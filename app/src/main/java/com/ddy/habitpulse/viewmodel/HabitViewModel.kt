@@ -173,8 +173,18 @@ class HabitViewModel(application: Application) : AndroidViewModel(application) {
     }
     
     fun isFormValid(): Boolean {
+        // For daily repeat cycle, at least one reminder time is required
+        val hasValidReminderTime = if (_repeatCycle.value == RepeatCycle.DAILY) {
+            _reminderTimes.value.isNotEmpty()
+        } else if (_repeatCycle.value == RepeatCycle.WEEKLY) {
+            _selectedDays.value.isNotEmpty() && _reminderTimes.value.isNotEmpty()
+        } else {
+            true // For other cases
+        }
+        
         return _title.value.isNotBlank() &&
                 (_repeatCycle.value == RepeatCycle.DAILY || (_repeatCycle.value == RepeatCycle.WEEKLY && _selectedDays.value.isNotEmpty())) &&
+                hasValidReminderTime &&
                 (_supervisionMethod.value == SupervisionMethod.LOCAL_NOTIFICATION_ONLY || 
                  (_supervisionMethod.value == SupervisionMethod.SMS_REPORTING && _supervisorPhoneNumbers.value.isNotEmpty() && _supervisorPhoneNumbers.value.all { it.isNotBlank() }))
     }
