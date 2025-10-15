@@ -84,16 +84,14 @@ fun MainScreen(modifier: Modifier = Modifier) {
             )
         },
         floatingActionButton = {
-            if (!showHabitSheet) { // Only show the FAB when the bottom sheet is not visible
-                ExtendedFloatingActionButton(
-                    text = { Text("新建习惯") },
-                    icon = { Icon(Icons.Filled.Add, contentDescription = "Add") },
-                    onClick = { 
-                        isEditing = false
-                        showHabitSheet = true 
-                    }
-                )
-            }
+            ExtendedFloatingActionButton(
+                text = { Text("新建习惯") },
+                icon = { Icon(Icons.Filled.Add, contentDescription = "Add") },
+                onClick = {
+                    isEditing = false
+                    showHabitSheet = true
+                }
+            )
         },
         content = { innerPadding ->
             Box(
