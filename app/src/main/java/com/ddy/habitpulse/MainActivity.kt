@@ -25,6 +25,10 @@ import androidx.compose.ui.unit.dp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import androidx.compose.material3.rememberTimePickerState
 import androidx.compose.material3.TimeInput
+import androidx.compose.material3.DropdownMenuItem
+import androidx.compose.foundation.layout.PaddingValues
+import androidx.compose.material3.ExposedDropdownMenuBox
+import androidx.compose.material3.ExposedDropdownMenuDefaults
 import com.ddy.habitpulse.enums.RepeatCycle
 import com.ddy.habitpulse.enums.SupervisionMethod
 import com.ddy.habitpulse.ui.theme.HabitPulseTheme
@@ -80,14 +84,16 @@ fun MainScreen(modifier: Modifier = Modifier) {
             )
         },
         floatingActionButton = {
-            ExtendedFloatingActionButton(
-                text = { Text("新建习惯") },
-                icon = { Icon(Icons.Filled.Add, contentDescription = "Add") },
-                onClick = { 
-                    isEditing = false
-                    showHabitSheet = true 
-                }
-            )
+            if (!showHabitSheet) { // Only show the FAB when the bottom sheet is not visible
+                ExtendedFloatingActionButton(
+                    text = { Text("新建习惯") },
+                    icon = { Icon(Icons.Filled.Add, contentDescription = "Add") },
+                    onClick = { 
+                        isEditing = false
+                        showHabitSheet = true 
+                    }
+                )
+            }
         },
         content = { innerPadding ->
             Box(
@@ -229,44 +235,70 @@ fun HabitFormContent(
                 .weight(1f, fill = true)
         ) {
             item {
+                // Repeat Cycle Selection with segmented buttons (below title)
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.spacedBy(8.dp)
+                ) {
+                    // Daily button
+                    if (viewModel.repeatCycle == RepeatCycle.DAILY) {
+                        // Selected: Filled button with smaller corner radius
+                        Button(
+                            onClick = { viewModel.setRepeatCycle(RepeatCycle.DAILY) },
+                            modifier = Modifier.weight(1f),
+                            shape = RoundedCornerShape(16.dp) // Smaller corner radius
+                        ) {
+                            Text("每日")
+                        }
+                    } else {
+                        // Not selected: Toned down button with grey background and smaller corner radius
+                        Button(
+                            onClick = { viewModel.setRepeatCycle(RepeatCycle.DAILY) },
+                            modifier = Modifier.weight(1f),
+                            colors = ButtonDefaults.buttonColors(
+                                containerColor = MaterialTheme.colorScheme.surfaceVariant,
+                                contentColor = MaterialTheme.colorScheme.onSurfaceVariant
+                            ),
+                            shape = RoundedCornerShape(16.dp) // Smaller corner radius
+                        ) {
+                            Text("每日")
+                        }
+                    }
+                    
+                    // Weekly button  
+                    if (viewModel.repeatCycle == RepeatCycle.WEEKLY) {
+                        // Selected: Filled button with smaller corner radius
+                        Button(
+                            onClick = { viewModel.setRepeatCycle(RepeatCycle.WEEKLY) },
+                            modifier = Modifier.weight(1f),
+                            shape = RoundedCornerShape(16.dp) // Smaller corner radius
+                        ) {
+                            Text("每周")
+                        }
+                    } else {
+                        // Not selected: Toned down button with grey background and smaller corner radius
+                        Button(
+                            onClick = { viewModel.setRepeatCycle(RepeatCycle.WEEKLY) },
+                            modifier = Modifier.weight(1f),
+                            colors = ButtonDefaults.buttonColors(
+                                containerColor = MaterialTheme.colorScheme.surfaceVariant,
+                                contentColor = MaterialTheme.colorScheme.onSurfaceVariant
+                            ),
+                            shape = RoundedCornerShape(16.dp) // Smaller corner radius
+                        ) {
+                            Text("每周")
+                        }
+                    }
+                }
+                Spacer(modifier = Modifier.height(16.dp))
+                
                 // Habit Title
                 OutlinedTextField(
                     value = viewModel.title,
                     onValueChange = { viewModel.setTitle(it) },
-                    label = { Text("习惯标题 *") },
+                    label = { Text("习惯标题") },
                     modifier = Modifier.fillMaxWidth(),
-                    supportingText = {
-                        Text("必填项目")
-                    }
                 )
-                Spacer(modifier = Modifier.height(16.dp))
-                
-                // Repeat Cycle Selection
-                Text(
-                    text = "重复周期 *",
-                    style = MaterialTheme.typography.titleMedium,
-                    modifier = Modifier.padding(bottom = 8.dp)
-                )
-                
-                // Radio buttons for repeat cycle
-                repeatCycleOptions.forEach { cycle ->
-                    Row(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .clickable { viewModel.setRepeatCycle(cycle.value) }
-                            .padding(vertical = 4.dp),
-                        verticalAlignment = Alignment.CenterVertically
-                    ) {
-                        RadioButton(
-                            selected = viewModel.repeatCycle == cycle.value,
-                            onClick = { viewModel.setRepeatCycle(cycle.value) }
-                        )
-                        Text(
-                            text = cycle.label,
-                            modifier = Modifier.padding(start = 8.dp)
-                        )
-                    }
-                }
                 Spacer(modifier = Modifier.height(16.dp))
                 
                 // Daily repeat cycle - Multiple reminder times
@@ -287,7 +319,7 @@ fun HabitFormContent(
                             modifier = Modifier.weight(1f)
                         )
                         
-                        Button(
+                        OutlinedButton(
                             onClick = { 
                                 showTimePicker = true 
                             }
@@ -385,7 +417,7 @@ fun HabitFormContent(
                                 modifier = Modifier.weight(1f)
                             )
                             
-                            Button(
+                            OutlinedButton(
                                 onClick = { 
                                     showTimePicker = true 
                                 }
@@ -425,25 +457,8 @@ fun HabitFormContent(
                 
                 Spacer(modifier = Modifier.height(16.dp))
                 
-                // Notes field
-                OutlinedTextField(
-                    value = viewModel.notes,
-                    onValueChange = { viewModel.setNotes(it) },
-                    label = { Text("备注") },
-                    modifier = Modifier.fillMaxWidth(),
-                    supportingText = {
-                        Text("可选")
-                    }
-                )
-                
-                Spacer(modifier = Modifier.height(16.dp))
-                
-                // Divider for supervision method
-                HorizontalDivider(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(vertical = 8.dp)
-                )
+                // Move Notes field to the bottom, so removing it from here
+                // This part will be replaced in the new location
                 
                 Text(
                     text = "监督方式",
@@ -451,23 +466,39 @@ fun HabitFormContent(
                     modifier = Modifier.padding(bottom = 8.dp)
                 )
                 
-                // Supervision method selection
-                supervisionMethodOptions.forEach { method ->
-                    Row(
+                var supervisionMethodExpanded by remember { mutableStateOf(false) }
+                
+                // Dropdown for supervision method
+                ExposedDropdownMenuBox(
+                    expanded = supervisionMethodExpanded,
+                    onExpandedChange = { supervisionMethodExpanded = !supervisionMethodExpanded }
+                ) {
+                    // This is the text field that triggers the dropdown
+                    OutlinedTextField(
                         modifier = Modifier
                             .fillMaxWidth()
-                            .clickable { viewModel.setSupervisionMethod(method.value) }
-                            .padding(vertical = 4.dp),
-                        verticalAlignment = Alignment.CenterVertically
+                            .menuAnchor(),
+                        value = getSupervisionMethodLabel(viewModel.supervisionMethod),
+                        onValueChange = {},
+                        readOnly = true,
+                        label = { Text("选择监督方式") }
+                    )
+                    
+                    // This is the actual dropdown menu
+                    ExposedDropdownMenu(
+                        expanded = supervisionMethodExpanded,
+                        onDismissRequest = { supervisionMethodExpanded = false }
                     ) {
-                        RadioButton(
-                            selected = viewModel.supervisionMethod == method.value,
-                            onClick = { viewModel.setSupervisionMethod(method.value) }
-                        )
-                        Text(
-                            text = method.label,
-                            modifier = Modifier.padding(start = 8.dp)
-                        )
+                        supervisionMethodOptions.forEach { method ->
+                            DropdownMenuItem(
+                                text = { Text(method.label) },
+                                onClick = {
+                                    viewModel.setSupervisionMethod(method.value)
+                                    supervisionMethodExpanded = false
+                                },
+                                contentPadding = PaddingValues(16.dp)
+                            )
+                        }
                     }
                 }
                 
@@ -476,35 +507,67 @@ fun HabitFormContent(
                     Spacer(modifier = Modifier.height(16.dp))
                     
                     Text(
-                        text = "监督人电话号码 *",
+                        text = "监督人电话号码",
                         style = MaterialTheme.typography.titleMedium,
                         modifier = Modifier.padding(bottom = 8.dp)
                     )
+
+                    Text(
+                        text = "添加一位或多位监督人的电话号码",
+                        style = MaterialTheme.typography.bodyMedium,
+                        modifier = Modifier.padding(bottom = 8.dp)
+                    )
                     
-                    // Input field for new supervisor
-                    Row(
-                        modifier = Modifier.fillMaxWidth(),
-                        horizontalArrangement = Arrangement.spacedBy(8.dp)
-                    ) {
-                        OutlinedTextField(
-                            value = newSupervisorPhone,
-                            onValueChange = { newSupervisorPhone = it },
-                            label = { Text("输入电话号码") },
-                            modifier = Modifier.weight(1f)
-                        )
-                        
-                        Button(
-                            onClick = {
-                                if (newSupervisorPhone.isNotBlank()) {
-                                    viewModel.addSupervisorPhoneNumber(newSupervisorPhone)
-                                    newSupervisorPhone = ""
-                                }
-                            },
-                            enabled = newSupervisorPhone.isNotBlank()
-                        ) {
-                            Text("添加")
+                    // Validate phone number format
+                    val phoneValid by remember(newSupervisorPhone) {
+                        derivedStateOf {
+                            newSupervisorPhone.isBlank() || isPhoneNumberValid(newSupervisorPhone)
                         }
                     }
+                    
+                    val duplicatePhone by remember(newSupervisorPhone, viewModel.supervisorPhoneNumbers) {
+                        derivedStateOf {
+                            newSupervisorPhone.isNotBlank() && viewModel.supervisorPhoneNumbers.contains(newSupervisorPhone)
+                        }
+                    }
+                    
+                    // Input field for new supervisor with trailing button and validation
+                    OutlinedTextField(
+                        value = newSupervisorPhone,
+                        onValueChange = { newSupervisorPhone = it },
+                        label = { Text("输入电话号码") },
+                        modifier = Modifier.fillMaxWidth(),
+                        trailingIcon = {
+                            IconButton(
+                                onClick = {
+                                    if (newSupervisorPhone.isNotBlank() && phoneValid && !duplicatePhone) {
+                                        viewModel.addSupervisorPhoneNumber(newSupervisorPhone)
+                                        newSupervisorPhone = ""
+                                    }
+                                },
+                                enabled = newSupervisorPhone.isNotBlank() && phoneValid && !duplicatePhone
+                            ) {
+                                Icon(
+                                    imageVector = Icons.Default.Add,
+                                    contentDescription = "添加"
+                                )
+                            }
+                        },
+                        supportingText = {
+                            if (!phoneValid) {
+                                Text(
+                                    text = "请输入有效的电话号码",
+                                    color = MaterialTheme.colorScheme.error
+                                )
+                            } else if (duplicatePhone) {
+                                Text(
+                                    text = "该号码已存在",
+                                    color = MaterialTheme.colorScheme.error
+                                )
+                            }
+                        },
+                        isError = !phoneValid || duplicatePhone
+                    )
                     
                     // Display existing supervisors with delete option
                     if (viewModel.supervisorPhoneNumbers.isNotEmpty()) {
@@ -519,10 +582,13 @@ fun HabitFormContent(
                             ) {
                                 Text(
                                     text = phone,
-                                    modifier = Modifier.weight(1f)
+                                    modifier = Modifier
+                                        .weight(1f)
+                                        .align(Alignment.CenterVertically)
                                 )
                                 IconButton(
-                                    onClick = { viewModel.removeSupervisorPhoneNumber(phone) }
+                                    onClick = { viewModel.removeSupervisorPhoneNumber(phone) },
+                                    modifier = Modifier.align(Alignment.CenterVertically)
                                 ) {
                                     Icon(
                                         imageVector = Icons.Default.Delete,
@@ -534,31 +600,44 @@ fun HabitFormContent(
                     }
                 }
                 
+                Spacer(modifier = Modifier.height(16.dp))
+
+                Text(
+                    text = "备注信息 ",
+                    style = MaterialTheme.typography.titleMedium,
+                    modifier = Modifier.padding(bottom = 8.dp)
+                )
+
+                // Notes field (moved to the bottom)
+                OutlinedTextField(
+                    value = viewModel.notes,
+                    onValueChange = { viewModel.setNotes(it) },
+                    label = { Text("备注信息，可换行") },
+                    modifier = Modifier.fillMaxWidth(),
+                )
+                
                 // Add some bottom padding to ensure content is not hidden
                 Spacer(modifier = Modifier.height(100.dp))
             }
         }
         
-        // Save and Cancel buttons
-        Row(
+        // Extended FAB for Save button
+        Box(
             modifier = Modifier
-                .fillMaxWidth()
-                .padding(top = 16.dp),
-            horizontalArrangement = Arrangement.spacedBy(8.dp)
+                .fillMaxWidth(),
+            contentAlignment = Alignment.BottomEnd
         ) {
-            OutlinedButton(
-                onClick = onCancel,
-                modifier = Modifier.weight(1f)
-            ) {
-                Text("取消")
-            }
-            
-            Button(
-                onClick = onSave,
-                modifier = Modifier.weight(1f)
-            ) {
-                Text("保存")
-            }
+            ExtendedFloatingActionButton(
+                text = { Text("保存") },
+                icon = { Icon(Icons.Filled.Save, contentDescription = "保存") },
+                onClick = {
+                    if (viewModel.isFormValid()) {
+                        onSave()
+                    } else {
+                        Toast.makeText(context, "请填写所有必填项目", Toast.LENGTH_SHORT).show()
+                    }
+                }
+            )
         }
     }
     
@@ -567,17 +646,18 @@ fun HabitFormContent(
         val timePickerState = rememberTimePickerState()
         val confirmEnabled = remember { mutableStateOf(true) }
         
+        // Use the original timePickerState defined above
         AlertDialog(
             onDismissRequest = { showTimePicker = false },
             title = { Text("选择时间") },
             text = {
-                TimeInput(
+                TimePicker(
                     state = timePickerState,
                     modifier = Modifier.fillMaxWidth()
                 )
             },
             confirmButton = {
-                Button(
+                TextButton(
                     onClick = {
                         val formattedTime = "${timePickerState.hour.toString().padStart(2, '0')}:${timePickerState.minute.toString().padStart(2, '0')}"
                         
@@ -604,7 +684,7 @@ fun HabitFormContent(
                 }
             },
             dismissButton = {
-                Button(
+                TextButton(
                     onClick = { showTimePicker = false }
                 ) {
                     Text("取消")
@@ -627,6 +707,40 @@ val supervisionMethodOptions = listOf(
     SupervisionMethodOption(SupervisionMethod.LOCAL_NOTIFICATION_ONLY, "不监督，仅本地通知我"),
     SupervisionMethodOption(SupervisionMethod.SMS_REPORTING, "短信汇报")
 )
+
+fun getRepeatCycleLabel(repeatCycle: RepeatCycle): String {
+    return when (repeatCycle) {
+        RepeatCycle.DAILY -> "每日"
+        RepeatCycle.WEEKLY -> "每周"
+    }
+}
+
+fun getSupervisionMethodLabel(supervisionMethod: SupervisionMethod): String {
+    return when (supervisionMethod) {
+        SupervisionMethod.LOCAL_NOTIFICATION_ONLY -> "不监督，仅本地通知我"
+        SupervisionMethod.SMS_REPORTING -> "短信汇报"
+    }
+}
+
+fun isPhoneNumberValid(phone: String): Boolean {
+    // Remove any whitespace
+    val cleanPhone = phone.trim()
+    
+    // Basic check: non-empty and has reasonable length (10-15 digits)
+    if (cleanPhone.isEmpty() || cleanPhone.length < 10 || cleanPhone.length > 15) {
+        return false
+    }
+    
+    // Check if it contains only valid phone number characters: digits, spaces, dashes, parentheses, plus sign
+    val validPhonePattern = Regex("^[0-9+\\-()\\s]+$")
+    if (!validPhonePattern.matches(cleanPhone)) {
+        return false
+    }
+    
+    // Check if it has at least 10 digits after removing non-digit characters
+    val digitsOnly = cleanPhone.filter { it.isDigit() }
+    return digitsOnly.length >= 10 && digitsOnly.length <= 15
+}
 
 @Preview(showBackground = true)
 @Composable

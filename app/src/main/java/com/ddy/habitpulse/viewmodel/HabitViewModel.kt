@@ -103,9 +103,10 @@ class HabitViewModel(application: Application) : AndroidViewModel(application) {
 
     fun setSupervisionMethod(method: SupervisionMethod) {
         _supervisionMethod.value = method
-        // When changing to SMS reporting, ensure we have at least one supervisor
+        // When changing to SMS reporting, do not add an empty supervisor by default
         if (method == SupervisionMethod.SMS_REPORTING && _supervisorPhoneNumbers.value.isEmpty()) {
-            _supervisorPhoneNumbers.value = listOf("")
+            // Don't add empty supervisor by default
+            // _supervisorPhoneNumbers.value = listOf("")
         }
     }
 
