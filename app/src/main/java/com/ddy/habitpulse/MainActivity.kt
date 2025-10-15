@@ -2,13 +2,14 @@ package com.ddy.habitpulse
 
 import android.content.Intent
 import android.os.Bundle
+import android.widget.Toast
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.*
@@ -17,10 +18,17 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import androidx.lifecycle.viewmodel.compose.viewModel
+import androidx.compose.material3.rememberTimePickerState
+import androidx.compose.material3.TimeInput
+import com.ddy.habitpulse.enums.RepeatCycle
+import com.ddy.habitpulse.enums.SupervisionMethod
 import com.ddy.habitpulse.ui.theme.HabitPulseTheme
+import com.ddy.habitpulse.viewmodel.HabitViewModel
 
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -37,9 +45,10 @@ class MainActivity : ComponentActivity() {
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun MainScreen(modifier: Modifier = Modifier) {
+    val viewModel: HabitViewModel = viewModel()
     var showHabitSheet by remember { mutableStateOf(false) }
     var isEditing by remember { mutableStateOf(false) }
-    val context = androidx.compose.ui.platform.LocalContext.current
+    val context = LocalContext.current
 
     // Modal bottom sheet state - configure to skip partially expanded state so it expands fully when shown
     val bottomSheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
@@ -146,7 +155,10 @@ fun MainScreen(modifier: Modifier = Modifier) {
         }
         
         ModalBottomSheet(
-            onDismissRequest = { showHabitSheet = false },
+            onDismissRequest = { 
+                showHabitSheet = false 
+                viewModel.resetForm()
+            },
             sheetState = bottomSheetState,
             shape = sheetShape,
             dragHandle = {
@@ -163,72 +175,468 @@ fun MainScreen(modifier: Modifier = Modifier) {
                 )
             }
         ) {
-            Column(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(horizontal = 16.dp, vertical = 8.dp)
-            ) {
-                Text(
-                    text = if (isEditing) "编辑习惯" else "新建习惯",
-                    style = MaterialTheme.typography.headlineSmall,
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(bottom = 16.dp)
+            HabitFormContent(
+                viewModel = viewModel,
+                onSave = {
+                    if (viewModel.isFormValid()) {
+                        viewModel.saveHabit()
+                        showHabitSheet = false
+                        Toast.makeText(context, "习惯已保存", Toast.LENGTH_SHORT).show()
+                    } else {
+                        Toast.makeText(context, "请填写所有必填项目", Toast.LENGTH_SHORT).show()
+                    }
+                },
+                onCancel = {
+                    showHabitSheet = false
+                    viewModel.resetForm()
+                }
+            )
+        }
+    }
+}
+
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+fun HabitFormContent(
+    viewModel: HabitViewModel,
+    onSave: () -> Unit,
+    onCancel: () -> Unit
+) {
+    val context = LocalContext.current
+    
+    // State for showing time picker
+    var showTimePicker by remember { mutableStateOf(false) }
+    
+    // For SMS reporting supervisor management
+    var newSupervisorPhone by remember { mutableStateOf("") }
+    
+    Column(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(horizontal = 16.dp, vertical = 8.dp)
+    ) {
+        Text(
+            text = "新建习惯",
+            style = MaterialTheme.typography.headlineSmall,
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(bottom = 16.dp)
+        )
+        
+        LazyColumn(
+            modifier = Modifier
+                .fillMaxWidth()
+                .weight(1f, fill = true)
+        ) {
+            item {
+                // Habit Title
+                OutlinedTextField(
+                    value = viewModel.title,
+                    onValueChange = { viewModel.setTitle(it) },
+                    label = { Text("习惯标题 *") },
+                    modifier = Modifier.fillMaxWidth(),
+                    supportingText = {
+                        Text("必填项目")
+                    }
                 )
-                // Content will be implemented later
-                LazyColumn {
-                    items(20) { index ->
-                        Card(
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .padding(vertical = 4.dp),
-                            shape = RoundedCornerShape(8.dp),
-                            elevation = CardDefaults.cardElevation(defaultElevation = 2.dp)
+                Spacer(modifier = Modifier.height(16.dp))
+                
+                // Repeat Cycle Selection
+                Text(
+                    text = "重复周期 *",
+                    style = MaterialTheme.typography.titleMedium,
+                    modifier = Modifier.padding(bottom = 8.dp)
+                )
+                
+                // Radio buttons for repeat cycle
+                repeatCycleOptions.forEach { cycle ->
+                    Row(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .clickable { viewModel.setRepeatCycle(cycle.value) }
+                            .padding(vertical = 4.dp),
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        RadioButton(
+                            selected = viewModel.repeatCycle == cycle.value,
+                            onClick = { viewModel.setRepeatCycle(cycle.value) }
+                        )
+                        Text(
+                            text = cycle.label,
+                            modifier = Modifier.padding(start = 8.dp)
+                        )
+                    }
+                }
+                Spacer(modifier = Modifier.height(16.dp))
+                
+                // Daily repeat cycle - Multiple reminder times
+                if (viewModel.repeatCycle == RepeatCycle.DAILY) {
+                    Text(
+                        text = "提醒时间",
+                        style = MaterialTheme.typography.titleMedium,
+                        modifier = Modifier.padding(bottom = 8.dp)
+                    )
+                    
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.SpaceBetween,
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Text(
+                            text = if (viewModel.reminderTimes.isEmpty()) "未设置提醒时间" else "已设置 ${viewModel.reminderTimes.size} 个时间",
+                            modifier = Modifier.weight(1f)
+                        )
+                        
+                        Button(
+                            onClick = { 
+                                showTimePicker = true 
+                            }
                         ) {
-                            Column(
+                            Text("添加提醒时间")
+                        }
+                    }
+                    
+                    // Display selected times with delete option
+                    if (viewModel.reminderTimes.isNotEmpty()) {
+                        Spacer(modifier = Modifier.height(8.dp))
+                        viewModel.reminderTimes.forEach { time ->
+                            Row(
                                 modifier = Modifier
                                     .fillMaxWidth()
-                                    .padding(12.dp)
+                                    .padding(vertical = 2.dp),
+                                horizontalArrangement = Arrangement.SpaceBetween,
+                                verticalAlignment = Alignment.CenterVertically
                             ) {
                                 Text(
-                                    text = "示例内容 ${index + 1}",
-                                    style = MaterialTheme.typography.titleMedium,
-                                    modifier = Modifier.padding(bottom = 8.dp)
+                                    text = time,
+                                    modifier = Modifier.weight(1f)
                                 )
-                                Text(
-                                    text = "这是一个示例文本，用来占据更多垂直空间，以便测试底部工作表的滚动功能。" +
-                                            "Lorem ipsum dolor sit amet, consectetur adipiscing elit. " +
-                                            "Sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. " +
-                                            "Ut enim ad minim veniam, quis nostrud exercitation ullamco.",
-                                    style = MaterialTheme.typography.bodyMedium,
-                                    modifier = Modifier.padding(bottom = 4.dp)
-                                )
-                                Row(
-                                    modifier = Modifier.fillMaxWidth(),
-                                    horizontalArrangement = Arrangement.SpaceBetween
+                                IconButton(
+                                    onClick = { viewModel.removeReminderTime(time) }
                                 ) {
-                                    Text(
-                                        text = "日期: ${"2023-10-${(index + 1).toString().padStart(2, '0')}"}",
-                                        style = MaterialTheme.typography.bodySmall
-                                    )
-                                    Text(
-                                        text = "状态: ${if (index % 2 == 0) "进行中" else "已完成"}",
-                                        style = MaterialTheme.typography.bodySmall
+                                    Icon(
+                                        imageVector = Icons.Default.Delete,
+                                        contentDescription = "删除时间"
                                     )
                                 }
                             }
                         }
                     }
                 }
+                
+                // Weekly repeat cycle - Day selection and time handling
+                if (viewModel.repeatCycle == RepeatCycle.WEEKLY) {
+                    Text(
+                        text = "选择日期",
+                        style = MaterialTheme.typography.titleMedium,
+                        modifier = Modifier.padding(bottom = 8.dp)
+                    )
+                    
+                    // Week day selection using checkboxes
+                    val weekDays = listOf(
+                        "周一" to 0,
+                        "周二" to 1, 
+                        "周三" to 2,
+                        "周四" to 3,
+                        "周五" to 4,
+                        "周六" to 5,
+                        "周日" to 6
+                    )
+                    
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.SpaceBetween
+                    ) {
+                        weekDays.forEach { (dayName, dayIndex) ->
+                            Column(
+                                horizontalAlignment = Alignment.CenterHorizontally
+                            ) {
+                                Checkbox(
+                                    checked = viewModel.selectedDays.contains(dayIndex),
+                                    onCheckedChange = { isChecked ->
+                                        viewModel.setSelectedDay(dayIndex, isChecked)
+                                    }
+                                )
+                                Text(
+                                    text = dayName,
+                                    style = MaterialTheme.typography.bodySmall
+                                )
+                            }
+                        }
+                    }
+                    
+                    // Show time selection for each selected day
+                    Spacer(modifier = Modifier.height(16.dp))
+                    
+                    if (viewModel.selectedDays.isNotEmpty()) {
+                        Text(
+                            text = "每日提醒时间",
+                            style = MaterialTheme.typography.titleMedium,
+                            modifier = Modifier.padding(bottom = 8.dp)
+                        )
+                        
+                        Row(
+                            modifier = Modifier.fillMaxWidth(),
+                            horizontalArrangement = Arrangement.SpaceBetween,
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            Text(
+                                text = if (viewModel.reminderTimes.isEmpty()) "未设置提醒时间" else "已设置时间: ${viewModel.reminderTimes.first()}",
+                                modifier = Modifier.weight(1f)
+                            )
+                            
+                            Button(
+                                onClick = { 
+                                    showTimePicker = true 
+                                }
+                            ) {
+                                Text("设置提醒时间")
+                            }
+                        }
+                        
+                        // Display the selected time
+                        if (viewModel.reminderTimes.isNotEmpty()) {
+                            Spacer(modifier = Modifier.height(8.dp))
+                            Row(
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .padding(vertical = 2.dp),
+                                horizontalArrangement = Arrangement.SpaceBetween,
+                                verticalAlignment = Alignment.CenterVertically
+                            ) {
+                                Text(
+                                    text = viewModel.reminderTimes.first(),
+                                    modifier = Modifier.weight(1f)
+                                )
+                                IconButton(
+                                    onClick = { 
+                                        viewModel.setReminderTimes(emptyList()) 
+                                    }
+                                ) {
+                                    Icon(
+                                        imageVector = Icons.Default.Delete,
+                                        contentDescription = "删除时间"
+                                    )
+                                }
+                            }
+                        }
+                    }
+                }
+                
+                Spacer(modifier = Modifier.height(16.dp))
+                
+                // Notes field
+                OutlinedTextField(
+                    value = viewModel.notes,
+                    onValueChange = { viewModel.setNotes(it) },
+                    label = { Text("备注") },
+                    modifier = Modifier.fillMaxWidth(),
+                    supportingText = {
+                        Text("可选")
+                    }
+                )
+                
+                Spacer(modifier = Modifier.height(16.dp))
+                
+                // Divider for supervision method
+                HorizontalDivider(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(vertical = 8.dp)
+                )
+                
+                Text(
+                    text = "监督方式",
+                    style = MaterialTheme.typography.titleMedium,
+                    modifier = Modifier.padding(bottom = 8.dp)
+                )
+                
+                // Supervision method selection
+                supervisionMethodOptions.forEach { method ->
+                    Row(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .clickable { viewModel.setSupervisionMethod(method.value) }
+                            .padding(vertical = 4.dp),
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        RadioButton(
+                            selected = viewModel.supervisionMethod == method.value,
+                            onClick = { viewModel.setSupervisionMethod(method.value) }
+                        )
+                        Text(
+                            text = method.label,
+                            modifier = Modifier.padding(start = 8.dp)
+                        )
+                    }
+                }
+                
+                // Show supervisor phone input when SMS reporting is selected
+                if (viewModel.supervisionMethod == SupervisionMethod.SMS_REPORTING) {
+                    Spacer(modifier = Modifier.height(16.dp))
+                    
+                    Text(
+                        text = "监督人电话号码 *",
+                        style = MaterialTheme.typography.titleMedium,
+                        modifier = Modifier.padding(bottom = 8.dp)
+                    )
+                    
+                    // Input field for new supervisor
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.spacedBy(8.dp)
+                    ) {
+                        OutlinedTextField(
+                            value = newSupervisorPhone,
+                            onValueChange = { newSupervisorPhone = it },
+                            label = { Text("输入电话号码") },
+                            modifier = Modifier.weight(1f)
+                        )
+                        
+                        Button(
+                            onClick = {
+                                if (newSupervisorPhone.isNotBlank()) {
+                                    viewModel.addSupervisorPhoneNumber(newSupervisorPhone)
+                                    newSupervisorPhone = ""
+                                }
+                            },
+                            enabled = newSupervisorPhone.isNotBlank()
+                        ) {
+                            Text("添加")
+                        }
+                    }
+                    
+                    // Display existing supervisors with delete option
+                    if (viewModel.supervisorPhoneNumbers.isNotEmpty()) {
+                        Spacer(modifier = Modifier.height(8.dp))
+                        viewModel.supervisorPhoneNumbers.forEach { phone ->
+                            Row(
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .padding(vertical = 2.dp),
+                                horizontalArrangement = Arrangement.SpaceBetween,
+                                verticalAlignment = Alignment.CenterVertically
+                            ) {
+                                Text(
+                                    text = phone,
+                                    modifier = Modifier.weight(1f)
+                                )
+                                IconButton(
+                                    onClick = { viewModel.removeSupervisorPhoneNumber(phone) }
+                                ) {
+                                    Icon(
+                                        imageVector = Icons.Default.Delete,
+                                        contentDescription = "删除监督人"
+                                    )
+                                }
+                            }
+                        }
+                    }
+                }
+                
+                // Add some bottom padding to ensure content is not hidden
+                Spacer(modifier = Modifier.height(100.dp))
+            }
+        }
+        
+        // Save and Cancel buttons
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(top = 16.dp),
+            horizontalArrangement = Arrangement.spacedBy(8.dp)
+        ) {
+            OutlinedButton(
+                onClick = onCancel,
+                modifier = Modifier.weight(1f)
+            ) {
+                Text("取消")
+            }
+            
+            Button(
+                onClick = onSave,
+                modifier = Modifier.weight(1f)
+            ) {
+                Text("保存")
             }
         }
     }
+    
+    // Time picker dialog
+    if (showTimePicker) {
+        val timePickerState = rememberTimePickerState()
+        val confirmEnabled = remember { mutableStateOf(true) }
+        
+        AlertDialog(
+            onDismissRequest = { showTimePicker = false },
+            title = { Text("选择时间") },
+            text = {
+                TimeInput(
+                    state = timePickerState,
+                    modifier = Modifier.fillMaxWidth()
+                )
+            },
+            confirmButton = {
+                Button(
+                    onClick = {
+                        val formattedTime = "${timePickerState.hour.toString().padStart(2, '0')}:${timePickerState.minute.toString().padStart(2, '0')}"
+                        
+                        if (viewModel.repeatCycle == RepeatCycle.DAILY) {
+                            // For daily, just add the time to the list
+                            if (!viewModel.reminderTimes.contains(formattedTime)) {
+                                viewModel.addReminderTime(formattedTime)
+                            }
+                        } else if (viewModel.repeatCycle == RepeatCycle.WEEKLY) {
+                            // For weekly, replace any existing time with the new one (only one time for all selected days)
+                            if (!viewModel.reminderTimes.contains(formattedTime)) {
+                                viewModel.setReminderTimes(listOf(formattedTime))
+                            } else {
+                                // If this time already exists, we don't add it again
+                                Toast.makeText(context, "该时间已存在", Toast.LENGTH_SHORT).show()
+                            }
+                        }
+                        
+                        showTimePicker = false
+                    },
+                    enabled = confirmEnabled.value
+                ) {
+                    Text("确定")
+                }
+            },
+            dismissButton = {
+                Button(
+                    onClick = { showTimePicker = false }
+                ) {
+                    Text("取消")
+                }
+            }
+        )
+    }
 }
+
+// Data classes for options
+data class RepeatCycleOption(val value: RepeatCycle, val label: String)
+data class SupervisionMethodOption(val value: SupervisionMethod, val label: String)
+
+val repeatCycleOptions = listOf(
+    RepeatCycleOption(RepeatCycle.DAILY, "每日"),
+    RepeatCycleOption(RepeatCycle.WEEKLY, "每周")
+)
+
+val supervisionMethodOptions = listOf(
+    SupervisionMethodOption(SupervisionMethod.LOCAL_NOTIFICATION_ONLY, "不监督，仅本地通知我"),
+    SupervisionMethodOption(SupervisionMethod.SMS_REPORTING, "短信汇报")
+)
 
 @Preview(showBackground = true)
 @Composable
 fun MainScreenPreview() {
     HabitPulseTheme {
-        MainScreen()
+        val viewModel: HabitViewModel = viewModel()
+        HabitFormContent(
+            viewModel = viewModel,
+            onSave = {},
+            onCancel = {}
+        )
     }
 }
