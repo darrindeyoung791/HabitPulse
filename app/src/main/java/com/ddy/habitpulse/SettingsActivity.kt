@@ -4,11 +4,13 @@ import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material3.*
 import androidx.compose.runtime.Composable
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.unit.dp
 import androidx.core.view.WindowCompat
@@ -89,21 +91,42 @@ fun SettingsScreen(
                     Text(
                         text = "HabitPulse 高度重视您的隐私。您的数据始终保留在您的设备上，并且 HabitPulse 不会联网。",
                         style = MaterialTheme.typography.bodyMedium,
-                        modifier = Modifier.padding(bottom = 4.dp)
+                        modifier = Modifier.padding(bottom = 8.dp)
                     )
                     
+                    val context = androidx.compose.ui.platform.LocalContext.current
                     Text(
-                        text = "帮助与反馈",
-                        style = MaterialTheme.typography.bodyMedium,
+                        text = "去「设置」查看 HabitPulse 应用信息",
                         color = MaterialTheme.colorScheme.primary,
-                        modifier = Modifier.padding(top = 8.dp)
+                        style = MaterialTheme.typography.bodyMedium,
+                        modifier = Modifier
+                            .padding(top = 8.dp)
+                            .clickable {
+                                // Intent to open app info in settings
+                                val intent = android.content.Intent().apply {
+                                    action = android.provider.Settings.ACTION_APPLICATION_DETAILS_SETTINGS
+                                    data = android.net.Uri.parse("package:com.ddy.habitpulse")
+                                    addFlags(android.content.Intent.FLAG_ACTIVITY_NEW_TASK)
+                                }
+                                context.startActivity(intent)
+                            }
                     )
 
                     Text(
-                        text = "在 GitHub 上查看本项目",
-                        style = MaterialTheme.typography.bodyMedium,
+                        text = "去 Github 查看本项目",
                         color = MaterialTheme.colorScheme.primary,
-                        modifier = Modifier.padding(top = 8.dp)
+                        style = MaterialTheme.typography.bodyMedium,
+                        modifier = Modifier
+                            .padding(top = 8.dp)
+                            .clickable {
+                                // Intent to open GitHub project
+                                val intent = android.content.Intent().apply {
+                                    action = android.content.Intent.ACTION_VIEW
+                                    data = android.net.Uri.parse("https://github.com/darrindeyoung791/HabitPulse")
+                                    addFlags(android.content.Intent.FLAG_ACTIVITY_NEW_TASK)
+                                }
+                                context.startActivity(intent)
+                            }
                     )
                 }
             }
