@@ -33,6 +33,7 @@ import com.ddy.habitpulse.enums.RepeatCycle
 import com.ddy.habitpulse.enums.SupervisionMethod
 import com.ddy.habitpulse.ui.theme.HabitPulseTheme
 import com.ddy.habitpulse.viewmodel.HabitViewModel
+import java.util.Calendar
 
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -666,43 +667,36 @@ fun HabitFormContent(
     
     // Time picker dialog
     if (showTimePicker) {
-        val timePickerState = rememberTimePickerState()
-        val confirmEnabled = remember { mutableStateOf(true) }
-        
-        // Use the original timePickerState defined above
-        AlertDialog(
+        val calendar = Calendar.getInstance()
+        val timePickerState = rememberTimePickerState(
+            initialHour = calendar.get(Calendar.HOUR_OF_DAY),
+            initialMinute = calendar.get(Calendar.MINUTE),
+            is24Hour = false // 使用12小时制
+        )
+
+        TimePickerDialog(
+            state = timePickerState,
             onDismissRequest = { showTimePicker = false },
-            title = { Text("选择时间") },
-            text = {
-                TimePicker(
-                    state = timePickerState,
-                    modifier = Modifier.fillMaxWidth()
-                )
-            },
             confirmButton = {
                 TextButton(
-                    //TODO 需要之后修改格式让长度不超限
                     onClick = {
                         val formattedTime = "${timePickerState.hour.toString().padStart(2, '0')}:${timePickerState.minute.toString().padStart(2, '0')}"
-                        
+
                         if (viewModel.repeatCycle == RepeatCycle.DAILY) {
-                            // For daily, just add the time to the list
                             if (!viewModel.reminderTimes.contains(formattedTime)) {
                                 viewModel.addReminderTime(formattedTime)
+                            } else {
+                                Toast.makeText(context, "该时间已存在", Toast.LENGTH_SHORT).show()
                             }
                         } else if (viewModel.repeatCycle == RepeatCycle.WEEKLY) {
-                            // For weekly, replace any existing time with the new one (only one time for all selected days)
                             if (!viewModel.reminderTimes.contains(formattedTime)) {
                                 viewModel.setReminderTimes(listOf(formattedTime))
                             } else {
-                                // If this time already exists, we don't add it again
                                 Toast.makeText(context, "该时间已存在", Toast.LENGTH_SHORT).show()
                             }
                         }
-                        
                         showTimePicker = false
-                    },
-                    enabled = confirmEnabled.value
+                    }
                 ) {
                     Text("确定")
                 }
@@ -717,6 +711,60 @@ fun HabitFormContent(
         )
     }
 }
+
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+fun TimePickerDialog(
+    state: TimePickerState,
+    onDismissRequest: () -> Unit,
+    confirmButton: @Composable () -> Unit,
+    dismissButton: @Composable (() -> Unit)? = null,
+    title: String = "选择时间",
+    containerColor: androidx.compose.ui.graphics.Color = MaterialTheme.colorScheme.surface,
+) {
+    var showTimeInput by remember { mutableStateOf(false) }
+
+    AlertDialog(
+        onDismissRequest = onDismissRequest,
+        properties = androidx.compose.ui.window.DialogProperties(
+            usePlatformDefaultWidth = false
+        ),
+        modifier = Modifier
+            .widthIn(max = 360.dp)
+            .padding(16.dp),
+        title = {
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Text(
+                    text = title,
+                    style = MaterialTheme.typography.labelLarge
+                )
+                IconButton(onClick = { showTimeInput = !showTimeInput }) {
+                    Icon(
+                        imageVector = if (showTimeInput) Icons.Outlined.Schedule else Icons.Outlined.Keyboard,
+                        contentDescription = if (showTimeInput) "切换到表盘" else "切换到键盘输入"
+                    )
+                }
+            }
+        },
+        text = {
+            Box(contentAlignment = Alignment.Center) {
+                if (showTimeInput) {
+                    TimeInput(state = state)
+                } else {
+                    TimePicker(state = state)
+                }
+            }
+        },
+        confirmButton = confirmButton,
+        dismissButton = dismissButton,
+        containerColor = containerColor
+    )
+}
+
 
 // Data classes for options
 data class RepeatCycleOption(val value: RepeatCycle, val label: String)
