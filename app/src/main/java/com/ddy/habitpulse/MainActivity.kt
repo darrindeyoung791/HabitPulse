@@ -54,7 +54,8 @@ fun MainScreen(modifier: Modifier = Modifier) {
     var isEditing by remember { mutableStateOf(false) }
     val context = LocalContext.current
 
-    // Modal bottom sheet state - configure to skip partially expanded state so it expands fully when shown
+    // Modal bottom sheet state - configure to skip partially expanded state so it expands fully
+    // when shown
     val bottomSheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
     
     Scaffold(
@@ -72,7 +73,9 @@ fun MainScreen(modifier: Modifier = Modifier) {
                 },
                 actions = {
                     IconButton(onClick = {
-                        val intent = Intent(context, SettingsActivity::class.java)
+                        val intent = Intent(
+                            context,
+                            SettingsActivity::class.java)
                         context.startActivity(intent)
                     }) {
                         Icon(
@@ -151,9 +154,9 @@ fun MainScreen(modifier: Modifier = Modifier) {
                     bottomSheetState.targetValue != bottomSheetState.currentValue
 
                 if (isDraggingOrAnimating) {
-                    RoundedCornerShape(28.dp)         // Rounded during drag/animation (when closing)
+                    RoundedCornerShape(28.dp) // Rounded during drag/animation (when closing)
                 } else {
-                    RoundedCornerShape(0.dp)          // Square when static (fully expanded)
+                    RoundedCornerShape(0.dp)  // Square when static (fully expanded)
                 }
             }
         }
@@ -185,9 +188,17 @@ fun MainScreen(modifier: Modifier = Modifier) {
                     if (viewModel.isFormValid()) {
                         viewModel.saveHabit()
                         showHabitSheet = false
-                        Toast.makeText(context, "习惯已保存", Toast.LENGTH_SHORT).show()
+                        Toast.makeText(
+                            context,
+                            "习惯已保存",
+                            Toast.LENGTH_SHORT
+                        ).show()
                     } else {
-                        Toast.makeText(context, "请填写所有必填项目", Toast.LENGTH_SHORT).show()
+                        Toast.makeText(
+                            context,
+                            "请填写所有必填项目",
+                            Toast.LENGTH_SHORT
+                        ).show()
                     }
                 },
                 onCancel = {
@@ -249,7 +260,8 @@ fun HabitFormContent(
                             Text("每日")
                         }
                     } else {
-                        // Not selected: Toned down button with grey background and smaller corner radius
+                        // Not selected: Toned down button with grey background and smaller corner
+                        // radius
                         Button(
                             onClick = { viewModel.setRepeatCycle(RepeatCycle.DAILY) },
                             modifier = Modifier.weight(1f),
@@ -274,7 +286,8 @@ fun HabitFormContent(
                             Text("每周")
                         }
                     } else {
-                        // Not selected: Toned down button with grey background and smaller corner radius
+                        // Not selected: Toned down button with grey background and smaller corner
+                        // radius
                         Button(
                             onClick = { viewModel.setRepeatCycle(RepeatCycle.WEEKLY) },
                             modifier = Modifier.weight(1f),
@@ -313,7 +326,11 @@ fun HabitFormContent(
                         verticalAlignment = Alignment.CenterVertically
                     ) {
                         Text(
-                            text = if (viewModel.reminderTimes.isEmpty()) "未设置提醒时间" else "已设置 ${viewModel.reminderTimes.size} 个时间",
+                            text = if (viewModel.reminderTimes.isEmpty()){
+                                "未设置提醒时间"
+                            } else {
+                                "已设置 ${viewModel.reminderTimes.size} 个时间"
+                            },
                             modifier = Modifier.weight(1f)
                         )
                         
@@ -411,7 +428,11 @@ fun HabitFormContent(
                             verticalAlignment = Alignment.CenterVertically
                         ) {
                             Text(
-                                text = if (viewModel.reminderTimes.isEmpty()) "未设置提醒时间" else "已设置时间: ${viewModel.reminderTimes.first()}",
+                                text = if (viewModel.reminderTimes.isEmpty()){
+                                    "未设置提醒时间"
+                                } else {
+                                    "已设置时间: ${viewModel.reminderTimes.first()}"
+                                },
                                 modifier = Modifier.weight(1f)
                             )
                             
@@ -529,6 +550,36 @@ fun HabitFormContent(
                         }
                     }
                     
+                    // Display existing supervisors with delete option
+                    if (viewModel.supervisorPhoneNumbers.isNotEmpty()) {
+                        Spacer(modifier = Modifier.height(8.dp))
+                        viewModel.supervisorPhoneNumbers.forEach { phone ->
+                            Row(
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .padding(vertical = 2.dp),
+                                horizontalArrangement = Arrangement.SpaceBetween,
+                                verticalAlignment = Alignment.CenterVertically
+                            ) {
+                                Text(
+                                    text = phone,
+                                    modifier = Modifier
+                                        .weight(1f)
+                                        .align(Alignment.CenterVertically)
+                                )
+                                IconButton(
+                                    onClick = { viewModel.removeSupervisorPhoneNumber(phone) },
+                                    modifier = Modifier.align(Alignment.CenterVertically)
+                                ) {
+                                    Icon(
+                                        imageVector = Icons.Default.Delete,
+                                        contentDescription = "删除监督人"
+                                    )
+                                }
+                            }
+                        }
+                    }
+                    
                     // Input field for new supervisor with trailing button and validation
                     OutlinedTextField(
                         value = newSupervisorPhone,
@@ -566,36 +617,6 @@ fun HabitFormContent(
                         },
                         isError = !phoneValid || duplicatePhone
                     )
-                    
-                    // Display existing supervisors with delete option
-                    if (viewModel.supervisorPhoneNumbers.isNotEmpty()) {
-                        Spacer(modifier = Modifier.height(8.dp))
-                        viewModel.supervisorPhoneNumbers.forEach { phone ->
-                            Row(
-                                modifier = Modifier
-                                    .fillMaxWidth()
-                                    .padding(vertical = 2.dp),
-                                horizontalArrangement = Arrangement.SpaceBetween,
-                                verticalAlignment = Alignment.CenterVertically
-                            ) {
-                                Text(
-                                    text = phone,
-                                    modifier = Modifier
-                                        .weight(1f)
-                                        .align(Alignment.CenterVertically)
-                                )
-                                IconButton(
-                                    onClick = { viewModel.removeSupervisorPhoneNumber(phone) },
-                                    modifier = Modifier.align(Alignment.CenterVertically)
-                                ) {
-                                    Icon(
-                                        imageVector = Icons.Default.Delete,
-                                        contentDescription = "删除监督人"
-                                    )
-                                }
-                            }
-                        }
-                    }
                 }
                 
                 Spacer(modifier = Modifier.height(16.dp))
@@ -632,7 +653,11 @@ fun HabitFormContent(
                     if (viewModel.isFormValid()) {
                         onSave()
                     } else {
-                        Toast.makeText(context, "请填写所有必填项目", Toast.LENGTH_SHORT).show()
+                        Toast.makeText(
+                            context,
+                            "请填写所有必填项目",
+                            Toast.LENGTH_SHORT
+                        ).show()
                     }
                 }
             )
@@ -656,6 +681,7 @@ fun HabitFormContent(
             },
             confirmButton = {
                 TextButton(
+                    //TODO 需要之后修改格式让长度不超限
                     onClick = {
                         val formattedTime = "${timePickerState.hour.toString().padStart(2, '0')}:${timePickerState.minute.toString().padStart(2, '0')}"
                         
@@ -702,8 +728,14 @@ val repeatCycleOptions = listOf(
 )
 
 val supervisionMethodOptions = listOf(
-    SupervisionMethodOption(SupervisionMethod.LOCAL_NOTIFICATION_ONLY, "不监督，仅本地通知我"),
-    SupervisionMethodOption(SupervisionMethod.SMS_REPORTING, "短信汇报")
+    SupervisionMethodOption(
+        SupervisionMethod.LOCAL_NOTIFICATION_ONLY,
+        "不监督，仅本地通知我"
+    ),
+    SupervisionMethodOption(
+        SupervisionMethod.SMS_REPORTING,
+        "短信汇报"
+    )
 )
 
 fun getRepeatCycleLabel(repeatCycle: RepeatCycle): String {
@@ -729,7 +761,8 @@ fun isPhoneNumberValid(phone: String): Boolean {
         return false
     }
     
-    // Check if it contains only valid phone number characters: digits, spaces, dashes, parentheses, plus sign
+    // Check if it contains only valid phone number characters: digits, spaces, dashes, parentheses,
+    // plus sign
     val validPhonePattern = Regex("^[0-9+\\-()\\s]+$")
     if (!validPhonePattern.matches(cleanPhone)) {
         return false
