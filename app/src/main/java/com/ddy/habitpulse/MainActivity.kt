@@ -237,6 +237,7 @@ fun MainScreen(
             HabitFormContent(
                 viewModel = viewModel,
                 habitListViewModel = habitListViewModel,
+                isEditing = isEditing,
                 onSave = {
                     showHabitSheet = false
                     // First save the habit through the HabitViewModel
@@ -266,6 +267,7 @@ fun MainScreen(
 fun HabitFormContent(
     viewModel: HabitViewModel,
     habitListViewModel: HabitListViewModel? = null,
+    isEditing: Boolean = false,
     onSave: () -> Unit,
     onCancel: () -> Unit
 ) {
@@ -283,7 +285,7 @@ fun HabitFormContent(
             .padding(horizontal = 16.dp, vertical = 8.dp)
     ) {
         Text(
-            text = "新建习惯",
+            text = if (isEditing) "编辑习惯" else "新建习惯",
             style = MaterialTheme.typography.headlineSmall,
             modifier = Modifier
                 .fillMaxWidth()
@@ -1073,6 +1075,7 @@ fun MainScreenPreview() {
         val viewModel: HabitViewModel = viewModel()
         HabitFormContent(
             viewModel = viewModel,
+            isEditing = false,
             onSave = {},
             onCancel = {}
         )
