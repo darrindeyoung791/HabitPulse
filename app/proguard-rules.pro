@@ -19,3 +19,25 @@
 # If you keep the line number information, uncomment this to
 # hide the original source file name.
 #-renamesourcefileattribute SourceFile
+
+# Keep generic type information for Gson TypeToken
+-keepattributes Signature
+-keepattributes *Annotation*
+
+# Keep TypeToken class and its generic signatures
+-keep class com.google.gson.reflect.TypeToken
+-keep class * extends com.google.gson.reflect.TypeToken
+
+# Keep generic signatures for Gson
+-keep class com.ddy.habitpulse.db.HabitTypeConverters { *; }
+
+# Keep generic types for Gson deserialization
+-keep class com.google.gson.** { *; }
+-keep class * implements com.google.gson.TypeAdapterFactory
+-keep class * extends com.google.gson.TypeAdapter { *; }
+
+# Keep Room database related classes
+-keep class * extends androidx.room.TypeConverter { *; }
+
+# Keep specific generic types used in TypeConverters
+-keep class com.google.gson.reflect.TypeToken$*

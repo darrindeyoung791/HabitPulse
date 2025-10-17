@@ -18,6 +18,39 @@ HabitPulse 是一个简洁的习惯追踪应用，帮助用户建立和维持良
 - AlarmManager
 - Material Design 3
 
+## 数据库结构
+
+### habits 表
+
+| 列名 | 类型 | 描述 |
+|------|------|------|
+| id | INTEGER (PRIMARY KEY, AUTOINCREMENT) | 习惯的唯一标识符 |
+| title | TEXT | 习惯的标题 |
+| repeatCycle | TEXT | 重复周期（DAILY 或 WEEKLY） |
+| repeatDays | TEXT | 重复天数列表（用于每周习惯，以JSON格式存储，如 [1,3,5] 表示周一、三、五） |
+| reminderTimes | TEXT | 提醒时间列表（以JSON格式存储，如 ["08:00","20:00"] 表示早上8点和晚上8点） |
+| notes | TEXT | 习惯的备注信息 |
+| supervisionMethod | TEXT | 监督方式（LOCAL_NOTIFICATION_ONLY 或 SMS_REPORTING） |
+| supervisorPhoneNumbers | TEXT | 监督人电话号码列表（以JSON格式存储） |
+| completed | INTEGER (BOOLEAN) | 今天是否已完成（0=未完成，1=已完成） |
+| completionCount | INTEGER | 总完成次数 |
+| createdDate | INTEGER | 创建日期（时间戳） |
+
+### 枚举类型说明
+
+#### RepeatCycle（重复周期）
+- `DAILY`：每日重复
+- `WEEKLY`：每周重复
+
+#### SupervisionMethod（监督方式）
+- `LOCAL_NOTIFICATION_ONLY`：仅本地通知
+- `SMS_REPORTING`：短信报告
+
+### 数据库配置
+- 数据库名称：`habit_database`
+- 数据库版本：2
+- 使用 `HabitTypeConverters` 进行类型转换，支持 List<Int>、List<String> 等类型的存储和读取
+
 ## 开发计划
 
 1. 项目初始化：创建基础项目结构，配置Gradle依赖

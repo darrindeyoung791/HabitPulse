@@ -8,8 +8,11 @@ import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.combinedClickable
+import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.*
@@ -29,9 +32,11 @@ import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.material3.ExposedDropdownMenuBox
 import androidx.compose.material3.ExposedDropdownMenuDefaults
+import com.ddy.habitpulse.db.Habit
 import com.ddy.habitpulse.enums.RepeatCycle
 import com.ddy.habitpulse.enums.SupervisionMethod
 import com.ddy.habitpulse.ui.theme.HabitPulseTheme
+import com.ddy.habitpulse.viewmodel.HabitListViewModel
 import com.ddy.habitpulse.viewmodel.HabitViewModel
 import java.util.Calendar
 
@@ -41,7 +46,8 @@ class MainActivity : ComponentActivity() {
         enableEdgeToEdge()
         setContent {
             HabitPulseTheme {
-                MainScreen()
+                val habitListViewModel: HabitListViewModel = viewModel { HabitListViewModel(this@MainActivity.application) }
+                MainScreen(habitListViewModel = habitListViewModel)
             }
         }
     }
@@ -49,7 +55,10 @@ class MainActivity : ComponentActivity() {
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
-fun MainScreen(modifier: Modifier = Modifier) {
+fun MainScreen(
+    habitListViewModel: HabitListViewModel,
+    modifier: Modifier = Modifier
+) {
     val viewModel: HabitViewModel = viewModel()
     var showHabitSheet by remember { mutableStateOf(false) }
     var isEditing by remember { mutableStateOf(false) }
@@ -98,42 +107,84 @@ fun MainScreen(modifier: Modifier = Modifier) {
             )
         },
         content = { innerPadding ->
-            Box(
-                modifier = Modifier
-                    .fillMaxSize()
-                    .padding(innerPadding),
-                contentAlignment = Alignment.Center
-            ) {
+            val habits = habitListViewModel.habits.collectAsState().value
+            
+            if (habits.isEmpty()) {
                 // Empty state when no habits exist
-                Column(
-                    horizontalAlignment = Alignment.CenterHorizontally,
-                    verticalArrangement = Arrangement.Center,
+                Box(
                     modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(horizontal = 24.dp)
+                        .fillMaxSize()
+                        .padding(innerPadding),
+                    contentAlignment = Alignment.Center
                 ) {
-                    Icon(
-                        imageVector = Icons.Outlined.LibraryAdd,
-                        contentDescription = "No habits",
-                        tint = MaterialTheme.colorScheme.onSurfaceVariant,
-                        modifier = Modifier.size(64.dp)
-                    )
-                    Spacer(modifier = Modifier.height(16.dp))
-                    Text(
-                        text = "暂无习惯",
-                        style = MaterialTheme.typography.headlineMedium,
-                        textAlign = TextAlign.Center
-                    )
-                    Spacer(modifier = Modifier.height(8.dp))
-                    TextButton(
-                        onClick = { 
-                            isEditing = false
-                            showHabitSheet = true 
-                        }
+                    Column(
+                        horizontalAlignment = Alignment.CenterHorizontally,
+                        verticalArrangement = Arrangement.Center,
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(horizontal = 24.dp)
                     ) {
+                        Icon(
+                            imageVector = Icons.Outlined.LibraryAdd,
+                            contentDescription = "No habits",
+                            tint = MaterialTheme.colorScheme.onSurfaceVariant,
+                            modifier = Modifier.size(64.dp)
+                        )
+                        Spacer(modifier = Modifier.height(16.dp))
                         Text(
-                            text = "去新建一个",
-                            style = MaterialTheme.typography.bodyLarge
+                            text = "暂无习惯",
+                            style = MaterialTheme.typography.headlineMedium,
+                            textAlign = TextAlign.Center
+                        )
+                        Spacer(modifier = Modifier.height(8.dp))
+                        TextButton(
+                            onClick = { 
+                                isEditing = false
+                                showHabitSheet = true 
+                            }
+                        ) {
+                            Text(
+                                text = "去新建一个",
+                                style = MaterialTheme.typography.bodyLarge
+                            )
+                        }
+                    }
+                }
+            } else {
+                // Display habit cards
+                LazyColumn(
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .padding(innerPadding),
+                    contentPadding = PaddingValues(16.dp),
+                    verticalArrangement = Arrangement.spacedBy(12.dp)
+                ) {
+                    items(habits) { habit ->
+                        HabitCard(
+                            habit = habit,
+                            onEditClick = {
+                                // Set up editing for this habit
+                                viewModel.setTitle(habit.title)
+                                viewModel.setRepeatCycle(habit.repeatCycle)
+                                viewModel.setSelectedDay(0, false) // Clear selections first
+                                habit.repeatDays.forEach { day ->
+                                    viewModel.setSelectedDay(day, true)
+                                } 
+                                viewModel.setReminderTimes(habit.reminderTimes)
+                                viewModel.setNotes(habit.notes)
+                                viewModel.setSupervisionMethod(habit.supervisionMethod)
+                                viewModel.setSupervisorPhoneNumbers(habit.supervisorPhoneNumbers)
+                                
+                                isEditing = true
+                                showHabitSheet = true
+                                viewModel.loadHabitForEdit(habit.id) // Load habit data for editing
+                            },
+                            onDeleteClick = {
+                                habitListViewModel.deleteHabitById(habit.id)
+                            },
+                            onToggleCompleted = {
+                                habitListViewModel.updateHabitCompleted(habit.id, !habit.completed)
+                            }
                         )
                     }
                 }
@@ -185,22 +236,21 @@ fun MainScreen(modifier: Modifier = Modifier) {
         ) {
             HabitFormContent(
                 viewModel = viewModel,
+                habitListViewModel = habitListViewModel,
                 onSave = {
-                    if (viewModel.isFormValid()) {
-                        viewModel.saveHabit()
-                        showHabitSheet = false
-                        Toast.makeText(
-                            context,
-                            "习惯已保存",
-                            Toast.LENGTH_SHORT
-                        ).show()
-                    } else {
-                        Toast.makeText(
-                            context,
-                            "请填写所有必填项目",
-                            Toast.LENGTH_SHORT
-                        ).show()
-                    }
+                    showHabitSheet = false
+                    // First save the habit through the HabitViewModel
+                    viewModel.saveHabit()
+                    // Use a small delay to ensure the database transaction completes before refreshing
+                    // This helps prevent race conditions where the list is refreshed before the habit is saved
+                    android.os.Handler(android.os.Looper.getMainLooper()).postDelayed({
+                        habitListViewModel.loadHabits() // Refresh the list after save operation
+                    }, 100) // 100ms delay should be sufficient
+                    Toast.makeText(
+                        context,
+                        "习惯已保存",
+                        Toast.LENGTH_SHORT
+                    ).show()
                 },
                 onCancel = {
                     showHabitSheet = false
@@ -215,6 +265,7 @@ fun MainScreen(modifier: Modifier = Modifier) {
 @Composable
 fun HabitFormContent(
     viewModel: HabitViewModel,
+    habitListViewModel: HabitListViewModel? = null,
     onSave: () -> Unit,
     onCancel: () -> Unit
 ) {
@@ -310,6 +361,8 @@ fun HabitFormContent(
                     onValueChange = { viewModel.setTitle(it) },
                     label = { Text("习惯标题") },
                     modifier = Modifier.fillMaxWidth(),
+                    singleLine = true,
+                    maxLines = 1,
                 )
                 Spacer(modifier = Modifier.height(16.dp))
                 
@@ -584,9 +637,15 @@ fun HabitFormContent(
                     // Input field for new supervisor with trailing button and validation
                     OutlinedTextField(
                         value = newSupervisorPhone,
-                        onValueChange = { newSupervisorPhone = it },
+                        onValueChange = { 
+                            // Limit to 20 characters and remove newlines
+                            val cleanValue = it.replace("\n", "").take(20)
+                            newSupervisorPhone = cleanValue 
+                        },
                         label = { Text("输入电话号码") },
                         modifier = Modifier.fillMaxWidth(),
+                        singleLine = true,
+                        maxLines = 1,
                         trailingIcon = {
                             IconButton(
                                 onClick = {
@@ -631,9 +690,15 @@ fun HabitFormContent(
                 // Notes field (moved to the bottom)
                 OutlinedTextField(
                     value = viewModel.notes,
-                    onValueChange = { viewModel.setNotes(it) },
+                    onValueChange = { 
+                        // Limit to 2000 characters but allow newlines for notes
+                        if (it.length <= 2000) {
+                            viewModel.setNotes(it)
+                        }
+                    },
                     label = { Text("备注信息，可换行") },
                     modifier = Modifier.fillMaxWidth(),
+                    maxLines = 10, // Allow multiple lines for notes
                 )
                 
                 // Add some bottom padding to ensure content is not hidden
@@ -652,7 +717,7 @@ fun HabitFormContent(
                 icon = { Icon(Icons.Filled.Save, contentDescription = "保存") },
                 onClick = {
                     if (viewModel.isFormValid()) {
-                        onSave()
+                        onSave() // This will trigger the save in the parent composable
                     } else {
                         Toast.makeText(
                             context,
@@ -763,6 +828,186 @@ fun TimePickerDialog(
         dismissButton = dismissButton,
         containerColor = containerColor
     )
+}
+
+
+@OptIn(ExperimentalMaterial3Api::class, ExperimentalFoundationApi::class)
+@Composable
+fun HabitCard(
+    habit: Habit,
+    onEditClick: () -> Unit,
+    onDeleteClick: () -> Unit,
+    onToggleCompleted: () -> Unit
+) {
+    var contextMenuVisible by remember { mutableStateOf(false) }
+    
+    Card(
+        modifier = Modifier
+            .fillMaxWidth()
+            .combinedClickable(
+                onClick = { onEditClick() }, // Click to edit
+                onLongClick = { contextMenuVisible = true } // Long press to show context menu
+            ),
+        shape = RoundedCornerShape(16.dp),
+        colors = CardDefaults.cardColors(
+            containerColor = MaterialTheme.colorScheme.surfaceVariant
+        ),
+        elevation = CardDefaults.cardElevation(
+            defaultElevation = 2.dp
+        )
+    ) {
+        Column(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(16.dp)
+        ) {
+            // Habit title (full width)
+            Text(
+                text = habit.title,
+                style = MaterialTheme.typography.titleLarge,
+                modifier = Modifier.fillMaxWidth()
+            )
+            
+            Spacer(modifier = Modifier.height(4.dp))
+            
+            // Completion count indicator below title
+            Row(
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Icon(
+                    imageVector = Icons.Filled.CheckCircle,
+                    contentDescription = "完成次数",
+                    tint = MaterialTheme.colorScheme.primary,
+                    modifier = Modifier.size(16.dp)
+                )
+                Spacer(modifier = Modifier.width(4.dp))
+                Text(
+                    text = "已完成 ${habit.completionCount} 次",
+                    style = MaterialTheme.typography.labelMedium,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                )
+            }
+            
+            Spacer(modifier = Modifier.height(8.dp))
+            
+            // Repeat cycle information
+            val repeatInfo = when (habit.repeatCycle) {
+                RepeatCycle.DAILY -> {
+                    "重复: 每日 • ${habit.reminderTimes.joinToString(", ")}"
+                }
+                RepeatCycle.WEEKLY -> {
+                    val days = listOf("周一", "周二", "周三", "周四", "周五", "周六", "周日")
+                    val selectedDaysText = habit.repeatDays.map { days[it] }.joinToString(", ")
+                    "重复: $selectedDaysText • ${habit.reminderTimes.firstOrNull() ?: ""}"
+                }
+            }
+            
+            Text(
+                text = repeatInfo,
+                style = MaterialTheme.typography.bodyMedium,
+                color = MaterialTheme.colorScheme.onSurfaceVariant
+            )
+            
+            Spacer(modifier = Modifier.height(4.dp))
+            
+            // Supervision method
+            val supervisionText = when (habit.supervisionMethod) {
+                SupervisionMethod.LOCAL_NOTIFICATION_ONLY -> "监督: 本地通知"
+                SupervisionMethod.SMS_REPORTING -> "监督: 短信汇报"
+            }
+            
+            Text(
+                text = supervisionText,
+                style = MaterialTheme.typography.bodyMedium,
+                color = MaterialTheme.colorScheme.onSurfaceVariant
+            )
+            
+            Spacer(modifier = Modifier.height(4.dp))
+            
+            // Notes (if any)
+            if (habit.notes.isNotBlank()) {
+                Row(
+                    verticalAlignment = Alignment.CenterVertically,
+                    modifier = Modifier.padding(vertical = 2.dp)
+                ) {
+                    Icon(
+                        imageVector = Icons.Outlined.Note,
+                        contentDescription = "备注",
+                        modifier = Modifier.size(16.dp),
+                        tint = MaterialTheme.colorScheme.onSurfaceVariant
+                    )
+                    Spacer(modifier = Modifier.width(6.dp))
+                    Text(
+                        text = habit.notes,
+                        style = MaterialTheme.typography.bodySmall,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant,
+                        maxLines = 2
+                    )
+                }
+            }
+            
+            // Phone numbers (if any)
+            if (habit.supervisionMethod == SupervisionMethod.SMS_REPORTING && habit.supervisorPhoneNumbers.isNotEmpty()) {
+                Spacer(modifier = Modifier.height(4.dp))
+                Row(
+                    verticalAlignment = Alignment.CenterVertically,
+                    modifier = Modifier.padding(vertical = 2.dp)
+                ) {
+                    Icon(
+                        imageVector = Icons.Outlined.Phone,
+                        contentDescription = "电话",
+                        modifier = Modifier.size(16.dp),
+                        tint = MaterialTheme.colorScheme.onSurfaceVariant
+                    )
+                    Spacer(modifier = Modifier.width(6.dp))
+                    Text(
+                        text = habit.supervisorPhoneNumbers.joinToString(", "),
+                        style = MaterialTheme.typography.bodySmall,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                    )
+                }
+            }
+            
+            // Completion button at the bottom (after all other content)
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(top = 8.dp),
+                horizontalArrangement = Arrangement.End
+            ) {
+                IconButton(
+                    onClick = onToggleCompleted
+                ) {
+                    Icon(
+                        imageVector = if (habit.completed) Icons.Filled.CheckCircle else Icons.Outlined.RadioButtonUnchecked,
+                        contentDescription = if (habit.completed) "已完成" else "完成",
+                        tint = if (habit.completed) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurfaceVariant
+                    )
+                }
+            }
+        }
+        
+        // Context menu - shown when long press occurs
+        DropdownMenu(
+            expanded = contextMenuVisible,
+            onDismissRequest = { contextMenuVisible = false }
+        ) {
+            DropdownMenuItem(
+                text = { Text("编辑") },
+                onClick = {
+                    onEditClick()
+                    contextMenuVisible = false
+                }
+            )
+            DropdownMenuItem(
+                text = { Text("删除") },
+                onClick = {
+                    onDeleteClick()
+                    contextMenuVisible = false
+                }
+            )
+        }
+    }
 }
 
 

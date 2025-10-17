@@ -22,6 +22,14 @@ class HabitViewModel(application: Application) : AndroidViewModel(application) {
     }
 
     // UI state variables using separate State objects to avoid property/setter conflicts
+    private val _id = mutableStateOf<Long>(0) // 0 means creating new habit, >0 means editing existing
+    val id: Long
+        get() = _id.value
+
+    fun setId(newId: Long) {
+        _id.value = newId
+    }
+    
     private val _title = mutableStateOf("")
     val title: String
         get() = _title.value
@@ -50,8 +58,13 @@ class HabitViewModel(application: Application) : AndroidViewModel(application) {
     val supervisorPhoneNumbers: List<String>
         get() = _supervisorPhoneNumbers.value
 
+    fun setSupervisorPhoneNumbers(numbers: List<String>) {
+        _supervisorPhoneNumbers.value = numbers
+    }
+
     fun setTitle(title: String) {
-        _title.value = title
+        val cleanTitle = title.replace("\n", "").take(200) // Remove newlines and limit to 200 chars
+        _title.value = cleanTitle
     }
 
     fun setRepeatCycle(repeatCycle: RepeatCycle) {
@@ -98,7 +111,8 @@ class HabitViewModel(application: Application) : AndroidViewModel(application) {
     }
 
     fun setNotes(notes: String) {
-        _notes.value = notes
+        val cleanNotes = notes.take(2000) // Limit to 2000 chars but allow newlines
+        _notes.value = cleanNotes
     }
 
     fun setSupervisionMethod(method: SupervisionMethod) {
@@ -111,8 +125,9 @@ class HabitViewModel(application: Application) : AndroidViewModel(application) {
     }
 
     fun addSupervisorPhoneNumber(phone: String) {
+        val cleanPhone = phone.replace("\n", "").take(20) // Remove newlines and limit to 20 chars
         val newPhones = _supervisorPhoneNumbers.value.toMutableList()
-        newPhones.add(phone)
+        newPhones.add(cleanPhone)
         _supervisorPhoneNumbers.value = newPhones
     }
 
@@ -123,9 +138,10 @@ class HabitViewModel(application: Application) : AndroidViewModel(application) {
     }
 
     fun updateSupervisorPhoneNumber(index: Int, newPhone: String) {
+        val cleanPhone = newPhone.replace("\n", "").take(20) // Remove newlines and limit to 20 chars
         val newPhones = _supervisorPhoneNumbers.value.toMutableList()
         if (index < newPhones.size) {
-            newPhones[index] = newPhone
+            newPhones[index] = cleanPhone
         }
         _supervisorPhoneNumbers.value = newPhones
     }
@@ -146,23 +162,49 @@ class HabitViewModel(application: Application) : AndroidViewModel(application) {
             }
 
             val habit = Habit(
+                id = _id.value,
                 title = title,
                 repeatCycle = repeatCycle,
                 repeatDays = if (repeatCycle == RepeatCycle.WEEKLY) selectedDays else emptyList(),
                 reminderTimes = reminderTimes,
                 notes = notes,
                 supervisionMethod = supervisionMethod,
-                supervisorPhoneNumbers = if (supervisionMethod == SupervisionMethod.SMS_REPORTING) supervisorPhoneNumbers else emptyList()
+                supervisorPhoneNumbers = if (supervisionMethod == SupervisionMethod.SMS_REPORTING) supervisorPhoneNumbers else emptyList(),
+                completed = false, // Default to not completed
+                completionCount = 0 // Default to 0 completions
             )
             
-            repository.insertHabit(habit)
+            if (_id.value > 0) {
+                // If ID > 0, we're updating an existing habit
+                repository.updateHabit(habit)
+            } else {
+                // If ID is 0, we're creating a new habit
+                repository.insertHabit(habit)
+            }
             
             // Reset form after saving
             resetForm()
         }
     }
 
+    fun loadHabitForEdit(habitId: Long) {
+        viewModelScope.launch {
+            val habit = repository.getHabitById(habitId)
+            habit?.let {
+                _id.value = it.id
+                _title.value = it.title
+                _repeatCycle.value = it.repeatCycle
+                _selectedDays.value = it.repeatDays
+                _reminderTimes.value = it.reminderTimes
+                _notes.value = it.notes
+                _supervisionMethod.value = it.supervisionMethod
+                setSupervisorPhoneNumbers(it.supervisorPhoneNumbers)
+            }
+        }
+    }
+    
     fun resetForm() {
+        _id.value = 0L
         _title.value = ""
         _repeatCycle.value = RepeatCycle.DAILY
         _selectedDays.value = emptyList()
@@ -187,5 +229,11 @@ class HabitViewModel(application: Application) : AndroidViewModel(application) {
                 hasValidReminderTime &&
                 (_supervisionMethod.value == SupervisionMethod.LOCAL_NOTIFICATION_ONLY || 
                  (_supervisionMethod.value == SupervisionMethod.SMS_REPORTING && _supervisorPhoneNumbers.value.isNotEmpty() && _supervisorPhoneNumbers.value.all { it.isNotBlank() }))
+    }
+    
+    fun updateHabitCompleted(id: Long, completed: Boolean) {
+        viewModelScope.launch {
+            repository.updateHabitCompleted(id, completed)
+        }
     }
 }

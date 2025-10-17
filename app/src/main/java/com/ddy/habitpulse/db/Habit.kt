@@ -15,5 +15,8 @@ data class Habit(
     val reminderTimes: List<String>, // List of time strings in "HH:mm" format
     val notes: String = "",
     val supervisionMethod: SupervisionMethod = SupervisionMethod.LOCAL_NOTIFICATION_ONLY,
-    val supervisorPhoneNumbers: List<String> = emptyList() // List of phone numbers for SMS supervision
+    val supervisorPhoneNumbers: List<String> = emptyList(), // List of phone numbers for SMS supervision
+    val completed: Boolean = false, // Track if habit is completed for today
+    val completionCount: Int = 0, // Track total number of times the habit has been completed
+    val createdDate: Long = System.currentTimeMillis()
 )

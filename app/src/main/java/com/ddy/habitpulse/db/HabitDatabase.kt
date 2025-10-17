@@ -8,7 +8,7 @@ import androidx.room.TypeConverters
 
 @Database(
     entities = [Habit::class],
-    version = 1,
+    version = 2,  // Incremented to handle schema change
     exportSchema = false
 )
 @TypeConverters(HabitTypeConverters::class)

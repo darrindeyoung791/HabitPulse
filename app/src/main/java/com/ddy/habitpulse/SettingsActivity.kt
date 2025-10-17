@@ -113,7 +113,7 @@ fun SettingsScreen(
                     )
 
                     Text(
-                        text = "去 Github 查看本项目",
+                        text = "去 Github 查看本开源项目",
                         color = MaterialTheme.colorScheme.primary,
                         style = MaterialTheme.typography.bodyMedium,
                         modifier = Modifier
