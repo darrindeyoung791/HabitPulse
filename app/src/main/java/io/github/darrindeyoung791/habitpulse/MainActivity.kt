@@ -14,6 +14,7 @@ import androidx.compose.ui.*
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.*
+import androidx.activity.compose.BackHandler
 import io.github.darrindeyoung791.habitpulse.ui.theme.HabitPulseTheme
 
 // 应用名称常量，便于全局统一管理
@@ -137,6 +138,11 @@ fun HabitBottomSheet(
     val sheetState = rememberModalBottomSheetState(
         skipPartiallyExpanded = true
     )
+
+    // 处理预测性返回手势：当 BottomSheet 打开时，按返回键关闭它
+    BackHandler(enabled = true) {
+        onDismiss()
+    }
 
     ModalBottomSheet(
         onDismissRequest = onDismiss,
