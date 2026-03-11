@@ -14,8 +14,19 @@
 
 # Uncomment this to preserve the line number information for
 # debugging stack traces.
-#-keepattributes SourceFile,LineNumberTable
+-keepattributes SourceFile,LineNumberTable
 
 # If you keep the line number information, uncomment this to
 # hide the original source file name.
 #-renamesourcefileattribute SourceFile
+
+# Keep Compose Preview functions
+-keep class io.github.darrindeyoung791.habitpulse.** { *; }
+-keep class io.github.darrindeyoung791.habitpulse.bean** { *; }
+
+# Keep Compose related classes
+-keep class androidx.compose.** { *; }
+-keepclassmembers class androidx.compose.** { *; }
+
+# Keep Material Icons
+-keep class androidx.compose.material.icons.** { *; }

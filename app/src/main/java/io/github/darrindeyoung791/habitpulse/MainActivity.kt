@@ -50,7 +50,7 @@ fun MainScreen() {
                     IconButton(onClick = { }) {
                         Icon(
                             imageVector = Icons.Filled.CalendarMonth,
-                            contentDescription = "日历"
+                            contentDescription = "日历视图"
                         )
                     }
                 },
@@ -105,8 +105,8 @@ fun EmptyStateContent(
         Icon(
             imageVector = Icons.Outlined.LibraryAdd,
             contentDescription = null,
-            modifier = Modifier.size(120.dp),
-            tint = MaterialTheme.colorScheme.onSurface
+            modifier = Modifier.size(80.dp),
+            tint = MaterialTheme.colorScheme.secondary
         )
 
         Spacer(modifier = Modifier.height(24.dp))
