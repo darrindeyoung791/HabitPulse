@@ -26,7 +26,10 @@ class MainActivity : ComponentActivity() {
         enableEdgeToEdge()
         setContent {
             HabitPulseTheme {
-                MainScreen()
+                // Apply safe drawing padding to avoid camera cutouts and system UI
+                Box(Modifier.safeDrawingPadding()) {
+                    MainScreen()
+                }
             }
         }
     }
