@@ -161,7 +161,7 @@ fun HabitBottomSheet(
         ) {
             Text(
                 text = "新建习惯",
-                style = MaterialTheme.typography.titleLarge,
+                style = MaterialTheme.typography.headlineLarge,
                 modifier = Modifier.padding(bottom = 16.dp)
             )
             // 这里后续添加习惯创建表单
