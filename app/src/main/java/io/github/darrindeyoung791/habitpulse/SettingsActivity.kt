@@ -4,7 +4,6 @@ import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
-import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.material.icons.*
@@ -22,6 +21,7 @@ import io.github.darrindeyoung791.habitpulse.ui.theme.HabitPulseTheme
 class SettingsActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+        // Enable edge-to-edge display - system bar colors handled by HabitPulseTheme
         enableEdgeToEdge()
         setContent {
             HabitPulseTheme {
@@ -34,9 +34,8 @@ class SettingsActivity : ComponentActivity() {
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun SettingsScreen() {
-    var darkTheme by remember { mutableStateOf(false) }
     val context = LocalContext.current
-    
+
     val versionName = remember {
         try {
             val packageInfo = context.packageManager.getPackageInfo(context.packageName, 0)
@@ -57,7 +56,7 @@ fun SettingsScreen() {
                     )
                 },
                 navigationIcon = {
-                    IconButton(onClick = { 
+                    IconButton(onClick = {
                         (context as? ComponentActivity)?.finish()
                     }) {
                         Icon(
@@ -75,55 +74,74 @@ fun SettingsScreen() {
                 .padding(innerPadding)
         ) {
             item {
-                // Appearance section
-                ListItem(
-                    headlineContent = { Text("深色模式") },
-                    supportingContent = { Text("切换应用主题颜色") },
-                    leadingContent = {
-                        Icon(
-                            Icons.Outlined.Palette,
-                            contentDescription = null
-                        )
-                    },
-                    trailingContent = {
-                        Switch(
-                            checked = darkTheme,
-                            onCheckedChange = { darkTheme = it }
-                        )
-                    },
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(horizontal = 16.dp, vertical = 8.dp)
-                )
-
                 // About section
-                ListItem(
-                    headlineContent = { Text("应用版本") },
-                    supportingContent = { Text(versionName) },
-                    leadingContent = {
+                SettingsListItem(
+                    headline = "应用版本",
+                    supportingText = versionName,
+                    leadingIcon = {
                         Icon(
-                            Icons.Outlined.Info,
+                            imageVector = Icons.Outlined.Info,
                             contentDescription = null
                         )
-                    },
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(horizontal = 16.dp, vertical = 8.dp)
+                    }
                 )
 
-                ListItem(
-                    headlineContent = { Text("开发者") },
-                    supportingContent = { Text("darrindeyoung791") },
-                    leadingContent = {
+                SettingsListItem(
+                    headline = "开发者",
+                    supportingText = "darrindeyoung791",
+                    leadingIcon = {
                         Icon(
-                            Icons.Outlined.Person,
+                            imageVector = Icons.Outlined.Person,
                             contentDescription = null
                         )
-                    },
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(horizontal = 16.dp, vertical = 8.dp)
+                    }
                 )
+            }
+        }
+    }
+}
+
+@Composable
+fun SettingsListItem(
+    headline: String,
+    supportingText: String,
+    leadingIcon: @Composable () -> Unit
+) {
+    Surface(
+        modifier = Modifier.fillMaxWidth(),
+        onClick = { },
+        color = MaterialTheme.colorScheme.surface
+    ) {
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(horizontal = 16.dp, vertical = 12.dp),
+            horizontalArrangement = Arrangement.SpaceBetween,
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            Row(
+                modifier = Modifier
+                    .weight(1f)
+                    .padding(end = 16.dp),
+                horizontalArrangement = Arrangement.spacedBy(16.dp),
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                leadingIcon()
+                Column(
+                    modifier = Modifier.weight(1f)
+                ) {
+                    Text(
+                        text = headline,
+                        style = MaterialTheme.typography.bodyLarge,
+                        color = MaterialTheme.colorScheme.onSurface
+                    )
+                    Spacer(modifier = Modifier.height(2.dp))
+                    Text(
+                        text = supportingText,
+                        style = MaterialTheme.typography.bodyMedium,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                    )
+                }
             }
         }
     }
@@ -137,7 +155,7 @@ fun SettingsScreenPreview() {
     }
 }
 
-@Preview(showBackground = true)
+@Preview(showBackground = true, showSystemUi = true)
 @Composable
 fun SettingsScreenDarkPreview() {
     HabitPulseTheme(darkTheme = true) {

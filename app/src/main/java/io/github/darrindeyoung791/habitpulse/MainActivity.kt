@@ -25,19 +25,8 @@ const val APP_NAME = "HabitPulse"
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        // Enable edge-to-edge display with proper system bar styling
-        // Status bar: transparent for both light and dark themes
-        // Navigation bar: matches surface color for proper contrast
-        enableEdgeToEdge(
-            statusBarStyle = SystemBarStyle.auto(
-                lightScrim = android.graphics.Color.TRANSPARENT,
-                darkScrim = android.graphics.Color.TRANSPARENT
-            ),
-            navigationBarStyle = SystemBarStyle.auto(
-                lightScrim = android.graphics.Color.WHITE,
-                darkScrim = android.graphics.Color.BLACK
-            )
-        )
+        // Enable edge-to-edge display - system bar colors handled by HabitPulseTheme
+        enableEdgeToEdge()
         setContent {
             HabitPulseTheme {
                 MainScreen()

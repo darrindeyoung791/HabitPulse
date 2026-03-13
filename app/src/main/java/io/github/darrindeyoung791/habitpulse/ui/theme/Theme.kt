@@ -1,5 +1,6 @@
 package io.github.darrindeyoung791.habitpulse.ui.theme
 
+import android.app.Activity
 import android.os.Build
 import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.material3.MaterialTheme
@@ -8,7 +9,12 @@ import androidx.compose.material3.dynamicDarkColorScheme
 import androidx.compose.material3.dynamicLightColorScheme
 import androidx.compose.material3.lightColorScheme
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.SideEffect
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.toArgb
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.LocalView
+import androidx.core.view.WindowCompat
 
 private val DarkColorScheme = darkColorScheme(
     primary = PurpleDarkPrimary,
@@ -92,6 +98,23 @@ fun HabitPulseTheme(
 
         darkTheme -> DarkColorScheme
         else -> LightColorScheme
+    }
+
+    // Update system bar appearance based on theme
+    val view = LocalView.current
+    if (!view.isInEditMode) {
+        SideEffect {
+            val window = (view.context as Activity).window
+            // Set status bar to transparent for edge-to-edge
+            window.statusBarColor = Color.Transparent.toArgb()
+            // Set navigation bar color to match surface
+            window.navigationBarColor = colorScheme.surface.toArgb()
+            // Update system bar icon colors based on theme
+            WindowCompat.getInsetsController(window, view).apply {
+                isAppearanceLightStatusBars = !darkTheme
+                isAppearanceLightNavigationBars = !darkTheme
+            }
+        }
     }
 
     MaterialTheme(
