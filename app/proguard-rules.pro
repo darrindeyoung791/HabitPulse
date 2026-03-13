@@ -20,13 +20,10 @@
 # hide the original source file name.
 #-renamesourcefileattribute SourceFile
 
-# Keep Compose Preview functions
--keep class io.github.darrindeyoung791.habitpulse.** { *; }
--keep class io.github.darrindeyoung791.habitpulse.bean** { *; }
+# Keep Compose Preview functions (for debugging only, can be removed in production)
+-keepclassmembers class * {
+    @androidx.compose.runtime.Composable *;
+}
 
-# Keep Compose related classes
--keep class androidx.compose.** { *; }
--keepclassmembers class androidx.compose.** { *; }
-
-# Keep Material Icons
--keep class androidx.compose.material.icons.** { *; }
+# Keep data classes and entities if you have any
+# -keep class io.github.darrindeyoung791.habitpulse.bean.** { *; }

@@ -3,13 +3,13 @@
 
     <style name="Theme.HabitPulse" parent="Theme.Material3.DayNight.NoActionBar">
         <!-- Fallback colorPrimary for pre-Monet devices; dynamic colors will override on Android 12+ -->
-        <item name="colorPrimary">@color/purple_500</item>
+        <item name="colorPrimary">@color/purple_200</item>
     </style>
 
     <!-- Splash theme used as application's launch theme so the system shows a proper background -->
     <style name="Theme.HabitPulse.Splash" parent="Theme.SplashScreen">
-        <!-- Use explicit color for compatibility with all Android versions -->
-        <item name="windowSplashScreenBackground">@color/white</item>
+        <!-- Use explicit color for night mode -->
+        <item name="windowSplashScreenBackground">@color/black</item>
         <!-- Keep the app theme after the splash finishes -->
         <item name="postSplashScreenTheme">@style/Theme.HabitPulse</item>
     </style>

@@ -43,7 +43,10 @@ fun SettingsScreen() {
     val versionName = remember {
         try {
             val packageInfo = context.packageManager.getPackageInfo(context.packageName, 0)
-            packageInfo.versionName ?: "1.0.0"
+            val version = packageInfo.versionName ?: "1.0.0"
+            val isDebug = context.applicationInfo.flags and android.content.pm.ApplicationInfo.FLAG_DEBUGGABLE != 0
+            val buildType = if (isDebug) " (Debug)" else " (Release)"
+            "$version$buildType"
         } catch (e: Exception) {
             "1.0.0"
         }
@@ -86,6 +89,15 @@ fun SettingsScreen() {
                     modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp)
                 )
 
+                // Privacy notice
+                val appName = stringResource(id = R.string.app_name)
+                Text(
+                    text = "$appName 高度重视您的隐私，您的数据始终保留在您的设备上，并且 $appName 不会联网。",
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp)
+                )
+
                 // About section
                 SettingsListItem(
                     headline = "应用版本",
@@ -109,8 +121,6 @@ fun SettingsScreen() {
                     }
                 )
 
-                val appName = stringResource(id = R.string.app_name)
-
                 Column(
                     modifier = Modifier
                         .fillMaxWidth()
@@ -133,7 +143,7 @@ fun SettingsScreen() {
                         modifier = Modifier.widthIn(min = 120.dp)
                     ) {
                         Text(
-                            text = "去「设置」查看 $appName 应用信息",
+                            text = "去「设置」查看 $appName 应用信息…",
                             style = MaterialTheme.typography.bodyMedium
                         )
                     }
@@ -147,7 +157,7 @@ fun SettingsScreen() {
                         modifier = Modifier.widthIn(min = 120.dp)
                     ) {
                         Text(
-                            text = "去 GitHub 查看本开源项目",
+                            text = "去 GitHub 查看本开源项目…",
                             style = MaterialTheme.typography.bodyMedium
                         )
                     }

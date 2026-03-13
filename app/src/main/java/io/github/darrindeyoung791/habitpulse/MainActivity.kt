@@ -5,6 +5,7 @@ import androidx.activity.ComponentActivity
 import androidx.activity.SystemBarStyle
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
+import androidx.core.splashscreen.SplashScreen.Companion.installSplashScreen
 import androidx.compose.foundation.layout.*
 import androidx.compose.material.icons.*
 import androidx.compose.material.icons.filled.*
@@ -24,6 +25,8 @@ const val APP_NAME = "HabitPulse"
 
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
+        // Install splash screen for compatibility with Android 11 and below
+        installSplashScreen()
         super.onCreate(savedInstanceState)
         // Enable edge-to-edge display - system bar colors handled by HabitPulseTheme
         enableEdgeToEdge()
