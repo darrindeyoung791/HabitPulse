@@ -1,6 +1,10 @@
 package io.github.darrindeyoung791.habitpulse
 
+import android.content.ActivityNotFoundException
+import android.content.Intent
+import android.net.Uri
 import android.os.Bundle
+import android.provider.Settings
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
@@ -74,6 +78,14 @@ fun SettingsScreen() {
                 .padding(innerPadding)
         ) {
             item {
+                // Section header
+                Text(
+                    text = "关于",
+                    style = MaterialTheme.typography.labelMedium,
+                    color = MaterialTheme.colorScheme.primary,
+                    modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp)
+                )
+
                 // About section
                 SettingsListItem(
                     headline = "应用版本",
@@ -96,6 +108,50 @@ fun SettingsScreen() {
                         )
                     }
                 )
+
+                val appName = stringResource(id = R.string.app_name)
+
+                Column(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(horizontal = 16.dp, vertical = 8.dp),
+                    verticalArrangement = Arrangement.spacedBy(4.dp)
+                ) {
+                    TextButton(
+                        onClick = {
+                            try {
+                                val intent = Intent(Settings.ACTION_APPLICATION_DETAILS_SETTINGS)
+                                intent.data = Uri.fromParts("package", context.packageName, null)
+                                context.startActivity(intent)
+                            } catch (e: ActivityNotFoundException) {
+                                // Fallback for some devices
+                                val intent = Intent(Settings.ACTION_MANAGE_APPLICATIONS_SETTINGS)
+                                context.startActivity(intent)
+                            }
+                        },
+                        contentPadding = PaddingValues(start = 0.dp, end = 16.dp),
+                        modifier = Modifier.widthIn(min = 120.dp)
+                    ) {
+                        Text(
+                            text = "去「设置」查看 $appName 应用信息",
+                            style = MaterialTheme.typography.bodyMedium
+                        )
+                    }
+
+                    TextButton(
+                        onClick = {
+                            val intent = Intent(Intent.ACTION_VIEW, Uri.parse("https://github.com/darrindeyoung791/HabitPulse"))
+                            context.startActivity(intent)
+                        },
+                        contentPadding = PaddingValues(start = 0.dp, end = 16.dp),
+                        modifier = Modifier.widthIn(min = 120.dp)
+                    ) {
+                        Text(
+                            text = "去 GitHub 查看本开源项目",
+                            style = MaterialTheme.typography.bodyMedium
+                        )
+                    }
+                }
             }
         }
     }

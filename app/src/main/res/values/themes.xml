@@ -1,5 +1,17 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
 
-    <style name="Theme.HabitPulse" parent="android:Theme.Material.Light.NoActionBar" />
+    <style name="Theme.HabitPulse" parent="Theme.Material3.DayNight.NoActionBar">
+        <!-- Fallback colorPrimary for pre-Monet devices; dynamic colors will override on Android 12+ -->
+        <item name="colorPrimary">@color/purple_500</item>
+    </style>
+
+    <!-- Splash theme used as application's launch theme so the system shows a proper background -->
+    <style name="Theme.HabitPulse.Splash" parent="Theme.SplashScreen">
+        <!-- Use the theme's primary color so Monet (dynamic colors) affects the splash on Android 12+ -->
+        <item name="windowSplashScreenBackground">?attr/colorPrimary</item>
+        <!-- Keep the app theme after the splash finishes -->
+        <item name="postSplashScreenTheme">@style/Theme.HabitPulse</item>
+    </style>
+
 </resources>
