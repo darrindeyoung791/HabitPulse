@@ -11,6 +11,7 @@ import androidx.compose.material.icons.outlined.*
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.*
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.*
@@ -38,6 +39,7 @@ class MainActivity : ComponentActivity() {
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun MainScreen() {
+    val context = LocalContext.current
     var showBottomSheet by remember { mutableStateOf(false) }
 
     Scaffold(
@@ -59,7 +61,10 @@ fun MainScreen() {
                     }
                 },
                 actions = {
-                    IconButton(onClick = { }) {
+                    IconButton(onClick = {
+                        val intent = android.content.Intent(context, SettingsActivity::class.java)
+                        context.startActivity(intent)
+                    }) {
                         Icon(
                             imageVector = Icons.Filled.Settings,
                             contentDescription = "设置"
