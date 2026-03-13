@@ -2,6 +2,7 @@ package io.github.darrindeyoung791.habitpulse
 
 import android.os.Bundle
 import androidx.activity.ComponentActivity
+import androidx.activity.SystemBarStyle
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
 import androidx.compose.foundation.layout.*
@@ -24,13 +25,22 @@ const val APP_NAME = "HabitPulse"
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        enableEdgeToEdge()
+        // Enable edge-to-edge display with proper system bar styling
+        // Status bar: transparent for both light and dark themes
+        // Navigation bar: matches surface color for proper contrast
+        enableEdgeToEdge(
+            statusBarStyle = SystemBarStyle.auto(
+                lightScrim = android.graphics.Color.TRANSPARENT,
+                darkScrim = android.graphics.Color.TRANSPARENT
+            ),
+            navigationBarStyle = SystemBarStyle.auto(
+                lightScrim = android.graphics.Color.WHITE,
+                darkScrim = android.graphics.Color.BLACK
+            )
+        )
         setContent {
             HabitPulseTheme {
-                // Apply safe drawing padding to avoid camera cutouts and system UI
-                Box(Modifier.safeDrawingPadding()) {
-                    MainScreen()
-                }
+                MainScreen()
             }
         }
     }
