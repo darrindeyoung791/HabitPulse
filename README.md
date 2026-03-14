@@ -4,7 +4,7 @@
 
 HabitPulse 是一个简洁的习惯追踪应用，帮助用户建立和维持良好的日常习惯。通过智能提醒和社交监督功能，让习惯养成更加有效。
 
-HabitPulse 使用 AI 辅助开发
+HabitPulse 使用 AI 辅助开发。如果您使用 Qwen Code 或 Claude Code 进行二次开发，读取 `QWEN.md` 以获得重要信息。
 
 ## 功能特性
 

@@ -14,6 +14,8 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.*
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.semantics.contentDescription
+import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.*
@@ -81,10 +83,13 @@ fun MainScreen() {
                 icon = {
                     Icon(
                         imageVector = Icons.Filled.Add,
-                        contentDescription = null
+                        contentDescription = null // Decorative, parent FAB provides label
                     )
                 },
-                text = { Text(text = "新建习惯") }
+                text = { Text(text = "新建习惯") },
+                modifier = Modifier.semantics {
+                    contentDescription = "新建习惯"
+                }
             )
         }
     ) { paddingValues ->
