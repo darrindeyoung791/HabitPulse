@@ -19,7 +19,7 @@
     <string name="main_create_habit_title">新建习惯</string>
     <string name="create_habit_title">新建习惯</string>
     <string name="create_habit_habit_name_label">习惯名称</string>
-    <string name="create_habit_habit_name_placeholder">例如：每天喝水、阅读、运动</string>
+    <string name="create_habit_habit_name_placeholder">你也许想试试：每天喝水、阅读、运动</string>
     <string name="create_habit_save_button">保存</string>
     <string name="create_habit_cancel_button">取消</string>
 </resources>

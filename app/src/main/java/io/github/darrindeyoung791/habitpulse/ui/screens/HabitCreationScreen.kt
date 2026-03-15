@@ -88,12 +88,6 @@ fun HabitCreationScreen(
                         // Close keyboard when done is pressed
                     }
                 ),
-                leadingIcon = {
-                    Icon(
-                        imageVector = Icons.Outlined.AddCircle,
-                        contentDescription = null
-                    )
-                }
             )
 
             // TODO: Add more habit creation fields here
