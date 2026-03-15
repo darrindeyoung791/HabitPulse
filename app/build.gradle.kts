@@ -19,6 +19,7 @@ android {
         versionName = "0.1.3-alpha"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
+        resourceConfigurations.addAll(listOf("zh-rCN", "en-rUS"))
     }
 
     buildTypes {
@@ -43,6 +44,9 @@ android {
     }
     buildFeatures {
         compose = true
+    }
+    androidResources {
+        generateLocaleConfig = true
     }
 }
 
