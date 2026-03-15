@@ -4,18 +4,24 @@
 
 **HabitPulse** is an Android habit tracking application built with Kotlin and Jetpack Compose. The app helps users build and maintain daily habits through smart reminders and social supervision features.
 
-### Key Features (Planned/In Development)
+The project is rapidly developing, LLM should update this page when big changes occur.
+
+### Key Features
 - **Habit Tracking**: Create, manage, and track daily habits
-- **Smart Reminders**: Time-based notifications to help users stick to habits
-- **Social Supervision**: Habit completion notifications to designated contacts
-- **Background Service**: Long-running background service for reliable reminders
+- **Smart Reminders**: Time-based notifications to help users stick to habits (planned)
+- **Social Supervision**: Habit completion notifications to designated contacts (planned)
+- **Background Service**: Long-running background service for reliable reminders (planned)
 - **Material Design 3**: Clean, modern UI following MD3 guidelines
+- **Split-screen Support**: Multi-window and picture-in-picture mode enabled
+- **Predictive Back Gesture**: Android 13+ predictive back gesture support
+- **Localization**: Chinese (Simplified) and English (US) support
 
 ### Tech Stack
 - **Language**: Kotlin
 - **UI Framework**: Jetpack Compose with Material Design 3
+- **Navigation**: Navigation Compose with custom animations
 - **Database**: Room (planned)
-- **Scheduling**: AlarmManager
+- **Scheduling**: AlarmManager (planned)
 - **Build System**: Gradle (Kotlin DSL)
 - **Minimum SDK**: 24 (Android 7.0)
 - **Target SDK**: 36
@@ -28,24 +34,36 @@ HabitPulse/
 │   ├── src/
 │   │   ├── main/
 │   │   │   ├── java/io/github/darrindeyoung791/habitpulse/
-│   │   │   │   ├── MainActivity.kt          # Main entry point
-│   │   │   │   └── ui/theme/
-│   │   │   │       ├── Color.kt             # Color definitions
-│   │   │   │       ├── Theme.kt             # Material theme setup
-│   │   │   │       └── Type.kt              # Typography definitions
-│   │   │   ├── res/                         # Android resources
+│   │   │   │   ├── MainActivity.kt              # Main entry point with NavHost
+│   │   │   │   ├── SettingsActivity.kt          # Settings screen
+│   │   │   │   ├── HabitPulseApplication.kt     # Application class
+│   │   │   │   ├── navigation/
+│   │   │   │   │   ├── HabitPulseNavGraph.kt    # Navigation graph with animations
+│   │   │   │   │   └── Route.kt                 # Route definitions
+│   │   │   │   └── ui/
+│   │   │   │       ├── screens/
+│   │   │   │       │   ├── HomeScreen.kt        # Home screen with habit list
+│   │   │   │       │   └── HabitCreationScreen.kt # Create/Edit habit screen
+│   │   │   │       └── theme/
+│   │   │   │           ├── Color.kt             # Color definitions
+│   │   │   │           ├── Theme.kt             # Material theme setup
+│   │   │   │           └── Type.kt              # Typography definitions
+│   │   │   ├── res/                             # Android resources
+│   │   │   │   ├── values/strings.xml           # Chinese strings
+│   │   │   │   └── values-en-rUS/strings.xml    # English strings
 │   │   │   └── AndroidManifest.xml
-│   │   ├── test/                            # Unit tests
-│   │   └── androidTest/                     # Instrumented tests
-│   ├── build.gradle.kts                     # App-level build config
-│   └── proguard-rules.pro                   # ProGuard rules
+│   │   ├── test/                                # Unit tests
+│   │   └── androidTest/                         # Instrumented tests
+│   ├── build.gradle.kts                         # App-level build config
+│   └── proguard-rules.pro                       # ProGuard rules
 ├── gradle/
 │   └── wrapper/
-│       └── gradle-wrapper.properties        # Gradle 9.4.0
-├── build.gradle.kts                         # Root build config
-├── settings.gradle.kts                      # Project settings
-├── gradle.properties                        # Gradle properties
-└── README.md                                # Project documentation
+│       └── gradle-wrapper.properties            # Gradle 9.4.0
+├── build.gradle.kts                             # Root build config
+├── settings.gradle.kts                          # Project settings
+├── gradle.properties                            # Gradle properties
+├── QWEN.md                                      # Project context (this file)
+└── README.md                                    # Project documentation
 ```
 
 ## Database Schema (Planned)
@@ -100,26 +118,33 @@ HabitPulse/
 
 ### Gradle Version
 - **Gradle**: 9.4.0
-- **Android Gradle Plugin**: Latest (via version catalog)
-- **Kotlin**: Latest (via version catalog)
+- **Android Gradle Plugin**: 9.1.0
+- **Kotlin**: 2.3.10
 
 ## Dependencies
 
 ### Core
-- `androidx.core.ktx` - Kotlin extensions for Android
-- `androidx.lifecycle.runtime.ktx` - Lifecycle components
-- `androidx.activity.compose` - Compose integration with Activity
+- `androidx.core.ktx` (1.17.0) - Kotlin extensions for Android
+- `androidx.lifecycle.runtime.ktx` (2.10.0) - Lifecycle components
+- `androidx.activity.compose` (1.10.1) - Compose integration with Activity
+- `androidx.activity.ktx` (1.10.1) - Kotlin extensions for Activity
+- `androidx.navigation.compose` (2.8.0) - Navigation Compose
 
 ### Compose UI
-- `androidx.compose.bom` - Compose Bill of Materials
+- `androidx.compose.bom` (2025.01.00) - Compose Bill of Materials
 - `androidx.compose.ui` - Core Compose UI
-- `androidx.compose.material3` - Material Design 3 components
-- `androidx.compose.material.icons` - Material icons (core + extended)
+- `androidx.compose.material3` (1.4.0) - Material Design 3 components
+- `androidx.compose.material.icons.core` (1.7.6) - Material icons core
+- `androidx.compose.material.icons.extended` (1.7.6) - Material icons extended
+
+### Other
+- `androidx.core:core-splashscreen` (1.0.1) - Splash screen compatibility
+- `com.google.android.material:material` (1.10.0) - Material components for dynamic colors
 
 ### Testing
-- `junit` - Unit testing framework
-- `androidx.junit` - Android JUnit extensions
-- `androidx.espresso.core` - UI testing framework
+- `junit` (4.13.2) - Unit testing framework
+- `androidx.junit` (1.2.1) - Android JUnit extensions
+- `androidx.espresso.core` (3.6.1) - UI testing framework
 - `androidx.compose.ui.test` - Compose testing utilities
 
 ## Development Conventions
@@ -130,10 +155,20 @@ HabitPulse/
 - **Compose**: Enabled with Material Design 3
 
 ### Architecture Patterns
-- Follow Android best practices with Jetpack Compose
+- Single Activity architecture with Navigation Compose
 - UI layer uses Compose with MaterialTheme
+- Screen composables in `ui/screens/` package
+- Navigation logic in `navigation/` package
 - Data layer planned with Room database
 - Type converters for complex types (List<Int>, List<String>)
+
+### Navigation
+- Uses Navigation Compose with custom route definitions
+- Custom animations for screen transitions:
+  - Home ↔ Create Habit: Vertical slide with spring animation
+  - Device corner radius applied to all screens (Android 12+)
+  - Scale animation for Home screen during navigation
+- `launchSingleTop` used to prevent duplicate destinations
 
 ### Testing Practices
 - Unit tests in `src/test/`
@@ -142,25 +177,59 @@ HabitPulse/
 
 ## Current Status
 
-The project is in **early development stage**:
+The project is in **early development stage** (v0.1.21-alpha):
+
+### Completed
 - ✅ Project structure set up
 - ✅ Basic Compose theme configured
-- ✅ MainActivity with placeholder content
-- ⏳ Database layer (planned)
-- ⏳ Habit management features (planned)
-- ⏳ Reminder system (planned)
-- ⏳ Email integration (planned)
+- ✅ Navigation Compose integrated
+- ✅ Home screen with empty state
+- ✅ Habit creation screen with navigation
+- ✅ Settings screen (separate Activity)
+- ✅ Custom screen transition animations
+- ✅ Device corner radius support (Android 12+)
+- ✅ Predictive back gesture support
+- ✅ Split-screen and PiP support
+- ✅ Localization (Chinese & English)
+
+### In Progress
+- 🔄 Habit data model and database schema
+- 🔄 Habit creation form fields (repeat cycle, reminders, etc.)
+
+### Planned
+- ⏳ Room database implementation
+- ⏳ Habit CRUD operations
+- ⏳ Reminder system with AlarmManager
+- ⏳ Habit completion tracking
+- ⏳ Social supervision features
+- ⏳ Email integration
 
 ## Package Information
 
 - **Namespace**: `io.github.darrindeyoung791.habitpulse`
 - **Application ID**: `io.github.darrindeyoung791.habitpulse`
 - **Version Code**: 1
-- **Version Name**: 1.0
+- **Version Name**: 0.1.21-alpha
+
+## Screen Flow
+
+```
+┌─────────────────┐     ┌──────────────────────┐     ┌─────────────────┐
+│                 │     │                      │     │                 │
+│   HomeScreen    │────▶│ HabitCreationScreen  │     │ SettingsActivity│
+│                 │◀────│                      │     │                 │
+│  - Habit list   │     │  - Create/Edit form  │     │  - App info     │
+│  - Empty state  │     │  - Habit name input  │     │  - Version      │
+│  - FAB (create) │     │  - More settings...  │     │  - GitHub link  │
+│                 │     │                      │     │                 │
+└─────────────────┘     └──────────────────────┘     └─────────────────┘
+```
 
 ## Notes
 
 - The app uses a custom mirror for Gradle distribution (`mirrors.cloud.tencent.com`)
 - Dynamic color theming is enabled for Android 12+ (API 31+)
-- Edge-to-edge display is enabled in MainActivity
-- Release builds have minification disabled by default
+- Edge-to-edge display is enabled in all activities
+- Release builds have minification and resource shrinking enabled
+- All activities support multi-window and picture-in-picture modes
+- Back gesture handling uses `enableOnBackInvokedCallback`
