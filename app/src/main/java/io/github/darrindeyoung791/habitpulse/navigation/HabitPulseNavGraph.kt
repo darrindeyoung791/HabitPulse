@@ -91,7 +91,12 @@ fun HabitPulseNavGraph(navController: NavHostController) {
             ) {
                 HomeScreen(
                     onCreateHabit = {
-                        navController.navigate(Route.CreateHabit.route)
+                        navController.navigate(Route.CreateHabit.route) {
+                            launchSingleTop = true
+                            popUpTo(Route.Home.route) {
+                                inclusive = false
+                            }
+                        }
                     },
                     onNavigateToSettings = {
                         val intent = android.content.Intent(context, SettingsActivity::class.java)
