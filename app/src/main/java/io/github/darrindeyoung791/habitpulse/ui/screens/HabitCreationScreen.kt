@@ -16,13 +16,27 @@ import androidx.compose.ui.unit.*
 import io.github.darrindeyoung791.habitpulse.R
 import io.github.darrindeyoung791.habitpulse.ui.theme.HabitPulseTheme
 
+/**
+ * 习惯编辑模式
+ */
+enum class EditMode {
+    CREATE,  // 新建习惯模式
+    EDIT     // 编辑习惯模式
+}
+
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun HabitCreationScreen(
-    onNavigateBack: () -> Unit
+    onNavigateBack: () -> Unit,
+    editMode: EditMode = EditMode.CREATE
 ) {
     var habitName by remember { mutableStateOf("") }
     var isSaving by remember { mutableStateOf(false) }
+
+    val titleRes = when (editMode) {
+        EditMode.CREATE -> R.string.create_habit_title
+        EditMode.EDIT -> R.string.edit_habit_title
+    }
 
     Scaffold(
         modifier = Modifier.fillMaxSize(),
@@ -30,7 +44,7 @@ fun HabitCreationScreen(
             CenterAlignedTopAppBar(
                 title = {
                     Text(
-                        text = stringResource(id = R.string.create_habit_title),
+                        text = stringResource(id = titleRes),
                         style = MaterialTheme.typography.titleLarge
                     )
                 },
