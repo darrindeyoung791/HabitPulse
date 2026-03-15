@@ -14,6 +14,7 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.*
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.font.FontWeight
@@ -21,9 +22,6 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.*
 import androidx.activity.compose.BackHandler
 import io.github.darrindeyoung791.habitpulse.ui.theme.HabitPulseTheme
-
-// 应用名称常量，便于全局统一管理
-const val APP_NAME = "HabitPulse"
 
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -45,6 +43,7 @@ class MainActivity : ComponentActivity() {
 fun MainScreen() {
     val context = LocalContext.current
     var showBottomSheet by remember { mutableStateOf(false) }
+    val newHabitLabel = stringResource(id = R.string.main_new_habit)
 
     Scaffold(
         modifier = Modifier.fillMaxSize(),
@@ -52,7 +51,7 @@ fun MainScreen() {
             CenterAlignedTopAppBar(
                 title = {
                     Text(
-                        text = APP_NAME,
+                        text = stringResource(id = R.string.app_name),
                         style = MaterialTheme.typography.titleLarge
                     )
                 },
@@ -60,7 +59,7 @@ fun MainScreen() {
                     IconButton(onClick = { }) {
                         Icon(
                             imageVector = Icons.Filled.CalendarMonth,
-                            contentDescription = "日历视图"
+                            contentDescription = stringResource(id = R.string.main_calendar_view)
                         )
                     }
                 },
@@ -71,7 +70,7 @@ fun MainScreen() {
                     }) {
                         Icon(
                             imageVector = Icons.Filled.Settings,
-                            contentDescription = "设置"
+                            contentDescription = stringResource(id = R.string.main_settings)
                         )
                     }
                 }
@@ -86,9 +85,9 @@ fun MainScreen() {
                         contentDescription = null // Decorative, parent FAB provides label
                     )
                 },
-                text = { Text(text = "新建习惯") },
+                text = { Text(text = newHabitLabel) },
                 modifier = Modifier.semantics {
-                    contentDescription = "新建习惯"
+                    contentDescription = newHabitLabel
                 }
             )
         }
@@ -128,7 +127,7 @@ fun EmptyStateContent(
         Spacer(modifier = Modifier.height(24.dp))
 
         Text(
-            text = "暂无习惯",
+            text = stringResource(id = R.string.main_no_habits),
             style = MaterialTheme.typography.titleLarge.copy(fontWeight = FontWeight.Normal),
             color = MaterialTheme.colorScheme.onSurface
         )
@@ -137,7 +136,7 @@ fun EmptyStateContent(
 
         TextButton(onClick = onCreateHabit) {
             Text(
-                text = "去新建一个",
+                text = stringResource(id = R.string.main_create_habit),
                 style = MaterialTheme.typography.bodyMedium.copy(fontWeight = FontWeight.Normal),
                 color = MaterialTheme.colorScheme.primary
             )
@@ -172,7 +171,7 @@ fun HabitBottomSheet(
                 .padding(16.dp)
         ) {
             Text(
-                text = "新建习惯",
+                text = stringResource(id = R.string.main_create_habit_title),
                 style = MaterialTheme.typography.headlineLarge,
                 modifier = Modifier.padding(bottom = 16.dp)
             )

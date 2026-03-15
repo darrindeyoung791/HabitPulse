@@ -68,7 +68,7 @@ fun SettingsScreen() {
                     }) {
                         Icon(
                             imageVector = Icons.AutoMirrored.Filled.ArrowBack,
-                            contentDescription = "返回"
+                            contentDescription = stringResource(id = R.string.settings_back)
                         )
                     }
                 }
@@ -83,7 +83,7 @@ fun SettingsScreen() {
             item {
                 // Section header
                 Text(
-                    text = "关于",
+                    text = stringResource(id = R.string.settings_about_section),
                     style = MaterialTheme.typography.labelMedium,
                     color = MaterialTheme.colorScheme.primary,
                     modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp)
@@ -92,7 +92,7 @@ fun SettingsScreen() {
                 // Privacy notice
                 val appName = stringResource(id = R.string.app_name)
                 Text(
-                    text = "$appName 高度重视您的隐私，您的数据始终保留在您的设备上，并且 $appName 不会联网。",
+                    text = stringResource(id = R.string.settings_privacy_notice, appName),
                     style = MaterialTheme.typography.bodyMedium,
                     color = MaterialTheme.colorScheme.onSurfaceVariant,
                     modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp)
@@ -100,7 +100,7 @@ fun SettingsScreen() {
 
                 // About section
                 SettingsListItem(
-                    headline = "应用版本",
+                    headline = stringResource(id = R.string.settings_app_version_label),
                     supportingText = versionName,
                     leadingIcon = {
                         Icon(
@@ -111,8 +111,8 @@ fun SettingsScreen() {
                 )
 
                 SettingsListItem(
-                    headline = "开发者",
-                    supportingText = "darrindeyoung791",
+                    headline = stringResource(id = R.string.settings_developer),
+                    supportingText = stringResource(id = R.string.settings_developer_name),
                     leadingIcon = {
                         Icon(
                             imageVector = Icons.Outlined.Person,
@@ -125,7 +125,7 @@ fun SettingsScreen() {
                     modifier = Modifier
                         .fillMaxWidth()
                         .padding(horizontal = 16.dp, vertical = 8.dp),
-                    verticalArrangement = Arrangement.spacedBy(4.dp)
+                    verticalArrangement = Arrangement.spacedBy(0.dp)
                 ) {
                     TextButton(
                         onClick = {
@@ -140,10 +140,10 @@ fun SettingsScreen() {
                             }
                         },
                         contentPadding = PaddingValues(start = 0.dp, end = 16.dp),
-                        modifier = Modifier.widthIn(min = 120.dp)
+                        modifier = Modifier.align(Alignment.Start)
                     ) {
                         Text(
-                            text = "去「设置」查看 $appName 应用信息…",
+                            text = stringResource(id = R.string.settings_app_info_button, appName),
                             style = MaterialTheme.typography.bodyMedium
                         )
                     }
@@ -154,10 +154,10 @@ fun SettingsScreen() {
                             context.startActivity(intent)
                         },
                         contentPadding = PaddingValues(start = 0.dp, end = 16.dp),
-                        modifier = Modifier.widthIn(min = 120.dp)
+                        modifier = Modifier.align(Alignment.Start)
                     ) {
                         Text(
-                            text = "去 GitHub 查看本开源项目…",
+                            text = stringResource(id = R.string.settings_github_button),
                             style = MaterialTheme.typography.bodyMedium
                         )
                     }
