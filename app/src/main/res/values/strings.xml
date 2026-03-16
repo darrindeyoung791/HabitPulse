@@ -24,6 +24,15 @@
     <string name="create_habit_repeat_cycle_label">重复周期</string>
     <string name="create_habit_daily_option">每日</string>
     <string name="create_habit_weekly_option">每周</string>
+    <string name="create_habit_repeat_days_label">重复日期</string>
+    <string name="create_habit_repeat_days_hint">选择重复日期</string>
+    <string name="create_habit_day_sunday">周日</string>
+    <string name="create_habit_day_monday">周一</string>
+    <string name="create_habit_day_tuesday">周二</string>
+    <string name="create_habit_day_wednesday">周三</string>
+    <string name="create_habit_day_thursday">周四</string>
+    <string name="create_habit_day_friday">周五</string>
+    <string name="create_habit_day_saturday">周六</string>
     <string name="create_habit_reminder_time_label">提醒时间</string>
     <string name="create_habit_no_reminder_set">未设置提醒时间</string>
     <string name="create_habit_reminder_set_count">已设置 %d 个提醒时间</string>

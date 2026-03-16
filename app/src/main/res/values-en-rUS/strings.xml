@@ -23,6 +23,15 @@
     <string name="create_habit_repeat_cycle_label">Repeat Cycle</string>
     <string name="create_habit_daily_option">Daily</string>
     <string name="create_habit_weekly_option">Weekly</string>
+    <string name="create_habit_repeat_days_label">Repeat Days</string>
+    <string name="create_habit_repeat_days_hint">Select repeat days</string>
+    <string name="create_habit_day_sunday">S</string>
+    <string name="create_habit_day_monday">M</string>
+    <string name="create_habit_day_tuesday">T</string>
+    <string name="create_habit_day_wednesday">W</string>
+    <string name="create_habit_day_thursday">T</string>
+    <string name="create_habit_day_friday">F</string>
+    <string name="create_habit_day_saturday">S</string>
     <string name="create_habit_reminder_time_label">Reminder Times</string>
     <string name="create_habit_no_reminder_set">No reminder times set</string>
     <string name="create_habit_reminder_set_count">%d reminder times set</string>
@@ -36,7 +45,7 @@
     <string name="create_habit_max_length_hint">Maximum 100 characters</string>
     <string name="create_habit_supervision_label">Supervision Method</string>
     <string name="create_habit_supervision_hint">Select supervision method</string>
-    <string name="create_habit_supervision_none">No supervision, local only</string>
+    <string name="create_habit_supervision_none">No supervisor</string>
     <string name="create_habit_supervision_email">Email reporting</string>
     <string name="create_habit_supervision_sms">SMS reporting</string>
     <string name="create_habit_supervisor_email_label">Supervisor Email Address</string>

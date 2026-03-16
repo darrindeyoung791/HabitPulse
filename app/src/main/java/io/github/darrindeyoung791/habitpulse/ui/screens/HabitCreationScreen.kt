@@ -4,6 +4,8 @@ import androidx.compose.animation.core.animateDpAsState
 import androidx.compose.animation.expandVertically
 import androidx.compose.animation.shrinkVertically
 import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.interaction.collectIsPressedAsState
@@ -11,6 +13,7 @@ import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.material.icons.*
 import androidx.compose.material.icons.outlined.*
 import androidx.compose.material3.*
@@ -137,6 +140,9 @@ fun HabitCreationScreen(
     var showPhoneError by remember { mutableStateOf(false) }
     var showEmailMaxToast by remember { mutableStateOf(false) }
     var showPhoneMaxToast by remember { mutableStateOf(false) }
+    
+    // Repeat days state (for weekly cycle)
+    var selectedRepeatDays by remember { mutableStateOf<Set<Int>>(setOf()) } // 0=Sunday, 1=Monday, etc.
     
     // Notes state
     var notes by remember { mutableStateOf("") }
@@ -323,6 +329,66 @@ fun HabitCreationScreen(
                                 },
                                 style = MaterialTheme.typography.bodyLarge
                             )
+                        }
+                    }
+                }
+            }
+
+            // Repeat days selection (for weekly cycle)
+            AnimatedVisibility(
+                visible = repeatCycle == RepeatCycle.WEEKLY,
+                enter = expandVertically() + fadeIn(),
+                exit = shrinkVertically() + fadeOut()
+            ) {
+                Card(
+                    modifier = Modifier.fillMaxWidth(),
+                    colors = CardDefaults.cardColors(
+                        containerColor = androidx.compose.ui.graphics.Color.Transparent
+                    ),
+                    shape = RoundedCornerShape(0.dp)
+                ) {
+                    Column(
+                        modifier = Modifier.fillMaxWidth()
+                    ) {
+                        Row(
+                            modifier = Modifier.fillMaxWidth(),
+                            horizontalArrangement = Arrangement.spacedBy(4.dp)
+                        ) {
+                            // Sunday (0) to Saturday (6)
+                            val dayLabels = listOf(
+                                stringResource(id = R.string.create_habit_day_sunday),
+                                stringResource(id = R.string.create_habit_day_monday),
+                                stringResource(id = R.string.create_habit_day_tuesday),
+                                stringResource(id = R.string.create_habit_day_wednesday),
+                                stringResource(id = R.string.create_habit_day_thursday),
+                                stringResource(id = R.string.create_habit_day_friday),
+                                stringResource(id = R.string.create_habit_day_saturday)
+                            )
+                            
+                            dayLabels.forEachIndexed { index, label ->
+                                FilterChip(
+                                    selected = selectedRepeatDays.contains(index),
+                                    onClick = {
+                                        selectedRepeatDays = if (selectedRepeatDays.contains(index)) {
+                                            selectedRepeatDays - index
+                                        } else {
+                                            selectedRepeatDays + index
+                                        }
+                                    },
+                                    label = {
+                                        Text(
+                                            text = label,
+                                            textAlign = TextAlign.Center,
+                                            modifier = Modifier.fillMaxWidth()
+                                        )
+                                    },
+                                    modifier = Modifier.weight(1f),
+                                    colors = FilterChipDefaults.filterChipColors(
+                                        selectedContainerColor = MaterialTheme.colorScheme.primary,
+                                        selectedLabelColor = MaterialTheme.colorScheme.onPrimary
+                                    )
+                                )
+                            }
                         }
                     }
                 }
@@ -784,13 +850,6 @@ fun HabitCreationScreen(
             // - Habit repeat days (for weekly cycle)
 
             Spacer(modifier = Modifier.weight(1f))
-
-            // Helper text
-            Text(
-                text = "更多设置将在此处添加...",
-                style = MaterialTheme.typography.bodyMedium,
-                color = MaterialTheme.colorScheme.onSurfaceVariant
-            )
         }
     }
 }
