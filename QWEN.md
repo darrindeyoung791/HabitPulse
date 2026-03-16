@@ -23,7 +23,7 @@ The project is rapidly developing, LLM should update this page when big changes 
 - **Database**: Room (planned)
 - **Scheduling**: AlarmManager (planned)
 - **Build System**: Gradle (Kotlin DSL)
-- **Minimum SDK**: 24 (Android 7.0)
+- **Minimum SDK**: 26 (Android 8.0)
 - **Target SDK**: 36
 
 ## Project Structure

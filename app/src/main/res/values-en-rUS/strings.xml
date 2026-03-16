@@ -19,7 +19,7 @@
     <string name="create_habit_title">Create Habit</string>
     <string name="edit_habit_title">Edit Habit</string>
     <string name="create_habit_habit_name_label">Habit Name</string>
-    <string name="create_habit_habit_name_placeholder">Try typing drink water</string>
+    <string name="create_habit_habit_name_placeholder">Try typing \"Drink water\"</string>
     <string name="create_habit_repeat_cycle_label">Repeat Cycle</string>
     <string name="create_habit_daily_option">Daily</string>
     <string name="create_habit_weekly_option">Weekly</string>

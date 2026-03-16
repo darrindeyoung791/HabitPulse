@@ -20,7 +20,7 @@
     <string name="create_habit_title">新建习惯</string>
     <string name="edit_habit_title">编辑习惯</string>
     <string name="create_habit_habit_name_label">习惯名称</string>
-    <string name="create_habit_habit_name_placeholder">你也许想试试：每天喝水</string>
+    <string name="create_habit_habit_name_placeholder">你也许想试试：按时喝水</string>
     <string name="create_habit_repeat_cycle_label">重复周期</string>
     <string name="create_habit_daily_option">每日</string>
     <string name="create_habit_weekly_option">每周</string>

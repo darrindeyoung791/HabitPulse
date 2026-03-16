@@ -1,5 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
+    <string name="app_name" translatable="false">HabitPulse</string>
     <string name="settings_title">设置</string>
     <string name="settings_about">关于</string>
     <string name="settings_app_version">应用版本</string>
@@ -8,6 +9,7 @@
     <string name="settings_about_section">关于</string>
     <string name="settings_privacy_notice">%1$s 高度重视您的隐私。您的数据始终保留在您的设备上，并且 %1$s 不会联网。</string>
     <string name="settings_app_version_label">应用版本</string>
+    <string name="settings_developer_name" translatable="false">darrindeyoung791</string>
     <string name="settings_app_info_button">去「设置」查看 %1$s 应用信息…</string>
     <string name="settings_github_button">去 GitHub 查看本开源项目…</string>
     <string name="main_calendar_view">日历视图</string>
@@ -19,7 +21,20 @@
     <string name="create_habit_title">新建习惯</string>
     <string name="edit_habit_title">编辑习惯</string>
     <string name="create_habit_habit_name_label">习惯名称</string>
-    <string name="create_habit_habit_name_placeholder">你也许想试试：每天喝水</string>
+    <string name="create_habit_habit_name_placeholder">你也许想试试：按时喝水</string>
+    <string name="create_habit_repeat_cycle_label">重复周期</string>
+    <string name="create_habit_daily_option">每日</string>
+    <string name="create_habit_weekly_option">每周</string>
+    <string name="create_habit_reminder_time_label">提醒时间</string>
+    <string name="create_habit_no_reminder_set">未设置提醒时间</string>
+    <string name="create_habit_reminder_set_count">已设置 %d 个提醒时间</string>
+    <string name="create_habit_add_reminder_button">添加提醒时间</string>
+    <string name="create_habit_expand_button">展开</string>
+    <string name="create_habit_collapse_button">收起</string>
+    <string name="create_habit_duplicate_time">该时间已存在</string>
+    <string name="create_habit_time_picker_title">选择提醒时间</string>
+    <string name="create_habit_time_picker_confirm">确定</string>
+    <string name="create_habit_time_picker_dismiss">取消</string>
     <string name="create_habit_save_button">保存</string>
     <string name="create_habit_cancel_button">取消</string>
 </resources>
