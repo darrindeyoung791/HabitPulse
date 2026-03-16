@@ -131,7 +131,8 @@ fun HabitPulseNavGraph(navController: NavHostController) {
                 HabitCreationScreen(
                     onNavigateBack = {
                         navController.popBackStack()
-                    }
+                    },
+                    navController = navController
                 )
             }
         }

@@ -7,6 +7,7 @@ import androidx.compose.material.icons.outlined.*
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.*
+import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.contentDescription
@@ -16,6 +17,8 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.*
 import io.github.darrindeyoung791.habitpulse.R
 import io.github.darrindeyoung791.habitpulse.ui.theme.HabitPulseTheme
+import io.github.darrindeyoung791.habitpulse.ui.utils.rememberDebounceClickHandler
+import kotlinx.coroutines.launch
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -23,6 +26,10 @@ fun HomeScreen(
     onCreateHabit: () -> Unit,
     onNavigateToSettings: () -> Unit
 ) {
+    // 防重复点击处理器，防止快速连续点击导致多次导航
+    val clickHandler = rememberDebounceClickHandler()
+    val scope = rememberCoroutineScope()
+
     Scaffold(
         modifier = Modifier.fillMaxSize(),
         topBar = {
@@ -42,7 +49,18 @@ fun HomeScreen(
                     }
                 },
                 actions = {
-                    IconButton(onClick = onNavigateToSettings) {
+                    IconButton(
+                        onClick = {
+                            if (clickHandler.isEnabled) {
+                                scope.launch {
+                                    clickHandler.processClick {
+                                        onNavigateToSettings()
+                                    }
+                                }
+                            }
+                        },
+                        enabled = clickHandler.isEnabled
+                    ) {
                         Icon(
                             imageVector = Icons.Filled.Settings,
                             contentDescription = stringResource(id = R.string.main_settings)
@@ -54,7 +72,15 @@ fun HomeScreen(
         floatingActionButton = {
             val newHabitLabel = stringResource(id = R.string.main_new_habit)
             ExtendedFloatingActionButton(
-                onClick = onCreateHabit,
+                onClick = {
+                    if (clickHandler.isEnabled) {
+                        scope.launch {
+                            clickHandler.processClick {
+                                onCreateHabit()
+                            }
+                        }
+                    }
+                },
                 icon = {
                     Icon(
                         imageVector = Icons.Filled.Add,
@@ -62,15 +88,25 @@ fun HomeScreen(
                     )
                 },
                 text = { Text(text = newHabitLabel) },
-                modifier = Modifier.semantics {
-                    contentDescription = newHabitLabel
-                }
+                modifier = Modifier
+                    .semantics {
+                        contentDescription = newHabitLabel
+                    }
+                    .alpha(if (clickHandler.isEnabled) 1f else 0.5f)
             )
         }
     ) { paddingValues ->
         EmptyStateContent(
             modifier = Modifier.padding(paddingValues),
-            onCreateHabit = onCreateHabit
+            onCreateHabit = {
+                if (clickHandler.isEnabled) {
+                    scope.launch {
+                        clickHandler.processClick {
+                            onCreateHabit()
+                        }
+                    }
+                }
+            }
         )
     }
 }

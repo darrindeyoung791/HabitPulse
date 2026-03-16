@@ -15,6 +15,9 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.*
 import io.github.darrindeyoung791.habitpulse.R
 import io.github.darrindeyoung791.habitpulse.ui.theme.HabitPulseTheme
+import io.github.darrindeyoung791.habitpulse.ui.utils.rememberDebounceClickHandler
+import io.github.darrindeyoung791.habitpulse.ui.utils.rememberNavigationGuard
+import kotlinx.coroutines.launch
 
 /**
  * 习惯编辑模式
@@ -28,10 +31,16 @@ enum class EditMode {
 @Composable
 fun HabitCreationScreen(
     onNavigateBack: () -> Unit,
-    editMode: EditMode = EditMode.CREATE
+    editMode: EditMode = EditMode.CREATE,
+    navController: androidx.navigation.NavHostController? = null
 ) {
     var habitName by remember { mutableStateOf("") }
     var isSaving by remember { mutableStateOf(false) }
+
+    // 防重复点击处理器，防止快速连续点击导致多次导航
+    val clickHandler = rememberDebounceClickHandler()
+    // 导航保护器，防止返回到主页以上
+    val navigationGuard = navController?.let { rememberNavigationGuard(it) }
 
     val titleRes = when (editMode) {
         EditMode.CREATE -> R.string.create_habit_title
@@ -49,7 +58,24 @@ fun HabitCreationScreen(
                     )
                 },
                 navigationIcon = {
-                    TextButton(onClick = onNavigateBack) {
+                    val scope = rememberCoroutineScope()
+                    TextButton(
+                        onClick = {
+                            if (clickHandler.isEnabled) {
+                                scope.launch {
+                                    clickHandler.processClick {
+                                        // 优先使用导航保护器进行安全返回
+                                        if (navigationGuard != null) {
+                                            navigationGuard.safePopBackStack()
+                                        } else {
+                                            onNavigateBack()
+                                        }
+                                    }
+                                }
+                            }
+                        },
+                        enabled = clickHandler.isEnabled
+                    ) {
                         Text(
                             text = stringResource(id = R.string.create_habit_cancel_button),
                             style = MaterialTheme.typography.bodyMedium
@@ -57,13 +83,25 @@ fun HabitCreationScreen(
                     }
                 },
                 actions = {
+                    val scope = rememberCoroutineScope()
                     TextButton(
                         onClick = {
-                            // TODO: Implement save logic
-                            isSaving = true
-                            onNavigateBack()
+                            if (clickHandler.isEnabled && habitName.isNotBlank() && !isSaving) {
+                                scope.launch {
+                                    clickHandler.processClick {
+                                        // TODO: Implement save logic
+                                        isSaving = true
+                                        // 优先使用导航保护器进行安全返回
+                                        if (navigationGuard != null) {
+                                            navigationGuard.safePopBackStack()
+                                        } else {
+                                            onNavigateBack()
+                                        }
+                                    }
+                                }
+                            }
                         },
-                        enabled = habitName.isNotBlank() && !isSaving
+                        enabled = habitName.isNotBlank() && !isSaving && clickHandler.isEnabled
                     ) {
                         Text(
                             text = stringResource(id = R.string.create_habit_save_button),

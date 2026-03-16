@@ -19,7 +19,7 @@
     <string name="create_habit_title">Create Habit</string>
     <string name="edit_habit_title">Edit Habit</string>
     <string name="create_habit_habit_name_label">Habit Name</string>
-    <string name="create_habit_habit_name_placeholder">e.g., Drink water daily, Read, Exercise</string>
+    <string name="create_habit_habit_name_placeholder">Try to drink water everyday</string>
     <string name="create_habit_save_button">Save</string>
     <string name="create_habit_cancel_button">Cancel</string>
 </resources>
