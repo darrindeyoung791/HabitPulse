@@ -33,6 +33,23 @@
     <string name="create_habit_time_picker_title">Select Reminder Time</string>
     <string name="create_habit_time_picker_confirm">OK</string>
     <string name="create_habit_time_picker_dismiss">Cancel</string>
+    <string name="create_habit_max_length_hint">Maximum 100 characters</string>
+    <string name="create_habit_supervision_label">Supervision Method</string>
+    <string name="create_habit_supervision_hint">Select supervision method</string>
+    <string name="create_habit_supervision_none">No supervision, local only</string>
+    <string name="create_habit_supervision_email">Email reporting</string>
+    <string name="create_habit_supervision_sms">SMS reporting</string>
+    <string name="create_habit_supervisor_email_label">Supervisor Email Address</string>
+    <string name="create_habit_supervisor_email_hint">Enter email address</string>
+    <string name="create_habit_supervisor_email_add">Add Email</string>
+    <string name="create_habit_supervisor_email_invalid">Please enter a valid email address</string>
+    <string name="create_habit_supervisor_phone_label">Supervisor Phone Number</string>
+    <string name="create_habit_supervisor_phone_hint">Enter phone number</string>
+    <string name="create_habit_supervisor_phone_add">Add Number</string>
+    <string name="create_habit_supervisor_phone_invalid">Please enter a valid phone number</string>
+    <string name="create_habit_notes_label">Notes</string>
+    <string name="create_habit_notes_hint">Notes, multi-line supported</string>
+    <string name="create_habit_notes_max_length_hint">Maximum 2000 characters</string>
     <string name="create_habit_save_button">Save</string>
     <string name="create_habit_cancel_button">Cancel</string>
 </resources>

@@ -34,6 +34,23 @@
     <string name="create_habit_time_picker_title">选择提醒时间</string>
     <string name="create_habit_time_picker_confirm">确定</string>
     <string name="create_habit_time_picker_dismiss">取消</string>
+    <string name="create_habit_max_length_hint">最多可输入 100 个字符</string>
+    <string name="create_habit_supervision_label">监督方式</string>
+    <string name="create_habit_supervision_hint">选择监督方式</string>
+    <string name="create_habit_supervision_none">不监督，仅本地联系我</string>
+    <string name="create_habit_supervision_email">邮件汇报</string>
+    <string name="create_habit_supervision_sms">短信汇报</string>
+    <string name="create_habit_supervisor_email_label">监督人邮箱地址</string>
+    <string name="create_habit_supervisor_email_hint">输入邮箱地址</string>
+    <string name="create_habit_supervisor_email_add">添加邮箱</string>
+    <string name="create_habit_supervisor_email_invalid">请输入有效的邮箱地址</string>
+    <string name="create_habit_supervisor_phone_label">监督人电话号码</string>
+    <string name="create_habit_supervisor_phone_hint">输入电话号码</string>
+    <string name="create_habit_supervisor_phone_add">添加号码</string>
+    <string name="create_habit_supervisor_phone_invalid">请输入有效的电话号码</string>
+    <string name="create_habit_notes_label">备注信息</string>
+    <string name="create_habit_notes_hint">备注信息，可换行</string>
+    <string name="create_habit_notes_max_length_hint">最多可输入 2000 个字符</string>
     <string name="create_habit_save_button">保存</string>
     <string name="create_habit_cancel_button">取消</string>
 </resources>

@@ -104,6 +104,12 @@ enum class RepeatCycle {
     WEEKLY   // 每周
 }
 
+enum class SupervisionMethod {
+    NONE,      // 不监督，仅本地联系
+    EMAIL,     // 邮件汇报
+    SMS        // 短信汇报
+}
+
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun HabitCreationScreen(
@@ -119,11 +125,71 @@ fun HabitCreationScreen(
     var showTimePicker by remember { mutableStateOf(false) }
     var currentTimePickerTime by remember { mutableStateOf(java.time.LocalTime.now()) }
     var isReminderExpanded by remember { mutableStateOf(false) }
+    var showMaxLengthToast by remember { mutableStateOf(false) }
+    
+    // Supervision method state
+    var supervisionMethod by remember { mutableStateOf(SupervisionMethod.NONE) }
+    var supervisorEmails by remember { mutableStateOf<List<String>>(emptyList()) }
+    var supervisorPhones by remember { mutableStateOf<List<String>>(emptyList()) }
+    var emailInput by remember { mutableStateOf("") }
+    var phoneInput by remember { mutableStateOf("") }
+    var showEmailError by remember { mutableStateOf(false) }
+    var showPhoneError by remember { mutableStateOf(false) }
+    var showEmailMaxToast by remember { mutableStateOf(false) }
+    var showPhoneMaxToast by remember { mutableStateOf(false) }
+    
+    // Notes state
+    var notes by remember { mutableStateOf("") }
+    var showNotesMaxToast by remember { mutableStateOf(false) }
 
     // 防重复点击处理器，防止快速连续点击导致多次导航
     val clickHandler = rememberDebounceClickHandler()
     // 导航保护器，防止返回到主页以上
     val navigationGuard = navController?.let { rememberNavigationGuard(it) }
+
+    // 显示最大长度 Toast
+    if (showMaxLengthToast) {
+        LaunchedEffect(Unit) {
+            android.widget.Toast.makeText(context, R.string.create_habit_max_length_hint, android.widget.Toast.LENGTH_SHORT).show()
+            showMaxLengthToast = false
+        }
+    }
+    
+    // 显示邮箱最大长度 Toast
+    if (showEmailMaxToast) {
+        LaunchedEffect(Unit) {
+            android.widget.Toast.makeText(context, R.string.create_habit_max_length_hint, android.widget.Toast.LENGTH_SHORT).show()
+            showEmailMaxToast = false
+        }
+    }
+    
+    // 显示电话最大长度 Toast
+    if (showPhoneMaxToast) {
+        LaunchedEffect(Unit) {
+            android.widget.Toast.makeText(context, R.string.create_habit_max_length_hint, android.widget.Toast.LENGTH_SHORT).show()
+            showPhoneMaxToast = false
+        }
+    }
+    
+    // 显示备注最大长度 Toast
+    if (showNotesMaxToast) {
+        LaunchedEffect(Unit) {
+            android.widget.Toast.makeText(context, R.string.create_habit_notes_max_length_hint, android.widget.Toast.LENGTH_SHORT).show()
+            showNotesMaxToast = false
+        }
+    }
+    
+    // 邮箱验证正则
+    fun isValidEmail(email: String): Boolean {
+        val emailPattern = "^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\\.[a-zA-Z]{2,}$"
+        return email.matches(emailPattern.toRegex())
+    }
+    
+    // 电话验证正则（简单验证，允许数字、+、-、空格）
+    fun isValidPhone(phone: String): Boolean {
+        val phonePattern = "^[+]?[0-9\\s-]{7,20}$"
+        return phone.matches(phonePattern.toRegex())
+    }
 
     val titleRes = when (editMode) {
         EditMode.CREATE -> R.string.create_habit_title
@@ -265,7 +331,12 @@ fun HabitCreationScreen(
             // Habit name input field
             OutlinedTextField(
                 value = habitName,
-                onValueChange = { habitName = it },
+                onValueChange = { newValue ->
+                    if (newValue.length > 100) {
+                        showMaxLengthToast = true
+                    }
+                    habitName = newValue.take(100)
+                },
                 label = {
                     Text(text = stringResource(id = R.string.create_habit_habit_name_label))
                 },
@@ -290,7 +361,8 @@ fun HabitCreationScreen(
                 modifier = Modifier.fillMaxWidth(),
                 colors = CardDefaults.cardColors(
                     containerColor = androidx.compose.ui.graphics.Color.Transparent
-                )
+                ),
+                shape = RoundedCornerShape(0.dp)
             ) {
                 Column(
                     modifier = Modifier
@@ -413,10 +485,303 @@ fun HabitCreationScreen(
                 )
             }
 
+            // Supervision method section
+            Card(
+                modifier = Modifier.fillMaxWidth(),
+                colors = CardDefaults.cardColors(
+                    containerColor = androidx.compose.ui.graphics.Color.Transparent
+                ),
+                shape = RoundedCornerShape(0.dp)
+            ) {
+                Column(
+                    modifier = Modifier.fillMaxWidth()
+                ) {
+                    Text(
+                        text = stringResource(id = R.string.create_habit_supervision_label),
+                        style = MaterialTheme.typography.bodyLarge,
+                        color = MaterialTheme.colorScheme.onSurface
+                    )
+                    
+                    Spacer(modifier = Modifier.height(8.dp))
+                    
+                    // Supervision method dropdown
+                    var expanded by remember { mutableStateOf(false) }
+                    val supervisionOptions = listOf(
+                        stringResource(id = R.string.create_habit_supervision_none),
+                        stringResource(id = R.string.create_habit_supervision_email),
+                        stringResource(id = R.string.create_habit_supervision_sms)
+                    )
+                    
+                    ExposedDropdownMenuBox(
+                        expanded = expanded,
+                        onExpandedChange = { expanded = !expanded }
+                    ) {
+                        OutlinedTextField(
+                            value = when (supervisionMethod) {
+                                SupervisionMethod.NONE -> supervisionOptions[0]
+                                SupervisionMethod.EMAIL -> supervisionOptions[1]
+                                SupervisionMethod.SMS -> supervisionOptions[2]
+                            },
+                            onValueChange = {},
+                            readOnly = true,
+                            label = {
+                                Text(text = stringResource(id = R.string.create_habit_supervision_hint))
+                            },
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .menuAnchor(),
+                            trailingIcon = {
+                                ExposedDropdownMenuDefaults.TrailingIcon(expanded = expanded)
+                            },
+                            colors = ExposedDropdownMenuDefaults.outlinedTextFieldColors()
+                        )
+                        
+                        ExposedDropdownMenu(
+                            expanded = expanded,
+                            onDismissRequest = { expanded = false }
+                        ) {
+                            supervisionOptions.forEachIndexed { index, option ->
+                                DropdownMenuItem(
+                                    text = { Text(option) },
+                                    onClick = {
+                                        supervisionMethod = when (index) {
+                                            0 -> SupervisionMethod.NONE
+                                            1 -> SupervisionMethod.EMAIL
+                                            2 -> SupervisionMethod.SMS
+                                            else -> SupervisionMethod.NONE
+                                        }
+                                        expanded = false
+                                    }
+                                )
+                            }
+                        }
+                    }
+                    
+                    // Email input section
+                    if (supervisionMethod == SupervisionMethod.EMAIL) {
+                        Spacer(modifier = Modifier.height(16.dp))
+                        
+                        Text(
+                            text = stringResource(id = R.string.create_habit_supervisor_email_label),
+                            style = MaterialTheme.typography.bodyMedium,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant
+                        )
+                        
+                        Spacer(modifier = Modifier.height(8.dp))
+                        
+                        // Email input row
+                        OutlinedTextField(
+                            value = emailInput,
+                            onValueChange = { 
+                                if (it.length <= 100) {
+                                    emailInput = it
+                                    showEmailError = false
+                                } else {
+                                    showEmailMaxToast = true
+                                }
+                            },
+                            label = {
+                                Text(text = stringResource(id = R.string.create_habit_supervisor_email_hint))
+                            },
+                            modifier = Modifier.fillMaxWidth(),
+                            singleLine = true,
+                            isError = showEmailError,
+                            supportingText = if (showEmailError) {
+                                {
+                                    Text(text = stringResource(id = R.string.create_habit_supervisor_email_invalid))
+                                }
+                            } else null,
+                            trailingIcon = {
+                                IconButton(
+                                    onClick = {
+                                        if (isValidEmail(emailInput) && !supervisorEmails.contains(emailInput)) {
+                                            supervisorEmails = supervisorEmails + emailInput
+                                            emailInput = ""
+                                            showEmailError = false
+                                        } else {
+                                            showEmailError = true
+                                        }
+                                    },
+                                    enabled = emailInput.isNotBlank()
+                                ) {
+                                    Icon(
+                                        imageVector = Icons.Outlined.Add,
+                                        contentDescription = stringResource(id = R.string.create_habit_supervisor_email_add),
+                                        tint = if (emailInput.isNotBlank()) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurfaceVariant
+                                    )
+                                }
+                            },
+                            colors = ExposedDropdownMenuDefaults.outlinedTextFieldColors()
+                        )
+                        
+                        // Email list
+                        if (supervisorEmails.isNotEmpty()) {
+                            Spacer(modifier = Modifier.height(8.dp))
+                            Column(
+                                verticalArrangement = Arrangement.spacedBy(4.dp)
+                            ) {
+                                supervisorEmails.forEachIndexed { index, email ->
+                                    Row(
+                                        modifier = Modifier.fillMaxWidth(),
+                                        horizontalArrangement = Arrangement.SpaceBetween,
+                                        verticalAlignment = Alignment.CenterVertically
+                                    ) {
+                                        Text(
+                                            text = email,
+                                            style = MaterialTheme.typography.bodyMedium,
+                                            color = MaterialTheme.colorScheme.onSurfaceVariant
+                                        )
+                                        IconButton(
+                                            onClick = {
+                                                supervisorEmails = supervisorEmails.filterIndexed { i, _ -> i != index }
+                                            }
+                                        ) {
+                                            Icon(
+                                                imageVector = Icons.Outlined.Delete,
+                                                contentDescription = "删除邮箱",
+                                                tint = MaterialTheme.colorScheme.error
+                                            )
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }
+                    
+                    // Phone input section
+                    if (supervisionMethod == SupervisionMethod.SMS) {
+                        Spacer(modifier = Modifier.height(16.dp))
+                        
+                        Text(
+                            text = stringResource(id = R.string.create_habit_supervisor_phone_label),
+                            style = MaterialTheme.typography.bodyMedium,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant
+                        )
+                        
+                        Spacer(modifier = Modifier.height(8.dp))
+                        
+                        // Phone input row
+                        OutlinedTextField(
+                            value = phoneInput,
+                            onValueChange = { 
+                                if (it.length <= 20) {
+                                    phoneInput = it
+                                    showPhoneError = false
+                                } else {
+                                    showPhoneMaxToast = true
+                                }
+                            },
+                            label = {
+                                Text(text = stringResource(id = R.string.create_habit_supervisor_phone_hint))
+                            },
+                            modifier = Modifier.fillMaxWidth(),
+                            singleLine = true,
+                            isError = showPhoneError,
+                            supportingText = if (showPhoneError) {
+                                {
+                                    Text(text = stringResource(id = R.string.create_habit_supervisor_phone_invalid))
+                                }
+                            } else null,
+                            trailingIcon = {
+                                IconButton(
+                                    onClick = {
+                                        if (isValidPhone(phoneInput) && !supervisorPhones.contains(phoneInput)) {
+                                            supervisorPhones = supervisorPhones + phoneInput
+                                            phoneInput = ""
+                                            showPhoneError = false
+                                        } else {
+                                            showPhoneError = true
+                                        }
+                                    },
+                                    enabled = phoneInput.isNotBlank()
+                                ) {
+                                    Icon(
+                                        imageVector = Icons.Outlined.Add,
+                                        contentDescription = stringResource(id = R.string.create_habit_supervisor_phone_add),
+                                        tint = if (phoneInput.isNotBlank()) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurfaceVariant
+                                    )
+                                }
+                            },
+                            colors = ExposedDropdownMenuDefaults.outlinedTextFieldColors()
+                        )
+                        
+                        // Phone list
+                        if (supervisorPhones.isNotEmpty()) {
+                            Spacer(modifier = Modifier.height(8.dp))
+                            Column(
+                                verticalArrangement = Arrangement.spacedBy(4.dp)
+                            ) {
+                                supervisorPhones.forEachIndexed { index, phone ->
+                                    Row(
+                                        modifier = Modifier.fillMaxWidth(),
+                                        horizontalArrangement = Arrangement.SpaceBetween,
+                                        verticalAlignment = Alignment.CenterVertically
+                                    ) {
+                                        Text(
+                                            text = phone,
+                                            style = MaterialTheme.typography.bodyMedium,
+                                            color = MaterialTheme.colorScheme.onSurfaceVariant
+                                        )
+                                        IconButton(
+                                            onClick = {
+                                                supervisorPhones = supervisorPhones.filterIndexed { i, _ -> i != index }
+                                            }
+                                        ) {
+                                            Icon(
+                                                imageVector = Icons.Outlined.Delete,
+                                                contentDescription = "删除号码",
+                                                tint = MaterialTheme.colorScheme.error
+                                            )
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+
+            // Notes section
+            Card(
+                modifier = Modifier.fillMaxWidth(),
+                colors = CardDefaults.cardColors(
+                    containerColor = androidx.compose.ui.graphics.Color.Transparent
+                ),
+                shape = RoundedCornerShape(0.dp)
+            ) {
+                Column(
+                    modifier = Modifier.fillMaxWidth()
+                ) {
+                    Text(
+                        text = stringResource(id = R.string.create_habit_notes_label),
+                        style = MaterialTheme.typography.bodyLarge,
+                        color = MaterialTheme.colorScheme.onSurface
+                    )
+                    
+                    Spacer(modifier = Modifier.height(8.dp))
+                    
+                    OutlinedTextField(
+                        value = notes,
+                        onValueChange = { 
+                            if (it.length <= 2000) {
+                                notes = it
+                            } else {
+                                showNotesMaxToast = true
+                            }
+                        },
+                        label = {
+                            Text(text = stringResource(id = R.string.create_habit_notes_hint))
+                        },
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .heightIn(min = 120.dp),
+                        maxLines = 10,
+                    )
+                }
+            }
+
             // TODO: Add more habit creation fields here
-            // - Reminder times
-            // - Notes
-            // - Supervision settings
+            // - Habit repeat days (for weekly cycle)
 
             Spacer(modifier = Modifier.weight(1f))
 
