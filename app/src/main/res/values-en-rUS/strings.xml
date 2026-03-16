@@ -6,7 +6,7 @@
     <string name="settings_developer">Developer</string>
     <string name="settings_back">Back</string>
     <string name="settings_about_section">About</string>
-    <string name="settings_privacy_notice">%1$s takes your privacy very seriously. Your data is always stored on your device, and %1$s does not access the internet.</string>
+    <string name="settings_privacy_notice">%1$s takes your privacy seriously. Your data is stored on your device, and %1$s does not access the internet.</string>
     <string name="settings_app_version_label">Version</string>
     <string name="settings_app_info_button">App info…</string>
     <string name="settings_github_button">GitHub repo…</string>
@@ -19,14 +19,20 @@
     <string name="create_habit_title">Create Habit</string>
     <string name="edit_habit_title">Edit Habit</string>
     <string name="create_habit_habit_name_label">Habit Name</string>
-    <string name="create_habit_habit_name_placeholder">Try to drink water everyday</string>
+    <string name="create_habit_habit_name_placeholder">Try typing drink water</string>
     <string name="create_habit_repeat_cycle_label">Repeat Cycle</string>
     <string name="create_habit_daily_option">Daily</string>
     <string name="create_habit_weekly_option">Weekly</string>
-    <string name="create_habit_reminder_time_label">Reminder Time</string>
-    <string name="create_habit_no_reminder_set">No reminder set</string>
-    <string name="create_habit_reminder_set_count">%d reminders set</string>
-    <string name="create_habit_add_reminder_button">Add Reminder</string>
+    <string name="create_habit_reminder_time_label">Reminder Times</string>
+    <string name="create_habit_no_reminder_set">No reminder times set</string>
+    <string name="create_habit_reminder_set_count">%d reminder times set</string>
+    <string name="create_habit_add_reminder_button">Add Time</string>
+    <string name="create_habit_expand_button">Expand</string>
+    <string name="create_habit_collapse_button">Collapse</string>
+    <string name="create_habit_duplicate_time">This time already exists</string>
+    <string name="create_habit_time_picker_title">Select Reminder Time</string>
+    <string name="create_habit_time_picker_confirm">OK</string>
+    <string name="create_habit_time_picker_dismiss">Cancel</string>
     <string name="create_habit_save_button">Save</string>
     <string name="create_habit_cancel_button">Cancel</string>
 </resources>

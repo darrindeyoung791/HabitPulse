@@ -1,6 +1,9 @@
 package io.github.darrindeyoung791.habitpulse.ui.screens
 
 import androidx.compose.animation.core.animateDpAsState
+import androidx.compose.animation.expandVertically
+import androidx.compose.animation.shrinkVertically
+import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.interaction.collectIsPressedAsState
@@ -45,7 +48,7 @@ fun TimePickerDialog(
     TimePickerDialog(
         onDismissRequest = onDismissRequest,
         title = {
-            TimePickerDialogDefaults.Title(displayMode = displayMode)
+            Text(text = "")
         },
         confirmButton = {
             TextButton(
@@ -54,14 +57,14 @@ fun TimePickerDialog(
                     onConfirmRequest(selectedTime)
                 }
             ) {
-                Text("确定")
+                Text(text = stringResource(id = R.string.create_habit_time_picker_confirm))
             }
         },
         dismissButton = {
             TextButton(
                 onClick = onDismissRequest
             ) {
-                Text("取消")
+                Text(text = stringResource(id = R.string.create_habit_time_picker_dismiss))
             }
         },
         modeToggleButton = {
@@ -115,6 +118,7 @@ fun HabitCreationScreen(
     var reminderTimes by remember { mutableStateOf<List<String>>(emptyList()) }
     var showTimePicker by remember { mutableStateOf(false) }
     var currentTimePickerTime by remember { mutableStateOf(java.time.LocalTime.now()) }
+    var isReminderExpanded by remember { mutableStateOf(false) }
 
     // 防重复点击处理器，防止快速连续点击导致多次导航
     val clickHandler = rememberDebounceClickHandler()
@@ -292,7 +296,7 @@ fun HabitCreationScreen(
                     modifier = Modifier
                         .fillMaxWidth()
                 ) {
-                    // Header row
+                    // Header row with add button
                     Row(
                         modifier = Modifier.fillMaxWidth(),
                         horizontalArrangement = Arrangement.SpaceBetween,
@@ -315,15 +319,52 @@ fun HabitCreationScreen(
                     
                     Spacer(modifier = Modifier.height(8.dp))
                     
-                    // Reminder count and times
-                    if (reminderTimes.isEmpty()) {
+                    // Reminder status row
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.SpaceBetween,
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
                         Text(
-                            text = stringResource(id = R.string.create_habit_no_reminder_set),
+                            text = if (reminderTimes.isEmpty()) {
+                                stringResource(id = R.string.create_habit_no_reminder_set)
+                            } else if (isReminderExpanded) {
+                                stringResource(id = R.string.create_habit_reminder_set_count, reminderTimes.size)
+                            } else {
+                                stringResource(id = R.string.create_habit_reminder_set_count, reminderTimes.size)
+                            },
                             style = MaterialTheme.typography.bodyMedium,
                             color = MaterialTheme.colorScheme.onSurfaceVariant
                         )
-                    } else {
+                        
+                        if (reminderTimes.isNotEmpty()) {
+                            TextButton(
+                                onClick = { isReminderExpanded = !isReminderExpanded }
+                            ) {
+                                Text(
+                                    text = if (isReminderExpanded) {
+                                        stringResource(id = R.string.create_habit_collapse_button)
+                                    } else {
+                                        stringResource(id = R.string.create_habit_expand_button)
+                                    }
+                                )
+                                Icon(
+                                    imageVector = if (isReminderExpanded) Icons.Outlined.KeyboardArrowUp else Icons.Outlined.KeyboardArrowDown,
+                                    contentDescription = if (isReminderExpanded) "收起" else "展开",
+                                    modifier = Modifier.size(18.dp)
+                                )
+                            }
+                        }
+                    }
+                    
+                    // Expandable reminder times list
+                    AnimatedVisibility(
+                        visible = isReminderExpanded && reminderTimes.isNotEmpty(),
+                        enter = expandVertically(),
+                        exit = shrinkVertically()
+                    ) {
                         Column(
+                            modifier = Modifier.padding(top = 8.dp),
                             verticalArrangement = Arrangement.spacedBy(8.dp)
                         ) {
                             reminderTimes.forEachIndexed { index, time ->
@@ -363,7 +404,7 @@ fun HabitCreationScreen(
                     onConfirmRequest = { selectedTime ->
                         val timeString = String.format("%02d:%02d", selectedTime.hour, selectedTime.minute)
                         if (reminderTimes.contains(timeString)) {
-                            android.widget.Toast.makeText(context, "该时间已存在", android.widget.Toast.LENGTH_SHORT).show()
+                            android.widget.Toast.makeText(context, context.getString(R.string.create_habit_duplicate_time), android.widget.Toast.LENGTH_SHORT).show()
                         } else {
                             reminderTimes = reminderTimes + timeString
                         }
