@@ -21,6 +21,13 @@
     <string name="edit_habit_title">编辑习惯</string>
     <string name="create_habit_habit_name_label">习惯名称</string>
     <string name="create_habit_habit_name_placeholder">你也许想试试：每天喝水</string>
+    <string name="create_habit_repeat_cycle_label">重复周期</string>
+    <string name="create_habit_daily_option">每日</string>
+    <string name="create_habit_weekly_option">每周</string>
+    <string name="create_habit_reminder_time_label">提醒时间</string>
+    <string name="create_habit_no_reminder_set">未设置提醒时间</string>
+    <string name="create_habit_reminder_set_count">已设置 %d 个提醒时间</string>
+    <string name="create_habit_add_reminder_button">添加提醒时间</string>
     <string name="create_habit_save_button">保存</string>
     <string name="create_habit_cancel_button">取消</string>
 </resources>
