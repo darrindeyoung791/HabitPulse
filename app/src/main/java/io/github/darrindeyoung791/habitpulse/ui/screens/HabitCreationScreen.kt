@@ -15,6 +15,7 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
+import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.material.icons.*
 import androidx.compose.material.icons.outlined.*
@@ -687,6 +688,9 @@ fun HabitCreationScreen(
                                         Text(text = stringResource(id = R.string.create_habit_supervisor_email_invalid))
                                     }
                                 } else null,
+                                keyboardOptions = KeyboardOptions(
+                                    keyboardType = KeyboardType.Email
+                                ),
                                 trailingIcon = {
                                     IconButton(
                                         onClick = {
@@ -829,6 +833,9 @@ fun HabitCreationScreen(
                                         Text(text = stringResource(id = R.string.create_habit_supervisor_phone_invalid))
                                     }
                                 } else null,
+                                keyboardOptions = KeyboardOptions(
+                                    keyboardType = KeyboardType.Phone
+                                ),
                                 trailingIcon = {
                                     IconButton(
                                         onClick = {
