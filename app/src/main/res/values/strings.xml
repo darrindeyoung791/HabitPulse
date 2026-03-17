@@ -37,9 +37,11 @@
     <string name="create_habit_no_reminder_set">未设置提醒时间</string>
     <string name="create_habit_reminder_set_count">已设置 %d 个提醒时间</string>
     <string name="create_habit_add_reminder_button">添加提醒时间</string>
+    <string name="create_habit_supervisor_count">已设置 %d 个监督人</string>
     <string name="create_habit_expand_button">展开</string>
     <string name="create_habit_collapse_button">收起</string>
     <string name="create_habit_duplicate_time">该时间已存在</string>
+    <string name="create_habit_duplicate_supervisor">该监督人已存在</string>
     <string name="create_habit_time_picker_title">选择提醒时间</string>
     <string name="create_habit_time_picker_confirm">确定</string>
     <string name="create_habit_time_picker_dismiss">取消</string>
