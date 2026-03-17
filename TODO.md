@@ -1,7 +1,6 @@
 # TODO 
 1. MainActivity
-    - [ ] Extended FAB 无法被 TalkBack 读取
-    - [ ] Modal bottom sheet 在横屏下的最大宽度需要调小，不能占据一屏宽
+    - [x] Extended FAB 无法被 TalkBack 读取
 2. CalendarActivity
     - [ ] 为日历按钮设计对应界面
 3. SettingsActivity

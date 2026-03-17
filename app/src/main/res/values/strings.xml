@@ -1,3 +1,4 @@
+<?xml version="1.0" encoding="utf-8"?>
 <resources>
     <string name="app_name" translatable="false">HabitPulse</string>
     <string name="settings_title">设置</string>
@@ -48,7 +49,7 @@
     <string name="create_habit_max_length_hint">最多可输入 100 个字符</string>
     <string name="create_habit_supervision_label">监督方式</string>
     <string name="create_habit_supervision_hint">选择监督方式</string>
-    <string name="create_habit_supervision_none">不监督，仅本地联系我</string>
+    <string name="create_habit_supervision_none">不监督，仅本地提醒我</string>
     <string name="create_habit_supervision_email">邮件汇报</string>
     <string name="create_habit_supervision_sms">短信汇报</string>
     <string name="create_habit_supervisor_email_label">监督人邮箱地址</string>
