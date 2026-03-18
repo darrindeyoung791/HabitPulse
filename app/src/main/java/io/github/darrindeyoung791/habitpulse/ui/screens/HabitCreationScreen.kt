@@ -253,17 +253,61 @@ fun HabitCreationScreen(
             showDuplicatePhoneToast = false
         }
     }
-    
+
+    // 显示必填项验证 Toast
+    var showValidationFailedToast by remember { mutableStateOf(false) }
+    if (showValidationFailedToast) {
+        LaunchedEffect(Unit) {
+            android.widget.Toast.makeText(context, R.string.create_habit_validation_failed, android.widget.Toast.LENGTH_SHORT).show()
+            showValidationFailedToast = false
+        }
+    }
+
     // 邮箱验证正则
     fun isValidEmail(email: String): Boolean {
         val emailPattern = "^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\\.[a-zA-Z]{2,}$"
         return email.matches(emailPattern.toRegex())
     }
-    
+
     // 电话验证正则（简单验证，允许数字、+、-、空格）
     fun isValidPhone(phone: String): Boolean {
         val phonePattern = "^[+]?[0-9\\s-]{7,20}$"
         return phone.matches(phonePattern.toRegex())
+    }
+
+    // 验证必填项
+    fun validateInputs(): Boolean {
+        // 习惯名称必填
+        if (habitName.isBlank()) {
+            showValidationFailedToast = true
+            return false
+        }
+        
+        // 提醒时间必填
+        if (reminderTimes.isEmpty()) {
+            showValidationFailedToast = true
+            return false
+        }
+        
+        // 每周活动必须选中至少一天
+        if (repeatCycle == RepeatCycle.WEEKLY && selectedRepeatDays.isEmpty()) {
+            showValidationFailedToast = true
+            return false
+        }
+        
+        // 选择邮件监督时，至少添加一个邮箱
+        if (supervisionMethod == SupervisionMethod.EMAIL && supervisorEmails.isEmpty()) {
+            showValidationFailedToast = true
+            return false
+        }
+        
+        // 选择短信监督时，至少添加一个电话号码
+        if (supervisionMethod == SupervisionMethod.SMS && supervisorPhones.isEmpty()) {
+            showValidationFailedToast = true
+            return false
+        }
+        
+        return true
     }
 
     val titleRes = when (editMode) {
@@ -310,9 +354,14 @@ fun HabitCreationScreen(
                     val scope = rememberCoroutineScope()
                     TextButton(
                         onClick = {
-                            if (clickHandler.isEnabled && habitName.isNotBlank() && !isSaving) {
+                            if (clickHandler.isEnabled && !isSaving) {
                                 scope.launch {
                                     clickHandler.processClick {
+                                        // 验证必填项
+                                        if (!validateInputs()) {
+                                            return@processClick
+                                        }
+                                        
                                         // 构建 Habit 对象
                                         val habit = if (editMode == EditMode.EDIT && habitId != null) {
                                             // 编辑模式：更新现有习惯
@@ -347,7 +396,7 @@ fun HabitCreationScreen(
                                 }
                             }
                         },
-                        enabled = habitName.isNotBlank() && !isSaving && clickHandler.isEnabled
+                        enabled = !isSaving && clickHandler.isEnabled
                     ) {
                         Text(
                             text = stringResource(id = R.string.create_habit_save_button),

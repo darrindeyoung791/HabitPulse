@@ -63,4 +63,5 @@
     <string name="create_habit_notes_max_length_hint">Maximum 2000 characters</string>
     <string name="create_habit_save_button">Save</string>
     <string name="create_habit_cancel_button">Cancel</string>
+    <string name="create_habit_validation_failed">Please fill in all required fields</string>
 </resources>
