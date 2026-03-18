@@ -27,12 +27,20 @@ import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.KeyboardCapitalization
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.*
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import io.github.darrindeyoung791.habitpulse.HabitPulseApplication
 import io.github.darrindeyoung791.habitpulse.R
+import io.github.darrindeyoung791.habitpulse.data.model.Habit
+import io.github.darrindeyoung791.habitpulse.data.model.RepeatCycle
+import io.github.darrindeyoung791.habitpulse.data.model.SupervisionMethod
 import io.github.darrindeyoung791.habitpulse.ui.theme.HabitPulseTheme
 import io.github.darrindeyoung791.habitpulse.ui.utils.rememberDebounceClickHandler
 import io.github.darrindeyoung791.habitpulse.ui.utils.rememberNavigationGuard
+import io.github.darrindeyoung791.habitpulse.viewmodel.HabitViewModel
 import kotlinx.coroutines.launch
+import org.json.JSONArray
 import java.time.LocalTime
+import java.util.UUID
 
 /**
  * TimePicker 对话框
@@ -121,18 +129,31 @@ enum class SupervisionMethod {
 fun HabitCreationScreen(
     onNavigateBack: () -> Unit,
     editMode: EditMode = EditMode.CREATE,
-    navController: androidx.navigation.NavHostController? = null
+    habitId: UUID? = null,
+    navController: androidx.navigation.NavHostController? = null,
+    application: HabitPulseApplication? = null
 ) {
     val context = androidx.compose.ui.platform.LocalContext.current
+    val app = application ?: context.applicationContext as HabitPulseApplication
+    
+    // 获取 ViewModel
+    val viewModel: HabitViewModel = remember {
+        HabitViewModel.Factory(app).create(HabitViewModel::class.java)
+    }
+    
+    // 收集 ViewModel 状态
+    val isSaving by viewModel.isSaving.collectAsStateWithLifecycle()
+    val saveSuccess by viewModel.saveSuccess.collectAsStateWithLifecycle()
+    
+    // UI 状态变量
     var habitName by remember { mutableStateOf("") }
-    var isSaving by remember { mutableStateOf(false) }
     var repeatCycle by remember { mutableStateOf(RepeatCycle.DAILY) }
     var reminderTimes by remember { mutableStateOf<List<String>>(emptyList()) }
     var showTimePicker by remember { mutableStateOf(false) }
     var currentTimePickerTime by remember { mutableStateOf(java.time.LocalTime.now()) }
     var isReminderExpanded by remember { mutableStateOf(false) }
     var showMaxLengthToast by remember { mutableStateOf(false) }
-    
+
     // Supervision method state
     var supervisionMethod by remember { mutableStateOf(SupervisionMethod.NONE) }
     var supervisorEmails by remember { mutableStateOf<List<String>>(emptyList()) }
@@ -147,13 +168,38 @@ fun HabitCreationScreen(
     var showDuplicatePhoneToast by remember { mutableStateOf(false) }
     var isEmailListExpanded by remember { mutableStateOf(false) }
     var isPhoneListExpanded by remember { mutableStateOf(false) }
-    
+
     // Repeat days state (for weekly cycle)
-    var selectedRepeatDays by remember { mutableStateOf<Set<Int>>(setOf()) } // 0=Sunday, 1=Monday, etc.
-    
+    var selectedRepeatDays by remember { mutableStateOf<Set<Int>>(setOf()) }
+
     // Notes state
     var notes by remember { mutableStateOf("") }
     var showNotesMaxToast by remember { mutableStateOf(false) }
+    
+    // 加载现有习惯数据（编辑模式）
+    LaunchedEffect(habitId, editMode) {
+        if (editMode == EditMode.EDIT && habitId != null) {
+            val habit = viewModel.getHabitById(habitId)
+            habit?.let {
+                habitName = it.title
+                repeatCycle = it.repeatCycle
+                selectedRepeatDays = it.getRepeatDaysList().toSet()
+                reminderTimes = it.getReminderTimesList()
+                notes = it.notes
+                supervisionMethod = it.supervisionMethod
+                supervisorEmails = it.getSupervisorEmailsList()
+                supervisorPhones = it.getSupervisorPhonesList()
+            }
+        }
+    }
+    
+    // 处理保存成功后的导航
+    LaunchedEffect(saveSuccess) {
+        if (saveSuccess == true) {
+            onNavigateBack()
+            viewModel.resetSaveSuccess()
+        }
+    }
 
     // 防重复点击处理器，防止快速连续点击导致多次导航
     val clickHandler = rememberDebounceClickHandler()
@@ -267,13 +313,35 @@ fun HabitCreationScreen(
                             if (clickHandler.isEnabled && habitName.isNotBlank() && !isSaving) {
                                 scope.launch {
                                     clickHandler.processClick {
-                                        // TODO: Implement save logic
-                                        isSaving = true
-                                        // 优先使用导航保护器进行安全返回
-                                        if (navigationGuard != null) {
-                                            navigationGuard.safePopBackStack()
+                                        // 构建 Habit 对象
+                                        val habit = if (editMode == EditMode.EDIT && habitId != null) {
+                                            // 编辑模式：更新现有习惯
+                                            viewModel.getHabitById(habitId)?.copy(
+                                                title = habitName,
+                                                repeatCycle = repeatCycle,
+                                                notes = notes,
+                                                supervisionMethod = supervisionMethod
+                                            )?.copyWithRepeatDays(selectedRepeatDays.toList())
+                                            ?.copyWithReminderTimes(reminderTimes)
+                                            ?.copyWithSupervisorEmails(supervisorEmails)
+                                            ?.copyWithSupervisorPhones(supervisorPhones)
                                         } else {
-                                            onNavigateBack()
+                                            // 新建模式：创建新习惯
+                                            Habit(
+                                                title = habitName,
+                                                repeatCycle = repeatCycle,
+                                                notes = notes,
+                                                supervisionMethod = supervisionMethod
+                                            )
+                                            .copyWithRepeatDays(selectedRepeatDays.toList())
+                                            .copyWithReminderTimes(reminderTimes)
+                                            .copyWithSupervisorEmails(supervisorEmails)
+                                            .copyWithSupervisorPhones(supervisorPhones)
+                                        }
+                                        
+                                        // 保存习惯
+                                        if (habit != null) {
+                                            viewModel.saveHabit(habit)
                                         }
                                     }
                                 }

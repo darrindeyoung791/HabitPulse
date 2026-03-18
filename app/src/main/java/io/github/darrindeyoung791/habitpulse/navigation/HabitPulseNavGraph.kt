@@ -12,11 +12,17 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.navigation.NavHostController
+import androidx.navigation.NavType
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
+import androidx.navigation.navArgument
+import io.github.darrindeyoung791.habitpulse.HabitPulseApplication
 import io.github.darrindeyoung791.habitpulse.SettingsActivity
+import io.github.darrindeyoung791.habitpulse.data.model.Habit
+import io.github.darrindeyoung791.habitpulse.ui.screens.EditMode
 import io.github.darrindeyoung791.habitpulse.ui.screens.HabitCreationScreen
 import io.github.darrindeyoung791.habitpulse.ui.screens.HomeScreen
+import java.util.UUID
 
 /**
  * 获取设备圆角半径（Android 12+）
@@ -101,7 +107,16 @@ fun HabitPulseNavGraph(navController: NavHostController) {
                     onNavigateToSettings = {
                         val intent = android.content.Intent(context, SettingsActivity::class.java)
                         context.startActivity(intent)
-                    }
+                    },
+                    onEditHabit = { habit ->
+                        navController.navigate(Route.EditHabit.createRoute(habit.id)) {
+                            launchSingleTop = true
+                            popUpTo(Route.Home.route) {
+                                inclusive = false
+                            }
+                        }
+                    },
+                    application = context.applicationContext as HabitPulseApplication
                 )
             }
         }
@@ -132,7 +147,47 @@ fun HabitPulseNavGraph(navController: NavHostController) {
                     onNavigateBack = {
                         navController.popBackStack()
                     },
-                    navController = navController
+                    editMode = EditMode.CREATE,
+                    navController = navController,
+                    application = context.applicationContext as HabitPulseApplication
+                )
+            }
+        }
+        composable(
+            route = Route.EditHabit.route,
+            arguments = listOf(
+                navArgument("habitId") { type = NavType.StringType }
+            ),
+            enterTransition = {
+                slideInVertically(
+                    initialOffsetY = { fullHeight -> fullHeight },
+                    animationSpec = spring(
+                        dampingRatio = 0.75f,
+                        stiffness = Spring.StiffnessLow
+                    )
+                ) + fadeIn(animationSpec = tween(durationMillis = 400))
+            },
+            exitTransition = {
+                slideOutVertically(
+                    targetOffsetY = { fullHeight -> fullHeight },
+                    animationSpec = tween(durationMillis = 200)
+                ) + fadeOut(animationSpec = tween(durationMillis = 200))
+            }
+        ) { backStackEntry ->
+            val habitId = UUID.fromString(backStackEntry.arguments?.getString("habitId"))
+            Box(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .clip(RoundedCornerShape(cornerRadius))
+            ) {
+                HabitCreationScreen(
+                    onNavigateBack = {
+                        navController.popBackStack()
+                    },
+                    editMode = EditMode.EDIT,
+                    habitId = habitId,
+                    navController = navController,
+                    application = context.applicationContext as HabitPulseApplication
                 )
             }
         }
