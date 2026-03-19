@@ -21,6 +21,8 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.ui.platform.LocalConfiguration
+import androidx.compose.ui.platform.LocalDensity
+import androidx.compose.ui.platform.LocalLayoutDirection
 import androidx.compose.ui.*
 import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.draw.clip
@@ -103,6 +105,11 @@ fun HomeScreen(
 
     val appName = stringResource(id = R.string.app_name)
 
+    val displayCutout = WindowInsets.displayCutout
+    val layoutDirection = LocalLayoutDirection.current
+    val isRailCutoutLeft = useRail && displayCutout.getLeft(LocalDensity.current, layoutDirection) > 0
+    val isRailCutoutRight = useRail && displayCutout.getRight(LocalDensity.current, layoutDirection) > 0
+
     val sectionItems = listOf(
         HomeSection.Todo,
         HomeSection.Count,
@@ -168,8 +175,15 @@ fun HomeScreen(
         if (isRailVisible) {
             // Phone landscape: use TopAppBar (always collapsed state)
             // to save vertical space
-            // Window insets are applied by the parent Column
+            // For phone landscape with rail, only apply top inset by default.
+            // If cutout is on right side, also apply end inset to keep settings icon safe.
             TopAppBar(
+                windowInsets = WindowInsets(0, 0, 0, 0),
+                modifier = Modifier.windowInsetsPadding(
+                    WindowInsets.safeDrawing.only(
+                        if (isRailCutoutRight) WindowInsetsSides.Top + WindowInsetsSides.End else WindowInsetsSides.Top
+                    )
+                ),
                 title = {
                     Text(
                         text = appName,
@@ -388,7 +402,7 @@ fun HomeScreen(
             NavigationRail(
                 modifier = Modifier
                     .fillMaxHeight()
-                    .windowInsetsPadding(WindowInsets.systemBars.only(WindowInsetsSides.Start))
+                    .windowInsetsPadding(WindowInsets.safeDrawing.only(WindowInsetsSides.Start))
             ) {
                 sectionItems.forEach { section ->
                     NavigationRailItem(
@@ -420,12 +434,16 @@ fun HomeScreen(
             }
 
             // Content area on right side
-            // Apply end inset to handle camera cutout on right
+            // Apply top inset always; apply end inset only when camera cutout is on right.
             Column(
                 modifier = Modifier
                     .fillMaxSize()
                     .weight(1f)
-                    .windowInsetsPadding(WindowInsets.systemBars.only(WindowInsetsSides.End + WindowInsetsSides.Top))
+                    .windowInsetsPadding(
+                        WindowInsets.safeDrawing.only(
+                            if (isRailCutoutRight) WindowInsetsSides.Top + WindowInsetsSides.End else WindowInsetsSides.Top
+                        )
+                    )
             ) {
                 // TopAppBar
                 topAppBarContent(true)
@@ -439,8 +457,8 @@ fun HomeScreen(
                         Modifier.fillMaxSize().padding(top = 4.dp),
                         null
                     )
-                    
-                    // FAB - floating above content, no padding needed
+
+                    // FAB - floating above content, safe with right inset when needed
                     if (showFab) {
                         ExtendedFloatingActionButton(
                             onClick = {
@@ -458,6 +476,11 @@ fun HomeScreen(
                             text = { Text(text = newHabitLabel) },
                             modifier = Modifier
                                 .align(Alignment.BottomEnd)
+                                .windowInsetsPadding(
+                                    WindowInsets.safeDrawing.only(
+                                        if (isRailCutoutRight) WindowInsetsSides.Bottom + WindowInsetsSides.End else WindowInsetsSides.Bottom
+                                    )
+                                )
                                 .padding(16.dp)
                                 .semantics { contentDescription = newHabitLabel }
                                 .alpha(if (clickHandler.isEnabled) 1f else 0.5f)
