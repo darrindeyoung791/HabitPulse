@@ -223,15 +223,68 @@ fun HabitListContent(
     val configuration = LocalConfiguration.current
     val isLandscape = configuration.orientation == Configuration.ORIENTATION_LANDSCAPE
     val screenWidthDp = configuration.screenWidthDp
-    val columns = if (isLandscape && screenWidthDp >= 840) 2 else 1
+    val useStaggeredGrid = isLandscape && screenWidthDp >= 840
 
-    LazyColumn(
-        modifier = modifier.fillMaxSize(),
-        contentPadding = PaddingValues(16.dp),
-        verticalArrangement = Arrangement.spacedBy(8.dp)
-    ) {
-        if (columns == 1) {
-            // Single column layout
+    if (useStaggeredGrid) {
+        // Waterfall layout with synchronized scrolling for landscape tablets
+        // Split habits into two columns: odd and even indices
+        val column1Habits = habits.filterIndexed { index, _ -> index % 2 == 0 }
+        val column2Habits = habits.filterIndexed { index, _ -> index % 2 == 1 }
+
+        Column(
+            modifier = modifier
+                .fillMaxSize()
+                .verticalScroll(rememberScrollState())
+                .padding(horizontal = 16.dp, vertical = 16.dp)
+        ) {
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.spacedBy(16.dp)
+            ) {
+                // Left column
+                Column(
+                    modifier = Modifier.weight(1f),
+                    verticalArrangement = Arrangement.spacedBy(8.dp)
+                ) {
+                    column1Habits.forEach { habit ->
+                        HabitCard(
+                            habit = habit,
+                            onClick = { onHabitClick(habit) },
+                            onCheckIn = { onCheckIn(habit) },
+                            onUndoCompletion = { onUndoCompletion(habit) },
+                            onEditHabit = { onHabitClick(habit) },
+                            onDeleteHabit = { onDeleteHabit(habit) }
+                        )
+                    }
+                }
+
+                // Right column
+                Column(
+                    modifier = Modifier.weight(1f),
+                    verticalArrangement = Arrangement.spacedBy(8.dp)
+                ) {
+                    column2Habits.forEach { habit ->
+                        HabitCard(
+                            habit = habit,
+                            onClick = { onHabitClick(habit) },
+                            onCheckIn = { onCheckIn(habit) },
+                            onUndoCompletion = { onUndoCompletion(habit) },
+                            onEditHabit = { onHabitClick(habit) },
+                            onDeleteHabit = { onDeleteHabit(habit) }
+                        )
+                    }
+                }
+            }
+            // Add bottom spacer to prevent FAB from covering last item
+            Spacer(modifier = Modifier.height(100.dp))
+        }
+    } else {
+        // Single column layout for phones and portrait mode
+        LazyColumn(
+            modifier = modifier.fillMaxSize(),
+            contentPadding = PaddingValues(16.dp),
+            verticalArrangement = Arrangement.spacedBy(8.dp)
+        ) {
             items(habits, key = { it.id.toString() }) { habit ->
                 HabitCard(
                     habit = habit,
@@ -242,35 +295,10 @@ fun HabitListContent(
                     onDeleteHabit = { onDeleteHabit(habit) }
                 )
             }
-        } else {
-            // Two column layout for landscape tablets
-            val pairedHabits = habits.chunked(2)
-            items(pairedHabits, key = { it.first().id.toString() }) { habitPair ->
-                Row(
-                    modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.spacedBy(16.dp)
-                ) {
-                    habitPair.forEach { habit ->
-                        HabitCard(
-                            habit = habit,
-                            onClick = { onHabitClick(habit) },
-                            onCheckIn = { onCheckIn(habit) },
-                            onUndoCompletion = { onUndoCompletion(habit) },
-                            onEditHabit = { onHabitClick(habit) },
-                            onDeleteHabit = { onDeleteHabit(habit) },
-                            modifier = Modifier.weight(1f)
-                        )
-                    }
-                    // Add spacer if only one habit in the pair
-                    if (habitPair.size == 1) {
-                        Spacer(modifier = Modifier.weight(1f))
-                    }
-                }
+            // Add bottom spacer to prevent FAB from covering last item
+            item {
+                Spacer(modifier = Modifier.height(100.dp))
             }
-        }
-        // Add bottom spacer to prevent FAB from covering last item
-        item {
-            Spacer(modifier = Modifier.height(100.dp))
         }
     }
 }
@@ -387,7 +415,8 @@ fun HabitCard(
                             maxLines = 1,
                             overflow = TextOverflow.Ellipsis,
                             modifier = Modifier.combinedClickable(
-                                onClick = { showReminderDialog = true }
+                                onClick = { showReminderDialog = true },
+                                onLongClick = { showMenu = true }
                             )
                         )
                     }
@@ -401,7 +430,8 @@ fun HabitCard(
                             maxLines = 3,
                             overflow = TextOverflow.Ellipsis,
                             modifier = Modifier.combinedClickable(
-                                onClick = { showNotesDialog = true }
+                                onClick = { showNotesDialog = true },
+                                onLongClick = { showMenu = true }
                             )
                         )
                     }
