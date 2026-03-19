@@ -7,7 +7,7 @@
     <string name="settings_developer">开发者</string>
     <string name="settings_back">返回</string>
     <string name="settings_about_section">关于</string>
-    <string name="settings_privacy_notice">%1$s 高度重视您的隐私。您的数据始终保留在您的设备上，并且 %1$s 不会联网。</string>
+    <string name="settings_privacy_notice">%1$s 高度重视您的隐私。您的数据始终保留在您的设备上，并且 %1$s 不会联网传输您的个人信息。</string>
     <string name="settings_app_version_label">应用版本</string>
     <string name="settings_developer_name" translatable="false">darrindeyoung791</string>
     <string name="settings_app_info_button">去「设置」查看 %1$s 应用信息…</string>
