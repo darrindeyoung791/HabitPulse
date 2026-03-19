@@ -223,6 +223,11 @@ The project is in **early development stage** (v0.1.31-alpha):
 - ✅ HabitRepository for data abstraction
 - ✅ HabitViewModel for UI state management
 - ✅ Habit completion toggle functionality
+- ✅ Responsive navigation system (NavigationRail, NavigationBar, PermanentNavigationDrawer)
+- ✅ Collapsed NavigationBar with circular selection indicator for tablet landscape
+- ✅ Animated drawer width for permanent navigation drawer
+- ✅ Adaptive horizontal padding for habit cards based on screen size
+- ✅ TalkBack accessibility support for all navigation elements
 
 ### In Progress
 - 🔄 Habit repeat days selection (weekly cycle)
@@ -256,6 +261,24 @@ The project is in **early development stage** (v0.1.31-alpha):
 │                 │     │                      │     │                 │
 └─────────────────┘     └──────────────────────┘     └─────────────────┘
 ```
+
+### Responsive Navigation System
+
+The app uses a responsive navigation system that adapts to screen size and orientation:
+
+| Device/Orientation | Threshold | Navigation Mode | FAB | Hamburger Menu |
+|---|---|---|---|---|
+| Phone Portrait | < 840dp | Bottom Navigation Bar | ✅ Extended | ❌ |
+| Phone Landscape | ≥ 840dp and < 1200dp | Navigation Rail | ✅ Extended | ❌ |
+| Tablet Portrait | ≥ 840dp | Bottom Navigation Bar | ✅ Extended | ❌ |
+| Tablet Landscape | ≥ 1200dp | Permanent Navigation Drawer | ✅ Extended | ✅ |
+
+**Permanent Navigation Drawer Behavior (Tablet Landscape)**
+
+- **Collapsed (80dp)**: Icons only with circular selection indicator
+- **Expanded (240dp)**: Icons + text labels
+- Smooth width animation (300ms tween)
+- Hamburger menu icon toggles between expand/collapse states
 
 ## Notes
 

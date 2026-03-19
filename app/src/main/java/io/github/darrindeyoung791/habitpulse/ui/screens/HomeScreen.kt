@@ -1,13 +1,17 @@
 package io.github.darrindeyoung791.habitpulse.ui.screens
 
 import android.content.res.Configuration
+import androidx.compose.animation.core.animateDpAsState
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.core.tween
 import androidx.compose.foundation.combinedClickable
+import androidx.compose.foundation.clickable
+import androidx.compose.foundation.background
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.*
@@ -41,7 +45,7 @@ import io.github.darrindeyoung791.habitpulse.viewmodel.HabitViewModel
 import kotlinx.coroutines.launch
 import org.json.JSONArray
 
-private enum class HomeSection { Todo, Count, Calendar }
+enum class HomeSection { Todo, Count, Calendar }
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -76,11 +80,24 @@ fun HomeScreen(
     val configuration = LocalConfiguration.current
     val screenWidthDp = configuration.screenWidthDp
     val isLandscape = configuration.orientation == Configuration.ORIENTATION_LANDSCAPE
+    
+    // Navigation mode decision logic:
+    // - Tablet landscape (≥1200dp): PermanentNavigationDrawer with hamburger menu
+    // - Phone landscape (≥840dp and <1200dp): NavigationRail
+    // - All portrait modes: BottomNavigationBar
     val isPermanentDrawer = screenWidthDp >= 1200 && isLandscape
-    val useRail = screenWidthDp >= 840 && !isPermanentDrawer
+    val useRail = screenWidthDp >= 840 && screenWidthDp < 1200 && isLandscape
+    val useBottomBar = !isPermanentDrawer && !useRail
 
     var currentSection by rememberSaveable { mutableStateOf(HomeSection.Todo) }
     var isDrawerExpanded by rememberSaveable { mutableStateOf(true) }
+
+    // Animated drawer width
+    val animatedDrawerWidth by animateDpAsState(
+        targetValue = if (isDrawerExpanded) 240.dp else 80.dp,
+        animationSpec = tween(300),
+        label = "drawerWidth"
+    )
 
     val scrollBehavior = TopAppBarDefaults.exitUntilCollapsedScrollBehavior()
 
@@ -95,7 +112,7 @@ fun HomeScreen(
     val navigateToSection: (HomeSection) -> Unit = { currentSection = it }
 
     // 主页主体内容
-    val homeBody: @Composable (Modifier) -> Unit = { modifier ->
+    val homeBody: @Composable (Modifier, androidx.compose.ui.input.nestedscroll.NestedScrollConnection?) -> Unit = { modifier, nestedScrollConn ->
         when (currentSection) {
             HomeSection.Todo -> {
                 if (isLoading) {
@@ -126,7 +143,7 @@ fun HomeScreen(
                         onCheckIn = { viewModel.incrementCompletionCount(it) },
                         onUndoCompletion = { viewModel.undoHabitCompletion(it) },
                         onDeleteHabit = { viewModel.deleteHabit(it) },
-                        nestedScrollConnection = scrollBehavior.nestedScrollConnection
+                        nestedScrollConnection = nestedScrollConn
                     )
                 }
             }
@@ -147,37 +164,75 @@ fun HomeScreen(
         }
     }
 
-    val topAppBarContent: @Composable () -> Unit = {
-        LargeTopAppBar(
-            title = {
-                Text(
-                    text = appName,
-                    style = MaterialTheme.typography.headlineLarge,
-                    maxLines = 1,
-                    overflow = TextOverflow.Ellipsis
-                )
-            },
-            actions = {
-                IconButton(
-                    onClick = {
-                        if (clickHandler.isEnabled) {
-                            scope.launch {
-                                clickHandler.processClick {
-                                    onNavigateToSettings()
+    val topAppBarContent: @Composable (Boolean) -> Unit = { isRailVisible ->
+        if (isRailVisible) {
+            // Phone landscape: use TopAppBar (always collapsed state)
+            // to save vertical space
+            // Window insets are applied by the parent Column
+            TopAppBar(
+                title = {
+                    Text(
+                        text = appName,
+                        style = MaterialTheme.typography.titleLarge,
+                        maxLines = 1,
+                        overflow = TextOverflow.Ellipsis
+                    )
+                },
+                actions = {
+                    IconButton(
+                        onClick = {
+                            if (clickHandler.isEnabled) {
+                                scope.launch {
+                                    clickHandler.processClick {
+                                        onNavigateToSettings()
+                                    }
                                 }
                             }
-                        }
-                    },
-                    enabled = clickHandler.isEnabled
-                ) {
-                    Icon(
-                        imageVector = Icons.Filled.Settings,
-                        contentDescription = stringResource(id = R.string.main_settings)
+                        },
+                        enabled = clickHandler.isEnabled
+                    ) {
+                        Icon(
+                            imageVector = Icons.Filled.Settings,
+                            contentDescription = stringResource(id = R.string.main_settings)
+                        )
+                    }
+                },
+                scrollBehavior = TopAppBarDefaults.pinnedScrollBehavior()
+            )
+        } else {
+            // Other modes: use LargeTopAppBar with exitUntilCollapsed behavior
+            LargeTopAppBar(
+                title = {
+                    Text(
+                        text = appName,
+                        style = MaterialTheme.typography.headlineLarge,
+                        maxLines = 1,
+                        overflow = TextOverflow.Ellipsis
                     )
-                }
-            },
-            scrollBehavior = scrollBehavior
-        )
+                },
+                actions = {
+                    IconButton(
+                        onClick = {
+                            if (clickHandler.isEnabled) {
+                                scope.launch {
+                                    clickHandler.processClick {
+                                        onNavigateToSettings()
+                                    }
+                                }
+                            }
+                        },
+                        enabled = clickHandler.isEnabled
+                    ) {
+                        Icon(
+                            imageVector = Icons.Filled.Settings,
+                            contentDescription = stringResource(id = R.string.main_settings)
+                        )
+                    }
+                },
+                scrollBehavior = scrollBehavior,
+                modifier = Modifier.nestedScroll(scrollBehavior.nestedScrollConnection)
+            )
+        }
     }
 
     val showFab = currentSection == HomeSection.Todo
@@ -188,9 +243,10 @@ fun HomeScreen(
             drawerContent = {
                 PermanentDrawerSheet(
                     modifier = Modifier
-                        .width(if (isDrawerExpanded) 240.dp else 80.dp)
+                        .width(animatedDrawerWidth)
                         .fillMaxHeight()
                 ) {
+                    // Drawer header with menu/collapse button
                     Box(
                         modifier = Modifier
                             .fillMaxWidth()
@@ -214,8 +270,13 @@ fun HomeScreen(
                         }
                     }
 
+                    // Navigation items - use consistent layout for both states
+                    // to prevent icon size changes during animation
                     sectionItems.forEach { section ->
+                        val isSelected = currentSection == section
+                        
                         if (isDrawerExpanded) {
+                            // Expanded state: full NavigationDrawerItem with label
                             NavigationDrawerItem(
                                 label = { Text(text = when (section) {
                                     HomeSection.Todo -> stringResource(id = R.string.main_tab_todo)
@@ -232,31 +293,48 @@ fun HomeScreen(
                                         contentDescription = null
                                     )
                                 },
-                                selected = currentSection == section,
+                                selected = isSelected,
                                 onClick = { navigateToSection(section) },
                                 modifier = Modifier.padding(NavigationDrawerItemDefaults.ItemPadding)
                             )
                         } else {
-                            NavigationDrawerItem(
-                                label = {},
-                                icon = {
-                                    Icon(
-                                        imageVector = when (section) {
-                                            HomeSection.Todo -> Icons.Filled.List
-                                            HomeSection.Count -> Icons.Filled.Calculate
-                                            HomeSection.Calendar -> Icons.Filled.CalendarMonth
-                                        },
-                                        contentDescription = when (section) {
-                                            HomeSection.Todo -> stringResource(id = R.string.main_tab_todo)
-                                            HomeSection.Count -> stringResource(id = R.string.main_tab_count)
-                                            HomeSection.Calendar -> stringResource(id = R.string.main_tab_calendar)
+                            // Collapsed state: use same Box structure as CollapsedNavigationBar
+                            // to ensure consistent icon size and centering
+                            Box(
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .padding(vertical = 8.dp, horizontal = 16.dp)
+                                    .then(
+                                        if (isSelected) {
+                                            Modifier
+                                                .clip(CircleShape)
+                                                .background(MaterialTheme.colorScheme.secondaryContainer)
+                                        } else {
+                                            Modifier
                                         }
                                     )
-                                },
-                                selected = currentSection == section,
-                                onClick = { navigateToSection(section) },
-                                modifier = Modifier.padding(4.dp)
-                            )
+                                    .size(56.dp)
+                                    .clickable(onClick = { navigateToSection(section) }),
+                                contentAlignment = Alignment.Center
+                            ) {
+                                Icon(
+                                    imageVector = when (section) {
+                                        HomeSection.Todo -> Icons.Filled.List
+                                        HomeSection.Count -> Icons.Filled.Calculate
+                                        HomeSection.Calendar -> Icons.Filled.CalendarMonth
+                                    },
+                                    contentDescription = when (section) {
+                                        HomeSection.Todo -> stringResource(id = R.string.main_tab_todo)
+                                        HomeSection.Count -> stringResource(id = R.string.main_tab_count)
+                                        HomeSection.Calendar -> stringResource(id = R.string.main_tab_calendar)
+                                    },
+                                    tint = if (isSelected) {
+                                        MaterialTheme.colorScheme.onSecondaryContainer
+                                    } else {
+                                        MaterialTheme.colorScheme.onSurfaceVariant
+                                    }
+                                )
+                            }
                         }
                     }
                 }
@@ -264,9 +342,8 @@ fun HomeScreen(
         ) {
             Scaffold(
                 modifier = Modifier
-                    .fillMaxSize()
-                    .nestedScroll(scrollBehavior.nestedScrollConnection),
-                topBar = topAppBarContent,
+                    .fillMaxSize(),
+                topBar = { topAppBarContent(false) },
                 floatingActionButton = {
                     if (showFab) {
                         ExtendedFloatingActionButton(
@@ -296,18 +373,108 @@ fun HomeScreen(
                         .fillMaxSize()
                         .padding(paddingValues)
                 ) {
-                    homeBody(Modifier.fillMaxSize().padding(16.dp))
+                    homeBody(Modifier.fillMaxSize(), scrollBehavior.nestedScrollConnection)
+                }
+            }
+        }
+    } else if (useRail) {
+        // NavigationRail layout for landscape phones (840dp to <1200dp)
+        // Rail occupies full height on left, content area on right
+        Row(
+            modifier = Modifier.fillMaxSize()
+        ) {
+            // NavigationRail - fixed on left side
+            // Apply start inset to NavigationRail to handle camera cutout on left
+            NavigationRail(
+                modifier = Modifier
+                    .fillMaxHeight()
+                    .windowInsetsPadding(WindowInsets.systemBars.only(WindowInsetsSides.Start))
+            ) {
+                sectionItems.forEach { section ->
+                    NavigationRailItem(
+                        icon = {
+                            Icon(
+                                imageVector = when (section) {
+                                    HomeSection.Todo -> Icons.Filled.List
+                                    HomeSection.Count -> Icons.Filled.Calculate
+                                    HomeSection.Calendar -> Icons.Filled.CalendarMonth
+                                },
+                                contentDescription = when (section) {
+                                    HomeSection.Todo -> stringResource(id = R.string.main_tab_todo)
+                                    HomeSection.Count -> stringResource(id = R.string.main_tab_count)
+                                    HomeSection.Calendar -> stringResource(id = R.string.main_tab_calendar)
+                                }
+                            )
+                        },
+                        label = {
+                            Text(text = when (section) {
+                                HomeSection.Todo -> stringResource(id = R.string.main_tab_todo)
+                                HomeSection.Count -> stringResource(id = R.string.main_tab_count)
+                                HomeSection.Calendar -> stringResource(id = R.string.main_tab_calendar)
+                            })
+                        },
+                        selected = currentSection == section,
+                        onClick = { navigateToSection(section) }
+                    )
+                }
+            }
+
+            // Content area on right side
+            // Apply end inset to handle camera cutout on right
+            Column(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .weight(1f)
+                    .windowInsetsPadding(WindowInsets.systemBars.only(WindowInsetsSides.End + WindowInsetsSides.Top))
+            ) {
+                // TopAppBar
+                topAppBarContent(true)
+
+                // Scrollable content area with small top padding to avoid being covered by TopAppBar
+                Box(
+                    modifier = Modifier
+                        .fillMaxSize()
+                ) {
+                    homeBody(
+                        Modifier.fillMaxSize().padding(top = 4.dp),
+                        null
+                    )
+                    
+                    // FAB - floating above content, no padding needed
+                    if (showFab) {
+                        ExtendedFloatingActionButton(
+                            onClick = {
+                                if (clickHandler.isEnabled) {
+                                    scope.launch {
+                                        clickHandler.processClick {
+                                            onCreateHabit()
+                                        }
+                                    }
+                                }
+                            },
+                            icon = {
+                                Icon(imageVector = Icons.Filled.Add, contentDescription = null)
+                            },
+                            text = { Text(text = newHabitLabel) },
+                            modifier = Modifier
+                                .align(Alignment.BottomEnd)
+                                .padding(16.dp)
+                                .semantics { contentDescription = newHabitLabel }
+                                .alpha(if (clickHandler.isEnabled) 1f else 0.5f)
+                        )
+                    }
                 }
             }
         }
     } else {
+        // Bottom Navigation Bar layout for portrait modes
         Scaffold(
             modifier = Modifier
-                .fillMaxSize()
-                .nestedScroll(scrollBehavior.nestedScrollConnection),
-            topBar = topAppBarContent,
+                .fillMaxSize(),
+            topBar = { topAppBarContent(false) },
             bottomBar = {
-                if (!useRail) {
+                if (useBottomBar) {
+                    // Bottom Navigation Bar for portrait modes
                     NavigationBar {
                         sectionItems.forEach { section ->
                             NavigationBarItem(
@@ -361,45 +528,35 @@ fun HomeScreen(
             },
             contentWindowInsets = WindowInsets(0, 0, 0, 0)
         ) { paddingValues ->
-            Row(
-                modifier = Modifier
-                    .fillMaxSize()
-                    .padding(paddingValues)
-            ) {
-                if (useRail) {
-                    NavigationRail {
-                        sectionItems.forEach { section ->
-                            NavigationRailItem(
-                                icon = {
-                                    Icon(
-                                        imageVector = when (section) {
-                                            HomeSection.Todo -> Icons.Filled.List
-                                            HomeSection.Count -> Icons.Filled.Calculate
-                                            HomeSection.Calendar -> Icons.Filled.CalendarMonth
-                                        },
-                                        contentDescription = when (section) {
-                                            HomeSection.Todo -> stringResource(id = R.string.main_tab_todo)
-                                            HomeSection.Count -> stringResource(id = R.string.main_tab_count)
-                                            HomeSection.Calendar -> stringResource(id = R.string.main_tab_calendar)
-                                        }
-                                    )
-                                },
-                                label = {
-                                    Text(text = when (section) {
-                                        HomeSection.Todo -> stringResource(id = R.string.main_tab_todo)
-                                        HomeSection.Count -> stringResource(id = R.string.main_tab_count)
-                                        HomeSection.Calendar -> stringResource(id = R.string.main_tab_calendar)
-                                    })
-                                },
-                                selected = currentSection == section,
-                                onClick = { navigateToSection(section) }
-                            )
-                        }
+            // Collapsed NavigationBar for tablet landscape
+            if (isPermanentDrawer) {
+                Row(
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .padding(paddingValues)
+                ) {
+                    CollapsedNavigationBar(
+                        sectionItems = sectionItems,
+                        currentSection = currentSection,
+                        onNavigateToSection = navigateToSection
+                    )
+
+                    Box(
+                        modifier = Modifier
+                            .fillMaxSize()
+                            .weight(1f)
+                    ) {
+                        homeBody(Modifier.fillMaxSize(), scrollBehavior.nestedScrollConnection)
                     }
                 }
-
-                Box(modifier = Modifier.fillMaxSize()) {
-                    homeBody(Modifier.fillMaxSize().padding(16.dp))
+            } else {
+                // Bottom bar layout - content fills entire area
+                Box(
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .padding(paddingValues)
+                ) {
+                    homeBody(Modifier.fillMaxSize(), scrollBehavior.nestedScrollConnection)
                 }
             }
         }
@@ -430,6 +587,68 @@ fun BlankSectionContent(
             style = MaterialTheme.typography.bodyMedium,
             textAlign = TextAlign.Center
         )
+    }
+}
+
+/**
+ * Collapsed NavigationBar for tablet landscape mode.
+ * Appears as a vertical rail with circular selection indicator.
+ */
+@Composable
+fun CollapsedNavigationBar(
+    sectionItems: List<HomeSection>,
+    currentSection: HomeSection,
+    onNavigateToSection: (HomeSection) -> Unit,
+    modifier: Modifier = Modifier
+) {
+    Column(
+        modifier = modifier
+            .fillMaxHeight()
+            .width(112.dp),  // Increased width for better spacing
+        horizontalAlignment = Alignment.CenterHorizontally,
+        verticalArrangement = Arrangement.Center
+    ) {
+        sectionItems.forEach { section ->
+            val isSelected = currentSection == section
+            
+            // Use a single Box with consistent sizing
+            Box(
+                modifier = Modifier
+                    .padding(vertical = 8.dp)
+                    .then(
+                        if (isSelected) {
+                            Modifier
+                                .size(56.dp)
+                                .clip(CircleShape)
+                                .background(MaterialTheme.colorScheme.secondaryContainer)
+                        } else {
+                            Modifier.size(56.dp)
+                        }
+                    )
+                    .clickable(onClick = { onNavigateToSection(section) }),
+                contentAlignment = Alignment.Center
+            ) {
+                // Icon with fixed size, centered in the Box
+                Icon(
+                    imageVector = when (section) {
+                        HomeSection.Todo -> Icons.Filled.List
+                        HomeSection.Count -> Icons.Filled.Calculate
+                        HomeSection.Calendar -> Icons.Filled.CalendarMonth
+                    },
+                    contentDescription = when (section) {
+                        HomeSection.Todo -> stringResource(id = R.string.main_tab_todo)
+                        HomeSection.Count -> stringResource(id = R.string.main_tab_count)
+                        HomeSection.Calendar -> stringResource(id = R.string.main_tab_calendar)
+                    },
+                    tint = if (isSelected) {
+                        MaterialTheme.colorScheme.onSecondaryContainer
+                    } else {
+                        MaterialTheme.colorScheme.onSurfaceVariant
+                    }
+                    // No explicit size modifier - Icon uses default 24dp
+                )
+            }
+        }
     }
 }
 
@@ -487,6 +706,9 @@ fun HabitListContent(
     val screenWidthDp = configuration.screenWidthDp
     val useStaggeredGrid = isLandscape && screenWidthDp >= 840
 
+    // Use consistent 16.dp horizontal padding to align with LargeTopAppBar title
+    val horizontalPadding = 16.dp
+
     if (useStaggeredGrid) {
         // Waterfall layout with synchronized scrolling for landscape tablets
         // Split habits into two columns: odd and even indices
@@ -498,7 +720,7 @@ fun HabitListContent(
             modifier = staggeredModifier
                 .fillMaxSize()
                 .verticalScroll(rememberScrollState())
-                .padding(horizontal = 16.dp, vertical = 16.dp)
+                .padding(horizontal = horizontalPadding, vertical = 16.dp)
         ) {
             Row(
                 modifier = Modifier.fillMaxWidth(),
@@ -546,7 +768,7 @@ fun HabitListContent(
         val listModifier = if (nestedScrollConnection != null) modifier.nestedScroll(nestedScrollConnection) else modifier
         LazyColumn(
             modifier = listModifier.fillMaxSize(),
-            contentPadding = PaddingValues(16.dp),
+            contentPadding = PaddingValues(horizontal = horizontalPadding, vertical = 16.dp),
             verticalArrangement = Arrangement.spacedBy(8.dp)
         ) {
             items(habits, key = { it.id.toString() }) { habit ->
