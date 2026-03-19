@@ -17,6 +17,7 @@
     <string name="settings_support_habitpulse_switch">开启开屏广告</string>
     <string name="settings_support_habitpulse_switch_description">显示 5 秒开屏广告，您可随时关闭此项</string>
     <string name="ad_skip_button">跳过广告 (%1$d 秒)</string>
+    <string name="ad_space_for_rent">广告位招租，帮帮我们！</string>
     <string name="main_calendar_view">日历视图</string>
     <string name="main_settings">设置</string>
     <string name="main_new_habit">新建习惯</string>
@@ -74,4 +75,24 @@
     <string name="habit_card_menu_undo">撤销打卡</string>
     <string name="habit_card_menu_edit">编辑</string>
     <string name="habit_card_menu_delete">删除</string>
+    <string name="habit_card_completed_count">已完成 %d 次</string>
+    <string name="habit_card_repeat_daily">每日</string>
+    <string name="habit_card_repeat_weekly">每周一、二、三</string>
+    <string name="habit_card_repeat_days_format">每周%s</string>
+    <string name="habit_card_reminder_count">%1$s 等 %2$d 次</string>
+    <string name="habit_card_reminder_single">%s</string>
+    <string name="habit_card_notes_preview">%s…</string>
+    <string name="habit_card_checkin_button">打卡</string>
+    <string name="habit_card_reminder_dialog_title">提醒详情</string>
+    <string name="habit_card_reminder_dialog_dismiss">关闭</string>
+    <string name="habit_card_notes_dialog_title">备注详情</string>
+    <string name="habit_card_notes_dialog_dismiss">关闭</string>
+    <string name="habit_card_no_notes">无备注</string>
+    <string name="habit_card_repeat_days_sunday">日</string>
+    <string name="habit_card_repeat_days_monday">一</string>
+    <string name="habit_card_repeat_days_tuesday">二</string>
+    <string name="habit_card_repeat_days_wednesday">三</string>
+    <string name="habit_card_repeat_days_thursday">四</string>
+    <string name="habit_card_repeat_days_friday">五</string>
+    <string name="habit_card_repeat_days_saturday">六</string>
 </resources>

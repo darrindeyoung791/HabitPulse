@@ -4,6 +4,8 @@ import android.os.Bundle
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
+import androidx.compose.animation.Crossfade
+import androidx.compose.animation.core.tween
 import androidx.compose.runtime.*
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.tooling.preview.Preview
@@ -69,31 +71,30 @@ class MainActivity : ComponentActivity() {
                 }
                 
                 // 如果广告结束，进入主页
-                if (adFinished) {
-                    HabitPulseNavGraph(
-                        navController = navController,
-                        onHomeDataLoaded = { homeDataLoaded = true }
-                    )
-                    
-                    // 处理系统返回键，确保在主页时按返回键可以退出应用
-                    HandleSystemBackPress(navController = navController, activity = this)
-                } else if (showSplashAd && showAdScreen) {
-                    // 显示广告页面
-                    AdScreen(
-                        onAdFinished = {
-                            adFinished = true
-                            showAdScreen = false
-                        }
-                    )
-                } else {
-                    // 不显示广告，直接进入主页（splash screen 会等待数据加载完成）
-                    HabitPulseNavGraph(
-                        navController = navController,
-                        onHomeDataLoaded = { homeDataLoaded = true }
-                    )
-                    
-                    // 处理系统返回键，确保在主页时按返回键可以退出应用
-                    HandleSystemBackPress(navController = navController, activity = this)
+                val showMainContent = adFinished || (!showSplashAd || !showAdScreen)
+
+                Crossfade(
+                    targetState = showMainContent,
+                    animationSpec = tween(durationMillis = 200),
+                    label = "screenCrossfade"
+                ) { showMain ->
+                    if (showMain) {
+                        HabitPulseNavGraph(
+                            navController = navController,
+                            onHomeDataLoaded = { homeDataLoaded = true }
+                        )
+
+                        // 处理系统返回键，确保在主页时按返回键可以退出应用
+                        HandleSystemBackPress(navController = navController, activity = this)
+                    } else if (showSplashAd && showAdScreen) {
+                        // 显示广告页面
+                        AdScreen(
+                            onAdFinished = {
+                                adFinished = true
+                                showAdScreen = false
+                            }
+                        )
+                    }
                 }
             }
         }

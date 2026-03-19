@@ -15,6 +15,7 @@
     <string name="settings_support_habitpulse_switch">Enable Splash Ad</string>
     <string name="settings_support_habitpulse_switch_description">Show 5-second splash ad to support %1$s development, you can turn it off</string>
     <string name="ad_skip_button">Skip Ad (%1$ds)</string>
+    <string name="ad_space_for_rent">This could be your ad.</string>
     <string name="main_calendar_view">Calendar view</string>
     <string name="main_settings">Settings</string>
     <string name="main_new_habit">Create habit</string>
