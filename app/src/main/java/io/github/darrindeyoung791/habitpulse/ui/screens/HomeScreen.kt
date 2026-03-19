@@ -1,5 +1,6 @@
 package io.github.darrindeyoung791.habitpulse.ui.screens
 
+import android.content.res.Configuration
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.core.tween
 import androidx.compose.foundation.combinedClickable
@@ -219,20 +220,53 @@ fun HabitListContent(
     onUndoCompletion: (Habit) -> Unit,
     onDeleteHabit: (Habit) -> Unit
 ) {
+    val configuration = LocalConfiguration.current
+    val isLandscape = configuration.orientation == Configuration.ORIENTATION_LANDSCAPE
+    val screenWidthDp = configuration.screenWidthDp
+    val columns = if (isLandscape && screenWidthDp >= 840) 2 else 1
+
     LazyColumn(
         modifier = modifier.fillMaxSize(),
         contentPadding = PaddingValues(16.dp),
         verticalArrangement = Arrangement.spacedBy(8.dp)
     ) {
-        items(habits, key = { it.id.toString() }) { habit ->
-            HabitCard(
-                habit = habit,
-                onClick = { onHabitClick(habit) },
-                onCheckIn = { onCheckIn(habit) },
-                onUndoCompletion = { onUndoCompletion(habit) },
-                onEditHabit = { onHabitClick(habit) },
-                onDeleteHabit = { onDeleteHabit(habit) }
-            )
+        if (columns == 1) {
+            // Single column layout
+            items(habits, key = { it.id.toString() }) { habit ->
+                HabitCard(
+                    habit = habit,
+                    onClick = { onHabitClick(habit) },
+                    onCheckIn = { onCheckIn(habit) },
+                    onUndoCompletion = { onUndoCompletion(habit) },
+                    onEditHabit = { onHabitClick(habit) },
+                    onDeleteHabit = { onDeleteHabit(habit) }
+                )
+            }
+        } else {
+            // Two column layout for landscape tablets
+            val pairedHabits = habits.chunked(2)
+            items(pairedHabits, key = { it.first().id.toString() }) { habitPair ->
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.spacedBy(16.dp)
+                ) {
+                    habitPair.forEach { habit ->
+                        HabitCard(
+                            habit = habit,
+                            onClick = { onHabitClick(habit) },
+                            onCheckIn = { onCheckIn(habit) },
+                            onUndoCompletion = { onUndoCompletion(habit) },
+                            onEditHabit = { onHabitClick(habit) },
+                            onDeleteHabit = { onDeleteHabit(habit) },
+                            modifier = Modifier.weight(1f)
+                        )
+                    }
+                    // Add spacer if only one habit in the pair
+                    if (habitPair.size == 1) {
+                        Spacer(modifier = Modifier.weight(1f))
+                    }
+                }
+            }
         }
         // Add bottom spacer to prevent FAB from covering last item
         item {
@@ -249,7 +283,8 @@ fun HabitCard(
     onCheckIn: () -> Unit,
     onUndoCompletion: () -> Unit,
     onEditHabit: () -> Unit,
-    onDeleteHabit: () -> Unit
+    onDeleteHabit: () -> Unit,
+    modifier: Modifier = Modifier
 ) {
     var showMenu by remember { mutableStateOf(false) }
     var showReminderDialog by remember { mutableStateOf(false) }
@@ -259,7 +294,7 @@ fun HabitCard(
     val repeatDays = habit.getRepeatDaysList()
 
     Box(
-        modifier = Modifier.fillMaxWidth()
+        modifier = modifier.fillMaxWidth()
     ) {
         OutlinedCard(
             modifier = Modifier
@@ -298,7 +333,7 @@ fun HabitCard(
                     // 已完成次数
                     Text(
                         text = stringResource(id = R.string.habit_card_completed_count, habit.completionCount),
-                        style = MaterialTheme.typography.bodyMedium,
+                        style = MaterialTheme.typography.bodyLarge,
                         color = MaterialTheme.colorScheme.onSurfaceVariant
                     )
 

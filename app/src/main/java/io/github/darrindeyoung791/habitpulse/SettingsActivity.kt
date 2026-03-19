@@ -223,7 +223,7 @@ fun SettingsSwitchItem(
 ) {
     Surface(
         modifier = Modifier.fillMaxWidth(),
-        onClick = { },
+        onClick = { onCheckedChange(!checked) },
         color = MaterialTheme.colorScheme.surface
     ) {
         Row(

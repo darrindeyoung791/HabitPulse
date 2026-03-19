@@ -263,6 +263,13 @@ fun HabitCreationScreen(
         }
     }
 
+    // 错误状态标记
+    var showHabitNameError by remember { mutableStateOf(false) }
+    var showReminderTimeError by remember { mutableStateOf(false) }
+    var showRepeatDaysError by remember { mutableStateOf(false) }
+    var showSupervisorEmailError by remember { mutableStateOf(false) }
+    var showSupervisorPhoneError by remember { mutableStateOf(false) }
+
     // 邮箱验证正则
     fun isValidEmail(email: String): Boolean {
         val emailPattern = "^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\\.[a-zA-Z]{2,}$"
@@ -277,37 +284,50 @@ fun HabitCreationScreen(
 
     // 验证必填项
     fun validateInputs(): Boolean {
+        // 重置所有错误状态
+        showHabitNameError = false
+        showReminderTimeError = false
+        showRepeatDaysError = false
+        showSupervisorEmailError = false
+        showSupervisorPhoneError = false
+
+        var isValid = true
+
         // 习惯名称必填
         if (habitName.isBlank()) {
-            showValidationFailedToast = true
-            return false
+            showHabitNameError = true
+            isValid = false
         }
-        
+
         // 提醒时间必填
         if (reminderTimes.isEmpty()) {
-            showValidationFailedToast = true
-            return false
+            showReminderTimeError = true
+            isValid = false
         }
-        
+
         // 每周活动必须选中至少一天
         if (repeatCycle == RepeatCycle.WEEKLY && selectedRepeatDays.isEmpty()) {
-            showValidationFailedToast = true
-            return false
+            showRepeatDaysError = true
+            isValid = false
         }
-        
+
         // 选择邮件监督时，至少添加一个邮箱
         if (supervisionMethod == SupervisionMethod.EMAIL && supervisorEmails.isEmpty()) {
-            showValidationFailedToast = true
-            return false
+            showSupervisorEmailError = true
+            isValid = false
         }
-        
+
         // 选择短信监督时，至少添加一个电话号码
         if (supervisionMethod == SupervisionMethod.SMS && supervisorPhones.isEmpty()) {
-            showValidationFailedToast = true
-            return false
+            showSupervisorPhoneError = true
+            isValid = false
         }
-        
-        return true
+
+        if (!isValid) {
+            showValidationFailedToast = true
+        }
+
+        return isValid
     }
 
     val titleRes = when (editMode) {
@@ -484,7 +504,11 @@ fun HabitCreationScreen(
                 Card(
                     modifier = Modifier.fillMaxWidth(),
                     colors = CardDefaults.cardColors(
-                        containerColor = androidx.compose.ui.graphics.Color.Transparent
+                        containerColor = if (showRepeatDaysError) {
+                            MaterialTheme.colorScheme.errorContainer.copy(alpha = 0.3f)
+                        } else {
+                            androidx.compose.ui.graphics.Color.Transparent
+                        }
                     ),
                     shape = RoundedCornerShape(0.dp)
                 ) {
@@ -505,7 +529,7 @@ fun HabitCreationScreen(
                                 stringResource(id = R.string.create_habit_day_friday),
                                 stringResource(id = R.string.create_habit_day_saturday)
                             )
-                            
+
                             dayLabels.forEachIndexed { index, label ->
                                 FilterChip(
                                     selected = selectedRepeatDays.contains(index),
@@ -515,6 +539,8 @@ fun HabitCreationScreen(
                                         } else {
                                             selectedRepeatDays + index
                                         }
+                                        // 用户选择日期时清除错误状态
+                                        showRepeatDaysError = false
                                     },
                                     label = {
                                         Text(
@@ -543,6 +569,8 @@ fun HabitCreationScreen(
                         showMaxLengthToast = true
                     }
                     habitName = newValue.take(100)
+                    // 用户输入时清除错误状态
+                    showHabitNameError = false
                 },
                 label = {
                     Text(text = stringResource(id = R.string.create_habit_habit_name_label))
@@ -561,13 +589,21 @@ fun HabitCreationScreen(
                         // Close keyboard when done is pressed
                     }
                 ),
+                isError = showHabitNameError,
+                supportingText = if (showHabitNameError) {
+                    { Text(text = context.getString(R.string.create_habit_habit_name_label)) }
+                } else null,
             )
 
             // Reminder time section
             Card(
                 modifier = Modifier.fillMaxWidth(),
                 colors = CardDefaults.cardColors(
-                    containerColor = androidx.compose.ui.graphics.Color.Transparent
+                    containerColor = if (showReminderTimeError) {
+                        MaterialTheme.colorScheme.errorContainer.copy(alpha = 0.3f)
+                    } else {
+                        androidx.compose.ui.graphics.Color.Transparent
+                    }
                 ),
                 shape = RoundedCornerShape(0.dp)
             ) {
@@ -584,7 +620,11 @@ fun HabitCreationScreen(
                         Text(
                             text = stringResource(id = R.string.create_habit_reminder_time_label),
                             style = MaterialTheme.typography.bodyLarge,
-                            color = MaterialTheme.colorScheme.onSurface
+                            color = if (showReminderTimeError) {
+                                MaterialTheme.colorScheme.error
+                            } else {
+                                MaterialTheme.colorScheme.onSurface
+                            }
                         )
 
                         // Button with animated shape
@@ -721,6 +761,8 @@ fun HabitCreationScreen(
                             android.widget.Toast.makeText(context, context.getString(R.string.create_habit_duplicate_time), android.widget.Toast.LENGTH_SHORT).show()
                         } else {
                             reminderTimes = reminderTimes + timeString
+                            // 添加提醒时间后清除错误状态
+                            showReminderTimeError = false
                         }
                         showTimePicker = false
                     }
@@ -731,7 +773,13 @@ fun HabitCreationScreen(
             Card(
                 modifier = Modifier.fillMaxWidth(),
                 colors = CardDefaults.cardColors(
-                    containerColor = androidx.compose.ui.graphics.Color.Transparent
+                    containerColor = if (supervisionMethod == SupervisionMethod.EMAIL && showSupervisorEmailError) {
+                        MaterialTheme.colorScheme.errorContainer.copy(alpha = 0.3f)
+                    } else if (supervisionMethod == SupervisionMethod.SMS && showSupervisorPhoneError) {
+                        MaterialTheme.colorScheme.errorContainer.copy(alpha = 0.3f)
+                    } else {
+                        androidx.compose.ui.graphics.Color.Transparent
+                    }
                 ),
                 shape = RoundedCornerShape(0.dp)
             ) {
@@ -741,7 +789,13 @@ fun HabitCreationScreen(
                     Text(
                         text = stringResource(id = R.string.create_habit_supervision_label),
                         style = MaterialTheme.typography.bodyLarge,
-                        color = MaterialTheme.colorScheme.onSurface
+                        color = if (supervisionMethod == SupervisionMethod.EMAIL && showSupervisorEmailError) {
+                            MaterialTheme.colorScheme.error
+                        } else if (supervisionMethod == SupervisionMethod.SMS && showSupervisorPhoneError) {
+                            MaterialTheme.colorScheme.error
+                        } else {
+                            MaterialTheme.colorScheme.onSurface
+                        }
                     )
                     
                     Spacer(modifier = Modifier.height(8.dp))
@@ -851,6 +905,7 @@ fun HabitCreationScreen(
                                                     supervisorEmails = supervisorEmails + emailInput
                                                     emailInput = ""
                                                     showEmailError = false
+                                                    showSupervisorEmailError = false
                                                 } else {
                                                     showDuplicateEmailToast = true
                                                 }
@@ -996,6 +1051,7 @@ fun HabitCreationScreen(
                                                     supervisorPhones = supervisorPhones + phoneInput
                                                     phoneInput = ""
                                                     showPhoneError = false
+                                                    showSupervisorPhoneError = false
                                                 } else {
                                                     showDuplicatePhoneToast = true
                                                 }
