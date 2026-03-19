@@ -66,4 +66,7 @@
     <string name="create_habit_save_button">保存</string>
     <string name="create_habit_cancel_button">取消</string>
     <string name="create_habit_validation_failed">请填写所有必填项</string>
+    <string name="habit_card_menu_undo">撤销打卡</string>
+    <string name="habit_card_menu_edit">编辑</string>
+    <string name="habit_card_menu_delete">删除</string>
 </resources>

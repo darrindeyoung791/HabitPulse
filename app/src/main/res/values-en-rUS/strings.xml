@@ -64,4 +64,7 @@
     <string name="create_habit_save_button">Save</string>
     <string name="create_habit_cancel_button">Cancel</string>
     <string name="create_habit_validation_failed">Please fill in all required fields</string>
+    <string name="habit_card_menu_undo">Undo check-in</string>
+    <string name="habit_card_menu_edit">Edit</string>
+    <string name="habit_card_menu_delete">Delete</string>
 </resources>

@@ -78,7 +78,13 @@ interface HabitDao {
      */
     @Query("UPDATE habits SET completedToday = :completed, lastCompletedDate = :timestamp, completionCount = completionCount + CASE WHEN :completed = 1 THEN 1 ELSE 0 END, modifiedDate = :timestamp WHERE id = :id")
     suspend fun updateCompletionStatus(id: UUID, completed: Boolean, timestamp: Long)
-    
+
+    /**
+     * 撤销习惯的今日完成状态（ completionCount 减 1）
+     */
+    @Query("UPDATE habits SET completedToday = 0, completionCount = MAX(0, completionCount - 1), modifiedDate = :timestamp WHERE id = :id")
+    suspend fun undoCompletionStatus(id: UUID, timestamp: Long)
+
     /**
      * 重置所有习惯的今日完成状态（用于每日重置）
      */

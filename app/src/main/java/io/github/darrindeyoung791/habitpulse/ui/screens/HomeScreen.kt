@@ -1,5 +1,6 @@
 package io.github.darrindeyoung791.habitpulse.ui.screens
 
+import androidx.compose.foundation.combinedClickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
@@ -37,12 +38,12 @@ fun HomeScreen(
     // 防重复点击处理器
     val clickHandler = rememberDebounceClickHandler()
     val scope = rememberCoroutineScope()
-    
+
     // 获取 ViewModel
     val viewModel: HabitViewModel = remember {
         HabitViewModel.Factory(application).create(HabitViewModel::class.java)
     }
-    
+
     // 收集习惯列表状态
     val habits by viewModel.habitsFlow.collectAsStateWithLifecycle(initialValue = emptyList())
 
@@ -130,7 +131,9 @@ fun HomeScreen(
                 modifier = Modifier.padding(paddingValues),
                 habits = habits,
                 onHabitClick = { onEditHabit(it) },
-                onToggleCompletion = { viewModel.toggleHabitCompletion(it) }
+                onToggleCompletion = { viewModel.toggleHabitCompletion(it) },
+                onUndoCompletion = { viewModel.undoHabitCompletion(it) },
+                onDeleteHabit = { viewModel.deleteHabit(it) }
             )
         }
     }
@@ -180,7 +183,9 @@ fun HabitListContent(
     modifier: Modifier = Modifier,
     habits: List<Habit>,
     onHabitClick: (Habit) -> Unit,
-    onToggleCompletion: (Habit) -> Unit
+    onToggleCompletion: (Habit) -> Unit,
+    onUndoCompletion: (Habit) -> Unit,
+    onDeleteHabit: (Habit) -> Unit
 ) {
     LazyColumn(
         modifier = modifier.fillMaxSize(),
@@ -191,7 +196,10 @@ fun HabitListContent(
             HabitCard(
                 habit = habit,
                 onClick = { onHabitClick(habit) },
-                onToggleCompletion = { onToggleCompletion(habit) }
+                onToggleCompletion = { onToggleCompletion(habit) },
+                onUndoCompletion = { onUndoCompletion(habit) },
+                onEditHabit = { onHabitClick(habit) },
+                onDeleteHabit = { onDeleteHabit(habit) }
             )
         }
     }
@@ -201,104 +209,178 @@ fun HabitListContent(
 fun HabitCard(
     habit: Habit,
     onClick: () -> Unit,
-    onToggleCompletion: () -> Unit
+    onToggleCompletion: () -> Unit,
+    onUndoCompletion: () -> Unit,
+    onEditHabit: () -> Unit,
+    onDeleteHabit: () -> Unit
 ) {
-    Card(
-        modifier = Modifier
-            .fillMaxWidth()
-            .heightIn(min = 72.dp),
-        onClick = onClick,
-        colors = CardDefaults.cardColors(
-            containerColor = if (habit.completedToday) {
-                MaterialTheme.colorScheme.secondaryContainer.copy(alpha = 0.5f)
-            } else {
-                MaterialTheme.colorScheme.surfaceVariant
-            }
-        )
+    var showMenu by remember { mutableStateOf(false) }
+
+    Box(
+        modifier = Modifier.fillMaxWidth()
     ) {
-        Row(
+        Card(
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(16.dp),
-            horizontalArrangement = Arrangement.spacedBy(16.dp),
-            verticalAlignment = Alignment.CenterVertically
-        ) {
-            // 完成状态复选框
-            Checkbox(
-                checked = habit.completedToday,
-                onCheckedChange = { onToggleCompletion() },
-                colors = CheckboxDefaults.colors(
-                    checkedColor = MaterialTheme.colorScheme.primary,
-                    uncheckedColor = MaterialTheme.colorScheme.onSurfaceVariant
-                )
+                .heightIn(min = 72.dp)
+                .combinedClickable(
+                    onClick = onClick,
+                    onLongClick = { showMenu = true }
+                ),
+            colors = CardDefaults.cardColors(
+                containerColor = if (habit.completedToday) {
+                    MaterialTheme.colorScheme.secondaryContainer.copy(alpha = 0.5f)
+                } else {
+                    MaterialTheme.colorScheme.surfaceVariant
+                }
             )
-            
-            // 习惯信息
-            Column(
-                modifier = Modifier.weight(1f),
-                verticalArrangement = Arrangement.spacedBy(4.dp)
+        ) {
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(16.dp),
+                horizontalArrangement = Arrangement.spacedBy(16.dp),
+                verticalAlignment = Alignment.CenterVertically
             ) {
-                Text(
-                    text = habit.title,
-                    style = MaterialTheme.typography.titleMedium,
-                    color = if (habit.completedToday) {
-                        MaterialTheme.colorScheme.onSurfaceVariant
-                    } else {
-                        MaterialTheme.colorScheme.onSurface
-                    },
-                    maxLines = 1,
-                    overflow = TextOverflow.Ellipsis
+                // 完成状态复选框
+                Checkbox(
+                    checked = habit.completedToday,
+                    onCheckedChange = { onToggleCompletion() },
+                    colors = CheckboxDefaults.colors(
+                        checkedColor = MaterialTheme.colorScheme.primary,
+                        uncheckedColor = MaterialTheme.colorScheme.onSurfaceVariant
+                    )
                 )
-                
-                // 显示重复周期和提醒时间
-                Row(
-                    horizontalArrangement = Arrangement.spacedBy(8.dp)
+
+                // 习惯信息
+                Column(
+                    modifier = Modifier.weight(1f),
+                    verticalArrangement = Arrangement.spacedBy(4.dp)
                 ) {
                     Text(
-                        text = when (habit.repeatCycle) {
-                            io.github.darrindeyoung791.habitpulse.data.model.RepeatCycle.DAILY -> 
-                                stringResource(id = R.string.create_habit_daily_option)
-                            io.github.darrindeyoung791.habitpulse.data.model.RepeatCycle.WEEKLY -> 
-                                stringResource(id = R.string.create_habit_weekly_option)
+                        text = habit.title,
+                        style = MaterialTheme.typography.titleMedium,
+                        color = if (habit.completedToday) {
+                            MaterialTheme.colorScheme.onSurfaceVariant
+                        } else {
+                            MaterialTheme.colorScheme.onSurface
                         },
-                        style = MaterialTheme.typography.bodySmall,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                        maxLines = 1,
+                        overflow = TextOverflow.Ellipsis
                     )
-                    
-                    val reminderCount = habit.getReminderTimesList().size
-                    if (reminderCount > 0) {
+
+                    // 显示重复周期和提醒时间
+                    Row(
+                        horizontalArrangement = Arrangement.spacedBy(8.dp)
+                    ) {
                         Text(
-                            text = "• $reminderCount 个提醒",
+                            text = when (habit.repeatCycle) {
+                                io.github.darrindeyoung791.habitpulse.data.model.RepeatCycle.DAILY ->
+                                    stringResource(id = R.string.create_habit_daily_option)
+                                io.github.darrindeyoung791.habitpulse.data.model.RepeatCycle.WEEKLY ->
+                                    stringResource(id = R.string.create_habit_weekly_option)
+                            },
                             style = MaterialTheme.typography.bodySmall,
                             color = MaterialTheme.colorScheme.onSurfaceVariant
                         )
+
+                        val reminderCount = habit.getReminderTimesList().size
+                        if (reminderCount > 0) {
+                            Text(
+                                text = "• $reminderCount 个提醒",
+                                style = MaterialTheme.typography.bodySmall,
+                                color = MaterialTheme.colorScheme.onSurfaceVariant
+                            )
+                        }
                     }
                 }
-            }
-            
-            // 完成次数徽章
-            if (habit.completionCount > 0) {
-                AssistChip(
-                    onClick = { },
-                    label = {
-                        Text(
-                            text = habit.completionCount.toString(),
-                            style = MaterialTheme.typography.labelMedium
+
+                // 完成次数徽章
+                if (habit.completionCount > 0) {
+                    AssistChip(
+                        onClick = { },
+                        label = {
+                            Text(
+                                text = habit.completionCount.toString(),
+                                style = MaterialTheme.typography.labelMedium
+                            )
+                        },
+                        leadingIcon = {
+                            Icon(
+                                imageVector = Icons.Filled.CheckCircle,
+                                contentDescription = null,
+                                modifier = Modifier.size(16.dp)
+                            )
+                        },
+                        colors = AssistChipDefaults.assistChipColors(
+                            containerColor = MaterialTheme.colorScheme.primaryContainer,
+                            labelColor = MaterialTheme.colorScheme.onPrimaryContainer
                         )
+                    )
+                }
+            }
+        }
+
+        // 长按下拉菜单
+        DropdownMenu(
+            expanded = showMenu,
+            onDismissRequest = { showMenu = false }
+        ) {
+            // 撤销打卡（仅当今天已打卡时显示）
+            if (habit.completedToday && habit.completionCount > 0) {
+                DropdownMenuItem(
+                    text = {
+                        Text(text = stringResource(id = R.string.habit_card_menu_undo))
                     },
                     leadingIcon = {
                         Icon(
-                            imageVector = Icons.Filled.CheckCircle,
+                            imageVector = Icons.Filled.Undo,
                             contentDescription = null,
-                            modifier = Modifier.size(16.dp)
+                            modifier = Modifier.size(24.dp)
                         )
                     },
-                    colors = AssistChipDefaults.assistChipColors(
-                        containerColor = MaterialTheme.colorScheme.primaryContainer,
-                        labelColor = MaterialTheme.colorScheme.onPrimaryContainer
-                    )
+                    onClick = {
+                        onUndoCompletion()
+                        showMenu = false
+                    }
                 )
             }
+
+            // 编辑
+            DropdownMenuItem(
+                text = {
+                    Text(text = stringResource(id = R.string.habit_card_menu_edit))
+                },
+                leadingIcon = {
+                    Icon(
+                        imageVector = Icons.Filled.Edit,
+                        contentDescription = null,
+                        modifier = Modifier.size(24.dp)
+                    )
+                },
+                onClick = {
+                    onEditHabit()
+                    showMenu = false
+                }
+            )
+
+            // 删除
+            DropdownMenuItem(
+                text = {
+                    Text(text = stringResource(id = R.string.habit_card_menu_delete))
+                },
+                leadingIcon = {
+                    Icon(
+                        imageVector = Icons.Filled.Delete,
+                        contentDescription = null,
+                        modifier = Modifier.size(24.dp)
+                    )
+                },
+                onClick = {
+                    onDeleteHabit()
+                    showMenu = false
+                }
+            )
         }
     }
 }
@@ -327,7 +409,10 @@ fun HabitCardPreview() {
                 completionCount = 15
             ),
             onClick = {},
-            onToggleCompletion = {}
+            onToggleCompletion = {},
+            onUndoCompletion = {},
+            onEditHabit = {},
+            onDeleteHabit = {}
         )
     }
 }
@@ -343,7 +428,10 @@ fun HabitCardCompletedPreview() {
                 completionCount = 30
             ),
             onClick = {},
-            onToggleCompletion = {}
+            onToggleCompletion = {},
+            onUndoCompletion = {},
+            onEditHabit = {},
+            onDeleteHabit = {}
         )
     }
 }

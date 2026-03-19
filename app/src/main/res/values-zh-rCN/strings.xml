@@ -65,4 +65,5 @@
     <string name="create_habit_notes_max_length_hint">最多可输入 2000 个字符</string>
     <string name="create_habit_save_button">保存</string>
     <string name="create_habit_cancel_button">取消</string>
+    <string name="create_habit_validation_failed">请填写所有必填项</string>
 </resources>

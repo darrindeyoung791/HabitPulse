@@ -124,6 +124,15 @@ class HabitViewModel(
     }
 
     /**
+     * 撤销习惯的完成状态（completionCount 减 1）
+     */
+    fun undoHabitCompletion(habit: Habit) {
+        viewModelScope.launch {
+            repository.undoCompletionStatus(habit)
+        }
+    }
+
+    /**
      * 重置保存状态标志
      */
     fun resetSaveSuccess() {

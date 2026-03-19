@@ -586,13 +586,48 @@ fun HabitCreationScreen(
                             style = MaterialTheme.typography.bodyLarge,
                             color = MaterialTheme.colorScheme.onSurface
                         )
-                        OutlinedButton(
-                            onClick = {
-                                currentTimePickerTime = java.time.LocalTime.now()
-                                showTimePicker = true
-                            }
+
+                        // Button with animated shape
+                        val interactionSource = remember { MutableInteractionSource() }
+                        val isPressed by interactionSource.collectIsPressedAsState()
+
+                        // 按压时圆角变大动画
+                        val cornerSize = animateDpAsState(
+                            targetValue = if (isPressed) 24.dp else 8.dp,
+                            label = "cornerSize"
+                        )
+
+                        Surface(
+                            modifier = Modifier
+                                .height(40.dp)
+                                .clickable(
+                                    interactionSource = interactionSource,
+                                    indication = null
+                                ) {
+                                    currentTimePickerTime = java.time.LocalTime.now()
+                                    showTimePicker = true
+                                },
+                            shape = RoundedCornerShape(cornerSize.value),
+                            color = MaterialTheme.colorScheme.primaryContainer,
+                            contentColor = MaterialTheme.colorScheme.onPrimaryContainer
                         ) {
-                            Text(text = stringResource(id = R.string.create_habit_add_reminder_button))
+                            Row(
+                                modifier = Modifier
+                                    .fillMaxHeight()
+                                    .padding(horizontal = 16.dp),
+                                horizontalArrangement = Arrangement.spacedBy(8.dp),
+                                verticalAlignment = Alignment.CenterVertically
+                            ) {
+                                Icon(
+                                    imageVector = Icons.Outlined.Add,
+                                    contentDescription = null,
+                                    modifier = Modifier.size(18.dp)
+                                )
+                                Text(
+                                    text = stringResource(id = R.string.create_habit_add_reminder_button),
+                                    style = MaterialTheme.typography.bodyMedium
+                                )
+                            }
                         }
                     }
                     

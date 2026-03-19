@@ -99,14 +99,23 @@ class HabitRepository(private val habitDao: HabitDao) {
     
     /**
      * 切换习惯的完成状态
-     * 
+     *
      * @param habit 习惯对象
      */
     suspend fun toggleCompletionStatus(habit: Habit) {
         val newStatus = !habit.completedToday
         updateCompletionStatus(habit.id, newStatus)
     }
-    
+
+    /**
+     * 撤销习惯的完成状态（completionCount 减 1）
+     *
+     * @param habit 习惯对象
+     */
+    suspend fun undoCompletionStatus(habit: Habit) {
+        habitDao.undoCompletionStatus(habit.id, System.currentTimeMillis())
+    }
+
     /**
      * 重置所有习惯的完成状态（用于每日重置）
      */
