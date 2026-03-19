@@ -261,7 +261,7 @@ fun HabitCard(
     Box(
         modifier = Modifier.fillMaxWidth()
     ) {
-        Card(
+        OutlinedCard(
             modifier = Modifier
                 .fillMaxWidth()
                 .heightIn(min = 120.dp)
@@ -269,12 +269,8 @@ fun HabitCard(
                     onClick = onClick,
                     onLongClick = { showMenu = true }
                 ),
-            colors = CardDefaults.cardColors(
-                containerColor = if (habit.completedToday) {
-                    MaterialTheme.colorScheme.secondaryContainer.copy(alpha = 0.5f)
-                } else {
-                    MaterialTheme.colorScheme.surfaceVariant
-                }
+            colors = CardDefaults.outlinedCardColors(
+                containerColor = MaterialTheme.colorScheme.surfaceContainerLowest
             )
         ) {
             Row(
@@ -287,18 +283,14 @@ fun HabitCard(
                 // 左侧内容：习惯信息
                 Column(
                     modifier = Modifier.weight(1f),
-                    verticalArrangement = Arrangement.spacedBy(4.dp)
+                    verticalArrangement = Arrangement.spacedBy(8.dp)
                 ) {
                     // 习惯名称（大字体）
                     Text(
                         text = habit.title,
                         style = MaterialTheme.typography.headlineSmall,
                         fontWeight = FontWeight.Bold,
-                        color = if (habit.completedToday) {
-                            MaterialTheme.colorScheme.onSurfaceVariant
-                        } else {
-                            MaterialTheme.colorScheme.onSurface
-                        },
+                        color = MaterialTheme.colorScheme.onSurface,
                         maxLines = 2,
                         overflow = TextOverflow.Ellipsis
                     )
@@ -310,17 +302,10 @@ fun HabitCard(
                         color = MaterialTheme.colorScheme.onSurfaceVariant
                     )
 
-                    // 重复周期和提醒时间（带图标）
-                    Row(
-                        verticalAlignment = Alignment.CenterVertically
+                    // 重复周期和提醒时间
+                    Column(
+                        verticalArrangement = Arrangement.spacedBy(4.dp)
                     ) {
-                        Icon(
-                            imageVector = Icons.Filled.AccessTime,
-                            contentDescription = null,
-                            modifier = Modifier.size(20.dp),
-                            tint = MaterialTheme.colorScheme.onSurfaceVariant
-                        )
-                        Spacer(modifier = Modifier.width(4.dp))
                         // Build day names map for reuse
                         val dayNames = listOf(
                             stringResource(id = R.string.habit_card_repeat_days_sunday),
@@ -371,29 +356,18 @@ fun HabitCard(
                         )
                     }
 
-                    // 备注信息（带图标，仅当有备注时显示）
+                    // 备注信息（仅当有备注时显示）
                     if (habit.notes.isNotBlank()) {
-                        Row(
-                            verticalAlignment = Alignment.Top
-                        ) {
-                            Icon(
-                                imageVector = Icons.Filled.Message,
-                                contentDescription = null,
-                                modifier = Modifier.size(20.dp),
-                                tint = MaterialTheme.colorScheme.onSurfaceVariant
+                        Text(
+                            text = formatNotesPreview(habit.notes),
+                            style = MaterialTheme.typography.bodyMedium,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant,
+                            maxLines = 3,
+                            overflow = TextOverflow.Ellipsis,
+                            modifier = Modifier.combinedClickable(
+                                onClick = { showNotesDialog = true }
                             )
-                            Spacer(modifier = Modifier.width(4.dp))
-                            Text(
-                                text = formatNotesPreview(habit.notes),
-                                style = MaterialTheme.typography.bodyMedium,
-                                color = MaterialTheme.colorScheme.onSurfaceVariant,
-                                maxLines = 3,
-                                overflow = TextOverflow.Ellipsis,
-                                modifier = Modifier.combinedClickable(
-                                    onClick = { showNotesDialog = true }
-                                )
-                            )
-                        }
+                        )
                     }
                 }
 

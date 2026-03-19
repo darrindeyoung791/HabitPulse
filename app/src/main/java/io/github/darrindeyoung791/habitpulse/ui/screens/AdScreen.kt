@@ -108,12 +108,6 @@ fun AdScreen(
                         horizontalArrangement = Arrangement.Center,
                         verticalAlignment = Alignment.CenterVertically
                     ) {
-                        Icon(
-                            imageVector = Icons.AutoMirrored.Outlined.Forward,
-                            contentDescription = null,
-                            modifier = Modifier.size(24.dp)
-                        )
-                        Spacer(modifier = Modifier.width(12.dp))
                         Text(
                             text = stringResource(id = R.string.ad_skip_button, countdown),
                             style = MaterialTheme.typography.titleLarge,
