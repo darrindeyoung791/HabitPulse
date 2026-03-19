@@ -13,7 +13,7 @@
     <string name="settings_support_habitpulse">Support %1$s</string>
     <string name="settings_support_habitpulse_description">Enable splash ad to support %1$s. Thank you for your support!</string>
     <string name="settings_support_habitpulse_switch">Enable Splash Ad</string>
-    <string name="settings_support_habitpulse_switch_description">Show 5-second splash ad to support %1$s development, you can turn it off</string>
+    <string name="settings_support_habitpulse_switch_description">Display a 5-second splash ad when the app starts. If you find the advertisements bothersome, you can turn this option off anytime.</string>
     <string name="ad_skip_button">Skip Ad (%1$ds)</string>
     <string name="ad_space_for_rent">This could be your ad.</string>
     <string name="main_calendar_view">Calendar view</string>
@@ -77,7 +77,7 @@
     <string name="habit_card_repeat_daily">Daily</string>
     <string name="habit_card_repeat_weekly">Mon, Tue, Wed</string>
     <string name="habit_card_repeat_days_format">Every %s</string>
-    <string name="habit_card_reminder_count">%1$s et al. %2$d times</string>
+    <string name="habit_card_reminder_count">%1$s etc. %2$d times</string>
     <string name="habit_card_reminder_single">%s</string>
     <string name="habit_card_notes_preview">%s…</string>
     <string name="habit_card_checkin_button">Check-in</string>
@@ -93,4 +93,5 @@
     <string name="habit_card_repeat_days_thursday">Thu</string>
     <string name="habit_card_repeat_days_friday">Fri</string>
     <string name="habit_card_repeat_days_saturday">Sat</string>
+    <string name="habit_card_repeat_days_separator">, </string>
 </resources>

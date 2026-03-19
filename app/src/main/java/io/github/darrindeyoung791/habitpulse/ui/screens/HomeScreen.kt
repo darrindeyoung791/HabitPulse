@@ -316,10 +316,11 @@ fun HabitCard(
                             stringResource(id = R.string.habit_card_repeat_days_friday),
                             stringResource(id = R.string.habit_card_repeat_days_saturday)
                         )
+                        val daySeparator = stringResource(id = R.string.habit_card_repeat_days_separator)
                         val repeatCycleText = when (habit.repeatCycle) {
                             RepeatCycle.DAILY -> stringResource(id = R.string.habit_card_repeat_daily)
                             RepeatCycle.WEEKLY -> {
-                                val daysText = repeatDays.joinToString("、") { dayIndex ->
+                                val daysText = repeatDays.joinToString(daySeparator) { dayIndex ->
                                     dayNames.getOrElse(dayIndex) { "" }
                                 }
                                 stringResource(id = R.string.habit_card_repeat_days_format, daysText)
@@ -541,10 +542,11 @@ fun ReminderDetailDialog(
                     stringResource(id = R.string.habit_card_repeat_days_friday),
                     stringResource(id = R.string.habit_card_repeat_days_saturday)
                 )
+                val daySeparator = stringResource(id = R.string.habit_card_repeat_days_separator)
                 val repeatCycleText = when (repeatCycle) {
                     RepeatCycle.DAILY -> stringResource(id = R.string.habit_card_repeat_daily)
                     RepeatCycle.WEEKLY -> {
-                        val daysText = repeatDays.joinToString(", ") { dayIndex ->
+                        val daysText = repeatDays.joinToString(daySeparator) { dayIndex ->
                             dayNames.getOrElse(dayIndex) { "" }
                         }
                         stringResource(id = R.string.habit_card_repeat_days_format, daysText)
