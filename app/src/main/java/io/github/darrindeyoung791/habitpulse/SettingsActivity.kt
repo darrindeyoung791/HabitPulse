@@ -20,7 +20,10 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import io.github.darrindeyoung791.habitpulse.data.preferences.UserPreferences
 import io.github.darrindeyoung791.habitpulse.ui.theme.HabitPulseTheme
+import kotlinx.coroutines.launch
 
 class SettingsActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -39,6 +42,11 @@ class SettingsActivity : ComponentActivity() {
 @Composable
 fun SettingsScreen() {
     val context = LocalContext.current
+    val scope = rememberCoroutineScope()
+    val userPreferences = remember { UserPreferences.getInstance(context) }
+    
+    // 收集开屏广告设置状态
+    val showSplashAd by userPreferences.showSplashAdFlow.collectAsStateWithLifecycle(initialValue = false)
 
     val versionName = remember {
         try {
@@ -80,13 +88,51 @@ fun SettingsScreen() {
                 .fillMaxSize()
                 .padding(innerPadding)
         ) {
+            // 支持部分
+            item {
+                // Section header
+                Text(
+                    text = stringResource(id = R.string.settings_support_habitpulse, stringResource(id = R.string.app_name)),
+                    style = MaterialTheme.typography.labelMedium,
+                    color = MaterialTheme.colorScheme.primary,
+                    modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp)
+                )
+                
+                // 支持说明文字
+                Text(
+                    text = stringResource(id = R.string.settings_support_habitpulse_description, stringResource(id = R.string.app_name)),
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    modifier = Modifier.padding(horizontal = 16.dp, vertical = 4.dp)
+                )
+
+                // Support HabitPulse switch
+                SettingsSwitchItem(
+                    headline = stringResource(id = R.string.settings_support_habitpulse_switch),
+                    supportingText = stringResource(id = R.string.settings_support_habitpulse_switch_description, stringResource(id = R.string.app_name)),
+                    checked = showSplashAd,
+                    onCheckedChange = { isChecked ->
+                        scope.launch {
+                            userPreferences.setShowSplashAd(isChecked)
+                        }
+                    },
+                    leadingIcon = {
+                        Icon(
+                            imageVector = Icons.Outlined.FavoriteBorder,
+                            contentDescription = null
+                        )
+                    }
+                )
+            }
+            
+            // 关于部分
             item {
                 // Section header
                 Text(
                     text = stringResource(id = R.string.settings_about_section),
                     style = MaterialTheme.typography.labelMedium,
                     color = MaterialTheme.colorScheme.primary,
-                    modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp)
+                    modifier = Modifier.padding(horizontal = 16.dp, vertical = 16.dp)
                 )
 
                 // Privacy notice
@@ -163,6 +209,58 @@ fun SettingsScreen() {
                     }
                 }
             }
+        }
+    }
+}
+
+@Composable
+fun SettingsSwitchItem(
+    headline: String,
+    supportingText: String,
+    checked: Boolean,
+    onCheckedChange: (Boolean) -> Unit,
+    leadingIcon: @Composable () -> Unit
+) {
+    Surface(
+        modifier = Modifier.fillMaxWidth(),
+        onClick = { },
+        color = MaterialTheme.colorScheme.surface
+    ) {
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(horizontal = 16.dp, vertical = 12.dp),
+            horizontalArrangement = Arrangement.SpaceBetween,
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            Row(
+                modifier = Modifier
+                    .weight(1f)
+                    .padding(end = 16.dp),
+                horizontalArrangement = Arrangement.spacedBy(16.dp),
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                leadingIcon()
+                Column(
+                    modifier = Modifier.weight(1f)
+                ) {
+                    Text(
+                        text = headline,
+                        style = MaterialTheme.typography.bodyLarge,
+                        color = MaterialTheme.colorScheme.onSurface
+                    )
+                    Spacer(modifier = Modifier.height(2.dp))
+                    Text(
+                        text = supportingText,
+                        style = MaterialTheme.typography.bodyMedium,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                    )
+                }
+            }
+            Switch(
+                checked = checked,
+                onCheckedChange = onCheckedChange
+            )
         }
     }
 }

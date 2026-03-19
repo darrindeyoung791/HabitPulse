@@ -34,7 +34,7 @@ fun HomeScreen(
     onNavigateToSettings: () -> Unit,
     onEditHabit: (Habit) -> Unit,
     application: HabitPulseApplication,
-    onSplashScreenReady: () -> Unit = {}
+    onHomeDataLoaded: () -> Unit = {}
 ) {
     // 防重复点击处理器
     val clickHandler = rememberDebounceClickHandler()
@@ -50,10 +50,10 @@ fun HomeScreen(
     // 收集加载状态
     val isLoading by viewModel.isLoading.collectAsStateWithLifecycle(initialValue = true)
     
-    // 当数据加载完成时，通知 splash screen 可以消失了
+    // 当数据加载完成时，通知调用方
     LaunchedEffect(isLoading) {
         if (!isLoading) {
-            onSplashScreenReady()
+            onHomeDataLoaded()
         }
     }
 
@@ -416,7 +416,7 @@ fun HomeScreenPreview() {
             onNavigateToSettings = {},
             onEditHabit = {},
             application = HabitPulseApplication(),
-            onSplashScreenReady = {}
+            onHomeDataLoaded = {}
         )
     }
 }
