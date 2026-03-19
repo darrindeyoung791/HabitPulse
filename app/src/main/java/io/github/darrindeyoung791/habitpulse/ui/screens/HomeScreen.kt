@@ -1,16 +1,24 @@
 package io.github.darrindeyoung791.habitpulse.ui.screens
 
+import androidx.compose.animation.core.animateFloatAsState
+import androidx.compose.animation.core.tween
 import androidx.compose.foundation.combinedClickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.*
 import androidx.compose.material.icons.filled.*
 import androidx.compose.material.icons.outlined.*
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
+import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.*
 import androidx.compose.ui.draw.alpha
+import androidx.compose.ui.draw.clip
+import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
@@ -22,10 +30,12 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import io.github.darrindeyoung791.habitpulse.HabitPulseApplication
 import io.github.darrindeyoung791.habitpulse.R
 import io.github.darrindeyoung791.habitpulse.data.model.Habit
+import io.github.darrindeyoung791.habitpulse.data.model.RepeatCycle
 import io.github.darrindeyoung791.habitpulse.ui.theme.HabitPulseTheme
 import io.github.darrindeyoung791.habitpulse.ui.utils.rememberDebounceClickHandler
 import io.github.darrindeyoung791.habitpulse.viewmodel.HabitViewModel
 import kotlinx.coroutines.launch
+import org.json.JSONArray
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -49,7 +59,7 @@ fun HomeScreen(
     val habits by viewModel.habitsFlow.collectAsStateWithLifecycle(initialValue = emptyList())
     // 收集加载状态
     val isLoading by viewModel.isLoading.collectAsStateWithLifecycle(initialValue = true)
-    
+
     // 当数据加载完成时，通知调用方
     LaunchedEffect(isLoading) {
         if (!isLoading) {
@@ -153,7 +163,7 @@ fun HomeScreen(
                 modifier = Modifier.padding(paddingValues),
                 habits = habits,
                 onHabitClick = { onEditHabit(it) },
-                onToggleCompletion = { viewModel.toggleHabitCompletion(it) },
+                onCheckIn = { viewModel.incrementCompletionCount(it) },
                 onUndoCompletion = { viewModel.undoHabitCompletion(it) },
                 onDeleteHabit = { viewModel.deleteHabit(it) }
             )
@@ -205,7 +215,7 @@ fun HabitListContent(
     modifier: Modifier = Modifier,
     habits: List<Habit>,
     onHabitClick: (Habit) -> Unit,
-    onToggleCompletion: (Habit) -> Unit,
+    onCheckIn: (Habit) -> Unit,
     onUndoCompletion: (Habit) -> Unit,
     onDeleteHabit: (Habit) -> Unit
 ) {
@@ -218,25 +228,35 @@ fun HabitListContent(
             HabitCard(
                 habit = habit,
                 onClick = { onHabitClick(habit) },
-                onToggleCompletion = { onToggleCompletion(habit) },
+                onCheckIn = { onCheckIn(habit) },
                 onUndoCompletion = { onUndoCompletion(habit) },
                 onEditHabit = { onHabitClick(habit) },
                 onDeleteHabit = { onDeleteHabit(habit) }
             )
         }
+        // Add bottom spacer to prevent FAB from covering last item
+        item {
+            Spacer(modifier = Modifier.height(100.dp))
+        }
     }
 }
 
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun HabitCard(
     habit: Habit,
     onClick: () -> Unit,
-    onToggleCompletion: () -> Unit,
+    onCheckIn: () -> Unit,
     onUndoCompletion: () -> Unit,
     onEditHabit: () -> Unit,
     onDeleteHabit: () -> Unit
 ) {
     var showMenu by remember { mutableStateOf(false) }
+    var showReminderDialog by remember { mutableStateOf(false) }
+    var showNotesDialog by remember { mutableStateOf(false) }
+
+    val reminderTimes = habit.getReminderTimesList()
+    val repeatDays = habit.getRepeatDaysList()
 
     Box(
         modifier = Modifier.fillMaxWidth()
@@ -244,7 +264,7 @@ fun HabitCard(
         Card(
             modifier = Modifier
                 .fillMaxWidth()
-                .heightIn(min = 72.dp)
+                .heightIn(min = 120.dp)
                 .combinedClickable(
                     onClick = onClick,
                     onLongClick = { showMenu = true }
@@ -261,85 +281,126 @@ fun HabitCard(
                 modifier = Modifier
                     .fillMaxWidth()
                     .padding(16.dp),
-                horizontalArrangement = Arrangement.spacedBy(16.dp),
+                horizontalArrangement = Arrangement.SpaceBetween,
                 verticalAlignment = Alignment.CenterVertically
             ) {
-                // 完成状态复选框
-                Checkbox(
-                    checked = habit.completedToday,
-                    onCheckedChange = { onToggleCompletion() },
-                    colors = CheckboxDefaults.colors(
-                        checkedColor = MaterialTheme.colorScheme.primary,
-                        uncheckedColor = MaterialTheme.colorScheme.onSurfaceVariant
-                    )
-                )
-
-                // 习惯信息
+                // 左侧内容：习惯信息
                 Column(
                     modifier = Modifier.weight(1f),
                     verticalArrangement = Arrangement.spacedBy(4.dp)
                 ) {
+                    // 习惯名称（大字体）
                     Text(
                         text = habit.title,
-                        style = MaterialTheme.typography.titleMedium,
+                        style = MaterialTheme.typography.headlineSmall,
+                        fontWeight = FontWeight.Bold,
                         color = if (habit.completedToday) {
                             MaterialTheme.colorScheme.onSurfaceVariant
                         } else {
                             MaterialTheme.colorScheme.onSurface
                         },
-                        maxLines = 1,
+                        maxLines = 2,
                         overflow = TextOverflow.Ellipsis
                     )
 
-                    // 显示重复周期和提醒时间
-                    Row(
-                        horizontalArrangement = Arrangement.spacedBy(8.dp)
-                    ) {
-                        Text(
-                            text = when (habit.repeatCycle) {
-                                io.github.darrindeyoung791.habitpulse.data.model.RepeatCycle.DAILY ->
-                                    stringResource(id = R.string.create_habit_daily_option)
-                                io.github.darrindeyoung791.habitpulse.data.model.RepeatCycle.WEEKLY ->
-                                    stringResource(id = R.string.create_habit_weekly_option)
-                            },
-                            style = MaterialTheme.typography.bodySmall,
-                            color = MaterialTheme.colorScheme.onSurfaceVariant
-                        )
+                    // 已完成次数
+                    Text(
+                        text = stringResource(id = R.string.habit_card_completed_count, habit.completionCount),
+                        style = MaterialTheme.typography.bodyMedium,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                    )
 
-                        val reminderCount = habit.getReminderTimesList().size
-                        if (reminderCount > 0) {
+                    // 重复周期和提醒时间（带图标）
+                    Row(
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Icon(
+                            imageVector = Icons.Filled.AccessTime,
+                            contentDescription = null,
+                            modifier = Modifier.size(20.dp),
+                            tint = MaterialTheme.colorScheme.onSurfaceVariant
+                        )
+                        Spacer(modifier = Modifier.width(4.dp))
+                        // Build day names map for reuse
+                        val dayNames = listOf(
+                            stringResource(id = R.string.habit_card_repeat_days_sunday),
+                            stringResource(id = R.string.habit_card_repeat_days_monday),
+                            stringResource(id = R.string.habit_card_repeat_days_tuesday),
+                            stringResource(id = R.string.habit_card_repeat_days_wednesday),
+                            stringResource(id = R.string.habit_card_repeat_days_thursday),
+                            stringResource(id = R.string.habit_card_repeat_days_friday),
+                            stringResource(id = R.string.habit_card_repeat_days_saturday)
+                        )
+                        val repeatCycleText = when (habit.repeatCycle) {
+                            RepeatCycle.DAILY -> stringResource(id = R.string.habit_card_repeat_daily)
+                            RepeatCycle.WEEKLY -> {
+                                val daysText = repeatDays.joinToString("、") { dayIndex ->
+                                    dayNames.getOrElse(dayIndex) { "" }
+                                }
+                                stringResource(id = R.string.habit_card_repeat_days_format, daysText)
+                            }
+                        }
+                        val reminderText = if (reminderTimes.isEmpty()) {
+                            ""
+                        } else {
+                            val firstTime = reminderTimes.first()
+                            if (reminderTimes.size == 1) {
+                                stringResource(id = R.string.habit_card_reminder_single, firstTime)
+                            } else {
+                                stringResource(
+                                    id = R.string.habit_card_reminder_count,
+                                    firstTime,
+                                    reminderTimes.size
+                                )
+                            }
+                        }
+                        val repeatInfoText = if (reminderText.isNotEmpty()) {
+                            "$repeatCycleText · $reminderText"
+                        } else {
+                            repeatCycleText
+                        }
+                        Text(
+                            text = repeatInfoText,
+                            style = MaterialTheme.typography.bodyMedium,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant,
+                            maxLines = 1,
+                            overflow = TextOverflow.Ellipsis,
+                            modifier = Modifier.combinedClickable(
+                                onClick = { showReminderDialog = true }
+                            )
+                        )
+                    }
+
+                    // 备注信息（带图标，仅当有备注时显示）
+                    if (habit.notes.isNotBlank()) {
+                        Row(
+                            verticalAlignment = Alignment.Top
+                        ) {
+                            Icon(
+                                imageVector = Icons.Filled.Message,
+                                contentDescription = null,
+                                modifier = Modifier.size(20.dp),
+                                tint = MaterialTheme.colorScheme.onSurfaceVariant
+                            )
+                            Spacer(modifier = Modifier.width(4.dp))
                             Text(
-                                text = "• $reminderCount 个提醒",
-                                style = MaterialTheme.typography.bodySmall,
-                                color = MaterialTheme.colorScheme.onSurfaceVariant
+                                text = formatNotesPreview(habit.notes),
+                                style = MaterialTheme.typography.bodyMedium,
+                                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                                maxLines = 3,
+                                overflow = TextOverflow.Ellipsis,
+                                modifier = Modifier.combinedClickable(
+                                    onClick = { showNotesDialog = true }
+                                )
                             )
                         }
                     }
                 }
 
-                // 完成次数徽章
-                if (habit.completionCount > 0) {
-                    AssistChip(
-                        onClick = { },
-                        label = {
-                            Text(
-                                text = habit.completionCount.toString(),
-                                style = MaterialTheme.typography.labelMedium
-                            )
-                        },
-                        leadingIcon = {
-                            Icon(
-                                imageVector = Icons.Filled.CheckCircle,
-                                contentDescription = null,
-                                modifier = Modifier.size(16.dp)
-                            )
-                        },
-                        colors = AssistChipDefaults.assistChipColors(
-                            containerColor = MaterialTheme.colorScheme.primaryContainer,
-                            labelColor = MaterialTheme.colorScheme.onPrimaryContainer
-                        )
-                    )
-                }
+                // 右侧：打卡按钮（垂直居中）
+                CheckInButton(
+                    onClick = onCheckIn
+                )
             }
         }
 
@@ -348,8 +409,8 @@ fun HabitCard(
             expanded = showMenu,
             onDismissRequest = { showMenu = false }
         ) {
-            // 撤销打卡（仅当今天已打卡时显示）
-            if (habit.completedToday && habit.completionCount > 0) {
+            // 撤销打卡（当已完成次数大于 0 时显示）
+            if (habit.completionCount > 0) {
                 DropdownMenuItem(
                     text = {
                         Text(text = stringResource(id = R.string.habit_card_menu_undo))
@@ -405,6 +466,205 @@ fun HabitCard(
             )
         }
     }
+
+    // 提醒详情对话框
+    if (showReminderDialog) {
+        ReminderDetailDialog(
+            reminderTimes = reminderTimes,
+            repeatCycle = habit.repeatCycle,
+            repeatDays = repeatDays,
+            onDismiss = { showReminderDialog = false }
+        )
+    }
+
+    // 备注详情对话框
+    if (showNotesDialog) {
+        NotesDetailDialog(
+            notes = habit.notes,
+            onDismiss = { showNotesDialog = false }
+        )
+    }
+}
+
+private fun formatNotesPreview(notes: String): String {
+    val lines = notes.lines().take(3).joinToString("\n")
+    return if (notes.lines().size > 3) {
+        "$lines…"
+    } else {
+        lines
+    }
+}
+
+@Composable
+fun CheckInButton(
+    onClick: () -> Unit
+) {
+    var isPressed by remember { mutableStateOf(false) }
+    val cornerRadius by animateFloatAsState(
+        targetValue = if (isPressed) 20f else 12f,
+        animationSpec = tween(200),
+        label = "cornerRadius"
+    )
+
+    Button(
+        onClick = {
+            isPressed = true
+            onClick()
+        },
+        modifier = Modifier
+            .size(56.dp)
+            .pointerInput(Unit) {
+                awaitPointerEventScope {
+                    while (true) {
+                        val event = awaitPointerEvent()
+                        isPressed = event.changes.any { it.pressed }
+                    }
+                }
+            },
+        shape = RoundedCornerShape(cornerRadius.dp),
+        colors = ButtonDefaults.buttonColors(
+            containerColor = MaterialTheme.colorScheme.primary,
+            contentColor = MaterialTheme.colorScheme.onPrimary
+        ),
+        contentPadding = PaddingValues(0.dp)
+    ) {
+        Icon(
+            imageVector = Icons.Outlined.Check,
+            contentDescription = null,
+            modifier = Modifier.fillMaxSize(0.7f)
+        )
+    }
+}
+
+@Composable
+fun ReminderDetailDialog(
+    reminderTimes: List<String>,
+    repeatCycle: RepeatCycle,
+    repeatDays: List<Int>,
+    onDismiss: () -> Unit
+) {
+    AlertDialog(
+        onDismissRequest = onDismiss,
+        title = {
+            Text(text = stringResource(id = R.string.habit_card_reminder_dialog_title))
+        },
+        text = {
+            Column(
+                modifier = Modifier
+                    .widthIn(max = 350.dp)
+                    .fillMaxWidth()
+                    .heightIn(max = LocalConfiguration.current.screenHeightDp.dp * 0.75f)
+                    .verticalScroll(rememberScrollState())
+            ) {
+                // 重复周期
+                // Build day names map for reuse
+                val dayNames = listOf(
+                    stringResource(id = R.string.habit_card_repeat_days_sunday),
+                    stringResource(id = R.string.habit_card_repeat_days_monday),
+                    stringResource(id = R.string.habit_card_repeat_days_tuesday),
+                    stringResource(id = R.string.habit_card_repeat_days_wednesday),
+                    stringResource(id = R.string.habit_card_repeat_days_thursday),
+                    stringResource(id = R.string.habit_card_repeat_days_friday),
+                    stringResource(id = R.string.habit_card_repeat_days_saturday)
+                )
+                val repeatCycleText = when (repeatCycle) {
+                    RepeatCycle.DAILY -> stringResource(id = R.string.habit_card_repeat_daily)
+                    RepeatCycle.WEEKLY -> {
+                        val daysText = repeatDays.joinToString(", ") { dayIndex ->
+                            dayNames.getOrElse(dayIndex) { "" }
+                        }
+                        stringResource(id = R.string.habit_card_repeat_days_format, daysText)
+                    }
+                }
+                Text(
+                    text = repeatCycleText,
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = MaterialTheme.colorScheme.onSurface
+                )
+
+                Spacer(modifier = Modifier.height(16.dp))
+
+                // 提醒时间列表
+                if (reminderTimes.isNotEmpty()) {
+                    Text(
+                        text = stringResource(id = R.string.create_habit_reminder_time_label),
+                        style = MaterialTheme.typography.labelMedium,
+                        color = MaterialTheme.colorScheme.primary
+                    )
+                    Spacer(modifier = Modifier.height(8.dp))
+                    Column(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .heightIn(max = 200.dp)
+                    ) {
+                        reminderTimes.forEach { time ->
+                            Row(
+                                verticalAlignment = Alignment.CenterVertically
+                            ) {
+                                Icon(
+                                    imageVector = Icons.Filled.AccessTime,
+                                    contentDescription = null,
+                                    modifier = Modifier.size(16.dp),
+                                    tint = MaterialTheme.colorScheme.onSurfaceVariant
+                                )
+                                Spacer(modifier = Modifier.width(8.dp))
+                                Text(
+                                    text = time,
+                                    style = MaterialTheme.typography.bodyMedium,
+                                    color = MaterialTheme.colorScheme.onSurface
+                                )
+                            }
+                            Spacer(modifier = Modifier.height(4.dp))
+                        }
+                    }
+                } else {
+                    Text(
+                        text = stringResource(id = R.string.create_habit_no_reminder_set),
+                        style = MaterialTheme.typography.bodyMedium,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                    )
+                }
+            }
+        },
+        confirmButton = {
+            TextButton(onClick = onDismiss) {
+                Text(text = stringResource(id = R.string.habit_card_reminder_dialog_dismiss))
+            }
+        }
+    )
+}
+
+@Composable
+fun NotesDetailDialog(
+    notes: String,
+    onDismiss: () -> Unit
+) {
+    AlertDialog(
+        onDismissRequest = onDismiss,
+        title = {
+            Text(text = stringResource(id = R.string.habit_card_notes_dialog_title))
+        },
+        text = {
+            Column(
+                modifier = Modifier
+                    .widthIn(max = 350.dp)
+                    .fillMaxWidth()
+                    .heightIn(max = LocalConfiguration.current.screenHeightDp.dp * 0.75f)
+                    .verticalScroll(rememberScrollState())
+            ) {
+                Text(
+                    text = notes,
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = MaterialTheme.colorScheme.onSurface
+                )
+            }
+        },
+        confirmButton = {
+            TextButton(onClick = onDismiss) {
+                Text(text = stringResource(id = R.string.habit_card_notes_dialog_dismiss))
+            }
+        }
+    )
 }
 
 @Preview(showBackground = true)
@@ -429,10 +689,13 @@ fun HabitCardPreview() {
             habit = Habit(
                 title = "每天喝水",
                 completedToday = false,
-                completionCount = 15
+                completionCount = 15,
+                repeatCycle = RepeatCycle.DAILY,
+                reminderTimes = "[\"08:00\",\"12:00\",\"20:00\"]",
+                notes = "记得每次喝水时要慢慢喝\n不要一口气喝完\n最好喝温水"
             ),
             onClick = {},
-            onToggleCompletion = {},
+            onCheckIn = {},
             onUndoCompletion = {},
             onEditHabit = {},
             onDeleteHabit = {}
@@ -448,10 +711,36 @@ fun HabitCardCompletedPreview() {
             habit = Habit(
                 title = "晨跑",
                 completedToday = true,
-                completionCount = 30
+                completionCount = 30,
+                repeatCycle = RepeatCycle.WEEKLY,
+                repeatDays = "[1,3,5]",
+                reminderTimes = "[\"06:00\"]",
+                notes = "跑步前记得热身\n跑完后要拉伸"
             ),
             onClick = {},
-            onToggleCompletion = {},
+            onCheckIn = {},
+            onUndoCompletion = {},
+            onEditHabit = {},
+            onDeleteHabit = {}
+        )
+    }
+}
+
+@Preview
+@Composable
+fun HabitCardWithNotesPreview() {
+    HabitPulseTheme {
+        HabitCard(
+            habit = Habit(
+                title = "阅读",
+                completedToday = false,
+                completionCount = 5,
+                repeatCycle = RepeatCycle.DAILY,
+                reminderTimes = "[\"21:00\"]",
+                notes = "每天至少读 30 分钟\n记录读书笔记\n分享读书心得"
+            ),
+            onClick = {},
+            onCheckIn = {},
             onUndoCompletion = {},
             onEditHabit = {},
             onDeleteHabit = {}

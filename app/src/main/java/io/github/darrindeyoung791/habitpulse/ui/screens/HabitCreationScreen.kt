@@ -1112,7 +1112,7 @@ fun HabitCreationScreen(
                     
                     OutlinedTextField(
                         value = notes,
-                        onValueChange = { 
+                        onValueChange = {
                             if (it.length <= 2000) {
                                 notes = it
                             } else {
@@ -1126,6 +1126,7 @@ fun HabitCreationScreen(
                             .fillMaxWidth()
                             .heightIn(min = 120.dp),
                         maxLines = 10,
+                        minLines = 5,
                     )
                 }
             }

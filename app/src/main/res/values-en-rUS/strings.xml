@@ -72,4 +72,24 @@
     <string name="habit_card_menu_undo">Undo check-in</string>
     <string name="habit_card_menu_edit">Edit</string>
     <string name="habit_card_menu_delete">Delete</string>
+    <string name="habit_card_completed_count">Completed %d times</string>
+    <string name="habit_card_repeat_daily">Daily</string>
+    <string name="habit_card_repeat_weekly">Mon, Tue, Wed</string>
+    <string name="habit_card_repeat_days_format">Every %s</string>
+    <string name="habit_card_reminder_count">%1$s et al. %2$d times</string>
+    <string name="habit_card_reminder_single">%s</string>
+    <string name="habit_card_notes_preview">%s…</string>
+    <string name="habit_card_checkin_button">Check-in</string>
+    <string name="habit_card_reminder_dialog_title">Reminder Details</string>
+    <string name="habit_card_reminder_dialog_dismiss">Close</string>
+    <string name="habit_card_notes_dialog_title">Notes Details</string>
+    <string name="habit_card_notes_dialog_dismiss">Close</string>
+    <string name="habit_card_no_notes">No notes</string>
+    <string name="habit_card_repeat_days_sunday">Sun</string>
+    <string name="habit_card_repeat_days_monday">Mon</string>
+    <string name="habit_card_repeat_days_tuesday">Tue</string>
+    <string name="habit_card_repeat_days_wednesday">Wed</string>
+    <string name="habit_card_repeat_days_thursday">Thu</string>
+    <string name="habit_card_repeat_days_friday">Fri</string>
+    <string name="habit_card_repeat_days_saturday">Sat</string>
 </resources>

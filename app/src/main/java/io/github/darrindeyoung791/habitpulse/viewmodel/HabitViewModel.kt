@@ -133,7 +133,17 @@ class HabitViewModel(
     }
 
     /**
+     * 增加习惯的完成次数（打卡）
+     */
+    fun incrementCompletionCount(habit: Habit) {
+        viewModelScope.launch {
+            repository.incrementCompletionCount(habit)
+        }
+    }
+
+    /**
      * 撤销习惯的完成状态（completionCount 减 1）
+     * 适用于任何已完成次数大于 0 的习惯
      */
     fun undoHabitCompletion(habit: Habit) {
         viewModelScope.launch {

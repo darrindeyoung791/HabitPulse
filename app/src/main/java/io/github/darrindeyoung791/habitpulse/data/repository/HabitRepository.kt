@@ -108,6 +108,15 @@ class HabitRepository(private val habitDao: HabitDao) {
     }
 
     /**
+     * 增加习惯的完成次数（打卡）
+     *
+     * @param habit 习惯对象
+     */
+    suspend fun incrementCompletionCount(habit: Habit) {
+        habitDao.incrementCompletionCount(habit.id, System.currentTimeMillis())
+    }
+
+    /**
      * 撤销习惯的完成状态（completionCount 减 1）
      *
      * @param habit 习惯对象
