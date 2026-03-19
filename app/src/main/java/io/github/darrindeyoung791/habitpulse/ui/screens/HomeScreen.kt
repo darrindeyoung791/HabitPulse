@@ -33,7 +33,8 @@ fun HomeScreen(
     onCreateHabit: () -> Unit,
     onNavigateToSettings: () -> Unit,
     onEditHabit: (Habit) -> Unit,
-    application: HabitPulseApplication
+    application: HabitPulseApplication,
+    onSplashScreenReady: () -> Unit = {}
 ) {
     // 防重复点击处理器
     val clickHandler = rememberDebounceClickHandler()
@@ -44,8 +45,17 @@ fun HomeScreen(
         HabitViewModel.Factory(application).create(HabitViewModel::class.java)
     }
 
-    // 收集习惯列表状态
+    // 收集习惯列表状态（使用空列表作为初始值，但会通过 isLoading 控制显示）
     val habits by viewModel.habitsFlow.collectAsStateWithLifecycle(initialValue = emptyList())
+    // 收集加载状态
+    val isLoading by viewModel.isLoading.collectAsStateWithLifecycle(initialValue = true)
+    
+    // 当数据加载完成时，通知 splash screen 可以消失了
+    LaunchedEffect(isLoading) {
+        if (!isLoading) {
+            onSplashScreenReady()
+        }
+    }
 
     Scaffold(
         modifier = Modifier.fillMaxSize(),
@@ -113,7 +123,18 @@ fun HomeScreen(
             )
         }
     ) { paddingValues ->
-        if (habits.isEmpty()) {
+        if (isLoading) {
+            // 加载状态：显示加载指示器
+            Box(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .padding(paddingValues),
+                contentAlignment = Alignment.Center
+            ) {
+                CircularProgressIndicator()
+            }
+        } else if (habits.isEmpty()) {
+            // 空状态：显示空状态内容
             EmptyStateContent(
                 modifier = Modifier.padding(paddingValues),
                 onCreateHabit = {
@@ -127,6 +148,7 @@ fun HomeScreen(
                 }
             )
         } else {
+            // 有数据：显示习惯列表
             HabitListContent(
                 modifier = Modifier.padding(paddingValues),
                 habits = habits,
@@ -393,7 +415,8 @@ fun HomeScreenPreview() {
             onCreateHabit = {},
             onNavigateToSettings = {},
             onEditHabit = {},
-            application = HabitPulseApplication()
+            application = HabitPulseApplication(),
+            onSplashScreenReady = {}
         )
     }
 }

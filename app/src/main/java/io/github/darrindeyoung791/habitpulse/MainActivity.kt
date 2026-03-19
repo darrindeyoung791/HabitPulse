@@ -16,20 +16,32 @@ import io.github.darrindeyoung791.habitpulse.ui.theme.HabitPulseTheme
 
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
-        // Install splash screen for compatibility with Android 11 and below
-        installSplashScreen()
+        // Install splash screen and keep it visible until content is loaded
+        val splashScreen = installSplashScreen()
         super.onCreate(savedInstanceState)
+        
         // Enable edge-to-edge display - system bar colors handled by HabitPulseTheme
         enableEdgeToEdge()
 
         setContent {
             HabitPulseTheme {
                 val navController = rememberNavController()
+                
+                // 控制 splash screen 保持显示的状态
+                // 使用 rememberSaveable 确保状态在配置变更时保持
+                var keepSplashScreen by remember { mutableStateOf(true) }
+                
+                // 设置 splash screen 保持条件
+                splashScreen.setKeepOnScreenCondition { keepSplashScreen }
+                
+                // 将 keepSplashScreen 的状态传递给导航图
+                HabitPulseNavGraph(
+                    navController = navController,
+                    onSplashScreenReady = { keepSplashScreen = false }
+                )
 
                 // 处理系统返回键，确保在主页时按返回键可以退出应用
                 HandleSystemBackPress(navController = navController, activity = this)
-
-                HabitPulseNavGraph(navController = navController)
             }
         }
     }

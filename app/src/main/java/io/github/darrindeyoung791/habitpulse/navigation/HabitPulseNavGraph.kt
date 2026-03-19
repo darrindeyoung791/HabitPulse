@@ -55,7 +55,10 @@ fun getDeviceCornerRadius(): Dp {
 }
 
 @Composable
-fun HabitPulseNavGraph(navController: NavHostController) {
+fun HabitPulseNavGraph(
+    navController: NavHostController,
+    onSplashScreenReady: () -> Unit = {}
+) {
     val cornerRadius = getDeviceCornerRadius()
     val context = LocalContext.current
 
@@ -116,7 +119,8 @@ fun HabitPulseNavGraph(navController: NavHostController) {
                             }
                         }
                     },
-                    application = context.applicationContext as HabitPulseApplication
+                    application = context.applicationContext as HabitPulseApplication,
+                    onSplashScreenReady = onSplashScreenReady
                 )
             }
         }

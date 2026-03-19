@@ -10,6 +10,7 @@ import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.launch
 import java.util.UUID
 
@@ -27,13 +28,21 @@ class HabitViewModel(
 
     /**
      * 所有习惯列表（按创建日期倒序）
+     * 收到第一个数据后会自动将 isLoading 设置为 false
      */
     val habitsFlow: Flow<List<Habit>> = repository.allHabitsFlow
+        .onEach { _isLoading.value = false }
 
     /**
      * 习惯总数
      */
     val habitCountFlow: Flow<Int> = repository.habitCountFlow
+
+    /**
+     * 数据是否正在加载
+     */
+    private val _isLoading = MutableStateFlow(true)
+    val isLoading: StateFlow<Boolean> = _isLoading.asStateFlow()
 
     /**
      * 当前正在编辑的习惯（用于编辑模式）
