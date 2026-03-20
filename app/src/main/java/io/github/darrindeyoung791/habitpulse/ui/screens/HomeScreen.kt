@@ -26,6 +26,7 @@ import androidx.compose.ui.platform.LocalLayoutDirection
 import androidx.compose.ui.*
 import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.input.nestedscroll.nestedScroll
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.res.stringResource
@@ -85,10 +86,10 @@ fun HomeScreen(
     
     // Navigation mode decision logic:
     // - Tablet landscape (≥1200dp): PermanentNavigationDrawer with hamburger menu
-    // - Phone landscape (≥840dp and <1200dp): NavigationRail
+    // - Phone landscape (≥720dp and <1200dp): NavigationRail
     // - All portrait modes: BottomNavigationBar
     val isPermanentDrawer = screenWidthDp >= 1200 && isLandscape
-    val useRail = screenWidthDp >= 840 && screenWidthDp < 1200 && isLandscape
+    val useRail = screenWidthDp >= 720 && screenWidthDp < 1200 && isLandscape
     val useBottomBar = !isPermanentDrawer && !useRail
 
     var currentSection by rememberSaveable { mutableStateOf(HomeSection.Todo) }
@@ -395,14 +396,17 @@ fun HomeScreen(
         // NavigationRail layout for landscape phones (840dp to <1200dp)
         // Rail occupies full height on left, content area on right
         Row(
-            modifier = Modifier.fillMaxSize()
+            modifier = Modifier
+                .fillMaxSize()
+                .background(MaterialTheme.colorScheme.surface)
         ) {
             // NavigationRail - fixed on left side
             // Apply start inset to NavigationRail to handle camera cutout on left
             NavigationRail(
                 modifier = Modifier
                     .fillMaxHeight()
-                    .windowInsetsPadding(WindowInsets.safeDrawing.only(WindowInsetsSides.Start))
+                    .windowInsetsPadding(WindowInsets.safeDrawing.only(WindowInsetsSides.Start)),
+                containerColor = Color.Transparent
             ) {
                 sectionItems.forEach { section ->
                     NavigationRailItem(
@@ -1142,30 +1146,24 @@ fun ReminderDetailDialog(
                         color = MaterialTheme.colorScheme.primary
                     )
                     Spacer(modifier = Modifier.height(8.dp))
-                    Column(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .heightIn(max = 200.dp)
-                    ) {
-                        reminderTimes.forEach { time ->
-                            Row(
-                                verticalAlignment = Alignment.CenterVertically
-                            ) {
-                                Icon(
-                                    imageVector = Icons.Filled.AccessTime,
-                                    contentDescription = null,
-                                    modifier = Modifier.size(16.dp),
-                                    tint = MaterialTheme.colorScheme.onSurfaceVariant
-                                )
-                                Spacer(modifier = Modifier.width(8.dp))
-                                Text(
-                                    text = time,
-                                    style = MaterialTheme.typography.bodyMedium,
-                                    color = MaterialTheme.colorScheme.onSurface
-                                )
-                            }
-                            Spacer(modifier = Modifier.height(4.dp))
+                    reminderTimes.forEach { time ->
+                        Row(
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            Icon(
+                                imageVector = Icons.Filled.AccessTime,
+                                contentDescription = null,
+                                modifier = Modifier.size(16.dp),
+                                tint = MaterialTheme.colorScheme.onSurfaceVariant
+                            )
+                            Spacer(modifier = Modifier.width(8.dp))
+                            Text(
+                                text = time,
+                                style = MaterialTheme.typography.bodyMedium,
+                                color = MaterialTheme.colorScheme.onSurface
+                            )
                         }
+                        Spacer(modifier = Modifier.height(4.dp))
                     }
                 } else {
                     Text(
