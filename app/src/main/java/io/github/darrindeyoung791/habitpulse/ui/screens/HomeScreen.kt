@@ -132,11 +132,9 @@ fun HomeScreen(
                     EmptyStateContent(
                         modifier = modifier,
                         onCreateHabit = {
-                            if (clickHandler.isEnabled) {
-                                scope.launch {
-                                    clickHandler.processClick {
-                                        onCreateHabit()
-                                    }
+                            scope.launch {
+                                clickHandler.processClick {
+                                    onCreateHabit()
                                 }
                             }
                         }
@@ -200,15 +198,12 @@ fun HomeScreen(
                 actions = {
                     IconButton(
                         onClick = {
-                            if (clickHandler.isEnabled) {
-                                scope.launch {
-                                    clickHandler.processClick {
-                                        onNavigateToSettings()
-                                    }
+                            scope.launch {
+                                clickHandler.processClick {
+                                    onNavigateToSettings()
                                 }
                             }
-                        },
-                        enabled = clickHandler.isEnabled
+                        }
                     ) {
                         Icon(
                             imageVector = Icons.Filled.Settings,
@@ -232,15 +227,12 @@ fun HomeScreen(
                 actions = {
                     IconButton(
                         onClick = {
-                            if (clickHandler.isEnabled) {
-                                scope.launch {
-                                    clickHandler.processClick {
-                                        onNavigateToSettings()
-                                    }
+                            scope.launch {
+                                clickHandler.processClick {
+                                    onNavigateToSettings()
                                 }
                             }
-                        },
-                        enabled = clickHandler.isEnabled
+                        }
                     ) {
                         Icon(
                             imageVector = Icons.Filled.Settings,
@@ -367,11 +359,9 @@ fun HomeScreen(
                     if (showFab) {
                         ExtendedFloatingActionButton(
                             onClick = {
-                                if (clickHandler.isEnabled) {
-                                    scope.launch {
-                                        clickHandler.processClick {
-                                            onCreateHabit()
-                                        }
+                                scope.launch {
+                                    clickHandler.processClick {
+                                        onCreateHabit()
                                     }
                                 }
                             },
@@ -381,7 +371,6 @@ fun HomeScreen(
                             text = { Text(text = newHabitLabel) },
                             modifier = Modifier
                                 .semantics { contentDescription = newHabitLabel }
-                                .alpha(if (clickHandler.isEnabled) 1f else 0.5f)
                         )
                     }
                 },
@@ -470,11 +459,9 @@ fun HomeScreen(
                     if (showFab) {
                         ExtendedFloatingActionButton(
                             onClick = {
-                                if (clickHandler.isEnabled) {
-                                    scope.launch {
-                                        clickHandler.processClick {
-                                            onCreateHabit()
-                                        }
+                                scope.launch {
+                                    clickHandler.processClick {
+                                        onCreateHabit()
                                     }
                                 }
                             },
@@ -491,7 +478,6 @@ fun HomeScreen(
                                 )
                                 .padding(16.dp)
                                 .semantics { contentDescription = newHabitLabel }
-                                .alpha(if (clickHandler.isEnabled) 1f else 0.5f)
                         )
                     }
                 }
@@ -539,11 +525,9 @@ fun HomeScreen(
                 if (showFab) {
                     ExtendedFloatingActionButton(
                         onClick = {
-                            if (clickHandler.isEnabled) {
-                                scope.launch {
-                                    clickHandler.processClick {
-                                        onCreateHabit()
-                                    }
+                            scope.launch {
+                                clickHandler.processClick {
+                                    onCreateHabit()
                                 }
                             }
                         },
@@ -553,7 +537,6 @@ fun HomeScreen(
                         text = { Text(text = newHabitLabel) },
                         modifier = Modifier
                             .semantics { contentDescription = newHabitLabel }
-                            .alpha(if (clickHandler.isEnabled) 1f else 0.5f)
                     )
                 }
             },

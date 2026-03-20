@@ -349,20 +349,17 @@ fun HabitCreationScreen(
                     val scope = rememberCoroutineScope()
                     TextButton(
                         onClick = {
-                            if (clickHandler.isEnabled) {
-                                scope.launch {
-                                    clickHandler.processClick {
-                                        // 优先使用导航保护器进行安全返回
-                                        if (navigationGuard != null) {
-                                            navigationGuard.safePopBackStack()
-                                        } else {
-                                            onNavigateBack()
-                                        }
+                            scope.launch {
+                                clickHandler.processClick {
+                                    // 优先使用导航保护器进行安全返回
+                                    if (navigationGuard != null) {
+                                        navigationGuard.safePopBackStack()
+                                    } else {
+                                        onNavigateBack()
                                     }
                                 }
                             }
-                        },
-                        enabled = clickHandler.isEnabled
+                        }
                     ) {
                         Text(
                             text = stringResource(id = R.string.create_habit_cancel_button),
@@ -374,14 +371,14 @@ fun HabitCreationScreen(
                     val scope = rememberCoroutineScope()
                     TextButton(
                         onClick = {
-                            if (clickHandler.isEnabled && !isSaving) {
+                            if (!isSaving) {
                                 scope.launch {
                                     clickHandler.processClick {
                                         // 验证必填项
                                         if (!validateInputs()) {
                                             return@processClick
                                         }
-                                        
+
                                         // 构建 Habit 对象
                                         val habit = if (editMode == EditMode.EDIT && habitId != null) {
                                             // 编辑模式：更新现有习惯
@@ -407,7 +404,7 @@ fun HabitCreationScreen(
                                             .copyWithSupervisorEmails(supervisorEmails)
                                             .copyWithSupervisorPhones(supervisorPhones)
                                         }
-                                        
+
                                         // 保存习惯
                                         if (habit != null) {
                                             viewModel.saveHabit(habit)
@@ -416,7 +413,7 @@ fun HabitCreationScreen(
                                 }
                             }
                         },
-                        enabled = !isSaving && clickHandler.isEnabled
+                        enabled = !isSaving
                     ) {
                         Text(
                             text = stringResource(id = R.string.create_habit_save_button),

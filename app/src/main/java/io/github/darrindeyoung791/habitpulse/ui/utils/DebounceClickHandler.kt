@@ -2,10 +2,8 @@ package io.github.darrindeyoung791.habitpulse.ui.utils
 
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.Stable
-import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
-import androidx.compose.runtime.setValue
 import kotlinx.coroutines.delay
 
 /**
@@ -16,27 +14,22 @@ import kotlinx.coroutines.delay
 class DebounceClickHandler(
     private val debounceTime: Long = 300L
 ) {
-    var isEnabled by mutableStateOf(true)
-        private set
-    
-    private var isProcessing by mutableStateOf(false)
+    private var isProcessing = mutableStateOf(false)
 
     /**
      * 处理点击事件，在防抖时间内只执行一次
      * @param action 要执行的动作
      */
     suspend fun processClick(action: suspend () -> Unit) {
-        if (!isEnabled || isProcessing) return
-        
-        isProcessing = true
-        isEnabled = false
-        
+        if (isProcessing.value) return
+
+        isProcessing.value = true
+
         try {
             action()
         } finally {
             delay(debounceTime)
-            isProcessing = false
-            isEnabled = true
+            isProcessing.value = false
         }
     }
 }
