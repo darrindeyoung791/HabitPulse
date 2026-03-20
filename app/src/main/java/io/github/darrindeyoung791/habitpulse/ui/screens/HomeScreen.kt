@@ -104,8 +104,6 @@ fun HomeScreen(
 
     val scrollBehavior = TopAppBarDefaults.exitUntilCollapsedScrollBehavior()
 
-    val appName = stringResource(id = R.string.app_name)
-
     val displayCutout = WindowInsets.displayCutout
     val layoutDirection = LocalLayoutDirection.current
     val isRailCutoutLeft = useRail && displayCutout.getLeft(LocalDensity.current, layoutDirection) > 0
@@ -173,6 +171,12 @@ fun HomeScreen(
     }
 
     val topAppBarContent: @Composable (Boolean) -> Unit = { isRailVisible ->
+        val currentTitle = when (currentSection) {
+            HomeSection.Todo -> stringResource(id = R.string.main_title_todo)
+            HomeSection.Count -> stringResource(id = R.string.main_title_count)
+            HomeSection.Calendar -> stringResource(id = R.string.main_title_calendar)
+        }
+
         if (isRailVisible) {
             // Phone landscape: use TopAppBar (always collapsed state)
             // to save vertical space
@@ -187,7 +191,7 @@ fun HomeScreen(
                 ),
                 title = {
                     Text(
-                        text = appName,
+                        text = currentTitle,
                         style = MaterialTheme.typography.titleLarge,
                         maxLines = 1,
                         overflow = TextOverflow.Ellipsis
@@ -219,7 +223,7 @@ fun HomeScreen(
             LargeTopAppBar(
                 title = {
                     Text(
-                        text = appName,
+                        text = currentTitle,
                         style = MaterialTheme.typography.headlineLarge,
                         maxLines = 1,
                         overflow = TextOverflow.Ellipsis
@@ -565,7 +569,10 @@ fun HomeScreen(
                     CollapsedNavigationBar(
                         sectionItems = sectionItems,
                         currentSection = currentSection,
-                        onNavigateToSection = navigateToSection
+                        onNavigateToSection = navigateToSection,
+                        todoContentDescription = stringResource(id = R.string.main_tab_todo),
+                        countContentDescription = stringResource(id = R.string.main_tab_count),
+                        calendarContentDescription = stringResource(id = R.string.main_tab_calendar)
                     )
 
                     Box(
@@ -626,7 +633,10 @@ fun CollapsedNavigationBar(
     sectionItems: List<HomeSection>,
     currentSection: HomeSection,
     onNavigateToSection: (HomeSection) -> Unit,
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
+    todoContentDescription: String,
+    countContentDescription: String,
+    calendarContentDescription: String
 ) {
     Column(
         modifier = modifier
@@ -637,7 +647,7 @@ fun CollapsedNavigationBar(
     ) {
         sectionItems.forEach { section ->
             val isSelected = currentSection == section
-            
+
             // Use a single Box with consistent sizing
             Box(
                 modifier = Modifier
@@ -663,9 +673,9 @@ fun CollapsedNavigationBar(
                         HomeSection.Calendar -> Icons.Filled.CalendarMonth
                     },
                     contentDescription = when (section) {
-                        HomeSection.Todo -> stringResource(id = R.string.main_tab_todo)
-                        HomeSection.Count -> stringResource(id = R.string.main_tab_count)
-                        HomeSection.Calendar -> stringResource(id = R.string.main_tab_calendar)
+                        HomeSection.Todo -> todoContentDescription
+                        HomeSection.Count -> countContentDescription
+                        HomeSection.Calendar -> calendarContentDescription
                     },
                     tint = if (isSelected) {
                         MaterialTheme.colorScheme.onSecondaryContainer
