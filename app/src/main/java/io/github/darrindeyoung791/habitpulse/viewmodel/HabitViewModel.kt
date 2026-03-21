@@ -62,6 +62,12 @@ class HabitViewModel(
     private val _saveSuccess = MutableStateFlow<Boolean?>(null)
     val saveSuccess: StateFlow<Boolean?> = _saveSuccess.asStateFlow()
 
+    /**
+     * 新添加的习惯 ID（用于触发动画）
+     */
+    private val _newlyAddedHabitId = MutableStateFlow<UUID?>(null)
+    val newlyAddedHabitId: StateFlow<UUID?> = _newlyAddedHabitId.asStateFlow()
+
     // ============= Data Operations =============
 
     /**
@@ -88,6 +94,8 @@ class HabitViewModel(
             _isSaving.value = true
             try {
                 repository.insertHabit(habit)
+                // Set newly added habit ID for animation trigger
+                _newlyAddedHabitId.value = habit.id
                 _saveSuccess.value = true
             } catch (e: Exception) {
                 _saveSuccess.value = false
@@ -156,6 +164,13 @@ class HabitViewModel(
      */
     fun resetSaveSuccess() {
         _saveSuccess.value = null
+    }
+
+    /**
+     * 重置新添加习惯 ID（动画完成后调用）
+     */
+    fun resetNewlyAddedHabitId() {
+        _newlyAddedHabitId.value = null
     }
 
     /**

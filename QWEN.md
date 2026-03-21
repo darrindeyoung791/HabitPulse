@@ -228,6 +228,10 @@ The project is in **early development stage** (v0.1.31-alpha):
 - ✅ Animated drawer width for permanent navigation drawer
 - ✅ Adaptive horizontal padding for habit cards based on screen size
 - ✅ TalkBack accessibility support for all navigation elements
+- ✅ Habit card animations (scale + slide enter/exit effects)
+- ✅ Dynamic app bar title font size (changes on scroll)
+- ✅ Delayed enter animation for newly added habits (after navigation completes)
+- ✅ Smooth reposition animation for other cards (animateContentSize)
 
 ### In Progress
 - 🔄 Habit repeat days selection (weekly cycle)
@@ -267,11 +271,11 @@ The project is in **early development stage** (v0.1.31-alpha):
 The app uses a responsive navigation system that adapts to screen size and orientation:
 
 | Device/Orientation | Threshold | Navigation Mode | FAB | Hamburger Menu |
-|---|---|---|---|---|
-| Phone Portrait | < 840dp | Bottom Navigation Bar | ✅ Extended | ❌ |
-| Phone Landscape | ≥ 840dp and < 1200dp | Navigation Rail | ✅ Extended | ❌ |
-| Tablet Portrait | ≥ 840dp | Bottom Navigation Bar | ✅ Extended | ❌ |
-| Tablet Landscape | ≥ 1200dp | Permanent Navigation Drawer | ✅ Extended | ✅ |
+|---|-----------|---|---|---|
+| Phone Portrait | < 840dp   | Bottom Navigation Bar | ✅ Extended | ❌ |
+| Phone Landscape | < 1200dp  | Navigation Rail | ✅ Extended | ❌ |
+| Tablet Portrait | ≥ 840dp   | Bottom Navigation Bar | ✅ Extended | ❌ |
+| Tablet Landscape | ≥ 1200dp  | Permanent Navigation Drawer | ✅ Extended | ✅ |
 
 **Permanent Navigation Drawer Behavior (Tablet Landscape)**
 

@@ -15,9 +15,9 @@
     <string name="settings_support_habitpulse">支持 %1$s</string>
     <string name="settings_support_habitpulse_description">开启开屏广告，以支持 %1$s。感谢您的支持！</string>
     <string name="settings_support_habitpulse_switch">开启开屏广告</string>
-    <string name="settings_support_habitpulse_switch_description">启动应用时，显示 5 秒开屏广告，您可随时关闭此项</string>
+    <string name="settings_support_habitpulse_switch_description">启动应用时，显示一个可跳过的开屏广告，您可随时关闭此项</string>
     <string name="ad_skip_button">跳过广告 (%1$d 秒)</string>
-    <string name="ad_space_for_rent">广告位招租，帮帮我们！</string>
+    <string name="ad_space_for_rent">广告位招租</string>
     <string name="main_calendar_view">日历视图</string>
     <string name="main_settings">设置</string>
     <string name="main_new_habit">新建习惯</string>

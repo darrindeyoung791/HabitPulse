@@ -22,6 +22,8 @@ import androidx.compose.material.icons.outlined.*
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.*
+import androidx.compose.ui.hapticfeedback.HapticFeedbackType
+import androidx.compose.ui.platform.LocalHapticFeedback
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.KeyboardCapitalization
@@ -134,17 +136,18 @@ fun HabitCreationScreen(
     application: HabitPulseApplication? = null
 ) {
     val context = androidx.compose.ui.platform.LocalContext.current
+    val hapticFeedback = LocalHapticFeedback.current
     val app = application ?: context.applicationContext as HabitPulseApplication
-    
+
     // 获取 ViewModel
     val viewModel: HabitViewModel = remember {
         HabitViewModel.Factory(app).create(HabitViewModel::class.java)
     }
-    
+
     // 收集 ViewModel 状态
     val isSaving by viewModel.isSaving.collectAsStateWithLifecycle()
     val saveSuccess by viewModel.saveSuccess.collectAsStateWithLifecycle()
-    
+
     // UI 状态变量
     var habitName by remember { mutableStateOf("") }
     var repeatCycle by remember { mutableStateOf(RepeatCycle.DAILY) }
@@ -160,12 +163,12 @@ fun HabitCreationScreen(
     var supervisorPhones by remember { mutableStateOf<List<String>>(emptyList()) }
     var emailInput by remember { mutableStateOf("") }
     var phoneInput by remember { mutableStateOf("") }
-    var showEmailError by remember { mutableStateOf(false) }
-    var showPhoneError by remember { mutableStateOf(false) }
     var showEmailMaxToast by remember { mutableStateOf(false) }
     var showPhoneMaxToast by remember { mutableStateOf(false) }
     var showDuplicateEmailToast by remember { mutableStateOf(false) }
     var showDuplicatePhoneToast by remember { mutableStateOf(false) }
+    var showInvalidEmailToast by remember { mutableStateOf(false) }
+    var showInvalidPhoneToast by remember { mutableStateOf(false) }
     var isEmailListExpanded by remember { mutableStateOf(false) }
     var isPhoneListExpanded by remember { mutableStateOf(false) }
 
@@ -209,46 +212,52 @@ fun HabitCreationScreen(
     // 显示最大长度 Toast
     if (showMaxLengthToast) {
         LaunchedEffect(Unit) {
+            hapticFeedback.performHapticFeedback(HapticFeedbackType.TextHandleMove)
             android.widget.Toast.makeText(context, R.string.create_habit_max_length_hint, android.widget.Toast.LENGTH_SHORT).show()
             showMaxLengthToast = false
         }
     }
-    
+
     // 显示邮箱最大长度 Toast
     if (showEmailMaxToast) {
         LaunchedEffect(Unit) {
+            hapticFeedback.performHapticFeedback(HapticFeedbackType.TextHandleMove)
             android.widget.Toast.makeText(context, R.string.create_habit_max_length_hint, android.widget.Toast.LENGTH_SHORT).show()
             showEmailMaxToast = false
         }
     }
-    
+
     // 显示电话最大长度 Toast
     if (showPhoneMaxToast) {
         LaunchedEffect(Unit) {
+            hapticFeedback.performHapticFeedback(HapticFeedbackType.TextHandleMove)
             android.widget.Toast.makeText(context, R.string.create_habit_max_length_hint, android.widget.Toast.LENGTH_SHORT).show()
             showPhoneMaxToast = false
         }
     }
-    
+
     // 显示备注最大长度 Toast
     if (showNotesMaxToast) {
         LaunchedEffect(Unit) {
+            hapticFeedback.performHapticFeedback(HapticFeedbackType.TextHandleMove)
             android.widget.Toast.makeText(context, R.string.create_habit_notes_max_length_hint, android.widget.Toast.LENGTH_SHORT).show()
             showNotesMaxToast = false
         }
     }
-    
+
     // 显示重复邮箱 Toast
     if (showDuplicateEmailToast) {
         LaunchedEffect(Unit) {
+            hapticFeedback.performHapticFeedback(HapticFeedbackType.TextHandleMove)
             android.widget.Toast.makeText(context, R.string.create_habit_duplicate_supervisor, android.widget.Toast.LENGTH_SHORT).show()
             showDuplicateEmailToast = false
         }
     }
-    
+
     // 显示重复电话 Toast
     if (showDuplicatePhoneToast) {
         LaunchedEffect(Unit) {
+            hapticFeedback.performHapticFeedback(HapticFeedbackType.TextHandleMove)
             android.widget.Toast.makeText(context, R.string.create_habit_duplicate_supervisor, android.widget.Toast.LENGTH_SHORT).show()
             showDuplicatePhoneToast = false
         }
@@ -258,8 +267,27 @@ fun HabitCreationScreen(
     var showValidationFailedToast by remember { mutableStateOf(false) }
     if (showValidationFailedToast) {
         LaunchedEffect(Unit) {
+            hapticFeedback.performHapticFeedback(HapticFeedbackType.TextHandleMove)
             android.widget.Toast.makeText(context, R.string.create_habit_validation_failed, android.widget.Toast.LENGTH_SHORT).show()
             showValidationFailedToast = false
+        }
+    }
+
+    // 显示无效邮箱 Toast
+    if (showInvalidEmailToast) {
+        LaunchedEffect(Unit) {
+            hapticFeedback.performHapticFeedback(HapticFeedbackType.TextHandleMove)
+            android.widget.Toast.makeText(context, R.string.create_habit_supervisor_email_invalid, android.widget.Toast.LENGTH_SHORT).show()
+            showInvalidEmailToast = false
+        }
+    }
+
+    // 显示无效电话 Toast
+    if (showInvalidPhoneToast) {
+        LaunchedEffect(Unit) {
+            hapticFeedback.performHapticFeedback(HapticFeedbackType.TextHandleMove)
+            android.widget.Toast.makeText(context, R.string.create_habit_supervisor_phone_invalid, android.widget.Toast.LENGTH_SHORT).show()
+            showInvalidPhoneToast = false
         }
     }
 
@@ -755,6 +783,7 @@ fun HabitCreationScreen(
                     onConfirmRequest = { selectedTime ->
                         val timeString = String.format("%02d:%02d", selectedTime.hour, selectedTime.minute)
                         if (reminderTimes.contains(timeString)) {
+                            hapticFeedback.performHapticFeedback(HapticFeedbackType.TextHandleMove)
                             android.widget.Toast.makeText(context, context.getString(R.string.create_habit_duplicate_time), android.widget.Toast.LENGTH_SHORT).show()
                         } else {
                             reminderTimes = reminderTimes + timeString
@@ -872,10 +901,9 @@ fun HabitCreationScreen(
                             // Email input row
                             OutlinedTextField(
                                 value = emailInput,
-                                onValueChange = { 
+                                onValueChange = {
                                     if (it.length <= 100) {
                                         emailInput = it
-                                        showEmailError = false
                                     } else {
                                         showEmailMaxToast = true
                                     }
@@ -885,12 +913,6 @@ fun HabitCreationScreen(
                                 },
                                 modifier = Modifier.fillMaxWidth(),
                                 singleLine = true,
-                                isError = showEmailError,
-                                supportingText = if (showEmailError) {
-                                    {
-                                        Text(text = stringResource(id = R.string.create_habit_supervisor_email_invalid))
-                                    }
-                                } else null,
                                 keyboardOptions = KeyboardOptions(
                                     keyboardType = KeyboardType.Email
                                 ),
@@ -901,13 +923,12 @@ fun HabitCreationScreen(
                                                 if (!supervisorEmails.contains(emailInput)) {
                                                     supervisorEmails = supervisorEmails + emailInput
                                                     emailInput = ""
-                                                    showEmailError = false
                                                     showSupervisorEmailError = false
                                                 } else {
                                                     showDuplicateEmailToast = true
                                                 }
                                             } else {
-                                                showEmailError = true
+                                                showInvalidEmailToast = true
                                             }
                                         },
                                         enabled = emailInput.isNotBlank()
@@ -1018,10 +1039,9 @@ fun HabitCreationScreen(
                             // Phone input row
                             OutlinedTextField(
                                 value = phoneInput,
-                                onValueChange = { 
+                                onValueChange = {
                                     if (it.length <= 20) {
                                         phoneInput = it
-                                        showPhoneError = false
                                     } else {
                                         showPhoneMaxToast = true
                                     }
@@ -1031,12 +1051,6 @@ fun HabitCreationScreen(
                                 },
                                 modifier = Modifier.fillMaxWidth(),
                                 singleLine = true,
-                                isError = showPhoneError,
-                                supportingText = if (showPhoneError) {
-                                    {
-                                        Text(text = stringResource(id = R.string.create_habit_supervisor_phone_invalid))
-                                    }
-                                } else null,
                                 keyboardOptions = KeyboardOptions(
                                     keyboardType = KeyboardType.Phone
                                 ),
@@ -1047,13 +1061,12 @@ fun HabitCreationScreen(
                                                 if (!supervisorPhones.contains(phoneInput)) {
                                                     supervisorPhones = supervisorPhones + phoneInput
                                                     phoneInput = ""
-                                                    showPhoneError = false
                                                     showSupervisorPhoneError = false
                                                 } else {
                                                     showDuplicatePhoneToast = true
                                                 }
                                             } else {
-                                                showPhoneError = true
+                                                showInvalidPhoneToast = true
                                             }
                                         },
                                         enabled = phoneInput.isNotBlank()

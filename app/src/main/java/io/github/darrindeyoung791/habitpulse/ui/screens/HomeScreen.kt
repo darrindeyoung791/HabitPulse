@@ -1,9 +1,19 @@
 package io.github.darrindeyoung791.habitpulse.ui.screens
 
 import android.content.res.Configuration
+import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.core.animateDpAsState
 import androidx.compose.animation.core.animateFloatAsState
+import androidx.compose.animation.core.spring
 import androidx.compose.animation.core.tween
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
+import androidx.compose.animation.scaleIn
+import androidx.compose.animation.scaleOut
+import androidx.compose.animation.slideInVertically
+import androidx.compose.animation.slideOutVertically
+import androidx.compose.animation.core.animateIntAsState
+import androidx.compose.animation.animateContentSize
 import androidx.compose.foundation.combinedClickable
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.background
@@ -27,8 +37,10 @@ import androidx.compose.ui.*
 import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.hapticfeedback.HapticFeedbackType
 import androidx.compose.ui.input.nestedscroll.nestedScroll
 import androidx.compose.ui.input.pointer.pointerInput
+import androidx.compose.ui.platform.LocalHapticFeedback
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
@@ -45,8 +57,10 @@ import io.github.darrindeyoung791.habitpulse.data.model.RepeatCycle
 import io.github.darrindeyoung791.habitpulse.ui.theme.HabitPulseTheme
 import io.github.darrindeyoung791.habitpulse.ui.utils.rememberDebounceClickHandler
 import io.github.darrindeyoung791.habitpulse.viewmodel.HabitViewModel
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import org.json.JSONArray
+import java.util.UUID
 
 enum class HomeSection { Todo, Count, Calendar }
 
@@ -72,11 +86,22 @@ fun HomeScreen(
     val habits by viewModel.habitsFlow.collectAsStateWithLifecycle(initialValue = emptyList())
     // 收集加载状态
     val isLoading by viewModel.isLoading.collectAsStateWithLifecycle(initialValue = true)
+    // 收集新添加的习惯 ID（用于触发动画）
+    val newlyAddedHabitId by viewModel.newlyAddedHabitId.collectAsStateWithLifecycle(initialValue = null)
 
     // 当数据加载完成时，通知调用方
     LaunchedEffect(isLoading) {
         if (!isLoading) {
             onHomeDataLoaded()
+        }
+    }
+
+    // 当新习惯添加后，延迟触发动画（等待导航动画完成）
+    LaunchedEffect(newlyAddedHabitId) {
+        if (newlyAddedHabitId != null) {
+            // 延迟 300ms 让导航返回动画完成，然后重置 ID 触发卡片进入动画
+            delay(300)
+            viewModel.resetNewlyAddedHabitId()
         }
     }
 
@@ -86,10 +111,10 @@ fun HomeScreen(
     
     // Navigation mode decision logic:
     // - Tablet landscape (≥1200dp): PermanentNavigationDrawer with hamburger menu
-    // - Phone landscape (≥720dp and <1200dp): NavigationRail
+    // - Phone landscape (<1200dp): NavigationRail
     // - All portrait modes: BottomNavigationBar
     val isPermanentDrawer = screenWidthDp >= 1200 && isLandscape
-    val useRail = screenWidthDp >= 720 && screenWidthDp < 1200 && isLandscape
+    val useRail = screenWidthDp < 1200 && isLandscape
     val useBottomBar = !isPermanentDrawer && !useRail
 
     var currentSection by rememberSaveable { mutableStateOf(HomeSection.Todo) }
@@ -147,7 +172,8 @@ fun HomeScreen(
                         onCheckIn = { viewModel.incrementCompletionCount(it) },
                         onUndoCompletion = { viewModel.undoHabitCompletion(it) },
                         onDeleteHabit = { viewModel.deleteHabit(it) },
-                        nestedScrollConnection = nestedScrollConn
+                        nestedScrollConnection = nestedScrollConn,
+                        newlyAddedHabitId = newlyAddedHabitId
                     )
                 }
             }
@@ -217,9 +243,16 @@ fun HomeScreen(
             // Other modes: use LargeTopAppBar with exitUntilCollapsed behavior
             LargeTopAppBar(
                 title = {
+                    // Animate font size based on scroll state: headlineLarge when expanded, titleLarge when collapsed
+                    val collapsedFraction = scrollBehavior.state.collapsedFraction
+                    val currentTextStyle = if (collapsedFraction < 0.5f) {
+                        MaterialTheme.typography.headlineLarge
+                    } else {
+                        MaterialTheme.typography.titleLarge
+                    }
                     Text(
                         text = currentTitle,
-                        style = MaterialTheme.typography.headlineLarge,
+                        style = currentTextStyle,
                         maxLines = 1,
                         overflow = TextOverflow.Ellipsis
                     )
@@ -386,7 +419,7 @@ fun HomeScreen(
             }
         }
     } else if (useRail) {
-        // NavigationRail layout for landscape phones (840dp to <1200dp)
+        // NavigationRail layout for landscape phones (<1200dp)
         // Rail occupies full height on left, content area on right
         Row(
             modifier = Modifier
@@ -719,7 +752,8 @@ fun HabitListContent(
     onCheckIn: (Habit) -> Unit,
     onUndoCompletion: (Habit) -> Unit,
     onDeleteHabit: (Habit) -> Unit,
-    nestedScrollConnection: androidx.compose.ui.input.nestedscroll.NestedScrollConnection? = null
+    nestedScrollConnection: androidx.compose.ui.input.nestedscroll.NestedScrollConnection? = null,
+    newlyAddedHabitId: UUID? = null
 ) {
     val configuration = LocalConfiguration.current
     val isLandscape = configuration.orientation == Configuration.ORIENTATION_LANDSCAPE
@@ -758,7 +792,8 @@ fun HabitListContent(
                             onCheckIn = { onCheckIn(habit) },
                             onUndoCompletion = { onUndoCompletion(habit) },
                             onEditHabit = { onHabitClick(habit) },
-                            onDeleteHabit = { onDeleteHabit(habit) }
+                            onDeleteHabit = { onDeleteHabit(habit) },
+                            isNewlyAdded = (habit.id == newlyAddedHabitId)
                         )
                     }
                 }
@@ -775,7 +810,8 @@ fun HabitListContent(
                             onCheckIn = { onCheckIn(habit) },
                             onUndoCompletion = { onUndoCompletion(habit) },
                             onEditHabit = { onHabitClick(habit) },
-                            onDeleteHabit = { onDeleteHabit(habit) }
+                            onDeleteHabit = { onDeleteHabit(habit) },
+                            isNewlyAdded = (habit.id == newlyAddedHabitId)
                         )
                     }
                 }
@@ -791,14 +827,19 @@ fun HabitListContent(
             contentPadding = PaddingValues(horizontal = horizontalPadding, vertical = 16.dp),
             verticalArrangement = Arrangement.spacedBy(8.dp)
         ) {
-            items(habits, key = { it.id.toString() }) { habit ->
+            items(
+                items = habits,
+                key = { it.id.toString() },
+                contentType = { "habitCard" }
+            ) { habit ->
                 HabitCard(
                     habit = habit,
                     onClick = { onHabitClick(habit) },
                     onCheckIn = { onCheckIn(habit) },
                     onUndoCompletion = { onUndoCompletion(habit) },
                     onEditHabit = { onHabitClick(habit) },
-                    onDeleteHabit = { onDeleteHabit(habit) }
+                    onDeleteHabit = { onDeleteHabit(habit) },
+                    isNewlyAdded = (habit.id == newlyAddedHabitId)
                 )
             }
             // Add bottom spacer to prevent FAB from covering last item
@@ -818,217 +859,266 @@ fun HabitCard(
     onUndoCompletion: () -> Unit,
     onEditHabit: () -> Unit,
     onDeleteHabit: () -> Unit,
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
+    isNewlyAdded: Boolean = false
 ) {
     var showMenu by remember { mutableStateOf(false) }
     var showReminderDialog by remember { mutableStateOf(false) }
     var showNotesDialog by remember { mutableStateOf(false) }
+    val hapticFeedback = LocalHapticFeedback.current
 
     val reminderTimes = habit.getReminderTimesList()
     val repeatDays = habit.getRepeatDaysList()
 
-    Box(
-        modifier = modifier.fillMaxWidth()
-    ) {
-        OutlinedCard(
-            modifier = Modifier
-                .fillMaxWidth()
-                .heightIn(min = 120.dp)
-                .combinedClickable(
-                    onClick = onClick,
-                    onLongClick = { showMenu = true }
-                ),
-            colors = CardDefaults.outlinedCardColors(
-                containerColor = MaterialTheme.colorScheme.surfaceContainerLowest
+    // Animation states for enter/exit effects
+    var isVisible by remember { mutableStateOf(true) }
+    val scope = rememberCoroutineScope()
+    
+    // For newly added habits, start invisible and animate in after delay
+    var isInitiallyVisible by remember { mutableStateOf(!isNewlyAdded) }
+    
+    // Delay animation trigger for newly added habits
+    LaunchedEffect(isNewlyAdded) {
+        if (isNewlyAdded) {
+            // Wait for navigation animation to complete before showing enter animation
+            delay(50)
+            isInitiallyVisible = true
+        }
+    }
+
+    AnimatedVisibility(
+        visible = isVisible && isInitiallyVisible,
+        enter = fadeIn(animationSpec = spring(dampingRatio = 0.8f, stiffness = 200f)) +
+                scaleIn(initialScale = 0.85f, animationSpec = spring(dampingRatio = 0.8f, stiffness = 200f)) +
+                slideInVertically(initialOffsetY = { it / 4 }, animationSpec = spring(dampingRatio = 0.8f, stiffness = 200f)),
+        exit = fadeOut(animationSpec = tween(150)) +
+               scaleOut(targetScale = 0.85f, animationSpec = tween(150)) +
+               slideOutVertically(targetOffsetY = { it / 4 }, animationSpec = tween(150)),
+        modifier = modifier
+            .animateContentSize(
+                animationSpec = spring(dampingRatio = 0.8f, stiffness = 200f)
             )
+    ) {
+        Box(
+            modifier = Modifier.fillMaxWidth()
         ) {
-            Row(
+            OutlinedCard(
                 modifier = Modifier
                     .fillMaxWidth()
-                    .padding(16.dp),
-                horizontalArrangement = Arrangement.SpaceBetween,
-                verticalAlignment = Alignment.CenterVertically
+                    .heightIn(min = 120.dp)
+                    .combinedClickable(
+                        onClick = {
+                            onClick()
+                            isVisible = true
+                        },
+                        onLongClick = {
+                            hapticFeedback.performHapticFeedback(HapticFeedbackType.LongPress)
+                            showMenu = true
+                        }
+                    ),
+                colors = CardDefaults.outlinedCardColors(
+                    containerColor = MaterialTheme.colorScheme.surfaceContainerLowest
+                )
             ) {
-                // 左侧内容：习惯信息
-                Column(
-                    modifier = Modifier.weight(1f),
-                    verticalArrangement = Arrangement.spacedBy(8.dp)
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(16.dp),
+                    horizontalArrangement = Arrangement.SpaceBetween,
+                    verticalAlignment = Alignment.CenterVertically
                 ) {
-                    // 习惯名称（大字体）
-                    Text(
-                        text = habit.title,
-                        style = MaterialTheme.typography.headlineSmall,
-                        fontWeight = FontWeight.Bold,
-                        color = MaterialTheme.colorScheme.onSurface,
-                        maxLines = 2,
-                        overflow = TextOverflow.Ellipsis
-                    )
-
-                    // 已完成次数
-                    Text(
-                        text = stringResource(id = R.string.habit_card_completed_count, habit.completionCount),
-                        style = MaterialTheme.typography.bodyLarge,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant
-                    )
-
-                    // 重复周期和提醒时间
+                    // 左侧内容：习惯信息
                     Column(
-                        verticalArrangement = Arrangement.spacedBy(4.dp)
+                        modifier = Modifier.weight(1f),
+                        verticalArrangement = Arrangement.spacedBy(8.dp)
                     ) {
-                        // Build day names map for reuse
-                        val dayNames = listOf(
-                            stringResource(id = R.string.habit_card_repeat_days_sunday),
-                            stringResource(id = R.string.habit_card_repeat_days_monday),
-                            stringResource(id = R.string.habit_card_repeat_days_tuesday),
-                            stringResource(id = R.string.habit_card_repeat_days_wednesday),
-                            stringResource(id = R.string.habit_card_repeat_days_thursday),
-                            stringResource(id = R.string.habit_card_repeat_days_friday),
-                            stringResource(id = R.string.habit_card_repeat_days_saturday)
-                        )
-                        val daySeparator = stringResource(id = R.string.habit_card_repeat_days_separator)
-                        val repeatCycleText = when (habit.repeatCycle) {
-                            RepeatCycle.DAILY -> stringResource(id = R.string.habit_card_repeat_daily)
-                            RepeatCycle.WEEKLY -> {
-                                val daysText = repeatDays.joinToString(daySeparator) { dayIndex ->
-                                    dayNames.getOrElse(dayIndex) { "" }
-                                }
-                                stringResource(id = R.string.habit_card_repeat_days_format, daysText)
-                            }
-                        }
-                        val reminderText = if (reminderTimes.isEmpty()) {
-                            ""
-                        } else {
-                            val firstTime = reminderTimes.first()
-                            if (reminderTimes.size == 1) {
-                                stringResource(id = R.string.habit_card_reminder_single, firstTime)
-                            } else {
-                                stringResource(
-                                    id = R.string.habit_card_reminder_count,
-                                    firstTime,
-                                    reminderTimes.size
-                                )
-                            }
-                        }
-                        val repeatInfoText = if (reminderText.isNotEmpty()) {
-                            "$repeatCycleText · $reminderText"
-                        } else {
-                            repeatCycleText
-                        }
+                        // 习惯名称（大字体）
                         Text(
-                            text = repeatInfoText,
-                            style = MaterialTheme.typography.bodyMedium,
-                            color = MaterialTheme.colorScheme.onSurfaceVariant,
-                            maxLines = 1,
-                            overflow = TextOverflow.Ellipsis,
-                            modifier = Modifier.combinedClickable(
-                                onClick = { showReminderDialog = true },
-                                onLongClick = { showMenu = true }
-                            )
+                            text = habit.title,
+                            style = MaterialTheme.typography.headlineSmall,
+                            fontWeight = FontWeight.Bold,
+                            color = MaterialTheme.colorScheme.onSurface,
+                            maxLines = 2,
+                            overflow = TextOverflow.Ellipsis
                         )
+
+                        // 已完成次数
+                        Text(
+                            text = stringResource(id = R.string.habit_card_completed_count, habit.completionCount),
+                            style = MaterialTheme.typography.bodyLarge,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant
+                        )
+
+                        // 重复周期和提醒时间
+                        Column(
+                            verticalArrangement = Arrangement.spacedBy(4.dp)
+                        ) {
+                            // Build day names map for reuse
+                            val dayNames = listOf(
+                                stringResource(id = R.string.habit_card_repeat_days_sunday),
+                                stringResource(id = R.string.habit_card_repeat_days_monday),
+                                stringResource(id = R.string.habit_card_repeat_days_tuesday),
+                                stringResource(id = R.string.habit_card_repeat_days_wednesday),
+                                stringResource(id = R.string.habit_card_repeat_days_thursday),
+                                stringResource(id = R.string.habit_card_repeat_days_friday),
+                                stringResource(id = R.string.habit_card_repeat_days_saturday)
+                            )
+                            val daySeparator = stringResource(id = R.string.habit_card_repeat_days_separator)
+                            val repeatCycleText = when (habit.repeatCycle) {
+                                RepeatCycle.DAILY -> stringResource(id = R.string.habit_card_repeat_daily)
+                                RepeatCycle.WEEKLY -> {
+                                    val daysText = repeatDays.joinToString(daySeparator) { dayIndex ->
+                                        dayNames.getOrElse(dayIndex) { "" }
+                                    }
+                                    stringResource(id = R.string.habit_card_repeat_days_format, daysText)
+                                }
+                            }
+                            val reminderText = if (reminderTimes.isEmpty()) {
+                                ""
+                            } else {
+                                val firstTime = reminderTimes.first()
+                                if (reminderTimes.size == 1) {
+                                    stringResource(id = R.string.habit_card_reminder_single, firstTime)
+                                } else {
+                                    stringResource(
+                                        id = R.string.habit_card_reminder_count,
+                                        firstTime,
+                                        reminderTimes.size
+                                    )
+                                }
+                            }
+                            val repeatInfoText = if (reminderText.isNotEmpty()) {
+                                "$repeatCycleText · $reminderText"
+                            } else {
+                                repeatCycleText
+                            }
+                            Text(
+                                text = repeatInfoText,
+                                style = MaterialTheme.typography.bodyMedium,
+                                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                                maxLines = 1,
+                                overflow = TextOverflow.Ellipsis,
+                                modifier = Modifier.combinedClickable(
+                                    onClick = { showReminderDialog = true },
+                                    onLongClick = {
+                                        hapticFeedback.performHapticFeedback(HapticFeedbackType.LongPress)
+                                        showMenu = true
+                                    }
+                                )
+                            )
+                        }
+
+                        // 备注信息（仅当有备注时显示）
+                        if (habit.notes.isNotBlank()) {
+                            Text(
+                                text = formatNotesPreview(habit.notes),
+                                style = MaterialTheme.typography.bodyMedium,
+                                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                                maxLines = 3,
+                                overflow = TextOverflow.Ellipsis,
+                                modifier = Modifier.combinedClickable(
+                                    onClick = { showNotesDialog = true },
+                                    onLongClick = {
+                                        hapticFeedback.performHapticFeedback(HapticFeedbackType.LongPress)
+                                        showMenu = true
+                                    }
+                                )
+                            )
+                        }
                     }
 
-                    // 备注信息（仅当有备注时显示）
-                    if (habit.notes.isNotBlank()) {
-                        Text(
-                            text = formatNotesPreview(habit.notes),
-                            style = MaterialTheme.typography.bodyMedium,
-                            color = MaterialTheme.colorScheme.onSurfaceVariant,
-                            maxLines = 3,
-                            overflow = TextOverflow.Ellipsis,
-                            modifier = Modifier.combinedClickable(
-                                onClick = { showNotesDialog = true },
-                                onLongClick = { showMenu = true }
+                    // 右侧：打卡按钮（垂直居中）
+                    CheckInButton(
+                        onClick = onCheckIn
+                    )
+                }
+            }
+
+            // 长按下拉菜单
+            DropdownMenu(
+                expanded = showMenu,
+                onDismissRequest = { showMenu = false }
+            ) {
+                // 撤销打卡（当已完成次数大于 0 时显示）
+                if (habit.completionCount > 0) {
+                    DropdownMenuItem(
+                        text = {
+                            Text(text = stringResource(id = R.string.habit_card_menu_undo))
+                        },
+                        leadingIcon = {
+                            Icon(
+                                imageVector = Icons.Filled.Undo,
+                                contentDescription = null,
+                                modifier = Modifier.size(24.dp)
                             )
-                        )
-                    }
+                        },
+                        onClick = {
+                            onUndoCompletion()
+                            showMenu = false
+                        }
+                    )
                 }
 
-                // 右侧：打卡按钮（垂直居中）
-                CheckInButton(
-                    onClick = onCheckIn
-                )
-            }
-        }
-
-        // 长按下拉菜单
-        DropdownMenu(
-            expanded = showMenu,
-            onDismissRequest = { showMenu = false }
-        ) {
-            // 撤销打卡（当已完成次数大于 0 时显示）
-            if (habit.completionCount > 0) {
+                // 编辑
                 DropdownMenuItem(
                     text = {
-                        Text(text = stringResource(id = R.string.habit_card_menu_undo))
+                        Text(text = stringResource(id = R.string.habit_card_menu_edit))
                     },
                     leadingIcon = {
                         Icon(
-                            imageVector = Icons.Filled.Undo,
+                            imageVector = Icons.Filled.Edit,
                             contentDescription = null,
                             modifier = Modifier.size(24.dp)
                         )
                     },
                     onClick = {
-                        onUndoCompletion()
+                        onEditHabit()
+                        showMenu = false
+                    }
+                )
+
+                // 删除
+                DropdownMenuItem(
+                    text = {
+                        Text(text = stringResource(id = R.string.habit_card_menu_delete))
+                    },
+                    leadingIcon = {
+                        Icon(
+                            imageVector = Icons.Filled.Delete,
+                            contentDescription = null,
+                            modifier = Modifier.size(24.dp)
+                        )
+                    },
+                    onClick = {
+                        // Start exit animation first, then call actual delete after animation completes
+                        isVisible = false
+                        scope.launch {
+                            kotlinx.coroutines.delay(150) // Wait for exit animation to complete
+                            onDeleteHabit()
+                        }
                         showMenu = false
                     }
                 )
             }
 
-            // 编辑
-            DropdownMenuItem(
-                text = {
-                    Text(text = stringResource(id = R.string.habit_card_menu_edit))
-                },
-                leadingIcon = {
-                    Icon(
-                        imageVector = Icons.Filled.Edit,
-                        contentDescription = null,
-                        modifier = Modifier.size(24.dp)
-                    )
-                },
-                onClick = {
-                    onEditHabit()
-                    showMenu = false
-                }
-            )
+            // 提醒详情对话框
+            if (showReminderDialog) {
+                ReminderDetailDialog(
+                    reminderTimes = reminderTimes,
+                    repeatCycle = habit.repeatCycle,
+                    repeatDays = repeatDays,
+                    onDismiss = { showReminderDialog = false }
+                )
+            }
 
-            // 删除
-            DropdownMenuItem(
-                text = {
-                    Text(text = stringResource(id = R.string.habit_card_menu_delete))
-                },
-                leadingIcon = {
-                    Icon(
-                        imageVector = Icons.Filled.Delete,
-                        contentDescription = null,
-                        modifier = Modifier.size(24.dp)
-                    )
-                },
-                onClick = {
-                    onDeleteHabit()
-                    showMenu = false
-                }
-            )
+            // 备注详情对话框
+            if (showNotesDialog) {
+                NotesDetailDialog(
+                    notes = habit.notes,
+                    onDismiss = { showNotesDialog = false }
+                )
+            }
         }
-    }
-
-    // 提醒详情对话框
-    if (showReminderDialog) {
-        ReminderDetailDialog(
-            reminderTimes = reminderTimes,
-            repeatCycle = habit.repeatCycle,
-            repeatDays = repeatDays,
-            onDismiss = { showReminderDialog = false }
-        )
-    }
-
-    // 备注详情对话框
-    if (showNotesDialog) {
-        NotesDetailDialog(
-            notes = habit.notes,
-            onDismiss = { showNotesDialog = false }
-        )
     }
 }
 
