@@ -232,6 +232,8 @@ The project is in **early development stage** (v0.1.31-alpha):
 - ✅ Dynamic app bar title font size (changes on scroll)
 - ✅ Delayed enter animation for newly added habits (after navigation completes)
 - ✅ Smooth reposition animation for other cards (animateContentSize)
+- ✅ Debug feature: tap version 5 times in 10s to add 20 sample habits
+- ✅ Haptic feedback (50ms vibration) on habit check-in
 
 ### In Progress
 - 🔄 Habit repeat days selection (weekly cycle)

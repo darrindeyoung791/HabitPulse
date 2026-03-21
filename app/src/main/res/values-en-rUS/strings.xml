@@ -100,4 +100,11 @@
     <string name="habit_card_repeat_days_friday">Fri</string>
     <string name="habit_card_repeat_days_saturday">Sat</string>
     <string name="habit_card_repeat_days_separator">, </string>
+    
+    <!-- Debug / Developer options -->
+    <string name="debug_add_sample_data_dialog_title">Add Sample Data</string>
+    <string name="debug_add_sample_data_dialog_message">Add 20 sample habit data entries?\n\nThis feature is for debugging on new devices. It will add habits with different reminder methods, supervision methods, and notes.</string>
+    <string name="debug_add_sample_data_yes">Add</string>
+    <string name="debug_add_sample_data_no">Cancel</string>
+    <string name="debug_sample_data_added">Added 20 sample data entries</string>
 </resources>
