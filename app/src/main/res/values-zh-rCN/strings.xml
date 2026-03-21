@@ -23,12 +23,13 @@
     <string name="main_new_habit">新建习惯</string>
     <string name="main_no_habits">暂无习惯</string>
     <string name="main_create_habit">去新建一个</string>
-    <string name="main_tab_todo">待办</string>
+    <string name="main_tab_habits">习惯</string>
     <string name="main_tab_count">计数</string>
     <string name="main_tab_calendar">日历</string>
-    <string name="main_title_todo">待办</string>
+    <string name="main_title_habits">习惯</string>
     <string name="main_title_count">计数</string>
     <string name="main_title_calendar">日历</string>
+    <string name="main_subtitle_habit_count">%d 个打卡习惯</string>
     <string name="main_blank_count_description">这是计数页面占位内容，未来填充统计与分析。</string>
     <string name="main_blank_calendar_description">这是日历页面占位内容，未来跳转日历视图。</string>
     <string name="main_expand_drawer">展开侧边栏</string>
@@ -106,4 +107,11 @@
     <string name="habit_card_repeat_days_friday">五</string>
     <string name="habit_card_repeat_days_saturday">六</string>
     <string name="habit_card_repeat_days_separator">、</string>
+
+    <!-- Debug / Developer options -->
+    <string name="debug_add_sample_data_dialog_title">添加样例数据</string>
+    <string name="debug_add_sample_data_dialog_message">是否添加 20 条样例习惯数据？\n\n此功能用于新机调试，将添加包含不同提醒方式、监督方式和备注的习惯数据。</string>
+    <string name="debug_add_sample_data_yes">添加</string>
+    <string name="debug_add_sample_data_no">取消</string>
+    <string name="debug_sample_data_added">已添加 20 条样例数据</string>
 </resources>

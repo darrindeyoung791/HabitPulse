@@ -12,7 +12,6 @@ import androidx.compose.animation.scaleIn
 import androidx.compose.animation.scaleOut
 import androidx.compose.animation.slideInVertically
 import androidx.compose.animation.slideOutVertically
-import androidx.compose.animation.core.animateIntAsState
 import androidx.compose.animation.animateContentSize
 import androidx.compose.foundation.combinedClickable
 import androidx.compose.foundation.clickable
@@ -35,7 +34,6 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.platform.LocalLayoutDirection
 import androidx.compose.ui.*
-import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.hapticfeedback.HapticFeedbackType
@@ -60,10 +58,9 @@ import io.github.darrindeyoung791.habitpulse.ui.utils.rememberDebounceClickHandl
 import io.github.darrindeyoung791.habitpulse.viewmodel.HabitViewModel
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
-import org.json.JSONArray
 import java.util.UUID
 
-enum class HomeSection { Todo, Count, Calendar }
+enum class HomeSection { Habits, Count, Calendar }
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -109,7 +106,7 @@ fun HomeScreen(
     val configuration = LocalConfiguration.current
     val screenWidthDp = configuration.screenWidthDp
     val isLandscape = configuration.orientation == Configuration.ORIENTATION_LANDSCAPE
-    
+
     // Navigation mode decision logic:
     // - Tablet landscape (≥1200dp): PermanentNavigationDrawer with hamburger menu
     // - Phone landscape (<1200dp): NavigationRail
@@ -118,7 +115,7 @@ fun HomeScreen(
     val useRail = screenWidthDp < 1200 && isLandscape
     val useBottomBar = !isPermanentDrawer && !useRail
 
-    var currentSection by rememberSaveable { mutableStateOf(HomeSection.Todo) }
+    var currentSection by rememberSaveable { mutableStateOf(HomeSection.Habits) }
     var isDrawerExpanded by rememberSaveable { mutableStateOf(true) }
 
     // Animated drawer width
@@ -136,7 +133,7 @@ fun HomeScreen(
     val isRailCutoutRight = useRail && displayCutout.getRight(LocalDensity.current, layoutDirection) > 0
 
     val sectionItems = listOf(
-        HomeSection.Todo,
+        HomeSection.Habits,
         HomeSection.Count,
         HomeSection.Calendar
     )
@@ -146,7 +143,7 @@ fun HomeScreen(
     // 主页主体内容
     val homeBody: @Composable (Modifier, androidx.compose.ui.input.nestedscroll.NestedScrollConnection?) -> Unit = { modifier, nestedScrollConn ->
         when (currentSection) {
-            HomeSection.Todo -> {
+            HomeSection.Habits -> {
                 if (isLoading) {
                     Box(
                         modifier = modifier.fillMaxSize(),
@@ -197,7 +194,7 @@ fun HomeScreen(
 
     val topAppBarContent: @Composable (Boolean) -> Unit = { isRailVisible ->
         val currentTitle = when (currentSection) {
-            HomeSection.Todo -> stringResource(id = R.string.main_title_todo)
+            HomeSection.Habits -> stringResource(id = R.string.main_title_habits)
             HomeSection.Count -> stringResource(id = R.string.main_title_count)
             HomeSection.Calendar -> stringResource(id = R.string.main_title_calendar)
         }
@@ -244,19 +241,31 @@ fun HomeScreen(
             // Other modes: use LargeTopAppBar with exitUntilCollapsed behavior
             LargeTopAppBar(
                 title = {
-                    // Animate font size based on scroll state: headlineLarge when expanded, titleLarge when collapsed
-                    val collapsedFraction = scrollBehavior.state.collapsedFraction
-                    val currentTextStyle = if (collapsedFraction < 0.5f) {
-                        MaterialTheme.typography.headlineLarge
-                    } else {
-                        MaterialTheme.typography.titleLarge
+                    Column {
+                        // Main title - animate font size based on scroll state
+                        val collapsedFraction = scrollBehavior.state.collapsedFraction
+                        val currentTextStyle = if (collapsedFraction < 0.5f) {
+                            MaterialTheme.typography.headlineLarge
+                        } else {
+                            MaterialTheme.typography.titleLarge
+                        }
+                        Text(
+                            text = currentTitle,
+                            style = currentTextStyle,
+                            maxLines = 1,
+                            overflow = TextOverflow.Ellipsis
+                        )
+                        // Subtitle - only show for Habits section when expanded
+                        if (currentSection == HomeSection.Habits && collapsedFraction < 0.5f) {
+                            Text(
+                                text = stringResource(id = R.string.main_subtitle_habit_count, habits.size),
+                                style = MaterialTheme.typography.bodyMedium,
+                                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                                maxLines = 1,
+                                overflow = TextOverflow.Ellipsis
+                            )
+                        }
                     }
-                    Text(
-                        text = currentTitle,
-                        style = currentTextStyle,
-                        maxLines = 1,
-                        overflow = TextOverflow.Ellipsis
-                    )
                 },
                 actions = {
                     IconButton(
@@ -280,7 +289,7 @@ fun HomeScreen(
         }
     }
 
-    val showFab = currentSection == HomeSection.Todo
+    val showFab = currentSection == HomeSection.Habits
     val newHabitLabel = stringResource(id = R.string.main_new_habit)
 
     if (isPermanentDrawer) {
@@ -324,14 +333,14 @@ fun HomeScreen(
                             // Expanded state: full NavigationDrawerItem with label
                             NavigationDrawerItem(
                                 label = { Text(text = when (section) {
-                                    HomeSection.Todo -> stringResource(id = R.string.main_tab_todo)
+                                    HomeSection.Habits -> stringResource(id = R.string.main_tab_habits)
                                     HomeSection.Count -> stringResource(id = R.string.main_tab_count)
                                     HomeSection.Calendar -> stringResource(id = R.string.main_tab_calendar)
                                 }) },
                                 icon = {
                                     Icon(
                                         imageVector = when (section) {
-                                            HomeSection.Todo -> Icons.Filled.List
+                                            HomeSection.Habits -> Icons.Filled.List
                                             HomeSection.Count -> Icons.Filled.Calculate
                                             HomeSection.Calendar -> Icons.Filled.CalendarMonth
                                         },
@@ -364,12 +373,12 @@ fun HomeScreen(
                             ) {
                                 Icon(
                                     imageVector = when (section) {
-                                        HomeSection.Todo -> Icons.Filled.List
+                                        HomeSection.Habits -> Icons.Filled.List
                                         HomeSection.Count -> Icons.Filled.Calculate
                                         HomeSection.Calendar -> Icons.Filled.CalendarMonth
                                     },
                                     contentDescription = when (section) {
-                                        HomeSection.Todo -> stringResource(id = R.string.main_tab_todo)
+                                        HomeSection.Habits -> stringResource(id = R.string.main_tab_habits)
                                         HomeSection.Count -> stringResource(id = R.string.main_tab_count)
                                         HomeSection.Calendar -> stringResource(id = R.string.main_tab_calendar)
                                     },
@@ -440,12 +449,12 @@ fun HomeScreen(
                         icon = {
                             Icon(
                                 imageVector = when (section) {
-                                    HomeSection.Todo -> Icons.Filled.List
+                                    HomeSection.Habits -> Icons.Filled.List
                                     HomeSection.Count -> Icons.Filled.Calculate
                                     HomeSection.Calendar -> Icons.Filled.CalendarMonth
                                 },
                                 contentDescription = when (section) {
-                                    HomeSection.Todo -> stringResource(id = R.string.main_tab_todo)
+                                    HomeSection.Habits -> stringResource(id = R.string.main_tab_habits)
                                     HomeSection.Count -> stringResource(id = R.string.main_tab_count)
                                     HomeSection.Calendar -> stringResource(id = R.string.main_tab_calendar)
                                 }
@@ -453,7 +462,7 @@ fun HomeScreen(
                         },
                         label = {
                             Text(text = when (section) {
-                                HomeSection.Todo -> stringResource(id = R.string.main_tab_todo)
+                                HomeSection.Habits -> stringResource(id = R.string.main_tab_habits)
                                 HomeSection.Count -> stringResource(id = R.string.main_tab_count)
                                 HomeSection.Calendar -> stringResource(id = R.string.main_tab_calendar)
                             })
@@ -532,19 +541,19 @@ fun HomeScreen(
                                 icon = {
                                     Icon(
                                         imageVector = when (section) {
-                                            HomeSection.Todo -> Icons.Filled.List
+                                            HomeSection.Habits -> Icons.Filled.List
                                             HomeSection.Count -> Icons.Filled.Calculate
                                             HomeSection.Calendar -> Icons.Filled.CalendarMonth
                                         },
                                         contentDescription = when (section) {
-                                            HomeSection.Todo -> stringResource(id = R.string.main_tab_todo)
+                                            HomeSection.Habits -> stringResource(id = R.string.main_tab_habits)
                                             HomeSection.Count -> stringResource(id = R.string.main_tab_count)
                                             HomeSection.Calendar -> stringResource(id = R.string.main_tab_calendar)
                                         }
                                     )
                                 },
                                 label = { Text(text = when (section) {
-                                    HomeSection.Todo -> stringResource(id = R.string.main_tab_todo)
+                                    HomeSection.Habits -> stringResource(id = R.string.main_tab_habits)
                                     HomeSection.Count -> stringResource(id = R.string.main_tab_count)
                                     HomeSection.Calendar -> stringResource(id = R.string.main_tab_calendar)
                                 }) },
@@ -587,7 +596,7 @@ fun HomeScreen(
                         sectionItems = sectionItems,
                         currentSection = currentSection,
                         onNavigateToSection = navigateToSection,
-                        todoContentDescription = stringResource(id = R.string.main_tab_todo),
+                        habitsContentDescription = stringResource(id = R.string.main_tab_habits),
                         countContentDescription = stringResource(id = R.string.main_tab_count),
                         calendarContentDescription = stringResource(id = R.string.main_tab_calendar)
                     )
@@ -651,7 +660,7 @@ fun CollapsedNavigationBar(
     currentSection: HomeSection,
     onNavigateToSection: (HomeSection) -> Unit,
     modifier: Modifier = Modifier,
-    todoContentDescription: String,
+    habitsContentDescription: String,
     countContentDescription: String,
     calendarContentDescription: String
 ) {
@@ -685,12 +694,12 @@ fun CollapsedNavigationBar(
                 // Icon with fixed size, centered in the Box
                 Icon(
                     imageVector = when (section) {
-                        HomeSection.Todo -> Icons.Filled.List
+                        HomeSection.Habits -> Icons.Filled.List
                         HomeSection.Count -> Icons.Filled.Calculate
                         HomeSection.Calendar -> Icons.Filled.CalendarMonth
                     },
                     contentDescription = when (section) {
-                        HomeSection.Todo -> todoContentDescription
+                        HomeSection.Habits -> habitsContentDescription
                         HomeSection.Count -> countContentDescription
                         HomeSection.Calendar -> calendarContentDescription
                     },

@@ -21,12 +21,13 @@
     <string name="main_new_habit">Create habit</string>
     <string name="main_no_habits">No habits</string>
     <string name="main_create_habit">Create habit</string>
-    <string name="main_title_todo">Todo</string>
+    <string name="main_title_habits">Habits</string>
     <string name="main_title_count">Count</string>
     <string name="main_title_calendar">Calendar</string>
-    <string name="main_tab_todo">Todo</string>
+    <string name="main_tab_habits">Habits</string>
     <string name="main_tab_count">Count</string>
     <string name="main_tab_calendar">Calendar</string>
+    <string name="main_subtitle_habit_count">%d habits</string>
     <string name="main_create_habit_title">Create habit</string>
     <string name="create_habit_title">Create Habit</string>
     <string name="edit_habit_title">Edit Habit</string>
