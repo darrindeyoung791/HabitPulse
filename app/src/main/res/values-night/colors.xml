@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
     <!-- Splash screen background color for dark theme -->
-    <color name="splash_background">#FF1C1B1F</color>
+    <color name="splash_background">#FF000000</color>
     <!-- Android 12+ will use dynamic colors from wallpaper -->
 </resources>

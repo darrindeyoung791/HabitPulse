@@ -16,6 +16,7 @@ import androidx.compose.animation.animateContentSize
 import androidx.compose.foundation.combinedClickable
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.background
+import androidx.compose.foundation.focusable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.items
@@ -40,14 +41,19 @@ import androidx.compose.ui.hapticfeedback.HapticFeedbackType
 import androidx.compose.ui.input.nestedscroll.nestedScroll
 import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.platform.LocalHapticFeedback
+import androidx.compose.ui.platform.LocalView
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.contentDescription
+import androidx.compose.ui.semantics.heading
+import androidx.compose.ui.semantics.paneTitle
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.*
+import androidx.compose.ui.focus.FocusRequester
+import androidx.compose.ui.focus.focusRequester
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import io.github.darrindeyoung791.habitpulse.HabitPulseApplication
 import io.github.darrindeyoung791.habitpulse.R
@@ -75,6 +81,9 @@ fun HomeScreen(
     val clickHandler = rememberDebounceClickHandler()
     val scope = rememberCoroutineScope()
 
+    // Focus requester for TalkBack initial focus
+    val titleFocusRequester = remember { androidx.compose.ui.focus.FocusRequester() }
+
     // 获取 ViewModel
     val viewModel: HabitViewModel = remember {
         HabitViewModel.Factory(application).create(HabitViewModel::class.java)
@@ -92,6 +101,14 @@ fun HomeScreen(
         if (!isLoading) {
             onHomeDataLoaded()
         }
+    }
+
+    // 当页面首次加载时，请求焦点到 title
+    LaunchedEffect(Unit) {
+        // 延迟一小段时间确保 UI 已经渲染完成
+        delay(500)
+        // 请求焦点到 title
+        titleFocusRequester.requestFocus()
     }
 
     // 当新习惯添加后，延迟触发动画（等待导航动画完成）
@@ -201,7 +218,6 @@ fun HomeScreen(
 
         if (isRailVisible) {
             // Phone landscape: use TopAppBar (always collapsed state)
-            // to save vertical space
             // For phone landscape with rail, only apply top inset by default.
             // If cutout is on right side, also apply end inset to keep settings icon safe.
             TopAppBar(
@@ -216,7 +232,13 @@ fun HomeScreen(
                         text = currentTitle,
                         style = MaterialTheme.typography.titleLarge,
                         maxLines = 1,
-                        overflow = TextOverflow.Ellipsis
+                        overflow = TextOverflow.Ellipsis,
+                        modifier = Modifier
+                            .focusRequester(titleFocusRequester)
+                            .focusable()
+                            .semantics {
+                                heading()
+                            }
                     )
                 },
                 actions = {
@@ -253,7 +275,13 @@ fun HomeScreen(
                             text = currentTitle,
                             style = currentTextStyle,
                             maxLines = 1,
-                            overflow = TextOverflow.Ellipsis
+                            overflow = TextOverflow.Ellipsis,
+                            modifier = Modifier
+                                .focusRequester(titleFocusRequester)
+                                .focusable()
+                                .semantics {
+                                    heading()
+                                }
                         )
                         // Subtitle - only show for Habits section when expanded
                         if (currentSection == HomeSection.Habits && collapsedFraction < 0.5f) {
@@ -328,7 +356,7 @@ fun HomeScreen(
                     // to prevent icon size changes during animation
                     sectionItems.forEach { section ->
                         val isSelected = currentSection == section
-                        
+
                         if (isDrawerExpanded) {
                             // Expanded state: full NavigationDrawerItem with label
                             NavigationDrawerItem(
