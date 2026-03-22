@@ -1,6 +1,7 @@
 package io.github.darrindeyoung791.habitpulse.data.preferences
 
 import android.content.Context
+import android.view.accessibility.AccessibilityManager
 import androidx.datastore.core.DataStore
 import androidx.datastore.preferences.core.Preferences
 import androidx.datastore.preferences.core.booleanPreferencesKey
@@ -11,7 +12,7 @@ import kotlinx.coroutines.flow.map
 
 /**
  * 用户偏好设置存储
- * 
+ *
  * 使用 DataStore 存储用户设置，支持异步读取和写入
  */
 
@@ -29,16 +30,24 @@ object PreferencesKeys {
 }
 
 /**
+ * Check if TalkBack or any accessibility service is enabled
+ */
+private fun isTalkBackEnabled(context: Context): Boolean {
+    val accessibilityManager = context.getSystemService(Context.ACCESSIBILITY_SERVICE) as AccessibilityManager
+    return accessibilityManager.isEnabled || accessibilityManager.isTouchExplorationEnabled
+}
+
+/**
  * 用户偏好设置管理器
- * 
+ *
  * 提供单例访问入口，封装 DataStore 操作
  */
 class UserPreferences(private val context: Context) {
-    
+
     companion object {
         @Volatile
         private var INSTANCE: UserPreferences? = null
-        
+
         /**
          * 获取单例实例
          */
@@ -50,23 +59,36 @@ class UserPreferences(private val context: Context) {
             }
         }
     }
-    
+
     /**
      * 是否显示开屏广告的 Flow
      * 默认值为 false（不显示）
+     * 如果检测到 TalkBack 开启，则强制返回 false
      */
     val showSplashAdFlow: Flow<Boolean> = context.dataStore.data.map { preferences ->
-        preferences[PreferencesKeys.SHOW_SPLASH_AD] ?: false
+        val showAd = preferences[PreferencesKeys.SHOW_SPLASH_AD] ?: false
+        // If TalkBack is enabled, force disable splash ad
+        if (isTalkBackEnabled(context)) {
+            false
+        } else {
+            showAd
+        }
     }
-    
+
     /**
      * 设置是否显示开屏广告
-     * 
+     *
      * @param show true 为显示，false 为不显示
      */
     suspend fun setShowSplashAd(show: Boolean) {
         context.dataStore.edit { preferences ->
-            preferences[PreferencesKeys.SHOW_SPLASH_AD] = show
+            // If TalkBack is enabled, force disable splash ad
+            val actualValue = if (isTalkBackEnabled(context) && show) {
+                false
+            } else {
+                show
+            }
+            preferences[PreferencesKeys.SHOW_SPLASH_AD] = actualValue
         }
     }
 }

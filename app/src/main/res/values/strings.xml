@@ -114,4 +114,7 @@
     <string name="debug_add_sample_data_yes">添加</string>
     <string name="debug_add_sample_data_no">取消</string>
     <string name="debug_sample_data_added">已添加 20 条样例数据</string>
+
+    <!-- Accessibility -->
+    <string name="accessibility_talkback_splash_ad_disabled">为了不影响视力障碍用户，开屏广告功能无法开启</string>
 </resources>

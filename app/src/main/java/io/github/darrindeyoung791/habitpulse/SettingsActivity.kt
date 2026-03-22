@@ -29,6 +29,7 @@ import io.github.darrindeyoung791.habitpulse.data.model.SupervisionMethod
 import io.github.darrindeyoung791.habitpulse.data.preferences.UserPreferences
 import io.github.darrindeyoung791.habitpulse.data.repository.HabitRepository
 import io.github.darrindeyoung791.habitpulse.ui.theme.HabitPulseTheme
+import io.github.darrindeyoung791.habitpulse.utils.AccessibilityUtils
 import kotlinx.coroutines.launch
 import org.json.JSONArray
 import java.util.UUID
@@ -55,6 +56,9 @@ fun SettingsScreen() {
 
     // 收集开屏广告设置状态
     val showSplashAd by userPreferences.showSplashAdFlow.collectAsStateWithLifecycle(initialValue = false)
+
+    // Check if TalkBack is enabled
+    val isTalkBackEnabled = remember { AccessibilityUtils.isTalkBackEnabled(context) }
 
     val versionName = remember {
         try {
@@ -177,10 +181,20 @@ fun SettingsScreen() {
                 SettingsSwitchItem(
                     headline = stringResource(id = R.string.settings_support_habitpulse_switch),
                     supportingText = stringResource(id = R.string.settings_support_habitpulse_switch_description, stringResource(id = R.string.app_name)),
-                    checked = showSplashAd,
+                    checked = showSplashAd && !isTalkBackEnabled,
+                    enabled = !isTalkBackEnabled,
                     onCheckedChange = { isChecked ->
-                        scope.launch {
-                            userPreferences.setShowSplashAd(isChecked)
+                        if (isChecked && isTalkBackEnabled) {
+                            // Show toast when trying to enable splash ad with TalkBack on
+                            android.widget.Toast.makeText(
+                                context,
+                                context.getString(R.string.accessibility_talkback_splash_ad_disabled),
+                                android.widget.Toast.LENGTH_SHORT
+                            ).show()
+                        } else {
+                            scope.launch {
+                                userPreferences.setShowSplashAd(isChecked)
+                            }
                         }
                     },
                     leadingIcon = {
@@ -301,11 +315,12 @@ fun SettingsSwitchItem(
     supportingText: String,
     checked: Boolean,
     onCheckedChange: (Boolean) -> Unit,
-    leadingIcon: @Composable () -> Unit
+    leadingIcon: @Composable () -> Unit,
+    enabled: Boolean = true
 ) {
     Surface(
         modifier = Modifier.fillMaxWidth(),
-        onClick = { onCheckedChange(!checked) },
+        onClick = { if (enabled) onCheckedChange(!checked) },
         color = MaterialTheme.colorScheme.surface
     ) {
         Row(
@@ -341,7 +356,8 @@ fun SettingsSwitchItem(
             }
             Switch(
                 checked = checked,
-                onCheckedChange = onCheckedChange
+                onCheckedChange = onCheckedChange,
+                enabled = enabled
             )
         }
     }

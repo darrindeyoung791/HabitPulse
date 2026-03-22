@@ -28,6 +28,10 @@
     <string name="main_tab_count">Count</string>
     <string name="main_tab_calendar">Calendar</string>
     <string name="main_subtitle_habit_count">%d habit(s)</string>
+    <string name="main_blank_count_description">This is the count page placeholder content, to be filled with statistics and analysis in the future.</string>
+    <string name="main_blank_calendar_description">This is the calendar page placeholder content, to be filled with calendar view navigation in the future.</string>
+    <string name="main_expand_drawer">Expand drawer</string>
+    <string name="main_collapse_drawer">Collapse drawer</string>
     <string name="main_create_habit_title">Create habit</string>
     <string name="create_habit_title">Create Habit</string>
     <string name="edit_habit_title">Edit Habit</string>
@@ -108,4 +112,7 @@
     <string name="debug_add_sample_data_yes">Add</string>
     <string name="debug_add_sample_data_no">Cancel</string>
     <string name="debug_sample_data_added">Added 20 sample data entries</string>
+
+    <!-- Accessibility -->
+    <string name="accessibility_talkback_splash_ad_disabled">To avoid affecting users with visual impairments, the splash ad feature cannot be enabled</string>
 </resources>
