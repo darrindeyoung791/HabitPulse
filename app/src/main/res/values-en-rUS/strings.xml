@@ -27,7 +27,7 @@
     <string name="main_tab_habits">Habits</string>
     <string name="main_tab_count">Count</string>
     <string name="main_tab_calendar">Calendar</string>
-    <string name="main_subtitle_habit_count">%d habits</string>
+    <string name="main_subtitle_habit_count">%d habit(s)</string>
     <string name="main_create_habit_title">Create habit</string>
     <string name="create_habit_title">Create Habit</string>
     <string name="edit_habit_title">Edit Habit</string>

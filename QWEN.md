@@ -4,7 +4,7 @@
 
 **HabitPulse** is an Android habit tracking application built with Kotlin and Jetpack Compose. The app helps users build and maintain daily habits through smart reminders and social supervision features.
 
-The project is rapidly developing, LLM should update this page when big changes occur.
+This project is rapidly developing, AI agents should update this page when big changes occur.
 
 ### Key Features
 - **Habit Tracking**: Create, manage, and track daily habits
@@ -176,6 +176,7 @@ HabitPulse/
 - **Kotlin style**: Official (as per `gradle.properties`)
 - **JVM target**: Java 11
 - **Compose**: Enabled with Material Design 3
+- **i18n**: 
 
 ### Architecture Patterns
 - Single Activity architecture with Navigation Compose
@@ -199,6 +200,21 @@ HabitPulse/
 - Unit tests in `src/test/`
 - Instrumented tests in `src/androidTest/`
 - Compose UI testing with `androidx.compose.ui.test`
+
+### Internationalization (i18n) Guidelines
+- **No hardcoded strings**: All user-visible strings must be stored in `strings.xml` resource files
+- **String resource location**:
+  - Default (Chinese): `res/values/strings.xml`
+  - English: `res/values-en-rUS/strings.xml`
+- **Usage in Compose**: Use `stringResource(R.string.resource_name)` to retrieve localized strings
+- **Naming convention**: Use snake_case for string resource names (e.g., `habit_creation_title`)
+- **Supported languages**:
+  - Chinese (Simplified) - Default
+  - English (US)
+- **Auto-mirrored icons**: Icons with directional meaning (e.g., arrows, back/forward) should use `autoMirrored="true"` in drawable resources for RTL support
+- **Agent requirement**: When adding new UI text, always:
+  1. Add string resources to both `values/strings.xml` and `values-en-rUS/strings.xml`
+  2. Reference via `R.string.*` in code, never inline string literals
 
 ## Current Status
 
@@ -234,10 +250,12 @@ The project is in **early development stage** (v0.1.31-alpha):
 - ✅ Smooth reposition animation for other cards (animateContentSize)
 - ✅ Debug feature: tap version 5 times in 10s to add 20 sample habits
 - ✅ Haptic feedback (50ms vibration) on habit check-in
+- ✅ Habit repeat days selection (weekly cycle)
+- ✅ Reminder time management
 
 ### In Progress
-- 🔄 Habit repeat days selection (weekly cycle)
-- 🔄 Reminder time management
+- 🔄 Count section (track unplanned events, such as game scores)
+- 🔄 Calendar section
 
 ### Planned
 - ⏳ Reminder system with AlarmManager
