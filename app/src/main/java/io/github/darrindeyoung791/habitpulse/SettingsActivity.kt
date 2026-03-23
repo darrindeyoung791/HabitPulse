@@ -57,8 +57,15 @@ fun SettingsScreen() {
     // 收集开屏广告设置状态
     val showSplashAd by userPreferences.showSplashAdFlow.collectAsStateWithLifecycle(initialValue = false)
 
-    // Check if TalkBack is enabled
-    val isTalkBackEnabled = remember { AccessibilityUtils.isTalkBackEnabled(context) }
+    // Check if TalkBack is enabled - poll every second to react to status changes
+    var isTalkBackEnabled by remember { mutableStateOf(AccessibilityUtils.isTalkBackEnabled(context)) }
+    
+    LaunchedEffect(Unit) {
+        while (true) {
+            kotlinx.coroutines.delay(1000)
+            isTalkBackEnabled = AccessibilityUtils.isTalkBackEnabled(context)
+        }
+    }
 
     val versionName = remember {
         try {

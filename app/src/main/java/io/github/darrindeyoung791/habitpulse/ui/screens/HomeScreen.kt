@@ -563,7 +563,11 @@ fun HomeScreen(
             bottomBar = {
                 if (useBottomBar) {
                     // Bottom Navigation Bar for portrait modes
-                    NavigationBar {
+                    // Use surface color to match system navigation bar color
+                    NavigationBar(
+                        containerColor = MaterialTheme.colorScheme.surface,
+                        contentColor = MaterialTheme.colorScheme.onSurface
+                    ) {
                         sectionItems.forEach { section ->
                             NavigationBarItem(
                                 icon = {
