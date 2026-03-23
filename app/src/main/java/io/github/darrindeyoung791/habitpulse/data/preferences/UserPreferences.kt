@@ -30,11 +30,16 @@ object PreferencesKeys {
 }
 
 /**
- * Check if TalkBack or any accessibility service is enabled
+ * Check if TalkBack is enabled
+ *
+ * Note: We only check touch exploration mode which is specific to TalkBack,
+ * not other accessibility services that users might have enabled.
  */
 private fun isTalkBackEnabled(context: Context): Boolean {
     val accessibilityManager = context.getSystemService(Context.ACCESSIBILITY_SERVICE) as AccessibilityManager
-    return accessibilityManager.isEnabled || accessibilityManager.isTouchExplorationEnabled
+    // Only check touch exploration mode (TalkBack specific)
+    // Don't use isEnabled as it returns true for ANY accessibility service
+    return accessibilityManager.isTouchExplorationEnabled
 }
 
 /**

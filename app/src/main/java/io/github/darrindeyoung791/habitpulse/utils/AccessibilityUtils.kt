@@ -9,13 +9,18 @@ import android.view.accessibility.AccessibilityManager
 object AccessibilityUtils {
 
     /**
-     * Check if TalkBack (or any accessibility service) is enabled
+     * Check if TalkBack is enabled
+     *
+     * Note: We only check touch exploration mode which is specific to TalkBack,
+     * not other accessibility services that users might have enabled.
      *
      * @param context the context to check accessibility status
-     * @return true if TalkBack or any accessibility service is enabled, false otherwise
+     * @return true if TalkBack is enabled, false otherwise
      */
     fun isTalkBackEnabled(context: Context): Boolean {
         val accessibilityManager = context.getSystemService(Context.ACCESSIBILITY_SERVICE) as AccessibilityManager
-        return accessibilityManager.isEnabled || accessibilityManager.isTouchExplorationEnabled
+        // Only check touch exploration mode (TalkBack specific)
+        // Don't use isEnabled as it returns true for ANY accessibility service
+        return accessibilityManager.isTouchExplorationEnabled
     }
 }
