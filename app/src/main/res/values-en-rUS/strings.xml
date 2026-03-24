@@ -14,6 +14,7 @@
     <string name="settings_support_habitpulse_description">Enable splash ad to support %1$s. Thank you for your support!</string>
     <string name="settings_support_habitpulse_switch">Enable Splash Ad</string>
     <string name="settings_support_habitpulse_switch_description">Display a closable splash ad when the app starts. If you find the ad bothersome, you can turn this option off anytime.</string>
+    <string name="settings_support_habitpulse_switch_description_talkback">Splash ad is unavailable when accessibility services are enabled</string>
     <string name="ad_skip_button">Skip Ad (%1$ds)</string>
     <string name="ad_space_for_rent">Your advertisement can be here.</string>
     <string name="main_calendar_view">Calendar view</string>

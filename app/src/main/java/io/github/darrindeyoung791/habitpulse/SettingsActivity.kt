@@ -187,7 +187,13 @@ fun SettingsScreen() {
                 // Support HabitPulse switch
                 SettingsSwitchItem(
                     headline = stringResource(id = R.string.settings_support_habitpulse_switch),
-                    supportingText = stringResource(id = R.string.settings_support_habitpulse_switch_description, stringResource(id = R.string.app_name)),
+                    supportingText = stringResource(
+                        id = if (isTalkBackEnabled) {
+                            R.string.settings_support_habitpulse_switch_description_talkback
+                        } else {
+                            R.string.settings_support_habitpulse_switch_description
+                        }
+                    ),
                     checked = showSplashAd && !isTalkBackEnabled,
                     enabled = !isTalkBackEnabled,
                     onCheckedChange = { isChecked ->
