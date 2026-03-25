@@ -74,7 +74,7 @@ fun HomeScreen(
     onCreateHabit: () -> Unit,
     onNavigateToSettings: () -> Unit,
     onEditHabit: (Habit) -> Unit,
-    application: HabitPulseApplication,
+    application: HabitPulseApplication? = null,
     onHomeDataLoaded: () -> Unit = {}
 ) {
     // 防重复点击处理器
@@ -84,9 +84,18 @@ fun HomeScreen(
     // Focus requester for TalkBack initial focus
     val titleFocusRequester = remember { androidx.compose.ui.focus.FocusRequester() }
 
-    // 获取 ViewModel
-    val viewModel: HabitViewModel = remember {
-        HabitViewModel.Factory(application).create(HabitViewModel::class.java)
+    // 获取 ViewModel - use preview mode if application is null
+    val viewModel: HabitViewModel = if (application != null) {
+        remember {
+            HabitViewModel.Factory(application).create(HabitViewModel::class.java)
+        }
+    } else {
+        // Preview mode: create a ViewModel with fake in-memory repository
+        remember {
+            val fakeDao = FakeHabitDao()
+            val fakeRepository = io.github.darrindeyoung791.habitpulse.data.repository.HabitRepository(fakeDao)
+            HabitViewModel(fakeRepository)
+        }
     }
 
     // 收集习惯列表状态（使用空列表作为初始值，但会通过 isLoading 控制显示）
@@ -1357,9 +1366,143 @@ fun HomeScreenPreview() {
             onCreateHabit = {},
             onNavigateToSettings = {},
             onEditHabit = {},
-            application = HabitPulseApplication(),
+            application = null,  // Use preview mode with fake data
             onHomeDataLoaded = {}
         )
+    }
+}
+
+/**
+ * Fake HabitDao implementation for Android Studio Preview.
+ * Provides in-memory storage with sample data for UI preview.
+ */
+@Suppress("unused")
+private class FakeHabitDao : io.github.darrindeyoung791.habitpulse.data.database.dao.HabitDao {
+    private val habits = mutableListOf<io.github.darrindeyoung791.habitpulse.data.model.Habit>()
+
+    init {
+        // Add sample data for preview
+        habits.add(
+            io.github.darrindeyoung791.habitpulse.data.model.Habit(
+                title = "每天喝水",
+                completedToday = false,
+                completionCount = 15,
+                repeatCycle = RepeatCycle.DAILY,
+                reminderTimes = "[\"08:00\",\"12:00\",\"20:00\"]",
+                notes = "记得每次喝水时要慢慢喝"
+            )
+        )
+        habits.add(
+            io.github.darrindeyoung791.habitpulse.data.model.Habit(
+                title = "晨跑",
+                completedToday = true,
+                completionCount = 30,
+                repeatCycle = RepeatCycle.WEEKLY,
+                repeatDays = "[1,3,5]",
+                reminderTimes = "[\"06:00\"]",
+                notes = "跑步前记得热身"
+            )
+        )
+        habits.add(
+            io.github.darrindeyoung791.habitpulse.data.model.Habit(
+                title = "阅读",
+                completedToday = false,
+                completionCount = 5,
+                repeatCycle = RepeatCycle.DAILY,
+                reminderTimes = "[\"21:00\"]",
+                notes = "每天至少读 30 分钟"
+            )
+        )
+    }
+
+    override fun getAllHabitsFlow(): kotlinx.coroutines.flow.Flow<List<io.github.darrindeyoung791.habitpulse.data.model.Habit>> {
+        return kotlinx.coroutines.flow.flowOf(habits)
+    }
+
+    override suspend fun getAllHabits(): List<io.github.darrindeyoung791.habitpulse.data.model.Habit> = habits
+
+    override fun getHabitByIdFlow(id: java.util.UUID): kotlinx.coroutines.flow.Flow<io.github.darrindeyoung791.habitpulse.data.model.Habit?> {
+        return kotlinx.coroutines.flow.flowOf(habits.find { it.id == id })
+    }
+
+    override suspend fun getHabitById(id: java.util.UUID): io.github.darrindeyoung791.habitpulse.data.model.Habit? {
+        return habits.find { it.id == id }
+    }
+
+    override fun getIncompleteHabitsFlow(): kotlinx.coroutines.flow.Flow<List<io.github.darrindeyoung791.habitpulse.data.model.Habit>> {
+        return kotlinx.coroutines.flow.flowOf(habits.filter { !it.completedToday })
+    }
+
+    override fun getCompletedHabitsFlow(): kotlinx.coroutines.flow.Flow<List<io.github.darrindeyoung791.habitpulse.data.model.Habit>> {
+        return kotlinx.coroutines.flow.flowOf(habits.filter { it.completedToday })
+    }
+
+    override suspend fun insert(habit: io.github.darrindeyoung791.habitpulse.data.model.Habit): Long {
+        habits.add(habit)
+        return 0
+    }
+
+    override suspend fun update(habit: io.github.darrindeyoung791.habitpulse.data.model.Habit) {
+        val index = habits.indexOfFirst { it.id == habit.id }
+        if (index >= 0) {
+            habits[index] = habit
+        }
+    }
+
+    override suspend fun delete(habit: io.github.darrindeyoung791.habitpulse.data.model.Habit) {
+        habits.removeIf { it.id == habit.id }
+    }
+
+    override suspend fun deleteAll() {
+        habits.clear()
+    }
+
+    override suspend fun updateCompletionStatus(id: java.util.UUID, completed: Boolean, timestamp: Long) {
+        val index = habits.indexOfFirst { it.id == id }
+        if (index >= 0) {
+            habits[index] = habits[index].copy(
+                completedToday = completed,
+                lastCompletedDate = timestamp,
+                completionCount = if (completed) habits[index].completionCount + 1 else habits[index].completionCount,
+                modifiedDate = timestamp
+            )
+        }
+    }
+
+    override suspend fun undoCompletionStatus(id: java.util.UUID, timestamp: Long) {
+        val index = habits.indexOfFirst { it.id == id }
+        if (index >= 0) {
+            habits[index] = habits[index].copy(
+                completedToday = false,
+                completionCount = maxOf(0, habits[index].completionCount - 1),
+                modifiedDate = timestamp
+            )
+        }
+    }
+
+    override suspend fun incrementCompletionCount(id: java.util.UUID, timestamp: Long) {
+        val index = habits.indexOfFirst { it.id == id }
+        if (index >= 0) {
+            habits[index] = habits[index].copy(
+                completedToday = true,
+                completionCount = habits[index].completionCount + 1,
+                lastCompletedDate = timestamp,
+                modifiedDate = timestamp
+            )
+        }
+    }
+
+    override suspend fun resetAllCompletionStatus(timestamp: Long) {
+        habits.replaceAll { habit ->
+            habit.copy(
+                completedToday = false,
+                modifiedDate = timestamp
+            )
+        }
+    }
+
+    override fun getHabitCount(): kotlinx.coroutines.flow.Flow<Int> {
+        return kotlinx.coroutines.flow.flowOf(habits.size)
     }
 }
 

@@ -176,7 +176,7 @@ HabitPulse/
 - **Kotlin style**: Official (as per `gradle.properties`)
 - **JVM target**: Java 11
 - **Compose**: Enabled with Material Design 3
-- **i18n**: 
+- **i18n**: Simplified Chinese and English(US)
 
 ### Architecture Patterns
 - Single Activity architecture with Navigation Compose
