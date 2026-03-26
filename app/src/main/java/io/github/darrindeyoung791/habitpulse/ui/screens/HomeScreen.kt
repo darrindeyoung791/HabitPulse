@@ -129,8 +129,19 @@ fun HomeScreen(
     }
 
     val configuration = LocalConfiguration.current
-    val screenWidthDp = configuration.screenWidthDp
+    var screenWidthDp = configuration.screenWidthDp
     val isLandscape = configuration.orientation == Configuration.ORIENTATION_LANDSCAPE
+
+    // 获取用户偏好设置
+    val userPreferences = application?.let {
+        remember { io.github.darrindeyoung791.habitpulse.data.preferences.UserPreferences.getInstance(it) }
+    }
+    val forceTabletLandscape: Boolean by userPreferences?.forceTabletLandscapeFlow?.collectAsStateWithLifecycle(initialValue = false) ?: remember { mutableStateOf(false) }
+
+    // 如果启用了强制平板横屏模式，将屏幕宽度视为 ≥1200dp
+    if (forceTabletLandscape && isLandscape && screenWidthDp < 1200) {
+        screenWidthDp = 1200
+    }
 
     // Navigation mode decision logic:
     // - Tablet landscape (≥1200dp): PermanentNavigationDrawer with hamburger menu
@@ -232,7 +243,8 @@ fun HomeScreen(
                         onDeleteHabit = { viewModel.deleteHabit(it) },
                         nestedScrollConnection = habitsScrollBehavior.nestedScrollConnection,
                         newlyAddedHabitId = newlyAddedHabitId,
-                        listState = habitsScrollState
+                        listState = habitsScrollState,
+                        forceTabletLandscape = forceTabletLandscape == true
                     )
                 }
             }
@@ -261,10 +273,16 @@ fun HomeScreen(
             HomeSection.Records -> stringResource(id = R.string.main_title_records)
         }
 
+        // 根据当前 Section 选择正确的 scrollBehavior
+        val currentTopAppBarScrollBehavior = when (currentSection) {
+            HomeSection.Records -> recordsScrollBehavior
+            HomeSection.Habits -> habitsScrollBehavior
+            else -> TopAppBarDefaults.pinnedScrollBehavior()
+        }
+
         if (isRailVisible) {
-            // Phone landscape: use TopAppBar (always collapsed state)
-            // For phone landscape with rail, only apply top inset by default.
-            // If cutout is on right side, also apply end inset to keep settings icon safe.
+            // Phone landscape: use TopAppBar
+            // Use the section-specific scrollBehavior for proper nested scrolling
             TopAppBar(
                 windowInsets = WindowInsets(0, 0, 0, 0),
                 modifier = Modifier.windowInsetsPadding(
@@ -302,7 +320,7 @@ fun HomeScreen(
                         )
                     }
                 },
-                scrollBehavior = TopAppBarDefaults.pinnedScrollBehavior()
+                scrollBehavior = currentTopAppBarScrollBehavior
             )
         } else {
             // Other modes: use LargeTopAppBar with exitUntilCollapsed behavior
@@ -840,12 +858,20 @@ fun HabitListContent(
     onDeleteHabit: (Habit) -> Unit,
     nestedScrollConnection: androidx.compose.ui.input.nestedscroll.NestedScrollConnection? = null,
     newlyAddedHabitId: UUID? = null,
-    listState: androidx.compose.foundation.lazy.LazyListState = remember { androidx.compose.foundation.lazy.LazyListState() }
+    listState: androidx.compose.foundation.lazy.LazyListState = remember { androidx.compose.foundation.lazy.LazyListState() },
+    forceTabletLandscape: Boolean = false
 ) {
     val configuration = LocalConfiguration.current
+    var screenWidthDp = configuration.screenWidthDp
     val isLandscape = configuration.orientation == Configuration.ORIENTATION_LANDSCAPE
-    val screenWidthDp = configuration.screenWidthDp
-    val useStaggeredGrid = isLandscape && screenWidthDp >= 840
+
+    // 如果启用了强制平板横屏模式，将屏幕宽度视为 ≥1200dp
+    if (forceTabletLandscape && isLandscape && screenWidthDp < 1200) {
+        screenWidthDp = 1200
+    }
+
+    // Use staggered grid only for tablets in landscape (≥1200dp)
+    val useStaggeredGrid = isLandscape && screenWidthDp >= 1200
 
     // Use consistent 16.dp horizontal padding to align with LargeTopAppBar title
     val horizontalPadding = 16.dp
@@ -857,54 +883,60 @@ fun HabitListContent(
         val column2Habits = habits.filterIndexed { index, _ -> index % 2 == 1 }
 
         val staggeredModifier = if (nestedScrollConnection != null) modifier.nestedScroll(nestedScrollConnection) else modifier
-        Column(
-            modifier = staggeredModifier
-                .fillMaxSize()
-                .verticalScroll(rememberScrollState())
-                .padding(horizontal = horizontalPadding, vertical = 16.dp)
+        
+        // Use LazyColumn with listState for proper scroll control
+        LazyColumn(
+            modifier = staggeredModifier.fillMaxSize(),
+            state = listState,
+            contentPadding = PaddingValues(horizontal = horizontalPadding, vertical = 16.dp),
+            verticalArrangement = Arrangement.spacedBy(8.dp)
         ) {
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.spacedBy(16.dp)
-            ) {
-                // Left column
-                Column(
-                    modifier = Modifier.weight(1f),
-                    verticalArrangement = Arrangement.spacedBy(8.dp)
+            item {
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.spacedBy(16.dp)
                 ) {
-                    column1Habits.forEach { habit ->
-                        HabitCard(
-                            habit = habit,
-                            onClick = { onHabitClick(habit) },
-                            onCheckIn = { onCheckIn(habit) },
-                            onUndoCompletion = { onUndoCompletion(habit) },
-                            onEditHabit = { onHabitClick(habit) },
-                            onDeleteHabit = { onDeleteHabit(habit) },
-                            isNewlyAdded = (habit.id == newlyAddedHabitId)
-                        )
+                    // Left column
+                    Column(
+                        modifier = Modifier.weight(1f),
+                        verticalArrangement = Arrangement.spacedBy(8.dp)
+                    ) {
+                        column1Habits.forEach { habit ->
+                            HabitCard(
+                                habit = habit,
+                                onClick = { onHabitClick(habit) },
+                                onCheckIn = { onCheckIn(habit) },
+                                onUndoCompletion = { onUndoCompletion(habit) },
+                                onEditHabit = { onHabitClick(habit) },
+                                onDeleteHabit = { onDeleteHabit(habit) },
+                                isNewlyAdded = (habit.id == newlyAddedHabitId)
+                            )
+                        }
                     }
-                }
 
-                // Right column
-                Column(
-                    modifier = Modifier.weight(1f),
-                    verticalArrangement = Arrangement.spacedBy(8.dp)
-                ) {
-                    column2Habits.forEach { habit ->
-                        HabitCard(
-                            habit = habit,
-                            onClick = { onHabitClick(habit) },
-                            onCheckIn = { onCheckIn(habit) },
-                            onUndoCompletion = { onUndoCompletion(habit) },
-                            onEditHabit = { onHabitClick(habit) },
-                            onDeleteHabit = { onDeleteHabit(habit) },
-                            isNewlyAdded = (habit.id == newlyAddedHabitId)
-                        )
+                    // Right column
+                    Column(
+                        modifier = Modifier.weight(1f),
+                        verticalArrangement = Arrangement.spacedBy(8.dp)
+                    ) {
+                        column2Habits.forEach { habit ->
+                            HabitCard(
+                                habit = habit,
+                                onClick = { onHabitClick(habit) },
+                                onCheckIn = { onCheckIn(habit) },
+                                onUndoCompletion = { onUndoCompletion(habit) },
+                                onEditHabit = { onHabitClick(habit) },
+                                onDeleteHabit = { onDeleteHabit(habit) },
+                                isNewlyAdded = (habit.id == newlyAddedHabitId)
+                            )
+                        }
                     }
                 }
             }
             // Add bottom spacer to prevent FAB from covering last item
-            Spacer(modifier = Modifier.height(100.dp))
+            item {
+                Spacer(modifier = Modifier.height(100.dp))
+            }
         }
     } else {
         // Single column layout for phones and portrait mode

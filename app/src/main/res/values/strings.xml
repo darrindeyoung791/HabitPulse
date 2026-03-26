@@ -139,4 +139,9 @@
     <string name="records_date_months_ago">%d 个月前</string>
     <string name="records_date_last_year">去年</string>
     <string name="records_date_years_ago">%d 年前</string>
+
+    <!-- Settings - Visual -->
+    <string name="settings_visual">视觉</string>
+    <string name="settings_force_tablet_landscape">强制使用平板横屏模式</string>
+    <string name="settings_force_tablet_landscape_description">在小平板横屏时，使用平板横屏的界面布局</string>
 </resources>

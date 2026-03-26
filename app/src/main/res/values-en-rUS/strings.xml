@@ -137,4 +137,9 @@
     <string name="records_date_months_ago">%d months ago</string>
     <string name="records_date_last_year">Last year</string>
     <string name="records_date_years_ago">%d years ago</string>
+
+    <!-- Settings - Visual -->
+    <string name="settings_visual">Visual</string>
+    <string name="settings_force_tablet_landscape">Force tablet landscape mode</string>
+    <string name="settings_force_tablet_landscape_description">Use tablet landscape layout on small tablets in landscape orientation</string>
 </resources>

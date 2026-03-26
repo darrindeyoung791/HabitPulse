@@ -27,6 +27,11 @@ object PreferencesKeys {
      * 是否开启开屏广告以支持 HabitPulse
      */
     val SHOW_SPLASH_AD = booleanPreferencesKey("show_splash_ad")
+
+    /**
+     * 是否强制使用平板横屏模式
+     */
+    val FORCE_TABLET_LANDSCAPE = booleanPreferencesKey("force_tablet_landscape")
 }
 
 /**
@@ -94,6 +99,25 @@ class UserPreferences(private val context: Context) {
                 show
             }
             preferences[PreferencesKeys.SHOW_SPLASH_AD] = actualValue
+        }
+    }
+
+    /**
+     * 是否强制使用平板横屏模式的 Flow
+     * 默认值为 false（不强制）
+     */
+    val forceTabletLandscapeFlow: Flow<Boolean> = context.dataStore.data.map { preferences ->
+        preferences[PreferencesKeys.FORCE_TABLET_LANDSCAPE] ?: false
+    }
+
+    /**
+     * 设置是否强制使用平板横屏模式
+     *
+     * @param force true 为强制，false 为不强制
+     */
+    suspend fun setForceTabletLandscape(force: Boolean) {
+        context.dataStore.edit { preferences ->
+            preferences[PreferencesKeys.FORCE_TABLET_LANDSCAPE] = force
         }
     }
 }

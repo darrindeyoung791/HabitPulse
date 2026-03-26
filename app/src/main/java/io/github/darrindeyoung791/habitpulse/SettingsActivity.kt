@@ -57,6 +57,8 @@ fun SettingsScreen() {
 
     // 收集开屏广告设置状态
     val showSplashAd by userPreferences.showSplashAdFlow.collectAsStateWithLifecycle(initialValue = false)
+    // 收集强制平板横屏模式设置状态
+    val forceTabletLandscape by userPreferences.forceTabletLandscapeFlow.collectAsStateWithLifecycle(initialValue = false)
 
     // Check if TalkBack is enabled - poll every second to react to status changes
     var isTalkBackEnabled by remember { mutableStateOf(AccessibilityUtils.isTalkBackEnabled(context)) }
@@ -226,7 +228,36 @@ fun SettingsScreen() {
                     }
                 )
             }
-            
+
+            // 视觉部分
+            item {
+                // Section header
+                Text(
+                    text = stringResource(id = R.string.settings_visual),
+                    style = MaterialTheme.typography.labelMedium,
+                    color = MaterialTheme.colorScheme.primary,
+                    modifier = Modifier.padding(horizontal = 16.dp, vertical = 16.dp)
+                )
+
+                // Force tablet landscape mode switch
+                SettingsSwitchItem(
+                    headline = stringResource(id = R.string.settings_force_tablet_landscape),
+                    supportingText = stringResource(id = R.string.settings_force_tablet_landscape_description),
+                    checked = forceTabletLandscape,
+                    onCheckedChange = { isChecked ->
+                        scope.launch {
+                            userPreferences.setForceTabletLandscape(isChecked)
+                        }
+                    },
+                    leadingIcon = {
+                        Icon(
+                            imageVector = Icons.Outlined.Info,
+                            contentDescription = null
+                        )
+                    }
+                )
+            }
+
             // 关于部分
             item {
                 // Section header
