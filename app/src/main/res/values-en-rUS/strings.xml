@@ -142,4 +142,10 @@
     <string name="settings_visual">Visual</string>
     <string name="settings_force_tablet_landscape">Force tablet landscape mode</string>
     <string name="settings_force_tablet_landscape_description">Use tablet landscape layout on small tablets in landscape orientation</string>
+    <string name="settings_force_tablet_landscape_warning_title">Caution!</string>
+    <string name="settings_force_tablet_landscape_warning_message">This feature is designed for small tablets. If enabled on a phone, the interface layout may display abnormally. Proceed?</string>
+    
+    <!-- Dialog buttons -->
+    <string name="dialog_confirm">OK</string>
+    <string name="dialog_cancel">Cancel</string>
 </resources>

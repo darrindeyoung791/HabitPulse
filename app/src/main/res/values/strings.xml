@@ -144,4 +144,10 @@
     <string name="settings_visual">视觉</string>
     <string name="settings_force_tablet_landscape">强制使用平板横屏模式</string>
     <string name="settings_force_tablet_landscape_description">在小平板横屏时，使用平板横屏的界面布局</string>
+    <string name="settings_force_tablet_landscape_warning_title">注意！</string>
+    <string name="settings_force_tablet_landscape_warning_message">此功能专为小屏平板设计。如果在手机上开启，界面布局可能会显示异常。确定要开启吗？</string>
+    
+    <!-- Dialog buttons -->
+    <string name="dialog_confirm">确定</string>
+    <string name="dialog_cancel">取消</string>
 </resources>

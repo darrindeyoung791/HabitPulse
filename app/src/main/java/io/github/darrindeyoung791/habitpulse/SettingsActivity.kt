@@ -2,6 +2,7 @@ package io.github.darrindeyoung791.habitpulse
 
 import android.content.ActivityNotFoundException
 import android.content.Intent
+import android.content.res.Configuration
 import android.net.Uri
 import android.os.Bundle
 import android.provider.Settings
@@ -18,6 +19,7 @@ import androidx.compose.material.icons.outlined.Person
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.*
+import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.Preview
@@ -60,6 +62,14 @@ fun SettingsScreen() {
     // 收集强制平板横屏模式设置状态
     val forceTabletLandscape by userPreferences.forceTabletLandscapeFlow.collectAsStateWithLifecycle(initialValue = false)
 
+    // 检测当前设备是否为平板（屏幕宽度 ≥ 1200dp）
+    val configuration = LocalConfiguration.current
+    val screenWidthDp = configuration.screenWidthDp
+    val isLandscape = configuration.orientation == Configuration.ORIENTATION_LANDSCAPE
+    val isTabletLandscape = isLandscape && screenWidthDp >= 1200
+    // 只有在非平板横屏设备上才显示此开关
+    val showForceTabletLandscapeSwitch = !isTabletLandscape
+
     // Check if TalkBack is enabled - poll every second to react to status changes
     var isTalkBackEnabled by remember { mutableStateOf(AccessibilityUtils.isTalkBackEnabled(context)) }
     
@@ -87,6 +97,10 @@ fun SettingsScreen() {
     var versionTapStartTime by remember { mutableStateOf(0L) }
     var showSampleDataDialog by remember { mutableStateOf(false) }
     var showSuccessMessage by remember { mutableStateOf(false) }
+    
+    // Dialog for force tablet landscape mode warning
+    var showForceTabletLandscapeDialog by remember { mutableStateOf(false) }
+    var pendingForceTabletLandscapeValue by remember { mutableStateOf(false) }
 
     val TAP_TIME_WINDOW = 10_000L // 10 seconds
     val TAP_COUNT_THRESHOLD = 5
@@ -146,6 +160,36 @@ fun SettingsScreen() {
             kotlinx.coroutines.delay(2000)
             showSuccessMessage = false
         }
+    }
+
+    // Dialog for force tablet landscape mode warning
+    if (showForceTabletLandscapeDialog) {
+        AlertDialog(
+            onDismissRequest = { showForceTabletLandscapeDialog = false },
+            title = {
+                Text(text = stringResource(id = R.string.settings_force_tablet_landscape_warning_title))
+            },
+            text = {
+                Text(text = stringResource(id = R.string.settings_force_tablet_landscape_warning_message))
+            },
+            confirmButton = {
+                TextButton(
+                    onClick = {
+                        showForceTabletLandscapeDialog = false
+                        scope.launch {
+                            userPreferences.setForceTabletLandscape(pendingForceTabletLandscapeValue)
+                        }
+                    }
+                ) {
+                    Text(text = stringResource(id = R.string.dialog_confirm))
+                }
+            },
+            dismissButton = {
+                TextButton(onClick = { showForceTabletLandscapeDialog = false }) {
+                    Text(text = stringResource(id = R.string.dialog_cancel))
+                }
+            }
+        )
     }
 
     Scaffold(
@@ -230,32 +274,41 @@ fun SettingsScreen() {
             }
 
             // 视觉部分
-            item {
-                // Section header
-                Text(
-                    text = stringResource(id = R.string.settings_visual),
-                    style = MaterialTheme.typography.labelMedium,
-                    color = MaterialTheme.colorScheme.primary,
-                    modifier = Modifier.padding(horizontal = 16.dp, vertical = 16.dp)
-                )
+            if (showForceTabletLandscapeSwitch) {
+                item {
+                    // Section header
+                    Text(
+                        text = stringResource(id = R.string.settings_visual),
+                        style = MaterialTheme.typography.labelMedium,
+                        color = MaterialTheme.colorScheme.primary,
+                        modifier = Modifier.padding(horizontal = 16.dp, vertical = 16.dp)
+                    )
 
-                // Force tablet landscape mode switch
-                SettingsSwitchItem(
-                    headline = stringResource(id = R.string.settings_force_tablet_landscape),
-                    supportingText = stringResource(id = R.string.settings_force_tablet_landscape_description),
-                    checked = forceTabletLandscape,
-                    onCheckedChange = { isChecked ->
-                        scope.launch {
-                            userPreferences.setForceTabletLandscape(isChecked)
+                    // Force tablet landscape mode switch
+                    SettingsSwitchItem(
+                        headline = stringResource(id = R.string.settings_force_tablet_landscape),
+                        supportingText = stringResource(id = R.string.settings_force_tablet_landscape_description),
+                        checked = forceTabletLandscape,
+                        onCheckedChange = { isChecked ->
+                            if (isChecked) {
+                                // Show warning dialog when enabling
+                                pendingForceTabletLandscapeValue = true
+                                showForceTabletLandscapeDialog = true
+                            } else {
+                                // Disable without warning
+                                scope.launch {
+                                    userPreferences.setForceTabletLandscape(false)
+                                }
+                            }
+                        },
+                        leadingIcon = {
+                            Icon(
+                                imageVector = Icons.Outlined.Info,
+                                contentDescription = null
+                            )
                         }
-                    },
-                    leadingIcon = {
-                        Icon(
-                            imageVector = Icons.Outlined.Info,
-                            contentDescription = null
-                        )
-                    }
-                )
+                    )
+                }
             }
 
             // 关于部分

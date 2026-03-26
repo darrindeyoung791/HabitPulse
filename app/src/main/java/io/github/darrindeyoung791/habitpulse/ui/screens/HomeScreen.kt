@@ -282,13 +282,10 @@ fun HomeScreen(
 
         if (isRailVisible) {
             // Phone landscape: use TopAppBar
-            // Use the section-specific scrollBehavior for proper nested scrolling
+            // TopAppBar handles its own insets (top for status bar, end for camera if needed)
             TopAppBar(
-                windowInsets = WindowInsets(0, 0, 0, 0),
-                modifier = Modifier.windowInsetsPadding(
-                    WindowInsets.safeDrawing.only(
-                        if (isRailCutoutRight) WindowInsetsSides.Top + WindowInsetsSides.End else WindowInsetsSides.Top
-                    )
+                windowInsets = WindowInsets.safeDrawing.only(
+                    if (isRailCutoutRight) WindowInsetsSides.Top + WindowInsetsSides.End else WindowInsetsSides.Top
                 ),
                 title = {
                     Text(
@@ -325,6 +322,7 @@ fun HomeScreen(
         } else {
             // Other modes: use LargeTopAppBar with exitUntilCollapsed behavior
             LargeTopAppBar(
+                windowInsets = WindowInsets.safeDrawing.only(WindowInsetsSides.Top),
                 title = {
                     Column {
                         // Main title - animate font size based on scroll state
@@ -390,6 +388,7 @@ fun HomeScreen(
                     modifier = Modifier
                         .width(animatedDrawerWidth)
                         .fillMaxHeight()
+                        .windowInsetsPadding(WindowInsets.safeDrawing.only(WindowInsetsSides.Start))
                 ) {
                     // Drawer header with menu/collapse button
                     Box(
@@ -485,9 +484,10 @@ fun HomeScreen(
                 }
             }
         ) {
+            // Tablet landscape mode
+            // Drawer handles start inset, Scaffold handles top and end insets
             Scaffold(
-                modifier = Modifier
-                    .fillMaxSize(),
+                modifier = Modifier.fillMaxSize(),
                 topBar = { topAppBarContent(false) },
                 floatingActionButton = {
                     if (showFab) {
@@ -508,7 +508,10 @@ fun HomeScreen(
                         )
                     }
                 },
-                contentWindowInsets = WindowInsets(0, 0, 0, 0)
+                // Scaffold handles top and end insets (start is handled by drawer)
+                contentWindowInsets = WindowInsets.safeDrawing.only(
+                    WindowInsetsSides.Top + WindowInsetsSides.End
+                )
             ) { paddingValues ->
                 Box(
                     modifier = Modifier
@@ -528,7 +531,7 @@ fun HomeScreen(
                 .background(MaterialTheme.colorScheme.surface)
         ) {
             // NavigationRail - fixed on left side
-            // Apply start inset to NavigationRail to handle camera cutout on left
+            // Handles start inset for camera cutout
             NavigationRail(
                 modifier = Modifier
                     .fillMaxHeight()
@@ -565,30 +568,33 @@ fun HomeScreen(
             }
 
             // Content area on right side
-            // Apply top inset always; apply end inset only when camera cutout is on right.
+            // TopAppBar handles its own top inset
+            // Content handles end inset if camera cutout is on right
             Column(
                 modifier = Modifier
                     .fillMaxSize()
                     .weight(1f)
-                    .windowInsetsPadding(
-                        WindowInsets.safeDrawing.only(
-                            if (isRailCutoutRight) WindowInsetsSides.Top + WindowInsetsSides.End else WindowInsetsSides.Top
-                        )
-                    )
             ) {
-                // TopAppBar
+                // TopAppBar handles its own insets via windowInsets parameter
                 topAppBarContent(true)
 
-                // Scrollable content area with small top padding to avoid being covered by TopAppBar
+                // Scrollable content area
                 Box(
-                    modifier = Modifier
-                        .fillMaxSize()
+                    modifier = Modifier.fillMaxSize()
                 ) {
                     homeBody(
-                        Modifier.fillMaxSize().padding(top = 4.dp)
+                        Modifier.fillMaxSize().then(
+                            if (isRailCutoutRight) {
+                                Modifier.windowInsetsPadding(
+                                    WindowInsets.safeDrawing.only(WindowInsetsSides.End)
+                                )
+                            } else {
+                                Modifier
+                            }
+                        )
                     )
 
-                    // FAB - floating above content, safe with right inset when needed
+                    // FAB - floating above content
                     if (showFab) {
                         ExtendedFloatingActionButton(
                             onClick = {
