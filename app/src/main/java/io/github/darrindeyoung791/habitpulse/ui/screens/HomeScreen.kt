@@ -66,7 +66,7 @@ import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import java.util.UUID
 
-enum class HomeSection { Habits, Count, Calendar }
+enum class HomeSection { Habits, Contacts, Records }
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -160,8 +160,8 @@ fun HomeScreen(
 
     val sectionItems = listOf(
         HomeSection.Habits,
-        HomeSection.Count,
-        HomeSection.Calendar
+        HomeSection.Contacts,
+        HomeSection.Records
     )
 
     val navigateToSection: (HomeSection) -> Unit = { currentSection = it }
@@ -201,18 +201,18 @@ fun HomeScreen(
                     )
                 }
             }
-            HomeSection.Count -> {
+            HomeSection.Contacts -> {
                 BlankSectionContent(
                     modifier = modifier,
-                    title = stringResource(id = R.string.main_tab_count),
-                    description = stringResource(id = R.string.main_blank_count_description)
+                    title = stringResource(id = R.string.main_tab_contacts),
+                    description = stringResource(id = R.string.main_blank_contacts_description)
                 )
             }
-            HomeSection.Calendar -> {
+            HomeSection.Records -> {
                 BlankSectionContent(
                     modifier = modifier,
-                    title = stringResource(id = R.string.main_tab_calendar),
-                    description = stringResource(id = R.string.main_blank_calendar_description)
+                    title = stringResource(id = R.string.main_tab_records),
+                    description = stringResource(id = R.string.main_blank_records_description)
                 )
             }
         }
@@ -221,8 +221,8 @@ fun HomeScreen(
     val topAppBarContent: @Composable (Boolean) -> Unit = { isRailVisible ->
         val currentTitle = when (currentSection) {
             HomeSection.Habits -> stringResource(id = R.string.main_title_habits)
-            HomeSection.Count -> stringResource(id = R.string.main_title_count)
-            HomeSection.Calendar -> stringResource(id = R.string.main_title_calendar)
+            HomeSection.Contacts -> stringResource(id = R.string.main_title_contacts)
+            HomeSection.Records -> stringResource(id = R.string.main_title_records)
         }
 
         if (isRailVisible) {
@@ -371,15 +371,15 @@ fun HomeScreen(
                             NavigationDrawerItem(
                                 label = { Text(text = when (section) {
                                     HomeSection.Habits -> stringResource(id = R.string.main_tab_habits)
-                                    HomeSection.Count -> stringResource(id = R.string.main_tab_count)
-                                    HomeSection.Calendar -> stringResource(id = R.string.main_tab_calendar)
+                                    HomeSection.Contacts -> stringResource(id = R.string.main_tab_contacts)
+                                    HomeSection.Records -> stringResource(id = R.string.main_tab_records)
                                 }) },
                                 icon = {
                                     Icon(
                                         imageVector = when (section) {
                                             HomeSection.Habits -> Icons.Filled.List
-                                            HomeSection.Count -> Icons.Filled.Calculate
-                                            HomeSection.Calendar -> Icons.Filled.CalendarMonth
+                                            HomeSection.Contacts -> Icons.Filled.People
+                                            HomeSection.Records -> Icons.Filled.Assessment
                                         },
                                         contentDescription = null
                                     )
@@ -411,13 +411,13 @@ fun HomeScreen(
                                 Icon(
                                     imageVector = when (section) {
                                         HomeSection.Habits -> Icons.Filled.List
-                                        HomeSection.Count -> Icons.Filled.Calculate
-                                        HomeSection.Calendar -> Icons.Filled.CalendarMonth
+                                        HomeSection.Contacts -> Icons.Filled.People
+                                        HomeSection.Records -> Icons.Filled.Assessment
                                     },
                                     contentDescription = when (section) {
                                         HomeSection.Habits -> stringResource(id = R.string.main_tab_habits)
-                                        HomeSection.Count -> stringResource(id = R.string.main_tab_count)
-                                        HomeSection.Calendar -> stringResource(id = R.string.main_tab_calendar)
+                                        HomeSection.Contacts -> stringResource(id = R.string.main_tab_contacts)
+                                        HomeSection.Records -> stringResource(id = R.string.main_tab_records)
                                     },
                                     tint = if (isSelected) {
                                         MaterialTheme.colorScheme.onSecondaryContainer
@@ -487,21 +487,21 @@ fun HomeScreen(
                             Icon(
                                 imageVector = when (section) {
                                     HomeSection.Habits -> Icons.Filled.List
-                                    HomeSection.Count -> Icons.Filled.Calculate
-                                    HomeSection.Calendar -> Icons.Filled.CalendarMonth
+                                    HomeSection.Contacts -> Icons.Filled.People
+                                    HomeSection.Records -> Icons.Filled.Assessment
                                 },
                                 contentDescription = when (section) {
                                     HomeSection.Habits -> stringResource(id = R.string.main_tab_habits)
-                                    HomeSection.Count -> stringResource(id = R.string.main_tab_count)
-                                    HomeSection.Calendar -> stringResource(id = R.string.main_tab_calendar)
+                                    HomeSection.Contacts -> stringResource(id = R.string.main_tab_contacts)
+                                    HomeSection.Records -> stringResource(id = R.string.main_tab_records)
                                 }
                             )
                         },
                         label = {
                             Text(text = when (section) {
                                 HomeSection.Habits -> stringResource(id = R.string.main_tab_habits)
-                                HomeSection.Count -> stringResource(id = R.string.main_tab_count)
-                                HomeSection.Calendar -> stringResource(id = R.string.main_tab_calendar)
+                                HomeSection.Contacts -> stringResource(id = R.string.main_tab_contacts)
+                                HomeSection.Records -> stringResource(id = R.string.main_tab_records)
                             })
                         },
                         selected = currentSection == section,
@@ -583,20 +583,20 @@ fun HomeScreen(
                                     Icon(
                                         imageVector = when (section) {
                                             HomeSection.Habits -> Icons.Filled.List
-                                            HomeSection.Count -> Icons.Filled.Calculate
-                                            HomeSection.Calendar -> Icons.Filled.CalendarMonth
+                                            HomeSection.Contacts -> Icons.Filled.People
+                                            HomeSection.Records -> Icons.Filled.Assessment
                                         },
                                         contentDescription = when (section) {
                                             HomeSection.Habits -> stringResource(id = R.string.main_tab_habits)
-                                            HomeSection.Count -> stringResource(id = R.string.main_tab_count)
-                                            HomeSection.Calendar -> stringResource(id = R.string.main_tab_calendar)
+                                            HomeSection.Contacts -> stringResource(id = R.string.main_tab_contacts)
+                                            HomeSection.Records -> stringResource(id = R.string.main_tab_records)
                                         }
                                     )
                                 },
                                 label = { Text(text = when (section) {
                                     HomeSection.Habits -> stringResource(id = R.string.main_tab_habits)
-                                    HomeSection.Count -> stringResource(id = R.string.main_tab_count)
-                                    HomeSection.Calendar -> stringResource(id = R.string.main_tab_calendar)
+                                    HomeSection.Contacts -> stringResource(id = R.string.main_tab_contacts)
+                                    HomeSection.Records -> stringResource(id = R.string.main_tab_records)
                                 }) },
                                 selected = currentSection == section,
                                 onClick = { navigateToSection(section) }
@@ -638,8 +638,8 @@ fun HomeScreen(
                         currentSection = currentSection,
                         onNavigateToSection = navigateToSection,
                         habitsContentDescription = stringResource(id = R.string.main_tab_habits),
-                        countContentDescription = stringResource(id = R.string.main_tab_count),
-                        calendarContentDescription = stringResource(id = R.string.main_tab_calendar)
+                        contactsContentDescription = stringResource(id = R.string.main_tab_contacts),
+                        recordsContentDescription = stringResource(id = R.string.main_tab_records)
                     )
 
                     Box(
@@ -702,8 +702,8 @@ fun CollapsedNavigationBar(
     onNavigateToSection: (HomeSection) -> Unit,
     modifier: Modifier = Modifier,
     habitsContentDescription: String,
-    countContentDescription: String,
-    calendarContentDescription: String
+    contactsContentDescription: String,
+    recordsContentDescription: String
 ) {
     Column(
         modifier = modifier
@@ -736,13 +736,13 @@ fun CollapsedNavigationBar(
                 Icon(
                     imageVector = when (section) {
                         HomeSection.Habits -> Icons.Filled.List
-                        HomeSection.Count -> Icons.Filled.Calculate
-                        HomeSection.Calendar -> Icons.Filled.CalendarMonth
+                        HomeSection.Contacts -> Icons.Filled.People
+                        HomeSection.Records -> Icons.Filled.Assessment
                     },
                     contentDescription = when (section) {
                         HomeSection.Habits -> habitsContentDescription
-                        HomeSection.Count -> countContentDescription
-                        HomeSection.Calendar -> calendarContentDescription
+                        HomeSection.Contacts -> contactsContentDescription
+                        HomeSection.Records -> recordsContentDescription
                     },
                     tint = if (isSelected) {
                         MaterialTheme.colorScheme.onSecondaryContainer
