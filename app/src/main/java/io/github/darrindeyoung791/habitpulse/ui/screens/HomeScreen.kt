@@ -84,16 +84,15 @@ fun HomeScreen(
     // Focus requester for TalkBack initial focus
     val titleFocusRequester = remember { androidx.compose.ui.focus.FocusRequester() }
 
-    // 获取 ViewModel - use preview mode if application is null
+    // 获取 ViewModel - 使用 Application 中的单例
     val viewModel: HabitViewModel = if (application != null) {
-        remember {
-            HabitViewModel.Factory(application).create(HabitViewModel::class.java)
-        }
+        application.habitViewModel
     } else {
         // Preview mode: create a ViewModel with fake in-memory repository
         remember {
-            val fakeDao = FakeHabitDao()
-            val fakeRepository = io.github.darrindeyoung791.habitpulse.data.repository.HabitRepository(fakeDao)
+            val fakeHabitDao = FakeHabitDao()
+            val fakeCompletionDao = FakeHabitCompletionDao()
+            val fakeRepository = io.github.darrindeyoung791.habitpulse.data.repository.HabitRepository(fakeHabitDao, fakeCompletionDao)
             HabitViewModel(fakeRepository)
         }
     }
@@ -144,6 +143,10 @@ fun HomeScreen(
     var currentSection by rememberSaveable { mutableStateOf(HomeSection.Habits) }
     var isDrawerExpanded by rememberSaveable { mutableStateOf(true) }
 
+    // 为每个 Section 保存独立的滚动状态
+    val habitsScrollState = remember { androidx.compose.foundation.lazy.LazyListState() }
+    val recordsScrollState = remember { androidx.compose.foundation.lazy.LazyListState() }
+
     // Animated drawer width
     val animatedDrawerWidth by animateDpAsState(
         targetValue = if (isDrawerExpanded) 240.dp else 80.dp,
@@ -151,7 +154,16 @@ fun HomeScreen(
         label = "drawerWidth"
     )
 
-    val scrollBehavior = TopAppBarDefaults.exitUntilCollapsedScrollBehavior()
+    // 为每个 Section 使用独立的 scrollBehavior
+    val habitsScrollBehavior = TopAppBarDefaults.exitUntilCollapsedScrollBehavior()
+    val recordsScrollBehavior = TopAppBarDefaults.exitUntilCollapsedScrollBehavior()
+    
+    // 根据当前 Section 切换 scrollBehavior
+    val currentScrollBehavior = when (currentSection) {
+        HomeSection.Habits -> habitsScrollBehavior
+        HomeSection.Records -> recordsScrollBehavior
+        else -> TopAppBarDefaults.pinnedScrollBehavior()
+    }
 
     val displayCutout = WindowInsets.displayCutout
     val layoutDirection = LocalLayoutDirection.current
@@ -164,10 +176,32 @@ fun HomeScreen(
         HomeSection.Records
     )
 
-    val navigateToSection: (HomeSection) -> Unit = { currentSection = it }
+    val navigateToSection: (HomeSection) -> Unit = { targetSection ->
+        if (currentSection == targetSection) {
+            // 如果点击的是当前页面，滚动到顶部
+            when (targetSection) {
+                HomeSection.Habits -> {
+                    scope.launch {
+                        habitsScrollState.animateScrollToItem(0)
+                    }
+                }
+                HomeSection.Records -> {
+                    scope.launch {
+                        recordsScrollState.animateScrollToItem(0)
+                    }
+                }
+                HomeSection.Contacts -> {
+                    // Contacts 页面没有滚动列表，不做处理
+                }
+            }
+        } else {
+            // 切换到不同页面
+            currentSection = targetSection
+        }
+    }
 
-    // 主页主体内容
-    val homeBody: @Composable (Modifier, androidx.compose.ui.input.nestedscroll.NestedScrollConnection?) -> Unit = { modifier, nestedScrollConn ->
+    // 主页主体内容 - 不再接收 nestedScrollConn，由各组件自己处理
+    val homeBody: @Composable (Modifier) -> Unit = { modifier ->
         when (currentSection) {
             HomeSection.Habits -> {
                 if (isLoading) {
@@ -196,8 +230,9 @@ fun HomeScreen(
                         onCheckIn = { viewModel.incrementCompletionCount(it) },
                         onUndoCompletion = { viewModel.undoHabitCompletion(it) },
                         onDeleteHabit = { viewModel.deleteHabit(it) },
-                        nestedScrollConnection = nestedScrollConn,
-                        newlyAddedHabitId = newlyAddedHabitId
+                        nestedScrollConnection = habitsScrollBehavior.nestedScrollConnection,
+                        newlyAddedHabitId = newlyAddedHabitId,
+                        listState = habitsScrollState
                     )
                 }
             }
@@ -209,10 +244,11 @@ fun HomeScreen(
                 )
             }
             HomeSection.Records -> {
-                BlankSectionContent(
+                RecordsScreenContent(
                     modifier = modifier,
-                    title = stringResource(id = R.string.main_tab_records),
-                    description = stringResource(id = R.string.main_blank_records_description)
+                    application = application,
+                    scrollBehavior = recordsScrollBehavior,
+                    listState = recordsScrollState
                 )
             }
         }
@@ -274,7 +310,7 @@ fun HomeScreen(
                 title = {
                     Column {
                         // Main title - animate font size based on scroll state
-                        val collapsedFraction = scrollBehavior.state.collapsedFraction
+                        val collapsedFraction = currentScrollBehavior.state.collapsedFraction
                         val currentTextStyle = if (collapsedFraction < 0.5f) {
                             MaterialTheme.typography.headlineLarge
                         } else {
@@ -320,8 +356,8 @@ fun HomeScreen(
                         )
                     }
                 },
-                scrollBehavior = scrollBehavior,
-                modifier = Modifier.nestedScroll(scrollBehavior.nestedScrollConnection)
+                scrollBehavior = currentScrollBehavior,
+                modifier = Modifier.nestedScroll(currentScrollBehavior.nestedScrollConnection)
             )
         }
     }
@@ -461,7 +497,7 @@ fun HomeScreen(
                         .fillMaxSize()
                         .padding(paddingValues)
                 ) {
-                    homeBody(Modifier.fillMaxSize(), scrollBehavior.nestedScrollConnection)
+                    homeBody(Modifier.fillMaxSize())
                 }
             }
         }
@@ -531,8 +567,7 @@ fun HomeScreen(
                         .fillMaxSize()
                 ) {
                     homeBody(
-                        Modifier.fillMaxSize().padding(top = 4.dp),
-                        null
+                        Modifier.fillMaxSize().padding(top = 4.dp)
                     )
 
                     // FAB - floating above content, safe with right inset when needed
@@ -647,7 +682,7 @@ fun HomeScreen(
                             .fillMaxSize()
                             .weight(1f)
                     ) {
-                        homeBody(Modifier.fillMaxSize(), scrollBehavior.nestedScrollConnection)
+                        homeBody(Modifier.fillMaxSize())
                     }
                 }
             } else {
@@ -657,7 +692,7 @@ fun HomeScreen(
                         .fillMaxSize()
                         .padding(paddingValues)
                 ) {
-                    homeBody(Modifier.fillMaxSize(), scrollBehavior.nestedScrollConnection)
+                    homeBody(Modifier.fillMaxSize())
                 }
             }
         }
@@ -804,7 +839,8 @@ fun HabitListContent(
     onUndoCompletion: (Habit) -> Unit,
     onDeleteHabit: (Habit) -> Unit,
     nestedScrollConnection: androidx.compose.ui.input.nestedscroll.NestedScrollConnection? = null,
-    newlyAddedHabitId: UUID? = null
+    newlyAddedHabitId: UUID? = null,
+    listState: androidx.compose.foundation.lazy.LazyListState = remember { androidx.compose.foundation.lazy.LazyListState() }
 ) {
     val configuration = LocalConfiguration.current
     val isLandscape = configuration.orientation == Configuration.ORIENTATION_LANDSCAPE
@@ -875,6 +911,7 @@ fun HabitListContent(
         val listModifier = if (nestedScrollConnection != null) modifier.nestedScroll(nestedScrollConnection) else modifier
         LazyColumn(
             modifier = listModifier.fillMaxSize(),
+            state = listState,
             contentPadding = PaddingValues(horizontal = horizontalPadding, vertical = 16.dp),
             verticalArrangement = Arrangement.spacedBy(8.dp)
         ) {
@@ -1570,5 +1607,78 @@ fun HabitCardWithNotesPreview() {
             onEditHabit = {},
             onDeleteHabit = {}
         )
+    }
+}
+
+/**
+ * Fake HabitCompletionDao implementation for Android Studio Preview.
+ * Provides in-memory storage with sample completion records for UI preview.
+ */
+@Suppress("unused")
+private class FakeHabitCompletionDao : io.github.darrindeyoung791.habitpulse.data.database.dao.HabitCompletionDao {
+    private val completions = mutableListOf<io.github.darrindeyoung791.habitpulse.data.model.HabitCompletion>()
+
+    override fun getCompletionsByHabitIdFlow(habitId: java.util.UUID): kotlinx.coroutines.flow.Flow<List<io.github.darrindeyoung791.habitpulse.data.model.HabitCompletion>> {
+        return kotlinx.coroutines.flow.flowOf(completions.filter { it.habitId == habitId })
+    }
+
+    override suspend fun getCompletionsByHabitId(habitId: java.util.UUID): List<io.github.darrindeyoung791.habitpulse.data.model.HabitCompletion> {
+        return completions.filter { it.habitId == habitId }
+    }
+
+    override suspend fun getCompletionsByHabitIdAndDate(
+        habitId: java.util.UUID,
+        date: String
+    ): List<io.github.darrindeyoung791.habitpulse.data.model.HabitCompletion> {
+        return completions.filter { it.habitId == habitId && it.completedDateLocal == date }
+    }
+
+    override suspend fun getCompletionsByHabitIdAndDateRange(
+        habitId: java.util.UUID,
+        startDate: String,
+        endDate: String
+    ): List<io.github.darrindeyoung791.habitpulse.data.model.HabitCompletion> {
+        return completions.filter { it.habitId == habitId && it.completedDateLocal in startDate..endDate }
+    }
+
+    override suspend fun getCompletionsByDate(date: String): List<io.github.darrindeyoung791.habitpulse.data.model.HabitCompletion> {
+        return completions.filter { it.completedDateLocal == date }
+    }
+
+    override suspend fun getTodayCompletionCount(habitId: java.util.UUID, date: String): Int {
+        return completions.count { it.habitId == habitId && it.completedDateLocal == date }
+    }
+
+    override suspend fun insert(completion: io.github.darrindeyoung791.habitpulse.data.model.HabitCompletion): Long {
+        completions.add(completion)
+        return 0
+    }
+
+    override suspend fun insertAll(completions: List<io.github.darrindeyoung791.habitpulse.data.model.HabitCompletion>) {
+        this.completions.addAll(completions)
+    }
+
+    override suspend fun delete(completion: io.github.darrindeyoung791.habitpulse.data.model.HabitCompletion) {
+        completions.remove(completion)
+    }
+
+    override suspend fun deleteByHabitId(habitId: java.util.UUID) {
+        completions.removeAll { it.habitId == habitId }
+    }
+
+    override suspend fun deleteByDate(date: String) {
+        completions.removeAll { it.completedDateLocal == date }
+    }
+
+    override suspend fun deleteAll() {
+        completions.clear()
+    }
+
+    override fun getCompletionCount(): kotlinx.coroutines.flow.Flow<Int> {
+        return kotlinx.coroutines.flow.flowOf(completions.size)
+    }
+
+    override suspend fun getCompletionCountByHabitId(habitId: java.util.UUID): Int {
+        return completions.count { it.habitId == habitId }
     }
 }

@@ -116,4 +116,25 @@
 
     <!-- Accessibility -->
     <string name="accessibility_talkback_splash_ad_disabled">To avoid affecting users with visual impairments, the splash ad feature cannot be enabled</string>
+
+    <!-- Records Screen -->
+    <string name="records_all_habits">All Habits</string>
+    <string name="records_select_habit">Select Habit</string>
+    <string name="records_completion_count">%d completion(s)</string>
+    <string name="records_date_format">MMM dd, yyyy</string>
+    <string name="records_time_format">HH:mm</string>
+    <string name="records_no_completions">No completion records</string>
+    <string name="records_no_completions_description">The selected habit has no completion records yet</string>
+    <string name="records_completion_sequence">Completion #%d</string>
+    
+    <!-- Relative dates -->
+    <string name="records_date_today">Today</string>
+    <string name="records_date_yesterday">Yesterday</string>
+    <string name="records_date_days_ago">%d days ago</string>
+    <string name="records_date_last_week">Last week</string>
+    <string name="records_date_weeks_ago">%d weeks ago</string>
+    <string name="records_date_last_month">Last month</string>
+    <string name="records_date_months_ago">%d months ago</string>
+    <string name="records_date_last_year">Last year</string>
+    <string name="records_date_years_ago">%d years ago</string>
 </resources>

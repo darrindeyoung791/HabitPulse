@@ -5,6 +5,7 @@ import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.viewModelScope
 import io.github.darrindeyoung791.habitpulse.HabitPulseApplication
 import io.github.darrindeyoung791.habitpulse.data.model.Habit
+import io.github.darrindeyoung791.habitpulse.data.model.HabitCompletion
 import io.github.darrindeyoung791.habitpulse.data.repository.HabitRepository
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -37,6 +38,11 @@ class HabitViewModel(
      * 习惯总数
      */
     val habitCountFlow: Flow<Int> = repository.habitCountFlow
+
+    /**
+     * 打卡记录总数
+     */
+    val completionCountFlow: Flow<Int> = repository.completionCountFlow
 
     /**
      * 数据是否正在加载
@@ -76,6 +82,33 @@ class HabitViewModel(
     fun getHabitById(id: UUID): Habit? {
         return kotlinx.coroutines.runBlocking { repository.getHabitById(id) }
     }
+
+    /**
+     * 获取指定习惯的所有打卡记录 Flow
+     */
+    fun getCompletionsByHabitIdFlow(habitId: UUID): Flow<List<HabitCompletion>> =
+        repository.getCompletionsByHabitIdFlow(habitId)
+
+    /**
+     * 获取指定习惯的所有打卡记录（一次性）
+     */
+    suspend fun getCompletionsByHabitId(habitId: UUID): List<HabitCompletion> =
+        repository.getCompletionsByHabitId(habitId)
+
+    /**
+     * 获取指定习惯在指定日期的打卡记录
+     */
+    suspend fun getCompletionsByHabitIdAndDate(
+        habitId: UUID,
+        date: String
+    ): List<HabitCompletion> =
+        repository.getCompletionsByHabitIdAndDate(habitId, date)
+
+    /**
+     * 获取指定习惯今天的打卡记录数量
+     */
+    suspend fun getTodayCompletionCount(habitId: UUID): Int =
+        repository.getTodayCompletionCount(habitId)
 
     /**
      * 设置正在编辑的习惯
@@ -142,11 +175,14 @@ class HabitViewModel(
 
     /**
      * 增加习惯的完成次数（打卡）
+     * @return 新插入的打卡记录
      */
-    fun incrementCompletionCount(habit: Habit) {
+    fun incrementCompletionCount(habit: Habit): HabitCompletion? {
+        var result: HabitCompletion? = null
         viewModelScope.launch {
-            repository.incrementCompletionCount(habit)
+            result = repository.incrementCompletionCount(habit)
         }
+        return result
     }
 
     /**

@@ -146,8 +146,9 @@ fun HabitCreationScreen(
     } else {
         // Preview mode: create a ViewModel with fake in-memory repository
         remember {
-            val fakeDao = FakeHabitDaoForCreation()
-            val fakeRepository = io.github.darrindeyoung791.habitpulse.data.repository.HabitRepository(fakeDao)
+            val fakeHabitDao = FakeHabitDaoForCreation()
+            val fakeCompletionDao = FakeHabitCompletionDaoForCreation()
+            val fakeRepository = io.github.darrindeyoung791.habitpulse.data.repository.HabitRepository(fakeHabitDao, fakeCompletionDao)
             HabitViewModel(fakeRepository)
         }
     }
@@ -1329,5 +1330,78 @@ private class FakeHabitDaoForCreation : io.github.darrindeyoung791.habitpulse.da
 
     override fun getHabitCount(): kotlinx.coroutines.flow.Flow<Int> {
         return kotlinx.coroutines.flow.flowOf(habits.size)
+    }
+}
+
+/**
+ * Fake HabitCompletionDao implementation for Android Studio Preview.
+ * Provides in-memory storage for UI preview.
+ */
+@Suppress("unused")
+private class FakeHabitCompletionDaoForCreation : io.github.darrindeyoung791.habitpulse.data.database.dao.HabitCompletionDao {
+    private val completions = mutableListOf<io.github.darrindeyoung791.habitpulse.data.model.HabitCompletion>()
+
+    override fun getCompletionsByHabitIdFlow(habitId: java.util.UUID): kotlinx.coroutines.flow.Flow<List<io.github.darrindeyoung791.habitpulse.data.model.HabitCompletion>> {
+        return kotlinx.coroutines.flow.flowOf(completions.filter { it.habitId == habitId })
+    }
+
+    override suspend fun getCompletionsByHabitId(habitId: java.util.UUID): List<io.github.darrindeyoung791.habitpulse.data.model.HabitCompletion> {
+        return completions.filter { it.habitId == habitId }
+    }
+
+    override suspend fun getCompletionsByHabitIdAndDate(
+        habitId: java.util.UUID,
+        date: String
+    ): List<io.github.darrindeyoung791.habitpulse.data.model.HabitCompletion> {
+        return completions.filter { it.habitId == habitId && it.completedDateLocal == date }
+    }
+
+    override suspend fun getCompletionsByHabitIdAndDateRange(
+        habitId: java.util.UUID,
+        startDate: String,
+        endDate: String
+    ): List<io.github.darrindeyoung791.habitpulse.data.model.HabitCompletion> {
+        return completions.filter { it.habitId == habitId && it.completedDateLocal in startDate..endDate }
+    }
+
+    override suspend fun getCompletionsByDate(date: String): List<io.github.darrindeyoung791.habitpulse.data.model.HabitCompletion> {
+        return completions.filter { it.completedDateLocal == date }
+    }
+
+    override suspend fun getTodayCompletionCount(habitId: java.util.UUID, date: String): Int {
+        return completions.count { it.habitId == habitId && it.completedDateLocal == date }
+    }
+
+    override suspend fun insert(completion: io.github.darrindeyoung791.habitpulse.data.model.HabitCompletion): Long {
+        completions.add(completion)
+        return 0
+    }
+
+    override suspend fun insertAll(completions: List<io.github.darrindeyoung791.habitpulse.data.model.HabitCompletion>) {
+        this.completions.addAll(completions)
+    }
+
+    override suspend fun delete(completion: io.github.darrindeyoung791.habitpulse.data.model.HabitCompletion) {
+        completions.remove(completion)
+    }
+
+    override suspend fun deleteByHabitId(habitId: java.util.UUID) {
+        completions.removeAll { it.habitId == habitId }
+    }
+
+    override suspend fun deleteByDate(date: String) {
+        completions.removeAll { it.completedDateLocal == date }
+    }
+
+    override suspend fun deleteAll() {
+        completions.clear()
+    }
+
+    override fun getCompletionCount(): kotlinx.coroutines.flow.Flow<Int> {
+        return kotlinx.coroutines.flow.flowOf(completions.size)
+    }
+
+    override suspend fun getCompletionCountByHabitId(habitId: java.util.UUID): Int {
+        return completions.count { it.habitId == habitId }
     }
 }

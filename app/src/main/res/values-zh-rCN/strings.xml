@@ -118,4 +118,25 @@
 
     <!-- Accessibility -->
     <string name="accessibility_talkback_splash_ad_disabled">为了不影响视力障碍用户，开屏广告功能无法开启</string>
+
+    <!-- Records Screen -->
+    <string name="records_all_habits">全部习惯</string>
+    <string name="records_select_habit">选择习惯</string>
+    <string name="records_completion_count">打卡 %d 次</string>
+    <string name="records_date_format">yyyy 年 MM 月 dd 日</string>
+    <string name="records_time_format">HH:mm</string>
+    <string name="records_no_completions">暂无打卡记录</string>
+    <string name="records_no_completions_description">所选习惯还没有打卡记录</string>
+    <string name="records_completion_sequence">第 %d 次打卡</string>
+
+    <!-- Relative dates -->
+    <string name="records_date_today">今天</string>
+    <string name="records_date_yesterday">昨天</string>
+    <string name="records_date_days_ago">%d 天前</string>
+    <string name="records_date_last_week">上周</string>
+    <string name="records_date_weeks_ago">%d 周前</string>
+    <string name="records_date_last_month">上月</string>
+    <string name="records_date_months_ago">%d 个月前</string>
+    <string name="records_date_last_year">去年</string>
+    <string name="records_date_years_ago">%d 年前</string>
 </resources>

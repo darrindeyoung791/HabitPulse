@@ -42,18 +42,21 @@ HabitPulse/
 │   │   │   │   │   └── Route.kt                 # Route definitions
 │   │   │   │   ├── data/
 │   │   │   │   │   ├── model/
-│   │   │   │   │   │   └── Habit.kt             # Habit entity with Room annotations
+│   │   │   │   │   │   ├── Habit.kt             # Habit entity with Room annotations
+│   │   │   │   │   │   └── HabitCompletion.kt   # Habit completion record entity
 │   │   │   │   │   ├── database/
-│   │   │   │   │   │   ├── HabitDatabase.kt     # Room database class
+│   │   │   │   │   │   ├── HabitDatabase.kt     # Room database class (v2)
 │   │   │   │   │   │   ├── dao/
-│   │   │   │   │   │   │   └── HabitDao.kt      # Data Access Object
+│   │   │   │   │   │   │   ├── HabitDao.kt      # Data Access Object for habits
+│   │   │   │   │   │   │   └── HabitCompletionDao.kt  # DAO for completion records
 │   │   │   │   │   │   └── converter/
 │   │   │   │   │   │       ├── ListConverters.kt    # List<Int>, List<String> converters
 │   │   │   │   │   │       └── EnumConverters.kt    # Enum type converters
 │   │   │   │   │   └── repository/
 │   │   │   │   │       └── HabitRepository.kt   # Repository pattern for data access
 │   │   │   │   ├── viewmodel/
-│   │   │   │   │   └── HabitViewModel.kt        # ViewModel for UI state management
+│   │   │   │   │   ├── HabitViewModel.kt        # ViewModel for UI state management
+│   │   │   │   │   └── RecordsViewModel.kt      # ViewModel for records screen
 │   │   │   │   └── ui/
 │   │   │   │       ├── screens/
 │   │   │   │       │   ├── HomeScreen.kt        # Home screen with habit list
@@ -100,6 +103,22 @@ HabitPulse/
 | lastCompletedDate | INTEGER | Last completion timestamp |
 | createdDate | INTEGER | Creation timestamp |
 | modifiedDate | INTEGER | Last modification timestamp |
+
+### habit_completions Table
+
+Records every habit completion with timestamp.
+
+| Column | Type | Description |
+|--------|------|-------------|
+| id | TEXT (PRIMARY KEY) | Unique completion record identifier (UUID) |
+| habitId | TEXT (FOREIGN KEY) | References habits.id (CASCADE delete) |
+| completedDate | INTEGER | Completion timestamp (milliseconds since epoch) |
+| completedDateLocal | TEXT | Local date string in yyyy-MM-dd format (e.g., "2026-03-26") |
+| timeZone | TEXT | Timezone ID when completion was recorded (e.g., "Asia/Shanghai") |
+
+**Indices:**
+- `habitId` - For fast lookups by habit
+- `completedDateLocal` - For fast date-based queries
 
 ## Building and Running
 
@@ -252,6 +271,21 @@ The project is in **early development stage** (v0.1.31-alpha):
 - ✅ Haptic feedback (50ms vibration) on habit check-in
 - ✅ Habit repeat days selection (weekly cycle)
 - ✅ Reminder time management
+- ✅ **Habit completion history tracking** - Every check-in is recorded with timestamp
+- ✅ **HabitCompletion entity** - Records completion date, local date, and timezone
+- ✅ **HabitCompletionDao** - Full CRUD operations for completion records
+- ✅ **Database v2** - Added habit_completions table with foreign key to habits
+- ✅ **Records screen** - Display all completion records sorted by time (newest first)
+- ✅ **Habit filtering** - Dropdown menu to filter records by specific habit or show all
+- ✅ **i18n support** - Chinese and English strings for records screen
+- ✅ Collapsed NavigationBar with circular selection indicator for tablet landscape
+- ✅ Animated drawer width for permanent navigation drawer
+- ✅ Adaptive horizontal padding for habit cards based on screen size
+- ✅ TalkBack accessibility support for all navigation elements
+- ✅ Habit card animations (scale + slide enter/exit effects)
+- ✅ Dynamic app bar title font size (changes on scroll)
+- ✅ Delayed enter animation for newly added habits (after navigation completes)
+- ✅ Smooth reposition animation for other cards (animateContentSize)
 
 ### In Progress
 - 🔄 Count section (track unplanned events, such as game scores)

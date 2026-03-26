@@ -24,6 +24,7 @@ import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import io.github.darrindeyoung791.habitpulse.data.model.Habit
+import io.github.darrindeyoung791.habitpulse.data.model.HabitCompletion
 import io.github.darrindeyoung791.habitpulse.data.model.RepeatCycle
 import io.github.darrindeyoung791.habitpulse.data.model.SupervisionMethod
 import io.github.darrindeyoung791.habitpulse.data.preferences.UserPreferences
@@ -104,10 +105,17 @@ fun SettingsScreen() {
                         showSampleDataDialog = false
                         // Generate and insert sample data
                         scope.launch {
-                            val database = (context.applicationContext as HabitPulseApplication).database
-                            val repository = HabitRepository(database.habitDao())
-                            generateSampleHabits().forEach { habit ->
-                                repository.insertHabit(habit)
+                            val application = context.applicationContext as HabitPulseApplication
+                            val database = application.database
+                            val repository = HabitRepository(database.habitDao(), database.habitCompletionDao())
+                            val (habits, completions) = generateSampleHabits()
+                            // Insert habits first
+                            habits.forEach { habit ->
+                                database.habitDao().insert(habit)
+                            }
+                            // Then insert completion records
+                            completions.forEach { completion ->
+                                database.habitCompletionDao().insert(completion)
                             }
                             showSuccessMessage = true
                             // Show toast message
@@ -429,10 +437,12 @@ fun SettingsListItem(
  * Mix of Chinese and English content
  * Random completion counts for realistic data
  * Some habits have super long notes (~1000 chars) and many reminders (~10) for UI testing
+ *
+ * @return Pair of List<Habit> and List<HabitCompletion> (habits and their completion records)
  */
-private fun generateSampleHabits(): List<Habit> {
+private fun generateSampleHabits(): Pair<List<Habit>, List<HabitCompletion>> {
     val random = kotlin.random.Random(System.currentTimeMillis())
-    
+
     // Generate ~1000 character long note for testing
     fun generateLongNote(): String {
         val baseText = "这是一段测试用的超长备注文本，用于检验 UI 在显示大量文字时的表现。"
@@ -452,260 +462,511 @@ private fun generateSampleHabits(): List<Habit> {
                 "请确保文字能够正常换行，不会出现溢出或截断的问题。" +
                 "同时也测试卡片高度是否能够自适应内容变化。"
     }
-    
+
     // Generate ~10 reminder times for testing
     fun generateManyReminders(): String {
-        val times = listOf("06:00", "07:00", "08:00", "09:00", "10:00", 
+        val times = listOf("06:00", "07:00", "08:00", "09:00", "10:00",
                           "11:00", "12:00", "13:00", "14:00", "15:00",
                           "16:00", "17:00", "18:00", "19:00", "20:00")
         return JSONArray().apply {
             times.take(random.nextInt(8, 12)).forEach { put(it) }
         }.toString()
     }
-    
+
+    // Helper to generate date string
+    fun formatDate(daysAgo: Int): String {
+        val calendar = java.util.Calendar.getInstance()
+        calendar.add(java.util.Calendar.DAY_OF_YEAR, -daysAgo)
+        val year = calendar.get(java.util.Calendar.YEAR)
+        val month = calendar.get(java.util.Calendar.MONTH) + 1
+        val day = calendar.get(java.util.Calendar.DAY_OF_MONTH)
+        return String.format("%04d-%02d-%02d", year, month, day)
+    }
+
+    // Helper to generate timestamp for a specific day (days ago)
+    fun generateTimestamp(daysAgo: Int, hour: Int = 12, minute: Int = 0): Long {
+        val calendar = java.util.Calendar.getInstance()
+        calendar.add(java.util.Calendar.DAY_OF_YEAR, -daysAgo)
+        calendar.set(java.util.Calendar.HOUR_OF_DAY, hour)
+        calendar.set(java.util.Calendar.MINUTE, minute)
+        calendar.set(java.util.Calendar.SECOND, 0)
+        calendar.set(java.util.Calendar.MILLISECOND, 0)
+        return calendar.timeInMillis
+    }
+
     val longNote = generateLongNote()
-    
-    val sampleHabits = listOf(
-        // Chinese habits - with super long note for UI testing
-        Habit(
-            title = "每天喝水",
-            repeatCycle = RepeatCycle.DAILY,
-            reminderTimes = JSONArray().apply { put("08:00"); put("12:00"); put("18:00") }.toString(),
-            notes = longNote, // ~1000 character note
-            supervisionMethod = SupervisionMethod.EMAIL,
-            supervisorEmails = JSONArray().apply { put("health@example.com") }.toString(),
-            completionCount = random.nextInt(0, 100),
-            createdDate = System.currentTimeMillis() - random.nextInt(0, 30) * 24 * 60 * 60 * 1000L
-        ),
-        // Chinese habit - with many reminders for UI testing
-        Habit(
-            title = "晨跑锻炼",
-            repeatCycle = RepeatCycle.WEEKLY,
-            repeatDays = JSONArray().apply { put(1); put(3); put(5) }.toString(),
-            reminderTimes = generateManyReminders(), // ~10 reminders (generated fresh)
-            notes = "跑步前记得热身\n跑完后要拉伸\n注意呼吸节奏\n选择合适的跑鞋\n循序渐进增加距离",
-            supervisionMethod = SupervisionMethod.SMS,
-            supervisorPhones = JSONArray().apply { put("+8613800138000") }.toString(),
-            completionCount = random.nextInt(0, 100),
-            createdDate = System.currentTimeMillis() - random.nextInt(0, 30) * 24 * 60 * 60 * 1000L
-        ),
-        Habit(
-            title = "阅读书籍",
-            repeatCycle = RepeatCycle.DAILY,
-            reminderTimes = JSONArray().apply { put("21:00") }.toString(),
-            notes = "每天至少读 30 分钟\n记录读书笔记\n分享读书心得",
-            supervisionMethod = SupervisionMethod.NONE,
-            completionCount = random.nextInt(0, 100),
-            createdDate = System.currentTimeMillis() - random.nextInt(0, 30) * 24 * 60 * 60 * 1000L
-        ),
-        // Another long note habit
-        Habit(
-            title = "冥想练习",
-            repeatCycle = RepeatCycle.DAILY,
-            reminderTimes = JSONArray().apply { put("07:00"); put("22:00") }.toString(),
-            notes = longNote, // ~1000 character note
-            supervisionMethod = SupervisionMethod.EMAIL,
-            supervisorEmails = JSONArray().apply { put("mindfulness@example.com") }.toString(),
-            completionCount = random.nextInt(0, 100),
-            createdDate = System.currentTimeMillis() - random.nextInt(0, 30) * 24 * 60 * 60 * 1000L
-        ),
-        // Another many reminders habit
-        Habit(
-            title = "学习编程",
-            repeatCycle = RepeatCycle.WEEKLY,
-            repeatDays = JSONArray().apply { put(2); put(4); put(6) }.toString(),
-            reminderTimes = generateManyReminders(), // ~10 reminders (generated fresh)
-            notes = "完成一个小型项目\n复习基础知识\n练习算法题\n阅读技术文档\n参与开源项目",
-            supervisionMethod = SupervisionMethod.SMS,
-            supervisorPhones = JSONArray().apply { put("+8613900139000") }.toString(),
-            completionCount = random.nextInt(0, 100),
-            createdDate = System.currentTimeMillis() - random.nextInt(0, 30) * 24 * 60 * 60 * 1000L
-        ),
-        Habit(
-            title = "早睡早起",
-            repeatCycle = RepeatCycle.DAILY,
-            reminderTimes = JSONArray().apply { put("22:30"); put("06:30") }.toString(),
-            supervisionMethod = SupervisionMethod.NONE,
-            completionCount = random.nextInt(0, 100),
-            createdDate = System.currentTimeMillis() - random.nextInt(0, 30) * 24 * 60 * 60 * 1000L
-        ),
-        Habit(
-            title = "健康饮食",
-            repeatCycle = RepeatCycle.DAILY,
-            reminderTimes = JSONArray().apply { put("08:00"); put("12:00"); put("18:00") }.toString(),
-            notes = "少油少盐\n多吃蔬菜水果\n控制糖分摄入\n适量蛋白质\n多喝水",
-            supervisionMethod = SupervisionMethod.EMAIL,
-            supervisorEmails = JSONArray().apply { put("diet@example.com"); put("nutrition@example.com") }.toString(),
-            completionCount = random.nextInt(0, 100),
-            createdDate = System.currentTimeMillis() - random.nextInt(0, 30) * 24 * 60 * 60 * 1000L
-        ),
-        Habit(
-            title = "瑜伽拉伸",
-            repeatCycle = RepeatCycle.WEEKLY,
-            repeatDays = JSONArray().apply { put(0); put(2); put(4); put(6) }.toString(),
-            reminderTimes = JSONArray().apply { put("20:00") }.toString(),
-            supervisionMethod = SupervisionMethod.NONE,
-            completionCount = random.nextInt(0, 100),
-            createdDate = System.currentTimeMillis() - random.nextInt(0, 30) * 24 * 60 * 60 * 1000L
-        ),
-        // Long note for testing
-        Habit(
-            title = "写日记",
-            repeatCycle = RepeatCycle.DAILY,
-            reminderTimes = JSONArray().apply { put("23:00") }.toString(),
-            notes = longNote, // ~1000 character note
-            supervisionMethod = SupervisionMethod.EMAIL,
-            supervisorEmails = JSONArray().apply { put("diary@example.com") }.toString(),
-            completionCount = random.nextInt(0, 100),
-            createdDate = System.currentTimeMillis() - random.nextInt(0, 30) * 24 * 60 * 60 * 1000L
-        ),
-        Habit(
-            title = "戒烟",
-            repeatCycle = RepeatCycle.DAILY,
-            reminderTimes = JSONArray().apply { put("09:00") }.toString(),
-            notes = "坚持就是胜利\n想想健康的重要性\n避免诱因\n寻找替代方法",
-            supervisionMethod = SupervisionMethod.SMS,
-            supervisorPhones = JSONArray().apply { put("+8613700137000"); put("+8613600136000") }.toString(),
-            completionCount = random.nextInt(0, 100),
-            createdDate = System.currentTimeMillis() - random.nextInt(0, 30) * 24 * 60 * 60 * 1000L
-        ),
-        
-        // English habits - with super long note for UI testing
-        Habit(
-            title = "Drink Water",
-            repeatCycle = RepeatCycle.DAILY,
-            reminderTimes = JSONArray().apply { put("09:00"); put("14:00"); put("17:00") }.toString(),
-            notes = "This is a super long note for testing UI display performance. " +
-                    "It should contain around 1000 characters to properly test how the interface " +
-                    "handles large amounts of text. The note should wrap correctly and not overflow " +
-                    "or get cut off. Additionally, the card height should adapt to the content. " +
-                    "Remember to stay hydrated throughout the day. Drink at least 8 glasses of water. " +
-                    "Keep a water bottle with you. Set reminders if needed. Track your progress. " +
-                    "Make it a habit. Your body will thank you. Water is essential for health. " +
-                    "It helps with digestion, circulation, and temperature regulation. " +
-                    "Proper hydration improves energy levels and cognitive function. " +
-                    "Don't wait until you're thirsty. Drink regularly throughout the day. " +
-                    "Monitor your urine color - it should be light yellow. " +
-                    "Adjust intake based on activity level and weather. " +
-                    "This text continues to ensure we have enough characters for testing purposes. " +
-                    "The UI should handle this gracefully with proper scrolling and layout. " +
-                    "Make sure the text is readable and the card expands as needed. " +
-                    "Testing edge cases is important for robust application development. " +
-                    "This note serves that purpose effectively.",
-            supervisionMethod = SupervisionMethod.EMAIL,
-            supervisorEmails = JSONArray().apply { put("water@health.com") }.toString(),
-            completionCount = random.nextInt(0, 100),
-            createdDate = System.currentTimeMillis() - random.nextInt(0, 30) * 24 * 60 * 60 * 1000L
-        ),
-        // English habit - with many reminders for UI testing
-        Habit(
-            title = "Morning Jog",
-            repeatCycle = RepeatCycle.WEEKLY,
-            repeatDays = JSONArray().apply { put(1); put(3); put(5) }.toString(),
-            reminderTimes = generateManyReminders(), // ~10 reminders (generated fresh)
-            notes = "Warm up before running\nStretch after exercise\nWear proper shoes\nStart slow and increase gradually\nTrack your progress",
-            supervisionMethod = SupervisionMethod.SMS,
-            supervisorPhones = JSONArray().apply { put("+1234567890") }.toString(),
-            completionCount = random.nextInt(0, 100),
-            createdDate = System.currentTimeMillis() - random.nextInt(0, 30) * 24 * 60 * 60 * 1000L
-        ),
-        // Another long note
-        Habit(
-            title = "Read Books",
-            repeatCycle = RepeatCycle.DAILY,
-            reminderTimes = JSONArray().apply { put("20:00") }.toString(),
-            notes = "This is another extended note for comprehensive UI testing. " +
-                    "Reading is an excellent habit that improves knowledge and cognitive abilities. " +
-                    "Set aside dedicated time each day for reading. Choose books that interest you. " +
-                    "Take notes while reading to retain information better. Join a book club to discuss. " +
-                    "Set reading goals like finishing a certain number of books per year. " +
-                    "Create a comfortable reading space with good lighting. " +
-                    "Minimize distractions while reading. Turn off electronic devices. " +
-                    "Read before bed to improve sleep quality. " +
-                    "Mix different genres to broaden your perspective. " +
-                    "Keep a reading journal to track your thoughts. " +
-                    "Share book recommendations with friends. " +
-                    "Visit libraries and bookstores regularly. " +
-                    "This extended text ensures proper testing of the UI components. " +
-                    "The interface should display this content clearly with appropriate formatting. " +
-                    "Scrolling should be smooth and the layout should be responsive. " +
-                    "Testing with realistic data helps identify potential issues early.",
-            supervisionMethod = SupervisionMethod.NONE,
-            completionCount = random.nextInt(0, 100),
-            createdDate = System.currentTimeMillis() - random.nextInt(0, 30) * 24 * 60 * 60 * 1000L
-        ),
-        // Another many reminders habit
-        Habit(
-            title = "Meditation",
-            repeatCycle = RepeatCycle.DAILY,
-            reminderTimes = generateManyReminders(), // ~10 reminders (generated fresh)
-            supervisionMethod = SupervisionMethod.EMAIL,
-            supervisorEmails = JSONArray().apply { put("zen@meditation.com") }.toString(),
-            completionCount = random.nextInt(0, 100),
-            createdDate = System.currentTimeMillis() - random.nextInt(0, 30) * 24 * 60 * 60 * 1000L
-        ),
-        Habit(
-            title = "Learn Coding",
-            repeatCycle = RepeatCycle.WEEKLY,
-            repeatDays = JSONArray().apply { put(2); put(4); put(6) }.toString(),
-            reminderTimes = JSONArray().apply { put("18:00") }.toString(),
-            notes = "Complete one small project\nReview basic concepts\nPractice algorithms\nRead documentation",
-            supervisionMethod = SupervisionMethod.SMS,
-            supervisorPhones = JSONArray().apply { put("+0987654321") }.toString(),
-            completionCount = random.nextInt(0, 100),
-            createdDate = System.currentTimeMillis() - random.nextInt(0, 30) * 24 * 60 * 60 * 1000L
-        ),
-        Habit(
-            title = "Early Sleep",
-            repeatCycle = RepeatCycle.DAILY,
-            reminderTimes = JSONArray().apply { put("22:00"); put("06:00") }.toString(),
-            notes = "Avoid screens before bed\nCreate a bedtime routine\nKeep bedroom cool and dark",
-            supervisionMethod = SupervisionMethod.NONE,
-            completionCount = random.nextInt(0, 100),
-            createdDate = System.currentTimeMillis() - random.nextInt(0, 30) * 24 * 60 * 60 * 1000L
-        ),
-        Habit(
-            title = "Healthy Eating",
-            repeatCycle = RepeatCycle.DAILY,
-            reminderTimes = JSONArray().apply { put("08:00"); put("12:00"); put("18:00") }.toString(),
-            notes = "Less oil and salt\nMore vegetables and fruits\nBalanced nutrition\nPortion control",
-            supervisionMethod = SupervisionMethod.EMAIL,
-            supervisorEmails = JSONArray().apply { put("healthy@food.com"); put("nutrition@diet.com") }.toString(),
-            completionCount = random.nextInt(0, 100),
-            createdDate = System.currentTimeMillis() - random.nextInt(0, 30) * 24 * 60 * 60 * 1000L
-        ),
-        Habit(
-            title = "Yoga Stretching",
-            repeatCycle = RepeatCycle.WEEKLY,
-            repeatDays = JSONArray().apply { put(0); put(2); put(4); put(6) }.toString(),
-            reminderTimes = JSONArray().apply { put("19:00") }.toString(),
-            supervisionMethod = SupervisionMethod.NONE,
-            completionCount = random.nextInt(0, 100),
-            createdDate = System.currentTimeMillis() - random.nextInt(0, 30) * 24 * 60 * 60 * 1000L
-        ),
-        Habit(
-            title = "Write Journal",
-            repeatCycle = RepeatCycle.DAILY,
-            reminderTimes = JSONArray().apply { put("22:30") }.toString(),
-            notes = "Record today's events\nReflect and improve\nSet goals for tomorrow",
-            supervisionMethod = SupervisionMethod.EMAIL,
-            supervisorEmails = JSONArray().apply { put("journal@write.com") }.toString(),
-            completionCount = random.nextInt(0, 100),
-            createdDate = System.currentTimeMillis() - random.nextInt(0, 30) * 24 * 60 * 60 * 1000L
-        ),
-        Habit(
-            title = "Quit Sugar",
-            repeatCycle = RepeatCycle.DAILY,
-            reminderTimes = JSONArray().apply { put("10:00") }.toString(),
-            notes = "Avoid sugary drinks\nChoose healthy snacks\nRead food labels carefully",
-            supervisionMethod = SupervisionMethod.SMS,
-            supervisorPhones = JSONArray().apply { put("+1122334455"); put("+5566778899") }.toString(),
-            completionCount = random.nextInt(0, 100),
-            createdDate = System.currentTimeMillis() - random.nextInt(0, 30) * 24 * 60 * 60 * 1000L
-        )
+    val habits = mutableListOf<Habit>()
+    val completions = mutableListOf<HabitCompletion>()
+
+    // Chinese habits
+    val habit1 = Habit(
+        title = "每天喝水",
+        repeatCycle = RepeatCycle.DAILY,
+        reminderTimes = JSONArray().apply { put("08:00"); put("12:00"); put("18:00") }.toString(),
+        notes = longNote,
+        supervisionMethod = SupervisionMethod.EMAIL,
+        supervisorEmails = JSONArray().apply { put("health@example.com") }.toString(),
+        completionCount = 45,
+        createdDate = generateTimestamp(30)
     )
-    
-    return sampleHabits
+    habits.add(habit1)
+    // Generate completion records for the past 30 days (randomly)
+    for (i in 0 until 30) {
+        if (random.nextFloat() > 0.3f) { // 70% completion rate
+            completions.add(HabitCompletion(
+                habitId = habit1.id,
+                completedDate = generateTimestamp(i, 9 + random.nextInt(12), random.nextInt(60)),
+                completedDateLocal = formatDate(i)
+            ))
+        }
+    }
+
+    val habit2 = Habit(
+        title = "晨跑锻炼",
+        repeatCycle = RepeatCycle.WEEKLY,
+        repeatDays = JSONArray().apply { put(1); put(3); put(5) }.toString(),
+        reminderTimes = generateManyReminders(),
+        notes = "跑步前记得热身\n跑完后要拉伸\n注意呼吸节奏\n选择合适的跑鞋\n循序渐进增加距离",
+        supervisionMethod = SupervisionMethod.SMS,
+        supervisorPhones = JSONArray().apply { put("+8613800138000") }.toString(),
+        completionCount = 28,
+        createdDate = generateTimestamp(30)
+    )
+    habits.add(habit2)
+    for (i in 0 until 30) {
+        val cal = java.util.Calendar.getInstance()
+        cal.add(java.util.Calendar.DAY_OF_YEAR, -i)
+        val dayOfWeek = (cal.get(java.util.Calendar.DAY_OF_WEEK) + 5) % 7 // Convert to 0=Monday
+        if (dayOfWeek in listOf(1, 3, 5) && random.nextFloat() > 0.2f) {
+            completions.add(HabitCompletion(
+                habitId = habit2.id,
+                completedDate = generateTimestamp(i, 7, 30),
+                completedDateLocal = formatDate(i)
+            ))
+        }
+    }
+
+    val habit3 = Habit(
+        title = "阅读书籍",
+        repeatCycle = RepeatCycle.DAILY,
+        reminderTimes = JSONArray().apply { put("21:00") }.toString(),
+        notes = "每天至少读 30 分钟\n记录读书笔记\n分享读书心得",
+        supervisionMethod = SupervisionMethod.NONE,
+        completionCount = 25,
+        createdDate = generateTimestamp(30)
+    )
+    habits.add(habit3)
+    for (i in 0 until 30) {
+        if (random.nextFloat() > 0.25f) {
+            completions.add(HabitCompletion(
+                habitId = habit3.id,
+                completedDate = generateTimestamp(i, 21, random.nextInt(60)),
+                completedDateLocal = formatDate(i)
+            ))
+        }
+    }
+
+    val habit4 = Habit(
+        title = "冥想练习",
+        repeatCycle = RepeatCycle.DAILY,
+        reminderTimes = JSONArray().apply { put("07:00"); put("22:00") }.toString(),
+        notes = longNote,
+        supervisionMethod = SupervisionMethod.EMAIL,
+        supervisorEmails = JSONArray().apply { put("mindfulness@example.com") }.toString(),
+        completionCount = 20,
+        createdDate = generateTimestamp(30)
+    )
+    habits.add(habit4)
+    for (i in 0 until 30) {
+        if (random.nextFloat() > 0.35f) {
+            completions.add(HabitCompletion(
+                habitId = habit4.id,
+                completedDate = generateTimestamp(i, 7, 0),
+                completedDateLocal = formatDate(i)
+            ))
+        }
+    }
+
+    val habit5 = Habit(
+        title = "学习编程",
+        repeatCycle = RepeatCycle.WEEKLY,
+        repeatDays = JSONArray().apply { put(2); put(4); put(6) }.toString(),
+        reminderTimes = generateManyReminders(),
+        notes = "完成一个小型项目\n复习基础知识\n练习算法题\n阅读技术文档\n参与开源项目",
+        supervisionMethod = SupervisionMethod.SMS,
+        supervisorPhones = JSONArray().apply { put("+8613900139000") }.toString(),
+        completionCount = 18,
+        createdDate = generateTimestamp(30)
+    )
+    habits.add(habit5)
+    for (i in 0 until 30) {
+        val cal = java.util.Calendar.getInstance()
+        cal.add(java.util.Calendar.DAY_OF_YEAR, -i)
+        val dayOfWeek = (cal.get(java.util.Calendar.DAY_OF_WEEK) + 5) % 7
+        if (dayOfWeek in listOf(2, 4, 6) && random.nextFloat() > 0.3f) {
+            completions.add(HabitCompletion(
+                habitId = habit5.id,
+                completedDate = generateTimestamp(i, 20, 0),
+                completedDateLocal = formatDate(i)
+            ))
+        }
+    }
+
+    val habit6 = Habit(
+        title = "早睡早起",
+        repeatCycle = RepeatCycle.DAILY,
+        reminderTimes = JSONArray().apply { put("22:30"); put("06:30") }.toString(),
+        supervisionMethod = SupervisionMethod.NONE,
+        completionCount = 22,
+        createdDate = generateTimestamp(30)
+    )
+    habits.add(habit6)
+    for (i in 0 until 30) {
+        if (random.nextFloat() > 0.3f) {
+            completions.add(HabitCompletion(
+                habitId = habit6.id,
+                completedDate = generateTimestamp(i, 6, 30),
+                completedDateLocal = formatDate(i)
+            ))
+        }
+    }
+
+    val habit7 = Habit(
+        title = "健康饮食",
+        repeatCycle = RepeatCycle.DAILY,
+        reminderTimes = JSONArray().apply { put("08:00"); put("12:00"); put("18:00") }.toString(),
+        notes = "少油少盐\n多吃蔬菜水果\n控制糖分摄入\n适量蛋白质\n多喝水",
+        supervisionMethod = SupervisionMethod.EMAIL,
+        supervisorEmails = JSONArray().apply { put("diet@example.com"); put("nutrition@example.com") }.toString(),
+        completionCount = 27,
+        createdDate = generateTimestamp(30)
+    )
+    habits.add(habit7)
+    for (i in 0 until 30) {
+        if (random.nextFloat() > 0.2f) {
+            completions.add(HabitCompletion(
+                habitId = habit7.id,
+                completedDate = generateTimestamp(i, 12, 0),
+                completedDateLocal = formatDate(i)
+            ))
+        }
+    }
+
+    val habit8 = Habit(
+        title = "瑜伽拉伸",
+        repeatCycle = RepeatCycle.WEEKLY,
+        repeatDays = JSONArray().apply { put(0); put(2); put(4); put(6) }.toString(),
+        reminderTimes = JSONArray().apply { put("20:00") }.toString(),
+        supervisionMethod = SupervisionMethod.NONE,
+        completionCount = 15,
+        createdDate = generateTimestamp(30)
+    )
+    habits.add(habit8)
+    for (i in 0 until 30) {
+        val cal = java.util.Calendar.getInstance()
+        cal.add(java.util.Calendar.DAY_OF_YEAR, -i)
+        val dayOfWeek = (cal.get(java.util.Calendar.DAY_OF_WEEK) + 5) % 7
+        if (dayOfWeek in listOf(0, 2, 4, 6) && random.nextFloat() > 0.4f) {
+            completions.add(HabitCompletion(
+                habitId = habit8.id,
+                completedDate = generateTimestamp(i, 20, 0),
+                completedDateLocal = formatDate(i)
+            ))
+        }
+    }
+
+    val habit9 = Habit(
+        title = "写日记",
+        repeatCycle = RepeatCycle.DAILY,
+        reminderTimes = JSONArray().apply { put("23:00") }.toString(),
+        notes = longNote,
+        supervisionMethod = SupervisionMethod.EMAIL,
+        supervisorEmails = JSONArray().apply { put("diary@example.com") }.toString(),
+        completionCount = 19,
+        createdDate = generateTimestamp(30)
+    )
+    habits.add(habit9)
+    for (i in 0 until 30) {
+        if (random.nextFloat() > 0.4f) {
+            completions.add(HabitCompletion(
+                habitId = habit9.id,
+                completedDate = generateTimestamp(i, 23, 0),
+                completedDateLocal = formatDate(i)
+            ))
+        }
+    }
+
+    val habit10 = Habit(
+        title = "戒烟",
+        repeatCycle = RepeatCycle.DAILY,
+        reminderTimes = JSONArray().apply { put("09:00") }.toString(),
+        notes = "坚持就是胜利\n想想健康的重要性\n避免诱因\n寻找替代方法",
+        supervisionMethod = SupervisionMethod.SMS,
+        supervisorPhones = JSONArray().apply { put("+8613700137000"); put("+8613600136000") }.toString(),
+        completionCount = 30,
+        createdDate = generateTimestamp(30)
+    )
+    habits.add(habit10)
+    for (i in 0 until 30) {
+        if (random.nextFloat() > 0.1f) { // 90% success rate
+            completions.add(HabitCompletion(
+                habitId = habit10.id,
+                completedDate = generateTimestamp(i, 9, 0),
+                completedDateLocal = formatDate(i)
+            ))
+        }
+    }
+
+    // English habits
+    val habit11 = Habit(
+        title = "Drink Water",
+        repeatCycle = RepeatCycle.DAILY,
+        reminderTimes = JSONArray().apply { put("09:00"); put("14:00"); put("17:00") }.toString(),
+        notes = "This is a super long note for testing UI display performance. " +
+                "It should contain around 1000 characters to properly test how the interface " +
+                "handles large amounts of text. The note should wrap correctly and not overflow " +
+                "or get cut off. Additionally, the card height should adapt to the content. " +
+                "Remember to stay hydrated throughout the day. Drink at least 8 glasses of water. " +
+                "Keep a water bottle with you. Set reminders if needed. Track your progress. " +
+                "Make it a habit. Your body will thank you. Water is essential for health. " +
+                "It helps with digestion, circulation, and temperature regulation. " +
+                "Proper hydration improves energy levels and cognitive function. " +
+                "Don't wait until you're thirsty. Drink regularly throughout the day. " +
+                "Monitor your urine color - it should be light yellow. " +
+                "Adjust intake based on activity level and weather. " +
+                "This text continues to ensure we have enough characters for testing purposes. " +
+                "The UI should handle this gracefully with proper scrolling and layout. " +
+                "Make sure the text is readable and the card expands as needed. " +
+                "Testing edge cases is important for robust application development. " +
+                "This note serves that purpose effectively.",
+        supervisionMethod = SupervisionMethod.EMAIL,
+        supervisorEmails = JSONArray().apply { put("water@health.com") }.toString(),
+        completionCount = 26,
+        createdDate = generateTimestamp(30)
+    )
+    habits.add(habit11)
+    for (i in 0 until 30) {
+        if (random.nextFloat() > 0.2f) {
+            completions.add(HabitCompletion(
+                habitId = habit11.id,
+                completedDate = generateTimestamp(i, 10, 0),
+                completedDateLocal = formatDate(i)
+            ))
+        }
+    }
+
+    val habit12 = Habit(
+        title = "Morning Jog",
+        repeatCycle = RepeatCycle.WEEKLY,
+        repeatDays = JSONArray().apply { put(1); put(3); put(5) }.toString(),
+        reminderTimes = generateManyReminders(),
+        notes = "Warm up before running\nStretch after exercise\nWear proper shoes\nStart slow and increase gradually\nTrack your progress",
+        supervisionMethod = SupervisionMethod.SMS,
+        supervisorPhones = JSONArray().apply { put("+1234567890") }.toString(),
+        completionCount = 20,
+        createdDate = generateTimestamp(30)
+    )
+    habits.add(habit12)
+    for (i in 0 until 30) {
+        val cal = java.util.Calendar.getInstance()
+        cal.add(java.util.Calendar.DAY_OF_YEAR, -i)
+        val dayOfWeek = (cal.get(java.util.Calendar.DAY_OF_WEEK) + 5) % 7
+        if (dayOfWeek in listOf(1, 3, 5) && random.nextFloat() > 0.3f) {
+            completions.add(HabitCompletion(
+                habitId = habit12.id,
+                completedDate = generateTimestamp(i, 6, 30),
+                completedDateLocal = formatDate(i)
+            ))
+        }
+    }
+
+    val habit13 = Habit(
+        title = "Read Books",
+        repeatCycle = RepeatCycle.DAILY,
+        reminderTimes = JSONArray().apply { put("20:00") }.toString(),
+        notes = "This is another extended note for comprehensive UI testing. " +
+                "Reading is an excellent habit that improves knowledge and cognitive abilities. " +
+                "Set aside dedicated time each day for reading. Choose books that interest you. " +
+                "Take notes while reading to retain information better. Join a book club to discuss. " +
+                "Set reading goals like finishing a certain number of books per year. " +
+                "Create a comfortable reading space with good lighting. " +
+                "Minimize distractions while reading. Turn off electronic devices. " +
+                "Read before bed to improve sleep quality. " +
+                "Mix different genres to broaden your perspective. " +
+                "Keep a reading journal to track your thoughts. " +
+                "Share book recommendations with friends. " +
+                "Visit libraries and bookstores regularly. " +
+                "This extended text ensures proper testing of the UI components. " +
+                "The interface should display this content clearly with appropriate formatting. " +
+                "Scrolling should be smooth and the layout should be responsive. " +
+                "Testing with realistic data helps identify potential issues early.",
+        supervisionMethod = SupervisionMethod.NONE,
+        completionCount = 24,
+        createdDate = generateTimestamp(30)
+    )
+    habits.add(habit13)
+    for (i in 0 until 30) {
+        if (random.nextFloat() > 0.25f) {
+            completions.add(HabitCompletion(
+                habitId = habit13.id,
+                completedDate = generateTimestamp(i, 20, 30),
+                completedDateLocal = formatDate(i)
+            ))
+        }
+    }
+
+    val habit14 = Habit(
+        title = "Meditation",
+        repeatCycle = RepeatCycle.DAILY,
+        reminderTimes = generateManyReminders(),
+        supervisionMethod = SupervisionMethod.EMAIL,
+        supervisorEmails = JSONArray().apply { put("zen@meditation.com") }.toString(),
+        completionCount = 18,
+        createdDate = generateTimestamp(30)
+    )
+    habits.add(habit14)
+    for (i in 0 until 30) {
+        if (random.nextFloat() > 0.4f) {
+            completions.add(HabitCompletion(
+                habitId = habit14.id,
+                completedDate = generateTimestamp(i, 6, 0),
+                completedDateLocal = formatDate(i)
+            ))
+        }
+    }
+
+    val habit15 = Habit(
+        title = "Learn Coding",
+        repeatCycle = RepeatCycle.WEEKLY,
+        repeatDays = JSONArray().apply { put(2); put(4); put(6) }.toString(),
+        reminderTimes = JSONArray().apply { put("18:00") }.toString(),
+        notes = "Complete one small project\nReview basic concepts\nPractice algorithms\nRead documentation",
+        supervisionMethod = SupervisionMethod.SMS,
+        supervisorPhones = JSONArray().apply { put("+0987654321") }.toString(),
+        completionCount = 16,
+        createdDate = generateTimestamp(30)
+    )
+    habits.add(habit15)
+    for (i in 0 until 30) {
+        val cal = java.util.Calendar.getInstance()
+        cal.add(java.util.Calendar.DAY_OF_YEAR, -i)
+        val dayOfWeek = (cal.get(java.util.Calendar.DAY_OF_WEEK) + 5) % 7
+        if (dayOfWeek in listOf(2, 4, 6) && random.nextFloat() > 0.35f) {
+            completions.add(HabitCompletion(
+                habitId = habit15.id,
+                completedDate = generateTimestamp(i, 19, 0),
+                completedDateLocal = formatDate(i)
+            ))
+        }
+    }
+
+    val habit16 = Habit(
+        title = "Early Sleep",
+        repeatCycle = RepeatCycle.DAILY,
+        reminderTimes = JSONArray().apply { put("22:00"); put("06:00") }.toString(),
+        notes = "Avoid screens before bed\nCreate a bedtime routine\nKeep bedroom cool and dark",
+        supervisionMethod = SupervisionMethod.NONE,
+        completionCount = 21,
+        createdDate = generateTimestamp(30)
+    )
+    habits.add(habit16)
+    for (i in 0 until 30) {
+        if (random.nextFloat() > 0.3f) {
+            completions.add(HabitCompletion(
+                habitId = habit16.id,
+                completedDate = generateTimestamp(i, 22, 0),
+                completedDateLocal = formatDate(i)
+            ))
+        }
+    }
+
+    val habit17 = Habit(
+        title = "Healthy Eating",
+        repeatCycle = RepeatCycle.DAILY,
+        reminderTimes = JSONArray().apply { put("08:00"); put("12:00"); put("18:00") }.toString(),
+        notes = "Less oil and salt\nMore vegetables and fruits\nBalanced nutrition\nPortion control",
+        supervisionMethod = SupervisionMethod.EMAIL,
+        supervisorEmails = JSONArray().apply { put("healthy@food.com"); put("nutrition@diet.com") }.toString(),
+        completionCount = 28,
+        createdDate = generateTimestamp(30)
+    )
+    habits.add(habit17)
+    for (i in 0 until 30) {
+        if (random.nextFloat() > 0.15f) {
+            completions.add(HabitCompletion(
+                habitId = habit17.id,
+                completedDate = generateTimestamp(i, 12, 30),
+                completedDateLocal = formatDate(i)
+            ))
+        }
+    }
+
+    val habit18 = Habit(
+        title = "Yoga Stretching",
+        repeatCycle = RepeatCycle.WEEKLY,
+        repeatDays = JSONArray().apply { put(0); put(2); put(4); put(6) }.toString(),
+        reminderTimes = JSONArray().apply { put("19:00") }.toString(),
+        supervisionMethod = SupervisionMethod.NONE,
+        completionCount = 14,
+        createdDate = generateTimestamp(30)
+    )
+    habits.add(habit18)
+    for (i in 0 until 30) {
+        val cal = java.util.Calendar.getInstance()
+        cal.add(java.util.Calendar.DAY_OF_YEAR, -i)
+        val dayOfWeek = (cal.get(java.util.Calendar.DAY_OF_WEEK) + 5) % 7
+        if (dayOfWeek in listOf(0, 2, 4, 6) && random.nextFloat() > 0.45f) {
+            completions.add(HabitCompletion(
+                habitId = habit18.id,
+                completedDate = generateTimestamp(i, 19, 30),
+                completedDateLocal = formatDate(i)
+            ))
+        }
+    }
+
+    val habit19 = Habit(
+        title = "Write Journal",
+        repeatCycle = RepeatCycle.DAILY,
+        reminderTimes = JSONArray().apply { put("22:30") }.toString(),
+        notes = "Record today's events\nReflect and improve\nSet goals for tomorrow",
+        supervisionMethod = SupervisionMethod.EMAIL,
+        supervisorEmails = JSONArray().apply { put("journal@write.com") }.toString(),
+        completionCount = 17,
+        createdDate = generateTimestamp(30)
+    )
+    habits.add(habit19)
+    for (i in 0 until 30) {
+        if (random.nextFloat() > 0.45f) {
+            completions.add(HabitCompletion(
+                habitId = habit19.id,
+                completedDate = generateTimestamp(i, 22, 30),
+                completedDateLocal = formatDate(i)
+            ))
+        }
+    }
+
+    val habit20 = Habit(
+        title = "Quit Sugar",
+        repeatCycle = RepeatCycle.DAILY,
+        reminderTimes = JSONArray().apply { put("10:00") }.toString(),
+        notes = "Avoid sugary drinks\nChoose healthy snacks\nRead food labels carefully",
+        supervisionMethod = SupervisionMethod.SMS,
+        supervisorPhones = JSONArray().apply { put("+1122334455"); put("+5566778899") }.toString(),
+        completionCount = 25,
+        createdDate = generateTimestamp(30)
+    )
+    habits.add(habit20)
+    for (i in 0 until 30) {
+        if (random.nextFloat() > 0.2f) {
+            completions.add(HabitCompletion(
+                habitId = habit20.id,
+                completedDate = generateTimestamp(i, 10, 30),
+                completedDateLocal = formatDate(i)
+            ))
+        }
+    }
+
+    return Pair(habits, completions)
 }
 
 @Preview(showBackground = true)
