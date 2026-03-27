@@ -87,7 +87,7 @@
     <string name="habit_card_menu_undo">撤销打卡</string>
     <string name="habit_card_menu_edit">编辑</string>
     <string name="habit_card_menu_delete">删除</string>
-    <string name="habit_card_completed_count">已完成 %d 次</string>
+    <string name="habit_card_completed_count">完成 %d 次</string>
     <string name="habit_card_repeat_daily">每日</string>
     <string name="habit_card_repeat_weekly">每周一、二、三</string>
     <string name="habit_card_repeat_days_format">每周%s</string>

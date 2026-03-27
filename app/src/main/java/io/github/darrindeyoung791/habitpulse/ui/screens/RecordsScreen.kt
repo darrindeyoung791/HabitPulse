@@ -32,6 +32,17 @@ import java.util.*
 import kotlin.math.absoluteValue
 
 /**
+ * 重置加载状态以确保切换时显示加载指示器过渡
+ * 使用 LaunchedEffect 在每次进入 Records 屏幕时触发
+ */
+@Composable
+private fun ResetLoadingStateOnEnter(viewModel: RecordsViewModel) {
+    LaunchedEffect(Unit) {
+        viewModel.resetLoadingState()
+    }
+}
+
+/**
  * 格式化相对日期
  * 返回如：今天、昨天、2 天前、上周三、3 周前、2 个月前、1 年前等
  */
@@ -126,6 +137,9 @@ fun RecordsScreenContent(
             RecordsViewModel(fakeRepository)
         }
     }
+
+    // 每次进入屏幕时重置加载状态，确保显示加载指示器过渡
+    ResetLoadingStateOnEnter(viewModel)
 
     // 收集状态
     val groupedRecords by viewModel.groupedRecordsFlow.collectAsStateWithLifecycle(

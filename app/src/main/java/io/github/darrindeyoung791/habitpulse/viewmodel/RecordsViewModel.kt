@@ -44,7 +44,7 @@ class RecordsViewModel(
     /**
      * 数据是否正在加载
      */
-    private val _isLoading = MutableStateFlow(true)
+    private val _isLoading = MutableStateFlow(false)
     val isLoading: StateFlow<Boolean> = _isLoading.asStateFlow()
 
     /**
@@ -66,6 +66,11 @@ class RecordsViewModel(
     )
 
     /**
+     * 标记是否已加载过数据（用于避免每次切换都显示加载指示器）
+     */
+    private var hasLoadedData = false
+
+    /**
      * 合并后的打卡记录 Flow（按日期分组）
      * 根据选中的习惯 ID 过滤记录
      */
@@ -73,6 +78,11 @@ class RecordsViewModel(
         habitsFlow,
         _selectedHabitId
     ) { habits, selectedId ->
+        // 首次加载时设置 loading 状态
+        if (!hasLoadedData) {
+            _isLoading.value = true
+        }
+        
         // 获取所有打卡记录
         val allCompletions = habits.flatMap { habit ->
             repository.getCompletionsByHabitId(habit.id)
@@ -105,7 +115,18 @@ class RecordsViewModel(
         records.groupBy { it.completion.completedDateLocal }
             .map { (date, recordsForDate) -> DateGroup(date, recordsForDate) }
             .sortedByDescending { it.date }
-    }.onEach { _isLoading.value = false }
+    }.onEach { 
+        _isLoading.value = false
+        hasLoadedData = true
+    }
+
+    /**
+     * 重置加载状态（在屏幕切换时调用，确保显示加载指示器过渡）
+     */
+    fun resetLoadingState() {
+        _isLoading.value = true
+        hasLoadedData = false
+    }
 
     /**
      * 获取用于下拉菜单的习惯列表
