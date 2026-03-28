@@ -1155,7 +1155,8 @@ fun HabitCard(
 
                     // 右侧：打卡按钮（垂直居中）
                     CheckInButton(
-                        onClick = onCheckIn
+                        onClick = onCheckIn,
+                        contentDescription = stringResource(id = R.string.accessibility_habit_checkin, habit.title)
                     )
                 }
             }
@@ -1259,7 +1260,8 @@ private fun formatNotesPreview(notes: String): String {
 
 @Composable
 fun CheckInButton(
-    onClick: () -> Unit
+    onClick: () -> Unit,
+    contentDescription: String
 ) {
     var isPressed by remember { mutableStateOf(false) }
     val cornerRadius by animateFloatAsState(
@@ -1284,6 +1286,7 @@ fun CheckInButton(
         },
         modifier = Modifier
             .size(56.dp)
+            .semantics { this.contentDescription = contentDescription }
             .pointerInput(Unit) {
                 awaitPointerEventScope {
                     while (true) {

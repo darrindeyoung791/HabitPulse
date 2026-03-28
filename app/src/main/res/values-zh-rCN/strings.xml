@@ -118,6 +118,7 @@
 
     <!-- Accessibility -->
     <string name="accessibility_talkback_splash_ad_disabled">为了不影响视力障碍用户，开屏广告功能无法开启</string>
+    <string name="accessibility_habit_checkin">打卡 %s</string>
 
     <!-- Records Screen -->
     <string name="records_all_habits">全部习惯</string>

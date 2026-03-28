@@ -16,6 +16,7 @@ import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.outlined.FavoriteBorder
 import androidx.compose.material.icons.outlined.Info
 import androidx.compose.material.icons.outlined.Person
+import androidx.compose.material.icons.outlined.Tablet
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.*
@@ -303,7 +304,7 @@ fun SettingsScreen() {
                         },
                         leadingIcon = {
                             Icon(
-                                imageVector = Icons.Outlined.Info,
+                                imageVector = Icons.Outlined.Tablet,
                                 contentDescription = null
                             )
                         }

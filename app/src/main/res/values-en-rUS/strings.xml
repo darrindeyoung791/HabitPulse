@@ -116,6 +116,7 @@
 
     <!-- Accessibility -->
     <string name="accessibility_talkback_splash_ad_disabled">To avoid affecting users with visual impairments, the splash ad feature cannot be enabled</string>
+    <string name="accessibility_habit_checkin">Check in %s</string>
 
     <!-- Records Screen -->
     <string name="records_all_habits">All Habits</string>
