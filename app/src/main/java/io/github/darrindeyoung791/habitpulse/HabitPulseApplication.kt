@@ -5,6 +5,7 @@ import androidx.room.Room
 import com.google.android.material.color.DynamicColors
 import io.github.darrindeyoung791.habitpulse.data.database.HabitDatabase
 import io.github.darrindeyoung791.habitpulse.data.repository.HabitRepository
+import io.github.darrindeyoung791.habitpulse.viewmodel.ContactsViewModel
 import io.github.darrindeyoung791.habitpulse.viewmodel.HabitViewModel
 import io.github.darrindeyoung791.habitpulse.viewmodel.RecordsViewModel
 
@@ -42,6 +43,11 @@ class HabitPulseApplication : Application() {
     // RecordsViewModel 单例（延迟初始化）
     val recordsViewModel: RecordsViewModel by lazy {
         RecordsViewModel(repository)
+    }
+
+    // ContactsViewModel 单例（延迟初始化）
+    val contactsViewModel: ContactsViewModel by lazy {
+        ContactsViewModel(repository)
     }
 
     override fun onCreate() {

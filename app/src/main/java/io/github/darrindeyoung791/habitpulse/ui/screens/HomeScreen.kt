@@ -196,6 +196,7 @@ fun HomeScreen(
     // 为每个 Section 保存独立的滚动状态
     val habitsScrollState = remember { androidx.compose.foundation.lazy.LazyListState() }
     val recordsScrollState = remember { androidx.compose.foundation.lazy.LazyListState() }
+    val contactsScrollState = remember { androidx.compose.foundation.lazy.LazyListState() }
 
     // Animated drawer width
     val animatedDrawerWidth by animateDpAsState(
@@ -207,11 +208,13 @@ fun HomeScreen(
     // 为每个 Section 使用独立的 scrollBehavior
     val habitsScrollBehavior = TopAppBarDefaults.exitUntilCollapsedScrollBehavior()
     val recordsScrollBehavior = TopAppBarDefaults.exitUntilCollapsedScrollBehavior()
-    
+    val contactsScrollBehavior = TopAppBarDefaults.exitUntilCollapsedScrollBehavior()
+
     // 根据当前 Section 切换 scrollBehavior
     val currentScrollBehavior = when (currentSection) {
         HomeSection.Habits -> habitsScrollBehavior
         HomeSection.Records -> recordsScrollBehavior
+        HomeSection.Contacts -> contactsScrollBehavior
         else -> TopAppBarDefaults.pinnedScrollBehavior()
     }
 
@@ -338,10 +341,11 @@ fun HomeScreen(
                 }
             }
             HomeSection.Contacts -> {
-                BlankSectionContent(
+                ContactsScreenContent(
                     modifier = modifier,
-                    title = stringResource(id = R.string.main_tab_contacts),
-                    description = stringResource(id = R.string.main_blank_contacts_description)
+                    application = application,
+                    scrollBehavior = contactsScrollBehavior,
+                    listState = contactsScrollState
                 )
             }
             HomeSection.Records -> {
@@ -366,6 +370,7 @@ fun HomeScreen(
         val currentTopAppBarScrollBehavior = when (currentSection) {
             HomeSection.Records -> recordsScrollBehavior
             HomeSection.Habits -> habitsScrollBehavior
+            HomeSection.Contacts -> contactsScrollBehavior
             else -> TopAppBarDefaults.pinnedScrollBehavior()
         }
 

@@ -160,7 +160,24 @@
     <string name="settings_force_tablet_landscape_description">Use tablet landscape layout on small tablets in landscape orientation</string>
     <string name="settings_force_tablet_landscape_warning_title">Caution!</string>
     <string name="settings_force_tablet_landscape_warning_message">This feature is designed for small tablets. If enabled on a phone, the interface layout may display abnormally. Proceed?</string>
-    
+
+    <!-- Contacts Screen -->
+    <string name="contacts_title">Contacts</string>
+    <string name="contacts_no_contacts">No contacts</string>
+    <string name="contacts_no_contacts_description">Contacts will appear here after adding habit supervisors</string>
+    <string name="contacts_email_type">Email</string>
+    <string name="contacts_phone_type">Phone</string>
+    <string name="contacts_used_in_habits">Used in %d habit(s)</string>
+    <string name="contacts_bottom_sheet_title">Habits using this contact</string>
+    <string name="contacts_delete_from_habit">Delete from this habit</string>
+    <string name="contacts_delete_from_all_habits">Delete from all habits</string>
+    <string name="contacts_delete_confirm_title">Confirm Delete</string>
+    <string name="contacts_delete_from_habit_confirm">Delete this contact from the current habit?</string>
+    <string name="contacts_delete_from_all_habits_confirm">Delete this contact from all habits? This action cannot be undone.</string>
+    <string name="contacts_delete_confirm">Delete</string>
+    <string name="contacts_delete_cancel">Cancel</string>
+    <string name="contacts_last_supervisor_warning">This is the only contact for this habit. Deleting will change supervision to "No supervisor, local notification only"</string>
+
     <!-- Dialog buttons -->
     <string name="dialog_confirm">OK</string>
     <string name="dialog_cancel">Cancel</string>

@@ -162,7 +162,24 @@
     <string name="settings_force_tablet_landscape_description">在小平板横屏时，使用平板横屏的界面布局</string>
     <string name="settings_force_tablet_landscape_warning_title">注意！</string>
     <string name="settings_force_tablet_landscape_warning_message">此功能专为小屏平板设计。如果在手机上开启，界面布局可能会显示异常。确定要开启吗？</string>
-    
+
+    <!-- Contacts Screen -->
+    <string name="contacts_title">联系人</string>
+    <string name="contacts_no_contacts">暂无联系人</string>
+    <string name="contacts_no_contacts_description">添加习惯监督人后，联系人将显示在这里</string>
+    <string name="contacts_email_type">邮箱</string>
+    <string name="contacts_phone_type">电话</string>
+    <string name="contacts_used_in_habits">用于 %d 个习惯</string>
+    <string name="contacts_bottom_sheet_title">使用该联系人的习惯</string>
+    <string name="contacts_delete_from_habit">从此习惯删除</string>
+    <string name="contacts_delete_from_all_habits">从全部习惯删除</string>
+    <string name="contacts_delete_confirm_title">确认删除</string>
+    <string name="contacts_delete_from_habit_confirm">确定要从此习惯删除该联系人吗？</string>
+    <string name="contacts_delete_from_all_habits_confirm">确定要从全部习惯删除该联系人吗？此操作无法撤销。</string>
+    <string name="contacts_delete_confirm">删除</string>
+    <string name="contacts_delete_cancel">取消</string>
+    <string name="contacts_last_supervisor_warning">这是该习惯的唯一联系人，删除后将变为"不监督，仅本地提醒"</string>
+
     <!-- Dialog buttons -->
     <string name="dialog_confirm">确定</string>
     <string name="dialog_cancel">取消</string>
