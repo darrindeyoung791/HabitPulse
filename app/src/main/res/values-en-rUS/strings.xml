@@ -131,6 +131,7 @@
     <string name="records_select_habit">Select Habit</string>
     <string name="records_completion_count">%d completion(s)</string>
     <string name="records_date_format">MMM dd, yyyy</string>
+    <string name="records_date_format_short">MM/dd/yyyy</string>
     <string name="records_time_format">HH:mm</string>
     <string name="records_no_completions">No completion records</string>
     <string name="records_no_completions_description">The selected habit has no completion records yet</string>

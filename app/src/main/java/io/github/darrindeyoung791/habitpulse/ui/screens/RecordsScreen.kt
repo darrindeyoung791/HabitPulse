@@ -16,6 +16,7 @@ import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
@@ -324,6 +325,9 @@ fun FilterBarSection(
     onDateSelected: () -> Unit,
     onDateCleared: () -> Unit
 ) {
+    var isHabitNameMultiline by remember { mutableStateOf(false) }
+    var isDateButtonMultiline by remember { mutableStateOf(false) }
+    
     Column(
         modifier = Modifier
             .fillMaxWidth()
@@ -336,14 +340,15 @@ fun FilterBarSection(
                 .fillMaxWidth()
                 .padding(horizontal = 16.dp),
             horizontalArrangement = Arrangement.Start,
-            verticalAlignment = Alignment.CenterVertically
+            verticalAlignment = Alignment.Top
         ) {
             // Habit Selector
             HabitSelectorChip(
                 selectedHabitName = selectedHabitName,
                 habitOptions = habitOptions,
                 selectedHabitId = selectedHabitId,
-                onHabitSelected = onHabitSelected
+                onHabitSelected = onHabitSelected,
+                onHeightChange = { isHabitNameMultiline = it }
             )
 
             Spacer(modifier = Modifier.width(8.dp))
@@ -352,7 +357,9 @@ fun FilterBarSection(
             JumpToDateButton(
                 selectedDate = selectedDate,
                 onDateSelected = onDateSelected,
-                onDateCleared = onDateCleared
+                onDateCleared = onDateCleared,
+                forceMultiline = isHabitNameMultiline,
+                onHeightChange = { isDateButtonMultiline = it }
             )
         }
     }
@@ -366,31 +373,37 @@ fun HabitSelectorChip(
     selectedHabitName: String,
     habitOptions: List<RecordsViewModel.HabitOption>,
     selectedHabitId: UUID?,
-    onHabitSelected: (UUID?) -> Unit
+    onHabitSelected: (UUID?) -> Unit,
+    onHeightChange: (Boolean) -> Unit = {}
 ) {
     var expanded by remember { mutableStateOf(false) }
+    var isMultiline by remember { mutableStateOf(false) }
 
     Box {
         FilterChip(
             selected = false,
             onClick = { expanded = true },
             label = {
-                Row(
-                    verticalAlignment = Alignment.CenterVertically,
-                    horizontalArrangement = Arrangement.spacedBy(4.dp)
-                ) {
-                    Text(
-                        text = selectedHabitName,
-                        maxLines = 1,
-                        overflow = TextOverflow.Ellipsis,
-                        style = MaterialTheme.typography.labelLarge
-                    )
-                    Icon(
-                        imageVector = Icons.Filled.ArrowDropDown,
-                        contentDescription = stringResource(id = R.string.records_select_habit),
-                        modifier = Modifier.size(18.dp)
-                    )
-                }
+                Text(
+                    text = selectedHabitName,
+                    maxLines = 2,
+                    overflow = TextOverflow.Ellipsis,
+                    style = MaterialTheme.typography.labelLarge,
+                    onTextLayout = { result ->
+                        val wasMultiline = isMultiline
+                        isMultiline = result.hasVisualOverflow || result.lineCount > 1
+                        if (wasMultiline != isMultiline) {
+                            onHeightChange(isMultiline)
+                        }
+                    }
+                )
+            },
+            trailingIcon = {
+                Icon(
+                    imageVector = Icons.Filled.ArrowDropDown,
+                    contentDescription = stringResource(id = R.string.records_select_habit),
+                    modifier = Modifier.size(18.dp)
+                )
             },
             leadingIcon = {
                 Icon(
@@ -403,7 +416,7 @@ fun HabitSelectorChip(
                 selectedContainerColor = MaterialTheme.colorScheme.primaryContainer,
                 selectedLabelColor = MaterialTheme.colorScheme.onPrimaryContainer
             ),
-            modifier = Modifier.height(40.dp)
+            modifier = Modifier.heightIn(min = 40.dp)
         )
 
         DropdownMenu(
@@ -465,7 +478,9 @@ fun HabitSelectorChip(
 fun JumpToDateButton(
     selectedDate: LocalDate?,
     onDateSelected: () -> Unit,
-    onDateCleared: () -> Unit
+    onDateCleared: () -> Unit,
+    forceMultiline: Boolean = false,
+    onHeightChange: (Boolean) -> Unit = {}
 ) {
     val interactionSource = remember { MutableInteractionSource() }
     val isPressed by interactionSource.collectIsPressedAsState()
@@ -476,24 +491,27 @@ fun JumpToDateButton(
         label = "cornerSize"
     )
 
+    // 使用短日期格式（中文：yyyy/MM/dd，英文：MM/dd/yyyy）
+    val shortDateFormat = stringResource(id = R.string.records_date_format_short)
+    val dateFormatter = remember { DateTimeFormatter.ofPattern(shortDateFormat) }
+
     if (selectedDate != null) {
         // 已选择日期状态 - 使用 secondaryContainer 强调色
-        val dateFormatter = remember { DateTimeFormatter.ofPattern("yyyy-MM-dd") }
         val dateStr = selectedDate.format(dateFormatter)
+        var isMultiline by remember { mutableStateOf(false) }
 
         Surface(
             modifier = Modifier
-                .height(40.dp)
+                .heightIn(min = 40.dp)
                 .clip(RoundedCornerShape(cornerSize.value)),
             color = MaterialTheme.colorScheme.secondaryContainer,
             contentColor = MaterialTheme.colorScheme.onSecondaryContainer
         ) {
             Row(
                 modifier = Modifier
-                    .fillMaxHeight()
-                    .padding(horizontal = 12.dp),
+                    .padding(horizontal = 12.dp, vertical = 8.dp),
                 horizontalArrangement = Arrangement.spacedBy(6.dp),
-                verticalAlignment = Alignment.CenterVertically
+                verticalAlignment = Alignment.Top
             ) {
                 Icon(
                     imageVector = Icons.Outlined.CalendarToday,
@@ -501,11 +519,23 @@ fun JumpToDateButton(
                     modifier = Modifier.size(18.dp),
                     tint = MaterialTheme.colorScheme.onSecondaryContainer
                 )
-                Text(
-                    text = stringResource(id = R.string.records_selected_date, dateStr),
-                    style = MaterialTheme.typography.labelLarge,
-                    maxLines = 1
-                )
+                Column(
+                    modifier = Modifier.weight(1f),
+                    verticalArrangement = Arrangement.Center
+                ) {
+                    Text(
+                        text = stringResource(id = R.string.records_selected_date, dateStr),
+                        style = MaterialTheme.typography.labelLarge,
+                        maxLines = 2,
+                        onTextLayout = { result ->
+                            val wasMultiline = isMultiline
+                            isMultiline = forceMultiline || result.lineCount > 1
+                            if (wasMultiline != isMultiline) {
+                                onHeightChange(isMultiline)
+                            }
+                        }
+                    )
+                }
                 IconButton(
                     onClick = onDateCleared,
                     modifier = Modifier.size(24.dp)
@@ -523,7 +553,7 @@ fun JumpToDateButton(
         // 未选择日期状态 - 使用 primaryContainer 主色
         Surface(
             modifier = Modifier
-                .height(40.dp)
+                .heightIn(min = if (forceMultiline) 64.dp else 40.dp)
                 .clip(RoundedCornerShape(cornerSize.value))
                 .clickable(
                     interactionSource = interactionSource,
