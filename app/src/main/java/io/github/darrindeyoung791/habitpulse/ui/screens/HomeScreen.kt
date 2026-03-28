@@ -73,10 +73,13 @@ import io.github.darrindeyoung791.habitpulse.data.model.Habit
 import io.github.darrindeyoung791.habitpulse.data.model.RepeatCycle
 import io.github.darrindeyoung791.habitpulse.ui.theme.HabitPulseTheme
 import io.github.darrindeyoung791.habitpulse.ui.utils.rememberDebounceClickHandler
+import io.github.darrindeyoung791.habitpulse.ui.screens.DateFilterButton
 import io.github.darrindeyoung791.habitpulse.viewmodel.HabitViewModel
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
+import java.time.LocalDate
+import java.time.ZoneId
 import java.util.UUID
 
 enum class HomeSection { Habits, Contacts, Records }
@@ -400,12 +403,10 @@ fun HomeScreen(
                         IconButton(
                             onClick = {
                                 if (isSearchActive) {
-                                    // 如果搜索框已显示，点击搜索按钮关闭搜索
                                     isSearchActive = false
                                     viewModel.clearSearch()
                                     focusManager.clearFocus()
                                 } else {
-                                    // 否则打开搜索
                                     isSearchActive = true
                                     searchFocusRequester.requestFocus()
                                 }
@@ -415,6 +416,53 @@ fun HomeScreen(
                                 imageVector = Icons.Filled.Search,
                                 contentDescription = stringResource(id = R.string.accessibility_search_habits)
                             )
+                        }
+                    }
+                    // Date filter button - only show in Records section
+                    if (currentSection == HomeSection.Records) {
+                        val recordsVM = application?.recordsViewModel
+                        if (recordsVM != null) {
+                            val recSelectedDate by recordsVM.selectedDate.collectAsStateWithLifecycle()
+                            val recDatePickerExpanded by recordsVM.datePickerExpanded.collectAsStateWithLifecycle()
+
+                            DateFilterButton(
+                                selectedDate = recSelectedDate,
+                                onDateSelected = { recordsVM.setDatePickerExpanded(true) },
+                                onDateCleared = { recordsVM.clearDate() }
+                            )
+
+                            if (recDatePickerExpanded) {
+                                val datePickerState = rememberDatePickerState(
+                                    initialSelectedDateMillis = recSelectedDate?.atStartOfDay()?.toInstant(java.time.ZoneOffset.UTC)?.toEpochMilli()
+                                        ?: System.currentTimeMillis()
+                                )
+                                DatePickerDialog(
+                                    onDismissRequest = { recordsVM.setDatePickerExpanded(false) },
+                                    confirmButton = {
+                                        TextButton(
+                                            onClick = {
+                                                datePickerState.selectedDateMillis?.let { millis ->
+                                                    val date = LocalDate.ofInstant(
+                                                        java.time.Instant.ofEpochMilli(millis),
+                                                        java.time.ZoneId.systemDefault()
+                                                    )
+                                                    recordsVM.selectDate(date)
+                                                }
+                                                recordsVM.setDatePickerExpanded(false)
+                                            }
+                                        ) {
+                                            Text(text = stringResource(id = R.string.records_date_picker_confirm))
+                                        }
+                                    },
+                                    dismissButton = {
+                                        TextButton(onClick = { recordsVM.setDatePickerExpanded(false) }) {
+                                            Text(text = stringResource(id = R.string.records_date_picker_dismiss))
+                                        }
+                                    }
+                                ) {
+                                    DatePicker(state = datePickerState)
+                                }
+                            }
                         }
                     }
                     IconButton(
@@ -475,12 +523,10 @@ fun HomeScreen(
                         IconButton(
                             onClick = {
                                 if (isSearchActive) {
-                                    // 如果搜索框已显示，点击搜索按钮关闭搜索
                                     isSearchActive = false
                                     viewModel.clearSearch()
                                     focusManager.clearFocus()
                                 } else {
-                                    // 否则打开搜索
                                     isSearchActive = true
                                     searchFocusRequester.requestFocus()
                                 }
@@ -490,6 +536,53 @@ fun HomeScreen(
                                 imageVector = Icons.Filled.Search,
                                 contentDescription = stringResource(id = R.string.accessibility_search_habits)
                             )
+                        }
+                    }
+                    // Date filter button - only show in Records section
+                    if (currentSection == HomeSection.Records) {
+                        val recordsVM = application?.recordsViewModel
+                        if (recordsVM != null) {
+                            val recSelectedDate by recordsVM.selectedDate.collectAsStateWithLifecycle()
+                            val recDatePickerExpanded by recordsVM.datePickerExpanded.collectAsStateWithLifecycle()
+
+                            DateFilterButton(
+                                selectedDate = recSelectedDate,
+                                onDateSelected = { recordsVM.setDatePickerExpanded(true) },
+                                onDateCleared = { recordsVM.clearDate() }
+                            )
+
+                            if (recDatePickerExpanded) {
+                                val datePickerState = rememberDatePickerState(
+                                    initialSelectedDateMillis = recSelectedDate?.atStartOfDay()?.toInstant(java.time.ZoneOffset.UTC)?.toEpochMilli()
+                                        ?: System.currentTimeMillis()
+                                )
+                                DatePickerDialog(
+                                    onDismissRequest = { recordsVM.setDatePickerExpanded(false) },
+                                    confirmButton = {
+                                        TextButton(
+                                            onClick = {
+                                                datePickerState.selectedDateMillis?.let { millis ->
+                                                    val date = LocalDate.ofInstant(
+                                                        java.time.Instant.ofEpochMilli(millis),
+                                                        java.time.ZoneId.systemDefault()
+                                                    )
+                                                    recordsVM.selectDate(date)
+                                                }
+                                                recordsVM.setDatePickerExpanded(false)
+                                            }
+                                        ) {
+                                            Text(text = stringResource(id = R.string.records_date_picker_confirm))
+                                        }
+                                    },
+                                    dismissButton = {
+                                        TextButton(onClick = { recordsVM.setDatePickerExpanded(false) }) {
+                                            Text(text = stringResource(id = R.string.records_date_picker_dismiss))
+                                        }
+                                    }
+                                ) {
+                                    DatePicker(state = datePickerState)
+                                }
+                            }
                         }
                     }
                     IconButton(

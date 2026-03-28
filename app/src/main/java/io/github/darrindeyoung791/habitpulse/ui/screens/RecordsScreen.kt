@@ -1,6 +1,14 @@
 package io.github.darrindeyoung791.habitpulse.ui.screens
 
 import androidx.compose.animation.core.animateDpAsState
+import androidx.compose.animation.core.tween
+import androidx.compose.animation.AnimatedContent
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
+import androidx.compose.animation.slideInHorizontally
+import androidx.compose.animation.slideOutHorizontally
+import androidx.compose.animation.togetherWith
+import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.LocalIndication
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
@@ -50,6 +58,13 @@ import androidx.compose.material3.TextButton
 import androidx.compose.material3.TopAppBarScrollBehavior
 import androidx.compose.material3.rememberDatePickerState
 import androidx.compose.runtime.Composable
+import androidx.compose.ui.ExperimentalComposeUiApi
+import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
+import androidx.compose.animation.slideInHorizontally
+import androidx.compose.animation.slideOutHorizontally
+import androidx.compose.material.icons.outlined.CalendarMonth
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -58,6 +73,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.input.nestedscroll.nestedScroll
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
@@ -67,6 +83,7 @@ import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
+import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import io.github.darrindeyoung791.habitpulse.HabitPulseApplication
@@ -215,10 +232,7 @@ fun RecordsScreenContent(
             selectedHabitName = selectedHabitName,
             habitOptions = habitOptions,
             selectedHabitId = selectedHabitId,
-            onHabitSelected = { viewModel.selectHabit(it) },
-            selectedDate = selectedDate,
-            onDateSelected = { viewModel.setDatePickerExpanded(true) },
-            onDateCleared = { viewModel.clearDate() }
+            onHabitSelected = { viewModel.selectHabit(it) }
         )
 
         // === Content Section ===
@@ -313,55 +327,29 @@ fun RecordsScreenContent(
 }
 
 /**
- * 过滤栏区域 - 包含习惯选择和日期选择
+ * 过滤栏区域 - 只包含习惯选择
  */
 @Composable
 fun FilterBarSection(
     selectedHabitName: String,
     habitOptions: List<RecordsViewModel.HabitOption>,
     selectedHabitId: UUID?,
-    onHabitSelected: (UUID?) -> Unit,
-    selectedDate: LocalDate?,
-    onDateSelected: () -> Unit,
-    onDateCleared: () -> Unit
+    onHabitSelected: (UUID?) -> Unit
 ) {
-    var isHabitNameMultiline by remember { mutableStateOf(false) }
-    var isDateButtonMultiline by remember { mutableStateOf(false) }
-    
-    Column(
+    Row(
         modifier = Modifier
             .fillMaxWidth()
-            .padding(vertical = 8.dp),
-        verticalArrangement = Arrangement.spacedBy(8.dp)
+            .padding(horizontal = 16.dp, vertical = 8.dp),
+        horizontalArrangement = Arrangement.Start,
+        verticalAlignment = Alignment.CenterVertically
     ) {
-        // Row 1: Filter controls - Left aligned with items close together
-        Row(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(horizontal = 16.dp),
-            horizontalArrangement = Arrangement.Start,
-            verticalAlignment = Alignment.Top
-        ) {
-            // Habit Selector
-            HabitSelectorChip(
-                selectedHabitName = selectedHabitName,
-                habitOptions = habitOptions,
-                selectedHabitId = selectedHabitId,
-                onHabitSelected = onHabitSelected,
-                onHeightChange = { isHabitNameMultiline = it }
-            )
-
-            Spacer(modifier = Modifier.width(8.dp))
-
-            // Date Picker Button
-            JumpToDateButton(
-                selectedDate = selectedDate,
-                onDateSelected = onDateSelected,
-                onDateCleared = onDateCleared,
-                forceMultiline = isHabitNameMultiline,
-                onHeightChange = { isDateButtonMultiline = it }
-            )
-        }
+        // Habit Selector
+        HabitSelectorChip(
+            selectedHabitName = selectedHabitName,
+            habitOptions = habitOptions,
+            selectedHabitId = selectedHabitId,
+            onHabitSelected = onHabitSelected
+        )
     }
 }
 
@@ -373,11 +361,9 @@ fun HabitSelectorChip(
     selectedHabitName: String,
     habitOptions: List<RecordsViewModel.HabitOption>,
     selectedHabitId: UUID?,
-    onHabitSelected: (UUID?) -> Unit,
-    onHeightChange: (Boolean) -> Unit = {}
+    onHabitSelected: (UUID?) -> Unit
 ) {
     var expanded by remember { mutableStateOf(false) }
-    var isMultiline by remember { mutableStateOf(false) }
 
     Box {
         FilterChip(
@@ -386,16 +372,9 @@ fun HabitSelectorChip(
             label = {
                 Text(
                     text = selectedHabitName,
-                    maxLines = 2,
+                    maxLines = 1,
                     overflow = TextOverflow.Ellipsis,
-                    style = MaterialTheme.typography.labelLarge,
-                    onTextLayout = { result ->
-                        val wasMultiline = isMultiline
-                        isMultiline = result.hasVisualOverflow || result.lineCount > 1
-                        if (wasMultiline != isMultiline) {
-                            onHeightChange(isMultiline)
-                        }
-                    }
+                    style = MaterialTheme.typography.labelLarge
                 )
             },
             trailingIcon = {
@@ -415,14 +394,12 @@ fun HabitSelectorChip(
             colors = FilterChipDefaults.filterChipColors(
                 selectedContainerColor = MaterialTheme.colorScheme.primaryContainer,
                 selectedLabelColor = MaterialTheme.colorScheme.onPrimaryContainer
-            ),
-            modifier = Modifier.heightIn(min = 40.dp)
+            )
         )
 
         DropdownMenu(
             expanded = expanded,
-            onDismissRequest = { expanded = false },
-            modifier = Modifier.widthIn(max = 200.dp)
+            onDismissRequest = { expanded = false }
         ) {
             habitOptions.forEach { option ->
                 val isSelected = when (option) {
@@ -432,30 +409,16 @@ fun HabitSelectorChip(
 
                 DropdownMenuItem(
                     text = {
-                        Row(
-                            verticalAlignment = Alignment.CenterVertically,
-                            modifier = Modifier.fillMaxWidth()
-                        ) {
-                            Text(
-                                text = when (option) {
-                                    is RecordsViewModel.HabitOption.AllHabits ->
-                                        stringResource(id = R.string.records_all_habits)
-                                    is RecordsViewModel.HabitOption.SpecificHabit ->
-                                        option.habit.title
-                                },
-                                modifier = Modifier.weight(1f),
-                                maxLines = 1,
-                                overflow = TextOverflow.Ellipsis
-                            )
-                            if (isSelected) {
-                                Icon(
-                                    imageVector = Icons.Filled.Check,
-                                    contentDescription = null,
-                                    modifier = Modifier.size(24.dp),
-                                    tint = MaterialTheme.colorScheme.primary
-                                )
-                            }
-                        }
+                        Text(
+                            text = when (option) {
+                                is RecordsViewModel.HabitOption.AllHabits ->
+                                    stringResource(id = R.string.records_all_habits)
+                                is RecordsViewModel.HabitOption.SpecificHabit ->
+                                    option.habit.title
+                            },
+                            maxLines = 1,
+                            overflow = TextOverflow.Ellipsis
+                        )
                     },
                     onClick = {
                         val habitId = when (option) {
@@ -472,113 +435,82 @@ fun HabitSelectorChip(
 }
 
 /**
- * 跳转到日期按钮 - 使用醒目样式
+ * 日期过滤按钮 - 用于 AppBar
+ * 使用 AnimatedContent 实现平滑过渡动画
  */
 @Composable
-fun JumpToDateButton(
+fun DateFilterButton(
     selectedDate: LocalDate?,
     onDateSelected: () -> Unit,
     onDateCleared: () -> Unit,
-    forceMultiline: Boolean = false,
-    onHeightChange: (Boolean) -> Unit = {}
+    modifier: Modifier = Modifier
 ) {
-    val interactionSource = remember { MutableInteractionSource() }
-    val isPressed by interactionSource.collectIsPressedAsState()
-
-    // 按压时圆角变大动画（从 8dp 到 24dp）
-    val cornerSize = animateDpAsState(
-        targetValue = if (isPressed) 24.dp else 8.dp,
-        label = "cornerSize"
-    )
-
-    // 使用短日期格式（中文：yyyy/MM/dd，英文：MM/dd/yyyy）
     val shortDateFormat = stringResource(id = R.string.records_date_format_short)
     val dateFormatter = remember { DateTimeFormatter.ofPattern(shortDateFormat) }
+    val dateStr = selectedDate?.format(dateFormatter)
 
-    if (selectedDate != null) {
-        // 已选择日期状态 - 使用 secondaryContainer 强调色
-        val dateStr = selectedDate.format(dateFormatter)
-        var isMultiline by remember { mutableStateOf(false) }
-
-        Surface(
-            modifier = Modifier
-                .heightIn(min = 40.dp)
-                .clip(RoundedCornerShape(cornerSize.value)),
-            color = MaterialTheme.colorScheme.secondaryContainer,
-            contentColor = MaterialTheme.colorScheme.onSecondaryContainer
-        ) {
-            Row(
+    AnimatedContent(
+        targetState = selectedDate != null,
+        label = "dateFilterButtonAnimation",
+        modifier = modifier,
+        transitionSpec = {
+            fadeIn(animationSpec = tween(220))
+                .togetherWith(fadeOut(animationSpec = tween(220)))
+        }
+    ) { isSelected ->
+        if (isSelected && dateStr != null) {
+            // 已选择日期状态 - 圆角矩形按钮
+            Surface(
                 modifier = Modifier
-                    .padding(horizontal = 12.dp, vertical = 8.dp),
-                horizontalArrangement = Arrangement.spacedBy(6.dp),
-                verticalAlignment = Alignment.Top
+                    .height(40.dp)
+                    .clip(RoundedCornerShape(20.dp))
+                    .clickable(onClick = onDateCleared),
+                color = MaterialTheme.colorScheme.primaryContainer,
+                contentColor = MaterialTheme.colorScheme.onPrimaryContainer
             ) {
-                Icon(
-                    imageVector = Icons.Outlined.CalendarToday,
-                    contentDescription = null,
-                    modifier = Modifier.size(18.dp),
-                    tint = MaterialTheme.colorScheme.onSecondaryContainer
-                )
-                Column(
-                    modifier = Modifier.weight(1f),
-                    verticalArrangement = Arrangement.Center
+                Row(
+                    modifier = Modifier
+                        .fillMaxHeight()
+                        .padding(horizontal = 12.dp),
+                    horizontalArrangement = Arrangement.spacedBy(8.dp),
+                    verticalAlignment = Alignment.CenterVertically
                 ) {
-                    Text(
-                        text = stringResource(id = R.string.records_selected_date, dateStr),
-                        style = MaterialTheme.typography.labelLarge,
-                        maxLines = 2,
-                        onTextLayout = { result ->
-                            val wasMultiline = isMultiline
-                            isMultiline = forceMultiline || result.lineCount > 1
-                            if (wasMultiline != isMultiline) {
-                                onHeightChange(isMultiline)
-                            }
-                        }
+                    Icon(
+                        imageVector = Icons.Outlined.CalendarMonth,
+                        contentDescription = null,
+                        modifier = Modifier.size(20.dp),
+                        tint = MaterialTheme.colorScheme.primary
                     )
-                }
-                IconButton(
-                    onClick = onDateCleared,
-                    modifier = Modifier.size(24.dp)
-                ) {
+                    Text(
+                        text = dateStr,
+                        style = MaterialTheme.typography.labelLarge,
+                        maxLines = 1,
+                        color = MaterialTheme.colorScheme.onPrimaryContainer
+                    )
+                    // 右侧竖线分隔符
+                    Spacer(
+                        modifier = Modifier
+                            .fillMaxHeight()
+                            .width(1.dp)
+                            .background(MaterialTheme.colorScheme.primary.copy(alpha = 0.3f))
+                    )
                     Icon(
                         imageVector = Icons.Filled.Close,
                         contentDescription = stringResource(id = R.string.records_clear_date),
                         modifier = Modifier.size(16.dp),
-                        tint = MaterialTheme.colorScheme.onSecondaryContainer
+                        tint = MaterialTheme.colorScheme.primary
                     )
                 }
             }
-        }
-    } else {
-        // 未选择日期状态 - 使用 primaryContainer 主色
-        Surface(
-            modifier = Modifier
-                .heightIn(min = if (forceMultiline) 64.dp else 40.dp)
-                .clip(RoundedCornerShape(cornerSize.value))
-                .clickable(
-                    interactionSource = interactionSource,
-                    indication = null,
-                    onClick = onDateSelected
-                ),
-            color = MaterialTheme.colorScheme.primaryContainer,
-            contentColor = MaterialTheme.colorScheme.onPrimaryContainer
-        ) {
-            Row(
-                modifier = Modifier
-                    .fillMaxHeight()
-                    .padding(horizontal = 12.dp),
-                horizontalArrangement = Arrangement.spacedBy(6.dp),
-                verticalAlignment = Alignment.CenterVertically
+        } else {
+            // 未选择日期状态 - 图标按钮
+            IconButton(
+                onClick = onDateSelected
             ) {
                 Icon(
-                    imageVector = Icons.Outlined.CalendarToday,
-                    contentDescription = null,
-                    modifier = Modifier.size(18.dp),
-                    tint = MaterialTheme.colorScheme.onPrimaryContainer
-                )
-                Text(
-                    text = stringResource(id = R.string.records_jump_to_date),
-                    style = MaterialTheme.typography.labelLarge
+                    imageVector = Icons.Outlined.CalendarMonth,
+                    contentDescription = stringResource(id = R.string.records_date_filter_tooltip),
+                    tint = MaterialTheme.colorScheme.onSurfaceVariant
                 )
             }
         }
@@ -910,15 +842,15 @@ fun RecordsScreenContentPreview() {
 
 @Preview(showBackground = true)
 @Composable
-fun JumpToDateButtonPreview() {
+fun DateFilterButtonPreview() {
     HabitPulseTheme {
         Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
-            JumpToDateButton(
+            DateFilterButton(
                 selectedDate = null,
                 onDateSelected = {},
                 onDateCleared = {}
             )
-            JumpToDateButton(
+            DateFilterButton(
                 selectedDate = LocalDate.now(),
                 onDateSelected = {},
                 onDateCleared = {}

@@ -143,6 +143,8 @@
     <string name="records_date_picker_title">Select Date</string>
     <string name="records_date_picker_confirm">OK</string>
     <string name="records_date_picker_dismiss">Cancel</string>
+    <string name="records_date_filter_tooltip">Select Date</string>
+    <string name="records_date_filter_selected">Selected Date</string>
     
     <!-- Relative dates -->
     <string name="records_date_today">Today</string>
