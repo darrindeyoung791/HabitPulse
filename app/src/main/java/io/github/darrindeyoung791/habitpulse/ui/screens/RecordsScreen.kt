@@ -1,6 +1,8 @@
 package io.github.darrindeyoung791.habitpulse.ui.screens
 
+import androidx.compose.foundation.LocalIndication
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyListState
@@ -15,6 +17,9 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.input.nestedscroll.nestedScroll
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.semantics.semantics
+import androidx.compose.ui.semantics.contentDescription
+import androidx.compose.ui.semantics.onClick
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
@@ -365,8 +370,30 @@ fun CompletionRecordCard(
     completionSequence: Int,
     modifier: Modifier = Modifier
 ) {
+    val interactionSource = remember { MutableInteractionSource() }
+    
+    // 格式化完成时间用于无障碍朗读
+    val formattedTime = timeFormat.format(Date(completion.completedDate))
+    val relativeDate = formatRelativeDate(Date(completion.completedDate))
+    val contentDescription = stringResource(
+        id = R.string.records_card_content_description,
+        habitTitle,
+        completionSequence,
+        relativeDate,
+        formattedTime
+    )
+    
     Card(
-        modifier = modifier,
+        modifier = modifier
+            .clickable(
+                interactionSource = interactionSource,
+                indication = LocalIndication.current,
+                onClick = { }
+            )
+            .semantics {
+                this.contentDescription = contentDescription
+                onClick { true }
+            },
         colors = CardDefaults.cardColors(
             containerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f)
         )
@@ -396,7 +423,7 @@ fun CompletionRecordCard(
                 )
             }
             Text(
-                text = timeFormat.format(Date(completion.completedDate)),
+                text = formattedTime,
                 style = MaterialTheme.typography.titleMedium,
                 fontWeight = FontWeight.Bold,
                 color = MaterialTheme.colorScheme.primary

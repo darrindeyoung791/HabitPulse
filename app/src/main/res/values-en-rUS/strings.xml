@@ -135,6 +135,7 @@
     <string name="records_no_completions">No completion records</string>
     <string name="records_no_completions_description">The selected habit has no completion records yet</string>
     <string name="records_completion_sequence">Completion #%d</string>
+    <string name="records_card_content_description">%1$s, Completion #%2$d, completed on %3$s at %4$s</string>
     
     <!-- Relative dates -->
     <string name="records_date_today">Today</string>
