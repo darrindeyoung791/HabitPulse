@@ -14,7 +14,10 @@ import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.debounce
+import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.flow.onEach
+import kotlinx.coroutines.flow.SharingStarted
+import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
 import java.util.UUID
 
@@ -86,13 +89,20 @@ class HabitViewModel(
     val searchQuery: StateFlow<String> = _searchQuery.asStateFlow()
 
     /**
-     * 搜索后的习惯列表（根据搜索关键词过滤）
-     * 当搜索词为空时返回所有习惯，否则返回搜索结果
+     * 用于 debounce 的搜索词（用户输入时延迟处理）
      */
     @OptIn(FlowPreview::class)
-    val filteredHabitsFlow: Flow<List<Habit>> = _searchQuery
-        .debounce(200)  // 200ms debounce to avoid excessive queries
-        .combine(repository.allHabitsFlow) { query, allHabits ->
+    private val debouncedSearchQuery: StateFlow<String> = _searchQuery
+        .debounce(200)  // 200ms debounce to avoid excessive filtering during typing
+        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), "")
+
+    /**
+     * 搜索后的习惯列表（根据搜索关键词过滤）
+     * 当搜索词为空时返回所有习惯，否则返回搜索结果
+     * 使用 debounce 后的搜索词，避免用户输入时频繁过滤
+     */
+    val filteredHabitsFlow: Flow<List<Habit>> = repository.allHabitsFlow
+        .combine(debouncedSearchQuery) { allHabits, query ->
             if (query.isNullOrBlank()) {
                 allHabits
             } else {
@@ -104,6 +114,8 @@ class HabitViewModel(
                 }
             }
         }
+        // 使用 distinctUntilChanged 避免重复发射相同数据
+        .distinctUntilChanged()
 
     // ============= Data Operations =============
 
