@@ -244,7 +244,9 @@ fun HomeScreen(
                     }
                 }
                 HomeSection.Contacts -> {
-                    // Contacts 页面没有滚动列表，不做处理
+                    scope.launch {
+                        contactsScrollState.animateScrollToItem(0)
+                    }
                 }
             }
         } else {
