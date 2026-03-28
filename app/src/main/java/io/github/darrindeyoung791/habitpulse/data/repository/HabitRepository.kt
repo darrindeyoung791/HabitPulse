@@ -198,4 +198,13 @@ class HabitRepository(
     suspend fun resetAllCompletionStatus() {
         habitDao.resetAllCompletionStatus(System.currentTimeMillis())
     }
+
+    /**
+     * 搜索习惯（根据标题或备注）
+     * @param query 搜索关键词
+     */
+    fun searchHabitsFlow(query: String): Flow<List<Habit>> {
+        val searchQuery = "%${query}%"
+        return habitDao.searchHabitsFlow(searchQuery)
+    }
 }

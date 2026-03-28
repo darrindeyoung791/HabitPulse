@@ -117,6 +117,14 @@
     <!-- Accessibility -->
     <string name="accessibility_talkback_splash_ad_disabled">To avoid affecting users with visual impairments, the splash ad feature cannot be enabled</string>
     <string name="accessibility_habit_checkin">Check in %s</string>
+    <string name="accessibility_search_habits">Search habits</string>
+    <string name="accessibility_clear_search">Clear search</string>
+
+    <!-- Search -->
+    <string name="search_habits_hint">Search habits…</string>
+    <string name="search_no_results">No matching habits found</string>
+    <string name="search_no_results_description">Try a different keyword</string>
+    <string name="search_results_count">%d habit(s) found</string>
 
     <!-- Records Screen -->
     <string name="records_all_habits">All Habits</string>

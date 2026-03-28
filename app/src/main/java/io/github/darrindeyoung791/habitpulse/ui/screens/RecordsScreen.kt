@@ -494,6 +494,15 @@ private class FakeHabitDaoForRecords : io.github.darrindeyoung791.habitpulse.dat
 
     override fun getHabitCount(): kotlinx.coroutines.flow.Flow<Int> =
         kotlinx.coroutines.flow.flowOf(habits.size)
+
+    override fun searchHabitsFlow(query: String): kotlinx.coroutines.flow.Flow<List<Habit>> {
+        val searchQuery = query.trim('%')
+        return kotlinx.coroutines.flow.flowOf(
+            habits.filter { habit ->
+                habit.title.contains(searchQuery, ignoreCase = true)
+            }
+        )
+    }
 }
 
 @Suppress("unused")

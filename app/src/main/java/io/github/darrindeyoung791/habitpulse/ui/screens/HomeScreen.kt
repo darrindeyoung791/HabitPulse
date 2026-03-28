@@ -52,8 +52,20 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.*
+import androidx.compose.ui.text.AnnotatedString
+import androidx.compose.ui.text.SpanStyle
+import androidx.compose.ui.text.buildAnnotatedString
+import androidx.compose.ui.text.withStyle
 import androidx.compose.ui.focus.FocusRequester
 import androidx.compose.ui.focus.focusRequester
+import androidx.compose.ui.focus.onFocusChanged
+import androidx.compose.ui.platform.LocalFocusManager
+import androidx.activity.compose.BackHandler
+import androidx.compose.ui.input.key.KeyEventType
+import androidx.compose.ui.input.key.Key
+import androidx.compose.ui.input.key.key
+import androidx.compose.ui.input.key.onKeyEvent
+import androidx.compose.ui.input.key.type
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import io.github.darrindeyoung791.habitpulse.HabitPulseApplication
 import io.github.darrindeyoung791.habitpulse.R
@@ -62,6 +74,7 @@ import io.github.darrindeyoung791.habitpulse.data.model.RepeatCycle
 import io.github.darrindeyoung791.habitpulse.ui.theme.HabitPulseTheme
 import io.github.darrindeyoung791.habitpulse.ui.utils.rememberDebounceClickHandler
 import io.github.darrindeyoung791.habitpulse.viewmodel.HabitViewModel
+import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import java.util.UUID
@@ -99,10 +112,36 @@ fun HomeScreen(
 
     // 收集习惯列表状态（使用空列表作为初始值，但会通过 isLoading 控制显示）
     val habits by viewModel.habitsFlow.collectAsStateWithLifecycle(initialValue = emptyList())
+    // 收集搜索后的习惯列表
+    val filteredHabits by viewModel.filteredHabitsFlow.collectAsStateWithLifecycle(initialValue = emptyList())
     // 收集加载状态
     val isLoading by viewModel.isLoading.collectAsStateWithLifecycle(initialValue = true)
     // 收集新添加的习惯 ID（用于触发动画）
     val newlyAddedHabitId by viewModel.newlyAddedHabitId.collectAsStateWithLifecycle(initialValue = null)
+    // 收集搜索关键词
+    val searchQuery by viewModel.searchQuery.collectAsStateWithLifecycle(initialValue = "")
+
+    // 搜索状态（是否正在搜索）
+    var isSearchActive by remember { mutableStateOf(false) }
+    // 搜索焦点状态
+    var isSearchFocused by remember { mutableStateOf(false) }
+    val searchFocusRequester = remember { FocusRequester() }
+    val focusManager = LocalFocusManager.current
+
+    // 当搜索激活时，拦截系统返回键
+    BackHandler(enabled = isSearchActive) {
+        isSearchActive = false
+        viewModel.clearSearch()
+        focusManager.clearFocus()
+    }
+
+    // 当退出搜索模式时，清除搜索关键词
+    LaunchedEffect(isSearchActive) {
+        if (!isSearchActive) {
+            viewModel.clearSearch()
+            focusManager.clearFocus()
+        }
+    }
 
     // 当数据加载完成时，通知调用方
     LaunchedEffect(isLoading) {
@@ -222,30 +261,80 @@ fun HomeScreen(
                     ) {
                         CircularProgressIndicator()
                     }
-                } else if (habits.isEmpty()) {
-                    EmptyStateContent(
-                        modifier = modifier,
-                        onCreateHabit = {
-                            scope.launch {
-                                clickHandler.processClick {
-                                    onCreateHabit()
-                                }
+                } else {
+                    // 使用 Column 布局，搜索框和内容区域垂直排列
+                    Column(
+                        modifier = modifier.fillMaxSize()
+                    ) {
+                        // 搜索框 - 使用 AnimatedVisibility 带滑入/滑出动画
+                        // 搜索框的高度变化会自动推动下方内容
+                        AnimatedVisibility(
+                            visible = isSearchActive,
+                            enter = slideInVertically(
+                                initialOffsetY = { -it },
+                                animationSpec = spring(dampingRatio = 0.8f, stiffness = 200f)
+                            ) + fadeIn(animationSpec = tween(200)),
+                            exit = slideOutVertically(
+                                targetOffsetY = { -it },
+                                animationSpec = tween(200)
+                            ) + fadeOut(animationSpec = tween(200))
+                        ) {
+                            SearchBarFixed(
+                                searchQuery = searchQuery,
+                                onSearchQueryChange = { viewModel.setSearchQuery(it) },
+                                onClearSearch = { viewModel.clearSearch() },
+                                onBackClick = { isSearchActive = false },
+                                placeholder = stringResource(id = R.string.search_habits_hint),
+                                accessibilityLabel = stringResource(id = R.string.accessibility_search_habits),
+                                focusRequester = searchFocusRequester,
+                                isFocused = isSearchFocused,
+                                onFocusedChange = { isSearchFocused = it }
+                            )
+                        }
+
+                        // 内容区域 - 使用 animateContentSize 让列表项平滑移动
+                        Box(
+                            modifier = Modifier
+                                .weight(1f)
+                                .animateContentSize(
+                                    animationSpec = spring(dampingRatio = 0.8f, stiffness = 200f)
+                                )
+                        ) {
+                            if (filteredHabits.isEmpty() && searchQuery.isNotEmpty()) {
+                                // 搜索但无结果
+                                SearchEmptyState(
+                                    modifier = Modifier.fillMaxSize(),
+                                    onClearSearch = { viewModel.clearSearch() }
+                                )
+                            } else if (filteredHabits.isEmpty()) {
+                                // 所有习惯为空
+                                EmptyStateContent(
+                                    modifier = Modifier.fillMaxSize(),
+                                    onCreateHabit = {
+                                        scope.launch {
+                                            clickHandler.processClick {
+                                                onCreateHabit()
+                                            }
+                                        }
+                                    }
+                                )
+                            } else {
+                                HabitListContent(
+                                    modifier = Modifier.fillMaxSize(),
+                                    habits = filteredHabits,
+                                    onHabitClick = { onEditHabit(it) },
+                                    onCheckIn = { viewModel.incrementCompletionCount(it) },
+                                    onUndoCompletion = { viewModel.undoHabitCompletion(it) },
+                                    onDeleteHabit = { viewModel.deleteHabit(it) },
+                                    nestedScrollConnection = habitsScrollBehavior.nestedScrollConnection,
+                                    newlyAddedHabitId = newlyAddedHabitId,
+                                    listState = habitsScrollState,
+                                    forceTabletLandscape = forceTabletLandscape == true,
+                                    searchQuery = searchQuery
+                                )
                             }
                         }
-                    )
-                } else {
-                    HabitListContent(
-                        modifier = modifier,
-                        habits = habits,
-                        onHabitClick = { onEditHabit(it) },
-                        onCheckIn = { viewModel.incrementCompletionCount(it) },
-                        onUndoCompletion = { viewModel.undoHabitCompletion(it) },
-                        onDeleteHabit = { viewModel.deleteHabit(it) },
-                        nestedScrollConnection = habitsScrollBehavior.nestedScrollConnection,
-                        newlyAddedHabitId = newlyAddedHabitId,
-                        listState = habitsScrollState,
-                        forceTabletLandscape = forceTabletLandscape == true
-                    )
+                    }
                 }
             }
             HomeSection.Contacts -> {
@@ -282,7 +371,6 @@ fun HomeScreen(
 
         if (isRailVisible) {
             // Phone landscape: use TopAppBar
-            // TopAppBar handles its own insets (top for status bar, end for camera if needed)
             TopAppBar(
                 windowInsets = WindowInsets.safeDrawing.only(
                     if (isRailCutoutRight) WindowInsetsSides.Top + WindowInsetsSides.End else WindowInsetsSides.Top
@@ -296,12 +384,32 @@ fun HomeScreen(
                         modifier = Modifier
                             .focusRequester(titleFocusRequester)
                             .focusable()
-                            .semantics {
-                                heading()
-                            }
+                            .semantics { heading() }
                     )
                 },
                 actions = {
+                    // Search button - only show in Habits section
+                    if (currentSection == HomeSection.Habits) {
+                        IconButton(
+                            onClick = {
+                                if (isSearchActive) {
+                                    // 如果搜索框已显示，点击搜索按钮关闭搜索
+                                    isSearchActive = false
+                                    viewModel.clearSearch()
+                                    focusManager.clearFocus()
+                                } else {
+                                    // 否则打开搜索
+                                    isSearchActive = true
+                                    searchFocusRequester.requestFocus()
+                                }
+                            }
+                        ) {
+                            Icon(
+                                imageVector = Icons.Filled.Search,
+                                contentDescription = stringResource(id = R.string.accessibility_search_habits)
+                            )
+                        }
+                    }
                     IconButton(
                         onClick = {
                             scope.launch {
@@ -340,9 +448,7 @@ fun HomeScreen(
                             modifier = Modifier
                                 .focusRequester(titleFocusRequester)
                                 .focusable()
-                                .semantics {
-                                    heading()
-                                }
+                                .semantics { heading() }
                         )
                         // Subtitle - only show for Habits section when expanded
                         if (currentSection == HomeSection.Habits && collapsedFraction < 0.5f) {
@@ -357,6 +463,28 @@ fun HomeScreen(
                     }
                 },
                 actions = {
+                    // Search button - only show in Habits section
+                    if (currentSection == HomeSection.Habits) {
+                        IconButton(
+                            onClick = {
+                                if (isSearchActive) {
+                                    // 如果搜索框已显示，点击搜索按钮关闭搜索
+                                    isSearchActive = false
+                                    viewModel.clearSearch()
+                                    focusManager.clearFocus()
+                                } else {
+                                    // 否则打开搜索
+                                    isSearchActive = true
+                                    searchFocusRequester.requestFocus()
+                                }
+                            }
+                        ) {
+                            Icon(
+                                imageVector = Icons.Filled.Search,
+                                contentDescription = stringResource(id = R.string.accessibility_search_habits)
+                            )
+                        }
+                    }
                     IconButton(
                         onClick = {
                             scope.launch {
@@ -865,7 +993,8 @@ fun HabitListContent(
     nestedScrollConnection: androidx.compose.ui.input.nestedscroll.NestedScrollConnection? = null,
     newlyAddedHabitId: UUID? = null,
     listState: androidx.compose.foundation.lazy.LazyListState = remember { androidx.compose.foundation.lazy.LazyListState() },
-    forceTabletLandscape: Boolean = false
+    forceTabletLandscape: Boolean = false,
+    searchQuery: String = ""
 ) {
     val configuration = LocalConfiguration.current
     var screenWidthDp = configuration.screenWidthDp
@@ -915,7 +1044,8 @@ fun HabitListContent(
                                 onUndoCompletion = { onUndoCompletion(habit) },
                                 onEditHabit = { onHabitClick(habit) },
                                 onDeleteHabit = { onDeleteHabit(habit) },
-                                isNewlyAdded = (habit.id == newlyAddedHabitId)
+                                isNewlyAdded = (habit.id == newlyAddedHabitId),
+                                searchQuery = searchQuery
                             )
                         }
                     }
@@ -933,7 +1063,8 @@ fun HabitListContent(
                                 onUndoCompletion = { onUndoCompletion(habit) },
                                 onEditHabit = { onHabitClick(habit) },
                                 onDeleteHabit = { onDeleteHabit(habit) },
-                                isNewlyAdded = (habit.id == newlyAddedHabitId)
+                                isNewlyAdded = (habit.id == newlyAddedHabitId),
+                                searchQuery = searchQuery
                             )
                         }
                     }
@@ -965,7 +1096,8 @@ fun HabitListContent(
                     onUndoCompletion = { onUndoCompletion(habit) },
                     onEditHabit = { onHabitClick(habit) },
                     onDeleteHabit = { onDeleteHabit(habit) },
-                    isNewlyAdded = (habit.id == newlyAddedHabitId)
+                    isNewlyAdded = (habit.id == newlyAddedHabitId),
+                    searchQuery = searchQuery
                 )
             }
             // Add bottom spacer to prevent FAB from covering last item
@@ -986,7 +1118,8 @@ fun HabitCard(
     onEditHabit: () -> Unit,
     onDeleteHabit: () -> Unit,
     modifier: Modifier = Modifier,
-    isNewlyAdded: Boolean = false
+    isNewlyAdded: Boolean = false,
+    searchQuery: String = ""
 ) {
     var showMenu by remember { mutableStateOf(false) }
     var showReminderDialog by remember { mutableStateOf(false) }
@@ -1058,9 +1191,9 @@ fun HabitCard(
                         modifier = Modifier.weight(1f),
                         verticalArrangement = Arrangement.spacedBy(8.dp)
                     ) {
-                        // 习惯名称（大字体）
+                        // 习惯名称（大字体）- 支持搜索高亮
                         Text(
-                            text = habit.title,
+                            text = highlightText(habit.title, searchQuery),
                             style = MaterialTheme.typography.headlineSmall,
                             fontWeight = FontWeight.Bold,
                             color = MaterialTheme.colorScheme.onSurface,
@@ -1582,6 +1715,16 @@ private class FakeHabitDao : io.github.darrindeyoung791.habitpulse.data.database
     override fun getHabitCount(): kotlinx.coroutines.flow.Flow<Int> {
         return kotlinx.coroutines.flow.flowOf(habits.size)
     }
+
+    override fun searchHabitsFlow(query: String): kotlinx.coroutines.flow.Flow<List<io.github.darrindeyoung791.habitpulse.data.model.Habit>> {
+        val searchQuery = query.trim('%')
+        return kotlinx.coroutines.flow.flowOf(
+            habits.filter { habit ->
+                habit.title.contains(searchQuery, ignoreCase = true) ||
+                habit.notes.contains(searchQuery, ignoreCase = true)
+            }
+        )
+    }
 }
 
 @Preview
@@ -1722,4 +1865,196 @@ private class FakeHabitCompletionDao : io.github.darrindeyoung791.habitpulse.dat
     override suspend fun getCompletionCountByHabitId(habitId: java.util.UUID): Int {
         return completions.count { it.habitId == habitId }
     }
+}
+
+// ============= Search Bar Fixed =============
+
+/**
+ * Search bar fixed below TopAppBar
+ * Uses 16.dp horizontal padding to align with habit cards
+ * Does not overlap content - content scrolls underneath
+ */
+@Composable
+private fun SearchBarFixed(
+    searchQuery: String,
+    onSearchQueryChange: (String) -> Unit,
+    onClearSearch: () -> Unit,
+    onBackClick: () -> Unit,
+    placeholder: String,
+    accessibilityLabel: String,
+    focusRequester: FocusRequester,
+    isFocused: Boolean,
+    onFocusedChange: (Boolean) -> Unit
+) {
+    // Fixed height container with padding
+    Box(
+        modifier = Modifier
+            .fillMaxWidth()
+            .height(72.dp)  // 56dp search bar + 16dp vertical padding
+            .padding(vertical = 8.dp, horizontal = 16.dp)
+    ) {
+        Surface(
+            modifier = Modifier.fillMaxSize(),
+            shape = RoundedCornerShape(28.dp),
+            color = MaterialTheme.colorScheme.surfaceContainerHighest
+        ) {
+            Row(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .padding(horizontal = 8.dp),
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                // Back button to exit search
+                IconButton(
+                    onClick = onBackClick,
+                    modifier = Modifier.size(40.dp)
+                ) {
+                    Icon(
+                        imageVector = Icons.Default.ArrowBack,
+                        contentDescription = stringResource(id = R.string.settings_back),
+                        tint = MaterialTheme.colorScheme.onSurfaceVariant
+                    )
+                }
+
+                // Search text field
+                TextField(
+                    value = searchQuery,
+                    onValueChange = onSearchQueryChange,
+                    modifier = Modifier
+                        .weight(1f)
+                        .focusRequester(focusRequester)
+                        .onFocusChanged { onFocusedChange(it.isFocused) },
+                    placeholder = {
+                        Text(
+                            text = placeholder,
+                            maxLines = 1,
+                            overflow = TextOverflow.Ellipsis
+                        )
+                    },
+                    singleLine = true,
+                    colors = TextFieldDefaults.colors(
+                        focusedIndicatorColor = Color.Transparent,
+                        unfocusedIndicatorColor = Color.Transparent,
+                        focusedContainerColor = Color.Transparent,
+                        unfocusedContainerColor = Color.Transparent,
+                        focusedTextColor = MaterialTheme.colorScheme.onSurface,
+                        unfocusedTextColor = MaterialTheme.colorScheme.onSurface,
+                        focusedPlaceholderColor = MaterialTheme.colorScheme.onSurfaceVariant,
+                        unfocusedPlaceholderColor = MaterialTheme.colorScheme.onSurfaceVariant,
+                        cursorColor = MaterialTheme.colorScheme.primary
+                    ),
+                    textStyle = MaterialTheme.typography.bodyLarge.copy(lineHeight = 24.sp)
+                )
+
+                // Clear button
+                if (searchQuery.isNotEmpty()) {
+                    IconButton(
+                        onClick = onClearSearch,
+                        modifier = Modifier.size(40.dp)
+                    ) {
+                        Icon(
+                            imageVector = Icons.Filled.Clear,
+                            contentDescription = accessibilityLabel,
+                            tint = MaterialTheme.colorScheme.onSurfaceVariant
+                        )
+                    }
+                }
+            }
+        }
+    }
+
+    // Request focus when search bar appears
+    LaunchedEffect(Unit) {
+        focusRequester.requestFocus()
+    }
+}
+
+/**
+ * Empty state for search with no results
+ */
+@Composable
+private fun SearchEmptyState(
+    modifier: Modifier = Modifier,
+    onClearSearch: () -> Unit
+) {
+    Column(
+        modifier = modifier
+            .fillMaxSize()
+            .padding(16.dp),
+        horizontalAlignment = Alignment.CenterHorizontally,
+        verticalArrangement = Arrangement.Center
+    ) {
+        Icon(
+            imageVector = Icons.Outlined.Search,
+            contentDescription = null,
+            modifier = Modifier.size(80.dp),
+            tint = MaterialTheme.colorScheme.secondary
+        )
+
+        Spacer(modifier = Modifier.height(24.dp))
+
+        Text(
+            text = stringResource(id = R.string.search_no_results),
+            style = MaterialTheme.typography.titleLarge.copy(fontWeight = FontWeight.Normal),
+            color = MaterialTheme.colorScheme.onSurface
+        )
+
+        Spacer(modifier = Modifier.height(8.dp))
+
+        Text(
+            text = stringResource(id = R.string.search_no_results_description),
+            style = MaterialTheme.typography.bodyMedium,
+            color = MaterialTheme.colorScheme.onSurfaceVariant
+        )
+
+        Spacer(modifier = Modifier.height(16.dp))
+
+        TextButton(onClick = onClearSearch) {
+            Text(
+                text = stringResource(id = R.string.accessibility_clear_search),
+                style = MaterialTheme.typography.bodyMedium.copy(fontWeight = FontWeight.Normal),
+                color = MaterialTheme.colorScheme.primary
+            )
+        }
+    }
+}
+
+// ============= Search Highlight Helpers =============
+
+/**
+ * Highlight matched text in the given text
+ */
+@Composable
+private fun highlightText(text: String, query: String): AnnotatedString {
+    if (query.isBlank()) {
+        return AnnotatedString(text)
+    }
+
+    val annotatedString = buildAnnotatedString {
+        var startIndex = 0
+        val lowerCaseText = text.lowercase()
+        val lowerCaseQuery = query.lowercase()
+
+        while (startIndex < text.length) {
+            val matchIndex = lowerCaseText.indexOf(lowerCaseQuery, startIndex)
+            if (matchIndex == -1) {
+                append(text.substring(startIndex))
+                break
+            }
+
+            // Append text before match
+            if (matchIndex > startIndex) {
+                append(text.substring(startIndex, matchIndex))
+            }
+
+            // Append matched text with highlight style
+            withStyle(style = SpanStyle(background = MaterialTheme.colorScheme.primaryContainer)) {
+                append(text.substring(matchIndex, matchIndex + query.length))
+            }
+
+            startIndex = matchIndex + query.length
+        }
+    }
+
+    return annotatedString
 }

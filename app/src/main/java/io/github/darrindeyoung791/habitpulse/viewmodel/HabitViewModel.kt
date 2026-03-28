@@ -7,10 +7,13 @@ import io.github.darrindeyoung791.habitpulse.HabitPulseApplication
 import io.github.darrindeyoung791.habitpulse.data.model.Habit
 import io.github.darrindeyoung791.habitpulse.data.model.HabitCompletion
 import io.github.darrindeyoung791.habitpulse.data.repository.HabitRepository
+import kotlinx.coroutines.FlowPreview
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.combine
+import kotlinx.coroutines.flow.debounce
 import kotlinx.coroutines.flow.onEach
 import kotlinx.coroutines.launch
 import java.util.UUID
@@ -73,6 +76,34 @@ class HabitViewModel(
      */
     private val _newlyAddedHabitId = MutableStateFlow<UUID?>(null)
     val newlyAddedHabitId: StateFlow<UUID?> = _newlyAddedHabitId.asStateFlow()
+
+    // ============= Search =============
+
+    /**
+     * 搜索关键词
+     */
+    private val _searchQuery = MutableStateFlow("")
+    val searchQuery: StateFlow<String> = _searchQuery.asStateFlow()
+
+    /**
+     * 搜索后的习惯列表（根据搜索关键词过滤）
+     * 当搜索词为空时返回所有习惯，否则返回搜索结果
+     */
+    @OptIn(FlowPreview::class)
+    val filteredHabitsFlow: Flow<List<Habit>> = _searchQuery
+        .debounce(200)  // 200ms debounce to avoid excessive queries
+        .combine(repository.allHabitsFlow) { query, allHabits ->
+            if (query.isNullOrBlank()) {
+                allHabits
+            } else {
+                // Client-side search for simplicity and responsiveness
+                val searchQuery = query.trim()
+                allHabits.filter { habit ->
+                    habit.title.contains(searchQuery, ignoreCase = true) ||
+                    habit.notes.contains(searchQuery, ignoreCase = true)
+                }
+            }
+        }
 
     // ============= Data Operations =============
 
@@ -207,6 +238,20 @@ class HabitViewModel(
      */
     fun resetNewlyAddedHabitId() {
         _newlyAddedHabitId.value = null
+    }
+
+    /**
+     * 设置搜索关键词
+     */
+    fun setSearchQuery(query: String) {
+        _searchQuery.value = query
+    }
+
+    /**
+     * 清除搜索关键词
+     */
+    fun clearSearch() {
+        _searchQuery.value = ""
     }
 
     /**

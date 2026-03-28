@@ -1331,6 +1331,16 @@ private class FakeHabitDaoForCreation : io.github.darrindeyoung791.habitpulse.da
     override fun getHabitCount(): kotlinx.coroutines.flow.Flow<Int> {
         return kotlinx.coroutines.flow.flowOf(habits.size)
     }
+
+    override fun searchHabitsFlow(query: String): kotlinx.coroutines.flow.Flow<List<io.github.darrindeyoung791.habitpulse.data.model.Habit>> {
+        val searchQuery = query.trim('%')
+        return kotlinx.coroutines.flow.flowOf(
+            habits.filter { habit ->
+                habit.title.contains(searchQuery, ignoreCase = true) ||
+                habit.notes.contains(searchQuery, ignoreCase = true)
+            }
+        )
+    }
 }
 
 /**

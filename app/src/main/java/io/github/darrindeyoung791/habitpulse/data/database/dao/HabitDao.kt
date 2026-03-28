@@ -102,4 +102,11 @@ interface HabitDao {
      */
     @Query("SELECT COUNT(*) FROM habits")
     fun getHabitCount(): Flow<Int>
+
+    /**
+     * 搜索习惯（根据标题或备注）
+     * @param query 搜索关键词，使用 LIKE 匹配（自动添加 % 通配符）
+     */
+    @Query("SELECT * FROM habits WHERE title LIKE :query OR notes LIKE :query ORDER BY createdDate DESC")
+    fun searchHabitsFlow(query: String): Flow<List<Habit>>
 }
