@@ -138,6 +138,12 @@
     <string name="records_no_completions_description">所选习惯还没有打卡记录</string>
     <string name="records_completion_sequence">第 %d 次打卡</string>
     <string name="records_card_content_description">%1$s，第 %2$d 次打卡，%3$s %4$s 完成</string>
+    <string name="records_jump_to_date">跳转到日期</string>
+    <string name="records_selected_date">已选择：%s</string>
+    <string name="records_clear_date">清除日期</string>
+    <string name="records_date_picker_title">选择日期</string>
+    <string name="records_date_picker_confirm">确定</string>
+    <string name="records_date_picker_dismiss">取消</string>
     
     <!-- Relative dates -->
     <string name="records_date_today">今天</string>

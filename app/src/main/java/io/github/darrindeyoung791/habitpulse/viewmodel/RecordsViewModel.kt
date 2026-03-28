@@ -13,6 +13,7 @@ import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.onEach
+import java.time.LocalDate
 import java.util.UUID
 
 /**
@@ -48,6 +49,18 @@ class RecordsViewModel(
     val isLoading: StateFlow<Boolean> = _isLoading.asStateFlow()
 
     /**
+     * 当前选中的日期（用于过滤），null 表示不过滤日期
+     */
+    private val _selectedDate = MutableStateFlow<LocalDate?>(null)
+    val selectedDate: StateFlow<LocalDate?> = _selectedDate.asStateFlow()
+
+    /**
+     * 日期选择器是否展开
+     */
+    private val _datePickerExpanded = MutableStateFlow(false)
+    val datePickerExpanded: StateFlow<Boolean> = _datePickerExpanded.asStateFlow()
+
+    /**
      * 打卡记录列表（按时间倒序）
      * 包含 HabitCompletion 和对应的 Habit 信息
      */
@@ -72,17 +85,18 @@ class RecordsViewModel(
 
     /**
      * 合并后的打卡记录 Flow（按日期分组）
-     * 根据选中的习惯 ID 过滤记录
+     * 根据选中的习惯 ID 和日期过滤记录
      */
     val groupedRecordsFlow: Flow<List<DateGroup>> = combine(
         habitsFlow,
-        _selectedHabitId
-    ) { habits, selectedId ->
+        _selectedHabitId,
+        _selectedDate
+    ) { habits, selectedId, selectedDate ->
         // 首次加载时设置 loading 状态
         if (!hasLoadedData) {
             _isLoading.value = true
         }
-        
+
         // 获取所有打卡记录
         val allCompletions = habits.flatMap { habit ->
             repository.getCompletionsByHabitId(habit.id)
@@ -91,10 +105,18 @@ class RecordsViewModel(
         val sortedCompletions = allCompletions.sortedByDescending { it.completedDate }
 
         // 根据选中的习惯 ID 过滤
-        val filteredCompletions = if (selectedId == null) {
+        val filteredByHabit = if (selectedId == null) {
             sortedCompletions
         } else {
             sortedCompletions.filter { it.habitId == selectedId }
+        }
+
+        // 根据选中的日期过滤
+        val filteredCompletions = if (selectedDate == null) {
+            filteredByHabit
+        } else {
+            val dateStr = selectedDate.toString() // yyyy-MM-dd format
+            filteredByHabit.filter { it.completedDateLocal == dateStr }
         }
 
         // 合并 Habit 信息并按日期分组
@@ -115,7 +137,7 @@ class RecordsViewModel(
         records.groupBy { it.completion.completedDateLocal }
             .map { (date, recordsForDate) -> DateGroup(date, recordsForDate) }
             .sortedByDescending { it.date }
-    }.onEach { 
+    }.onEach {
         _isLoading.value = false
         hasLoadedData = true
     }
@@ -164,6 +186,28 @@ class RecordsViewModel(
      */
     fun setDropdownExpanded(expanded: Boolean) {
         _dropdownExpanded.value = expanded
+    }
+
+    /**
+     * 选择日期
+     * @param date 日期，null 表示清除日期选择
+     */
+    fun selectDate(date: LocalDate?) {
+        _selectedDate.value = date
+    }
+
+    /**
+     * 清除日期选择
+     */
+    fun clearDate() {
+        _selectedDate.value = null
+    }
+
+    /**
+     * 设置日期选择器展开状态
+     */
+    fun setDatePickerExpanded(expanded: Boolean) {
+        _datePickerExpanded.value = expanded
     }
 
     /**

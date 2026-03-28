@@ -1,25 +1,66 @@
 package io.github.darrindeyoung791.habitpulse.ui.screens
 
+import androidx.compose.animation.core.animateDpAsState
 import androidx.compose.foundation.LocalIndication
+import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.interaction.MutableInteractionSource
-import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.interaction.collectIsPressedAsState
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.PaddingValues
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxHeight
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyListState
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ArrowDropDown
 import androidx.compose.material.icons.filled.Check
-import androidx.compose.material3.*
-import androidx.compose.runtime.*
+import androidx.compose.material.icons.filled.Close
+import androidx.compose.material.icons.outlined.CalendarToday
+import androidx.compose.material3.Card
+import androidx.compose.material3.CardDefaults
+import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.material3.DatePicker
+import androidx.compose.material3.DatePickerDialog
+import androidx.compose.material3.DropdownMenu
+import androidx.compose.material3.DropdownMenuItem
+import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.FilterChip
+import androidx.compose.material3.FilterChipDefaults
+import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Surface
+import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
+import androidx.compose.material3.TopAppBarScrollBehavior
+import androidx.compose.material3.rememberDatePickerState
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.input.nestedscroll.nestedScroll
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
-import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.onClick
+import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
@@ -30,15 +71,19 @@ import io.github.darrindeyoung791.habitpulse.R
 import io.github.darrindeyoung791.habitpulse.data.model.Habit
 import io.github.darrindeyoung791.habitpulse.data.model.HabitCompletion
 import io.github.darrindeyoung791.habitpulse.data.model.RepeatCycle
+import io.github.darrindeyoung791.habitpulse.data.repository.HabitRepository
 import io.github.darrindeyoung791.habitpulse.ui.theme.HabitPulseTheme
 import io.github.darrindeyoung791.habitpulse.viewmodel.RecordsViewModel
 import java.text.SimpleDateFormat
-import java.util.*
-import kotlin.math.absoluteValue
+import java.time.LocalDate
+import java.time.format.DateTimeFormatter
+import java.util.Calendar
+import java.util.Date
+import java.util.Locale
+import java.util.UUID
 
 /**
- * 重置加载状态以确保切换时显示加载指示器过渡
- * 使用 LaunchedEffect 在每次进入 Records 屏幕时触发
+ * 重置加载状态
  */
 @Composable
 private fun ResetLoadingStateOnEnter(viewModel: RecordsViewModel) {
@@ -49,14 +94,12 @@ private fun ResetLoadingStateOnEnter(viewModel: RecordsViewModel) {
 
 /**
  * 格式化相对日期
- * 返回如：今天、昨天、2 天前、上周三、3 周前、2 个月前、1 年前等
  */
 @Composable
 fun formatRelativeDate(date: Date): String {
     val now = Calendar.getInstance()
     val then = Calendar.getInstance().apply { time = date }
 
-    // 清除时间部分，只比较日期
     now.set(Calendar.HOUR_OF_DAY, 0)
     now.set(Calendar.MINUTE, 0)
     now.set(Calendar.SECOND, 0)
@@ -66,11 +109,9 @@ fun formatRelativeDate(date: Date): String {
     then.set(Calendar.SECOND, 0)
     then.set(Calendar.MILLISECOND, 0)
 
-    // 先计算月份差异（更准确）
     var yearDiff = now.get(Calendar.YEAR) - then.get(Calendar.YEAR)
     var monthDiff = now.get(Calendar.MONTH) - then.get(Calendar.MONTH)
-    
-    // 调整：如果当前日期的日期小于目标日期，需要借一个月
+
     if (now.get(Calendar.DAY_OF_MONTH) < then.get(Calendar.DAY_OF_MONTH)) {
         monthDiff -= 1
         if (monthDiff < 0) {
@@ -78,28 +119,23 @@ fun formatRelativeDate(date: Date): String {
             yearDiff -= 1
         }
     }
-    
+
     val totalMonths = yearDiff * 12 + monthDiff
-    
-    // 计算天数差异（用于短期显示）
     val daysDiff = ((now.timeInMillis - then.timeInMillis) / (24 * 60 * 60 * 1000)).toInt()
 
     return when {
-        // 短期：按天显示
         daysDiff == 0 -> stringResource(id = R.string.records_date_today)
         daysDiff == 1 -> stringResource(id = R.string.records_date_yesterday)
         daysDiff in 2..6 -> stringResource(id = R.string.records_date_days_ago, daysDiff)
         daysDiff == 7 -> stringResource(id = R.string.records_date_last_week)
         daysDiff in 8..13 -> {
-            val dayOfWeek = then.getDisplayName(Calendar.DAY_OF_WEEK, Calendar.LONG, Locale.getDefault())
+            then.getDisplayName(Calendar.DAY_OF_WEEK, Calendar.LONG, Locale.getDefault())
                 ?: then.getDisplayName(Calendar.DAY_OF_WEEK, Calendar.SHORT, Locale.getDefault())
-            dayOfWeek
         }
         daysDiff < 28 -> {
             val weeks = daysDiff / 7
             stringResource(id = R.string.records_date_weeks_ago, weeks)
         }
-        // 长期：按月/年显示（优先使用月份计算）
         totalMonths <= 0 -> stringResource(id = R.string.records_date_last_month)
         totalMonths < 12 -> stringResource(id = R.string.records_date_months_ago, totalMonths)
         totalMonths == 12 -> stringResource(id = R.string.records_date_last_year)
@@ -111,13 +147,7 @@ fun formatRelativeDate(date: Date): String {
 }
 
 /**
- * 记录页面内容组件（由 HomeScreen 嵌入使用）
- * 不包含 Scaffold 和 TopAppBar，由父组件管理
- *
- * @param modifier 修饰符
- * @param application 应用程序实例
- * @param scrollBehavior 滚动行为（用于 TopAppBar 联动）
- * @param listState 列表滚动状态（用于保存滚动位置）
+ * 记录页面内容组件
  */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -127,37 +157,28 @@ fun RecordsScreenContent(
     scrollBehavior: TopAppBarScrollBehavior? = null,
     listState: LazyListState = remember { LazyListState() }
 ) {
-    // 获取 ViewModel - 使用 Application 中的单例
     val viewModel: RecordsViewModel = if (application != null) {
         application.recordsViewModel
     } else {
-        // Preview mode
         remember {
             val fakeHabitDao = FakeHabitDaoForRecords()
             val fakeCompletionDao = FakeHabitCompletionDaoForRecords()
-            val fakeRepository = io.github.darrindeyoung791.habitpulse.data.repository.HabitRepository(
-                fakeHabitDao,
-                fakeCompletionDao
-            )
+            val fakeRepository = HabitRepository(fakeHabitDao, fakeCompletionDao)
             RecordsViewModel(fakeRepository)
         }
     }
 
-    // 每次进入屏幕时重置加载状态，确保显示加载指示器过渡
     ResetLoadingStateOnEnter(viewModel)
 
-    // 收集状态
-    val groupedRecords by viewModel.groupedRecordsFlow.collectAsStateWithLifecycle(
-        initialValue = emptyList()
-    )
+    // Collect ViewModel states
+    val groupedRecords by viewModel.groupedRecordsFlow.collectAsStateWithLifecycle(initialValue = emptyList())
     val selectedHabitId by viewModel.selectedHabitId.collectAsStateWithLifecycle()
-    val dropdownExpanded by viewModel.dropdownExpanded.collectAsStateWithLifecycle()
-    val habitOptions by viewModel.habitOptionsFlow.collectAsStateWithLifecycle(
-        initialValue = emptyList()
-    )
+    val habitOptions by viewModel.habitOptionsFlow.collectAsStateWithLifecycle(initialValue = emptyList())
     val isLoading by viewModel.isLoading.collectAsStateWithLifecycle(initialValue = true)
+    val selectedDate by viewModel.selectedDate.collectAsStateWithLifecycle()
+    val datePickerExpanded by viewModel.datePickerExpanded.collectAsStateWithLifecycle()
 
-    // 获取当前选中的习惯显示名称
+    // Get selected habit name for display
     val selectedHabitName = habitOptions.find { option ->
         when (option) {
             is RecordsViewModel.HabitOption.AllHabits -> selectedHabitId == null
@@ -170,8 +191,7 @@ fun RecordsScreenContent(
         }
     } ?: stringResource(id = R.string.records_all_habits)
 
-    // 格式化日期
-    val context = LocalContext.current
+    // Date formatters
     val dateFormatPattern = stringResource(id = R.string.records_date_format)
     val timeFormatPattern = stringResource(id = R.string.records_time_format)
     val displayDateFormat = remember(dateFormatPattern) {
@@ -181,140 +201,352 @@ fun RecordsScreenContent(
         SimpleDateFormat(timeFormatPattern, Locale.getDefault())
     }
 
-    // 应用 nested scroll
+    // Apply nested scroll
     val nestedScrollModifier = scrollBehavior?.let { modifier.nestedScroll(it.nestedScrollConnection) } ?: modifier
 
-    if (isLoading) {
-        // 加载状态
-        Box(
-            modifier = nestedScrollModifier.fillMaxSize(),
-            contentAlignment = Alignment.Center
-        ) {
-            CircularProgressIndicator()
-        }
-    } else if (groupedRecords.isEmpty()) {
-        // 空状态
-        EmptyRecordsContent(
-            modifier = nestedScrollModifier.fillMaxSize()
+    Column(
+        modifier = nestedScrollModifier.fillMaxSize()
+    ) {
+        // === Filter Bar Section - Always Visible ===
+        FilterBarSection(
+            selectedHabitName = selectedHabitName,
+            habitOptions = habitOptions,
+            selectedHabitId = selectedHabitId,
+            onHabitSelected = { viewModel.selectHabit(it) },
+            selectedDate = selectedDate,
+            onDateSelected = { viewModel.setDatePickerExpanded(true) },
+            onDateCleared = { viewModel.clearDate() }
         )
-    } else {
-        // 记录列表（按日期分组）
-        LazyColumn(
-            modifier = nestedScrollModifier.fillMaxSize(),
-            state = listState,
-            contentPadding = PaddingValues(horizontal = 16.dp, vertical = 8.dp),
-            verticalArrangement = Arrangement.spacedBy(4.dp)
-        ) {
-            // 顶部添加下拉菜单区域
-            item(key = "dropdown_header") {
-                Spacer(modifier = Modifier.height(8.dp))
-                // 习惯选择下拉菜单
-                ExposedDropdownMenuBox(
-                    expanded = dropdownExpanded,
-                    onExpandedChange = { viewModel.setDropdownExpanded(it) }
+
+        // === Content Section ===
+        when {
+            isLoading -> {
+                Box(
+                    modifier = Modifier.fillMaxSize(),
+                    contentAlignment = Alignment.Center
                 ) {
-                    Row(
-                        modifier = Modifier
-                            .menuAnchor()
-                            .clickable { viewModel.setDropdownExpanded(true) }
-                            .padding(horizontal = 12.dp, vertical = 8.dp),
-                        verticalAlignment = Alignment.CenterVertically
-                    ) {
-                        Text(
-                            text = selectedHabitName,
-                            style = MaterialTheme.typography.bodyLarge,
-                            maxLines = 1,
-                            overflow = TextOverflow.Ellipsis,
-                            modifier = Modifier.weight(1f),
-                            color = MaterialTheme.colorScheme.onSurface
-                        )
-                        Icon(
-                            imageVector = Icons.Filled.ArrowDropDown,
-                            contentDescription = stringResource(id = R.string.records_select_habit),
-                            tint = MaterialTheme.colorScheme.onSurfaceVariant
-                        )
-                    }
+                    CircularProgressIndicator()
+                }
+            }
+            groupedRecords.isEmpty() -> {
+                EmptyRecordsContent(
+                    modifier = Modifier.fillMaxSize()
+                )
+            }
+            else -> {
+                LazyColumn(
+                    modifier = Modifier.fillMaxSize(),
+                    state = listState,
+                    contentPadding = PaddingValues(horizontal = 16.dp, vertical = 8.dp),
+                    verticalArrangement = Arrangement.spacedBy(4.dp)
+                ) {
+                    groupedRecords.forEach { dateGroup ->
+                        item(key = "header_${dateGroup.date}") {
+                            DateSectionHeader(
+                                date = dateGroup.date,
+                                dateFormat = displayDateFormat,
+                                modifier = Modifier.fillMaxWidth()
+                            )
+                        }
 
-                    ExposedDropdownMenu(
-                        expanded = dropdownExpanded,
-                        onDismissRequest = { viewModel.setDropdownExpanded(false) }
-                    ) {
-                        habitOptions.forEach { option ->
-                            val isSelected = when (option) {
-                                is RecordsViewModel.HabitOption.AllHabits -> selectedHabitId == null
-                                is RecordsViewModel.HabitOption.SpecificHabit -> option.habit.id == selectedHabitId
-                            }
-
-                            DropdownMenuItem(
-                                text = {
-                                    Row(
-                                        verticalAlignment = Alignment.CenterVertically,
-                                        modifier = Modifier.fillMaxWidth()
-                                    ) {
-                                        Text(
-                                            text = when (option) {
-                                                is RecordsViewModel.HabitOption.AllHabits ->
-                                                    stringResource(id = R.string.records_all_habits)
-                                                is RecordsViewModel.HabitOption.SpecificHabit ->
-                                                    option.habit.title
-                                            },
-                                            modifier = Modifier.weight(1f),
-                                            maxLines = 1,
-                                            overflow = TextOverflow.Ellipsis
-                                        )
-                                        if (isSelected) {
-                                            Icon(
-                                                imageVector = Icons.Filled.Check,
-                                                contentDescription = null,
-                                                modifier = Modifier.size(24.dp),
-                                                tint = MaterialTheme.colorScheme.primary
-                                            )
-                                        }
-                                    }
-                                },
-                                onClick = {
-                                    val habitId = when (option) {
-                                        is RecordsViewModel.HabitOption.AllHabits -> null
-                                        is RecordsViewModel.HabitOption.SpecificHabit -> option.habit.id
-                                    }
-                                    viewModel.selectHabit(habitId)
-                                    viewModel.setDropdownExpanded(false)
-                                }
+                        items(
+                            items = dateGroup.records,
+                            key = { it.completion.id }
+                        ) { record ->
+                            CompletionRecordCard(
+                                completion = record.completion,
+                                habitTitle = record.habit.title,
+                                timeFormat = timeFormat,
+                                completionSequence = record.completionSequence,
+                                modifier = Modifier.fillMaxWidth()
                             )
                         }
                     }
-                }
-                Spacer(modifier = Modifier.height(8.dp))
-            }
 
-            groupedRecords.forEach { dateGroup ->
-                // 日期头部
-                item(key = "header_${dateGroup.date}") {
-                    DateSectionHeader(
-                        date = dateGroup.date,
-                        dateFormat = displayDateFormat,
-                        modifier = Modifier.fillMaxWidth()
-                    )
-                }
-
-                // 该日期的记录
-                items(
-                    items = dateGroup.records,
-                    key = { it.completion.id }
-                ) { record ->
-                    CompletionRecordCard(
-                        completion = record.completion,
-                        habitTitle = record.habit.title,
-                        timeFormat = timeFormat,
-                        completionSequence = record.completionSequence,
-                        modifier = Modifier.fillMaxWidth()
-                    )
+                    item {
+                        Spacer(modifier = Modifier.height(100.dp))
+                    }
                 }
             }
+        }
+    }
 
-            // 底部添加空白防止最后一条记录被遮挡
-            item {
-                Spacer(modifier = Modifier.height(100.dp))
+    // Date Picker Dialog
+    if (datePickerExpanded) {
+        val datePickerState = rememberDatePickerState(
+            initialSelectedDateMillis = selectedDate?.atStartOfDay()?.toInstant(java.time.ZoneOffset.UTC)?.toEpochMilli()
+                ?: System.currentTimeMillis()
+        )
+
+        DatePickerDialog(
+            onDismissRequest = { viewModel.setDatePickerExpanded(false) },
+            confirmButton = {
+                TextButton(
+                    onClick = {
+                        datePickerState.selectedDateMillis?.let { millis ->
+                            val date = LocalDate.ofInstant(
+                                java.time.Instant.ofEpochMilli(millis),
+                                java.time.ZoneId.systemDefault()
+                            )
+                            viewModel.selectDate(date)
+                        }
+                        viewModel.setDatePickerExpanded(false)
+                    }
+                ) {
+                    Text(text = stringResource(id = R.string.records_date_picker_confirm))
+                }
+            },
+            dismissButton = {
+                TextButton(
+                    onClick = { viewModel.setDatePickerExpanded(false) }
+                ) {
+                    Text(text = stringResource(id = R.string.records_date_picker_dismiss))
+                }
+            }
+        ) {
+            DatePicker(state = datePickerState)
+        }
+    }
+}
+
+/**
+ * 过滤栏区域 - 包含习惯选择和日期选择
+ */
+@Composable
+fun FilterBarSection(
+    selectedHabitName: String,
+    habitOptions: List<RecordsViewModel.HabitOption>,
+    selectedHabitId: UUID?,
+    onHabitSelected: (UUID?) -> Unit,
+    selectedDate: LocalDate?,
+    onDateSelected: () -> Unit,
+    onDateCleared: () -> Unit
+) {
+    Column(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(vertical = 8.dp),
+        verticalArrangement = Arrangement.spacedBy(8.dp)
+    ) {
+        // Row 1: Filter controls - Left aligned with items close together
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(horizontal = 16.dp),
+            horizontalArrangement = Arrangement.Start,
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            // Habit Selector
+            HabitSelectorChip(
+                selectedHabitName = selectedHabitName,
+                habitOptions = habitOptions,
+                selectedHabitId = selectedHabitId,
+                onHabitSelected = onHabitSelected
+            )
+
+            Spacer(modifier = Modifier.width(8.dp))
+
+            // Date Picker Button
+            JumpToDateButton(
+                selectedDate = selectedDate,
+                onDateSelected = onDateSelected,
+                onDateCleared = onDateCleared
+            )
+        }
+    }
+}
+
+/**
+ * 习惯选择器 Chip
+ */
+@Composable
+fun HabitSelectorChip(
+    selectedHabitName: String,
+    habitOptions: List<RecordsViewModel.HabitOption>,
+    selectedHabitId: UUID?,
+    onHabitSelected: (UUID?) -> Unit
+) {
+    var expanded by remember { mutableStateOf(false) }
+
+    Box {
+        FilterChip(
+            selected = false,
+            onClick = { expanded = true },
+            label = {
+                Row(
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.spacedBy(4.dp)
+                ) {
+                    Text(
+                        text = selectedHabitName,
+                        maxLines = 1,
+                        overflow = TextOverflow.Ellipsis,
+                        style = MaterialTheme.typography.labelLarge
+                    )
+                    Icon(
+                        imageVector = Icons.Filled.ArrowDropDown,
+                        contentDescription = stringResource(id = R.string.records_select_habit),
+                        modifier = Modifier.size(18.dp)
+                    )
+                }
+            },
+            leadingIcon = {
+                Icon(
+                    imageVector = Icons.Filled.Check,
+                    contentDescription = null,
+                    modifier = Modifier.size(18.dp)
+                )
+            },
+            colors = FilterChipDefaults.filterChipColors(
+                selectedContainerColor = MaterialTheme.colorScheme.primaryContainer,
+                selectedLabelColor = MaterialTheme.colorScheme.onPrimaryContainer
+            ),
+            modifier = Modifier.height(40.dp)
+        )
+
+        DropdownMenu(
+            expanded = expanded,
+            onDismissRequest = { expanded = false }
+        ) {
+            habitOptions.forEach { option ->
+                val isSelected = when (option) {
+                    is RecordsViewModel.HabitOption.AllHabits -> selectedHabitId == null
+                    is RecordsViewModel.HabitOption.SpecificHabit -> option.habit.id == selectedHabitId
+                }
+
+                DropdownMenuItem(
+                    text = {
+                        Row(
+                            verticalAlignment = Alignment.CenterVertically,
+                            modifier = Modifier.fillMaxWidth()
+                        ) {
+                            Text(
+                                text = when (option) {
+                                    is RecordsViewModel.HabitOption.AllHabits ->
+                                        stringResource(id = R.string.records_all_habits)
+                                    is RecordsViewModel.HabitOption.SpecificHabit ->
+                                        option.habit.title
+                                },
+                                modifier = Modifier.weight(1f),
+                                maxLines = 1,
+                                overflow = TextOverflow.Ellipsis
+                            )
+                            if (isSelected) {
+                                Icon(
+                                    imageVector = Icons.Filled.Check,
+                                    contentDescription = null,
+                                    modifier = Modifier.size(24.dp),
+                                    tint = MaterialTheme.colorScheme.primary
+                                )
+                            }
+                        }
+                    },
+                    onClick = {
+                        val habitId = when (option) {
+                            is RecordsViewModel.HabitOption.AllHabits -> null
+                            is RecordsViewModel.HabitOption.SpecificHabit -> option.habit.id
+                        }
+                        onHabitSelected(habitId)
+                        expanded = false
+                    }
+                )
+            }
+        }
+    }
+}
+
+/**
+ * 跳转到日期按钮 - 使用醒目样式
+ */
+@Composable
+fun JumpToDateButton(
+    selectedDate: LocalDate?,
+    onDateSelected: () -> Unit,
+    onDateCleared: () -> Unit
+) {
+    val interactionSource = remember { MutableInteractionSource() }
+    val isPressed by interactionSource.collectIsPressedAsState()
+
+    // 按压时圆角变大动画（从 8dp 到 24dp）
+    val cornerSize = animateDpAsState(
+        targetValue = if (isPressed) 24.dp else 8.dp,
+        label = "cornerSize"
+    )
+
+    if (selectedDate != null) {
+        // 已选择日期状态 - 使用 secondaryContainer 强调色
+        val dateFormatter = remember { DateTimeFormatter.ofPattern("yyyy-MM-dd") }
+        val dateStr = selectedDate.format(dateFormatter)
+
+        Surface(
+            modifier = Modifier
+                .height(40.dp)
+                .clip(RoundedCornerShape(cornerSize.value)),
+            color = MaterialTheme.colorScheme.secondaryContainer,
+            contentColor = MaterialTheme.colorScheme.onSecondaryContainer
+        ) {
+            Row(
+                modifier = Modifier
+                    .fillMaxHeight()
+                    .padding(horizontal = 12.dp),
+                horizontalArrangement = Arrangement.spacedBy(6.dp),
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Icon(
+                    imageVector = Icons.Outlined.CalendarToday,
+                    contentDescription = null,
+                    modifier = Modifier.size(18.dp),
+                    tint = MaterialTheme.colorScheme.onSecondaryContainer
+                )
+                Text(
+                    text = stringResource(id = R.string.records_selected_date, dateStr),
+                    style = MaterialTheme.typography.labelLarge,
+                    maxLines = 1
+                )
+                IconButton(
+                    onClick = onDateCleared,
+                    modifier = Modifier.size(24.dp)
+                ) {
+                    Icon(
+                        imageVector = Icons.Filled.Close,
+                        contentDescription = stringResource(id = R.string.records_clear_date),
+                        modifier = Modifier.size(16.dp),
+                        tint = MaterialTheme.colorScheme.onSecondaryContainer
+                    )
+                }
+            }
+        }
+    } else {
+        // 未选择日期状态 - 使用 primaryContainer 主色
+        Surface(
+            modifier = Modifier
+                .height(40.dp)
+                .clip(RoundedCornerShape(cornerSize.value))
+                .clickable(
+                    interactionSource = interactionSource,
+                    indication = null,
+                    onClick = onDateSelected
+                ),
+            color = MaterialTheme.colorScheme.primaryContainer,
+            contentColor = MaterialTheme.colorScheme.onPrimaryContainer
+        ) {
+            Row(
+                modifier = Modifier
+                    .fillMaxHeight()
+                    .padding(horizontal = 12.dp),
+                horizontalArrangement = Arrangement.spacedBy(6.dp),
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Icon(
+                    imageVector = Icons.Outlined.CalendarToday,
+                    contentDescription = null,
+                    modifier = Modifier.size(18.dp),
+                    tint = MaterialTheme.colorScheme.onPrimaryContainer
+                )
+                Text(
+                    text = stringResource(id = R.string.records_jump_to_date),
+                    style = MaterialTheme.typography.labelLarge
+                )
             }
         }
     }
@@ -325,7 +557,7 @@ fun RecordsScreenContent(
  */
 @Composable
 fun DateSectionHeader(
-    date: String, // yyyy-MM-dd format
+    date: String,
     dateFormat: SimpleDateFormat,
     modifier: Modifier = Modifier
 ) {
@@ -343,14 +575,13 @@ fun DateSectionHeader(
             .fillMaxWidth()
             .padding(vertical = 12.dp)
     ) {
-        // 相对日期（醒目）
         Text(
             text = dateObj?.let { formatRelativeDate(it) } ?: date,
             style = MaterialTheme.typography.titleSmall,
             fontWeight = FontWeight.SemiBold,
             color = MaterialTheme.colorScheme.primary
         )
-        // 完整日期（次要）
+        Spacer(modifier = Modifier.height(2.dp))
         Text(
             text = dateObj?.let { dateFormat.format(it) } ?: date,
             style = MaterialTheme.typography.bodySmall,
@@ -371,8 +602,6 @@ fun CompletionRecordCard(
     modifier: Modifier = Modifier
 ) {
     val interactionSource = remember { MutableInteractionSource() }
-    
-    // 格式化完成时间用于无障碍朗读
     val formattedTime = timeFormat.format(Date(completion.completedDate))
     val relativeDate = formatRelativeDate(Date(completion.completedDate))
     val contentDescription = stringResource(
@@ -382,13 +611,13 @@ fun CompletionRecordCard(
         relativeDate,
         formattedTime
     )
-    
+
     Card(
         modifier = modifier
             .clickable(
                 interactionSource = interactionSource,
                 indication = LocalIndication.current,
-                onClick = { }
+                onClick = {}
             )
             .semantics {
                 this.contentDescription = contentDescription
@@ -405,9 +634,7 @@ fun CompletionRecordCard(
             horizontalArrangement = Arrangement.SpaceBetween,
             verticalAlignment = Alignment.CenterVertically
         ) {
-            Column(
-                modifier = Modifier.weight(1f)
-            ) {
+            Column(modifier = Modifier.weight(1f)) {
                 Text(
                     text = habitTitle,
                     style = MaterialTheme.typography.titleMedium,
@@ -436,9 +663,7 @@ fun CompletionRecordCard(
  * 空记录状态
  */
 @Composable
-fun EmptyRecordsContent(
-    modifier: Modifier = Modifier
-) {
+fun EmptyRecordsContent(modifier: Modifier = Modifier) {
     Column(
         modifier = modifier,
         horizontalAlignment = Alignment.CenterHorizontally,
@@ -465,21 +690,21 @@ fun EmptyRecordsContent(
 private class FakeHabitDaoForRecords : io.github.darrindeyoung791.habitpulse.data.database.dao.HabitDao {
     private val habits = listOf(
         Habit(
-            id = java.util.UUID.fromString("00000000-0000-0000-0000-000000000001"),
+            id = UUID.fromString("00000000-0000-0000-0000-000000000001"),
             title = "每天喝水",
             repeatCycle = RepeatCycle.DAILY,
             completionCount = 15,
             createdDate = System.currentTimeMillis() - 30 * 24 * 60 * 60 * 1000L
         ),
         Habit(
-            id = java.util.UUID.fromString("00000000-0000-0000-0000-000000000002"),
+            id = UUID.fromString("00000000-0000-0000-0000-000000000002"),
             title = "晨跑锻炼",
             repeatCycle = RepeatCycle.WEEKLY,
             completionCount = 8,
             createdDate = System.currentTimeMillis() - 30 * 24 * 60 * 60 * 1000L
         ),
         Habit(
-            id = java.util.UUID.fromString("00000000-0000-0000-0000-000000000003"),
+            id = UUID.fromString("00000000-0000-0000-0000-000000000003"),
             title = "阅读书籍",
             repeatCycle = RepeatCycle.DAILY,
             completionCount = 20,
@@ -491,12 +716,10 @@ private class FakeHabitDaoForRecords : io.github.darrindeyoung791.habitpulse.dat
         kotlinx.coroutines.flow.flowOf(habits)
 
     override suspend fun getAllHabits(): List<Habit> = habits
-
-    override fun getHabitByIdFlow(id: java.util.UUID): kotlinx.coroutines.flow.Flow<Habit?> =
+    override fun getHabitByIdFlow(id: UUID): kotlinx.coroutines.flow.Flow<Habit?> =
         kotlinx.coroutines.flow.flowOf(habits.find { it.id == id })
 
-    override suspend fun getHabitById(id: java.util.UUID): Habit? = habits.find { it.id == id }
-
+    override suspend fun getHabitById(id: UUID): Habit? = habits.find { it.id == id }
     override fun getIncompleteHabitsFlow(): kotlinx.coroutines.flow.Flow<List<Habit>> =
         kotlinx.coroutines.flow.flowOf(emptyList())
 
@@ -504,21 +727,13 @@ private class FakeHabitDaoForRecords : io.github.darrindeyoung791.habitpulse.dat
         kotlinx.coroutines.flow.flowOf(habits)
 
     override suspend fun insert(habit: Habit): Long = 0
-
     override suspend fun update(habit: Habit) {}
-
     override suspend fun delete(habit: Habit) {}
-
     override suspend fun deleteAll() {}
-
-    override suspend fun updateCompletionStatus(id: java.util.UUID, completed: Boolean, timestamp: Long) {}
-
-    override suspend fun undoCompletionStatus(id: java.util.UUID, timestamp: Long) {}
-
-    override suspend fun incrementCompletionCount(id: java.util.UUID, timestamp: Long) {}
-
+    override suspend fun updateCompletionStatus(id: UUID, completed: Boolean, timestamp: Long) {}
+    override suspend fun undoCompletionStatus(id: UUID, timestamp: Long) {}
+    override suspend fun incrementCompletionCount(id: UUID, timestamp: Long) {}
     override suspend fun resetAllCompletionStatus(timestamp: Long) {}
-
     override fun getHabitCount(): kotlinx.coroutines.flow.Flow<Int> =
         kotlinx.coroutines.flow.flowOf(habits.size)
 
@@ -537,27 +752,26 @@ private class FakeHabitCompletionDaoForRecords : io.github.darrindeyoung791.habi
     private val completions = mutableListOf<HabitCompletion>()
 
     init {
-        // 添加一些示例数据
         val calendar = Calendar.getInstance()
-        val habit1Id = java.util.UUID.fromString("00000000-0000-0000-0000-000000000001")
-        val habit2Id = java.util.UUID.fromString("00000000-0000-0000-0000-000000000002")
-        val habit3Id = java.util.UUID.fromString("00000000-0000-0000-0000-000000000003")
+        val habit1Id = UUID.fromString("00000000-0000-0000-0000-000000000001")
+        val habit2Id = UUID.fromString("00000000-0000-0000-0000-000000000002")
+        val habit3Id = UUID.fromString("00000000-0000-0000-0000-000000000003")
 
-        // 过去 7 天的记录
         for (i in 0 until 7) {
             calendar.add(Calendar.DAY_OF_YEAR, -1)
             val timestamp = calendar.timeInMillis
-            val dateStr = String.format("%04d-%02d-%02d",
+            val dateStr = String.format(
+                "%04d-%02d-%02d",
                 calendar.get(Calendar.YEAR),
                 calendar.get(Calendar.MONTH) + 1,
-                calendar.get(Calendar.DAY_OF_MONTH))
+                calendar.get(Calendar.DAY_OF_MONTH)
+            )
 
-            // 随机添加一些记录
             if (i % 2 == 0) {
                 completions.add(
                     HabitCompletion(
                         habitId = habit1Id,
-                        completedDate = timestamp + 10 * 60 * 1000, // 10:00
+                        completedDate = timestamp + 10 * 60 * 1000,
                         completedDateLocal = dateStr
                     )
                 )
@@ -566,7 +780,7 @@ private class FakeHabitCompletionDaoForRecords : io.github.darrindeyoung791.habi
                 completions.add(
                     HabitCompletion(
                         habitId = habit2Id,
-                        completedDate = timestamp + 7 * 60 * 60 * 1000, // 07:00
+                        completedDate = timestamp + 7 * 60 * 60 * 1000,
                         completedDateLocal = dateStr
                     )
                 )
@@ -574,26 +788,26 @@ private class FakeHabitCompletionDaoForRecords : io.github.darrindeyoung791.habi
             completions.add(
                 HabitCompletion(
                     habitId = habit3Id,
-                    completedDate = timestamp + 21 * 60 * 60 * 1000, // 21:00
+                    completedDate = timestamp + 21 * 60 * 60 * 1000,
                     completedDateLocal = dateStr
                 )
             )
         }
     }
 
-    override fun getCompletionsByHabitIdFlow(habitId: java.util.UUID): kotlinx.coroutines.flow.Flow<List<HabitCompletion>> =
+    override fun getCompletionsByHabitIdFlow(habitId: UUID): kotlinx.coroutines.flow.Flow<List<HabitCompletion>> =
         kotlinx.coroutines.flow.flowOf(completions.filter { it.habitId == habitId })
 
-    override suspend fun getCompletionsByHabitId(habitId: java.util.UUID): List<HabitCompletion> =
+    override suspend fun getCompletionsByHabitId(habitId: UUID): List<HabitCompletion> =
         completions.filter { it.habitId == habitId }
 
     override suspend fun getCompletionsByHabitIdAndDate(
-        habitId: java.util.UUID,
+        habitId: UUID,
         date: String
     ): List<HabitCompletion> = completions.filter { it.habitId == habitId && it.completedDateLocal == date }
 
     override suspend fun getCompletionsByHabitIdAndDateRange(
-        habitId: java.util.UUID,
+        habitId: UUID,
         startDate: String,
         endDate: String
     ): List<HabitCompletion> =
@@ -602,7 +816,7 @@ private class FakeHabitCompletionDaoForRecords : io.github.darrindeyoung791.habi
     override suspend fun getCompletionsByDate(date: String): List<HabitCompletion> =
         completions.filter { it.completedDateLocal == date }
 
-    override suspend fun getTodayCompletionCount(habitId: java.util.UUID, date: String): Int =
+    override suspend fun getTodayCompletionCount(habitId: UUID, date: String): Int =
         completions.count { it.habitId == habitId && it.completedDateLocal == date }
 
     override suspend fun insert(completion: HabitCompletion): Long {
@@ -618,7 +832,7 @@ private class FakeHabitCompletionDaoForRecords : io.github.darrindeyoung791.habi
         completions.remove(completion)
     }
 
-    override suspend fun deleteByHabitId(habitId: java.util.UUID) {
+    override suspend fun deleteByHabitId(habitId: UUID) {
         completions.removeAll { it.habitId == habitId }
     }
 
@@ -633,7 +847,7 @@ private class FakeHabitCompletionDaoForRecords : io.github.darrindeyoung791.habi
     override fun getCompletionCount(): kotlinx.coroutines.flow.Flow<Int> =
         kotlinx.coroutines.flow.flowOf(completions.size)
 
-    override suspend fun getCompletionCountByHabitId(habitId: java.util.UUID): Int =
+    override suspend fun getCompletionCountByHabitId(habitId: UUID): Int =
         completions.count { it.habitId == habitId }
 }
 
@@ -650,37 +864,34 @@ fun RecordsScreenContentPreview() {
 
 @Preview(showBackground = true)
 @Composable
-fun CompletionRecordCardPreview() {
+fun JumpToDateButtonPreview() {
     HabitPulseTheme {
-        CompletionRecordCard(
-            completion = HabitCompletion(
-                habitId = java.util.UUID.randomUUID(),
-                completedDate = System.currentTimeMillis(),
-                completedDateLocal = "2026-03-26"
+        Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+            JumpToDateButton(
+                selectedDate = null,
+                onDateSelected = {},
+                onDateCleared = {}
+            )
+            JumpToDateButton(
+                selectedDate = LocalDate.now(),
+                onDateSelected = {},
+                onDateCleared = {}
+            )
+        }
+    }
+}
+
+@Preview(showBackground = true)
+@Composable
+fun HabitSelectorChipPreview() {
+    HabitPulseTheme {
+        HabitSelectorChip(
+            selectedHabitName = "全部习惯",
+            habitOptions = listOf(
+                RecordsViewModel.HabitOption.AllHabits
             ),
-            habitTitle = "每天喝水",
-            timeFormat = SimpleDateFormat("HH:mm", Locale.CHINA),
-            completionSequence = 15
+            selectedHabitId = null,
+            onHabitSelected = {}
         )
-    }
-}
-
-@Preview(showBackground = true)
-@Composable
-fun DateSectionHeaderPreview() {
-    HabitPulseTheme {
-        DateSectionHeader(
-            date = "2026-03-26",
-            dateFormat = SimpleDateFormat("yyyy 年 MM 月 dd 日", Locale.CHINA),
-            modifier = Modifier.fillMaxWidth()
-        )
-    }
-}
-
-@Preview(showBackground = true)
-@Composable
-fun EmptyRecordsContentPreview() {
-    HabitPulseTheme {
-        EmptyRecordsContent()
     }
 }

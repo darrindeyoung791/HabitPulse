@@ -136,6 +136,12 @@
     <string name="records_no_completions_description">The selected habit has no completion records yet</string>
     <string name="records_completion_sequence">Completion #%d</string>
     <string name="records_card_content_description">%1$s, Completion #%2$d, completed on %3$s at %4$s</string>
+    <string name="records_jump_to_date">Jump to Date</string>
+    <string name="records_selected_date">Selected: %s</string>
+    <string name="records_clear_date">Clear Date</string>
+    <string name="records_date_picker_title">Select Date</string>
+    <string name="records_date_picker_confirm">OK</string>
+    <string name="records_date_picker_dismiss">Cancel</string>
     
     <!-- Relative dates -->
     <string name="records_date_today">Today</string>
