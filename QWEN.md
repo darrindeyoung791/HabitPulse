@@ -124,7 +124,7 @@ Records every habit completion with timestamp.
 
 ### Prerequisites
 - Android Studio (latest version recommended)
-- JDK 11 or higher
+- JDK 17 or higher
 - Android SDK with API level 36
 
 ### Commands
@@ -155,7 +155,8 @@ Records every habit completion with timestamp.
 ### Gradle Version
 - **Gradle**: 9.4.0
 - **Android Gradle Plugin**: 9.1.0
-- **Kotlin**: 2.3.10
+- **Kotlin**: 2.3.20
+- **KSP**: 2.3.6
 
 ## Dependencies
 
@@ -173,7 +174,7 @@ Records every habit completion with timestamp.
 - `androidx.room:room-compiler` (2.8.4) - Room annotation processor (KSP)
 
 ### Compose UI
-- `androidx.compose.bom` (2025.01.00) - Compose Bill of Materials
+- `androidx.compose.bom` (2026.03.00) - Compose Bill of Materials
 - `androidx.compose.ui` - Core Compose UI
 - `androidx.compose.material3` (1.4.0) - Material Design 3 components
 - `androidx.compose.material.icons.core` (1.7.6) - Material icons core
@@ -193,7 +194,7 @@ Records every habit completion with timestamp.
 
 ### Code Style
 - **Kotlin style**: Official (as per `gradle.properties`)
-- **JVM target**: Java 11
+- **JVM target**: Java 17
 - **Compose**: Enabled with Material Design 3
 - **i18n**: Simplified Chinese and English(US)
 
@@ -340,7 +341,8 @@ The app uses a responsive navigation system that adapts to screen size and orien
 
 ## Notes
 
-- The app uses a custom mirror for Gradle distribution (`mirrors.cloud.tencent.com`)
+- The app uses Aliyun Maven mirrors for better connectivity in China (`maven.aliyun.com`)
+- `generateLocaleConfig` is disabled due to AGP 9.1.0 bug
 - Dynamic color theming is enabled for Android 12+ (API 31+)
 - Edge-to-edge display is enabled in all activities
 - Release builds have minification and resource shrinking enabled

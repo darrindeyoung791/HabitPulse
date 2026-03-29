@@ -6,8 +6,8 @@
 
 [![MIT License](https://img.shields.io/badge/License-MIT-yellow.svg)](https://choosealicense.com/licenses/mit/)
 [![Platform](https://img.shields.io/badge/Platform-Android-green.svg)](https://developer.android.com/)
-[![Kotlin](https://img.shields.io/badge/Kotlin-2.3.10-purple.svg)](https://kotlinlang.org/)
-[![Compose](https://img.shields.io/badge/Compose-1.7.6-brightgreen.svg)](https://developer.android.com/jetpack/compose)
+[![Kotlin](https://img.shields.io/badge/Kotlin-2.3.20-purple.svg)](https://kotlinlang.org/)
+[![Compose BOM](https://img.shields.io/badge/Compose%20BOM-2026.03.00-brightgreen.svg)](https://developer.android.com/jetpack/compose/bom)
 [![Room](https://img.shields.io/badge/Room-2.8.4-blue.svg)](https://developer.android.com/training/data-storage/room)
 [![API](https://img.shields.io/badge/API-26%2B-orange.svg)](https://developer.android.com/about/versions/oreo/android-8.0-api-26)
 
@@ -63,7 +63,7 @@
 
 ### 环境要求
 - **Android Studio**：最新版（推荐 Hedgehog 或更新版本）
-- **JDK**：11 或更高版本
+- **JDK**：17 或更高版本
 - **Android SDK**：
   - 最低 SDK：26 (Android 8.0)
   - 目标 SDK：36 (Android 16)
@@ -99,14 +99,15 @@ cd HabitPulse
 
 | 组件 | 版本 | 说明 |
 |------|------|------|
-| **语言** | Kotlin 2.3.10 | 现代化 Android 开发语言 |
-| **UI 框架** | Jetpack Compose 1.7.6 | 声明式 UI 框架 |
+| **语言** | Kotlin 2.3.20 | 现代化 Android 开发语言 |
+| **UI 框架** | Jetpack Compose (BOM 2026.03.00) | 声明式 UI 框架 |
 | **Material 3** | 1.4.0 | Material Design 3 组件库 |
 | **导航** | Navigation Compose 2.8.0 | 页面导航与动画 |
 | **数据库** | Room 2.8.4 | 本地数据持久化 |
 | **生命周期** | 2.10.0 | 生命周期感知组件 |
 | **ViewModel** | 2.8.7 | UI 状态管理 |
 | **构建工具** | Gradle 9.4.0 + AGP 9.1.0 | 项目构建系统 |
+| **JVM 目标** | Java 17 | 编译字节码版本 |
 
 ---
 
