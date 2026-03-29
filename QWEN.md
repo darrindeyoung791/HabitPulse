@@ -304,8 +304,8 @@ The project is in **early development stage** (v0.1.31-alpha):
 
 - **Namespace**: `io.github.darrindeyoung791.habitpulse`
 - **Application ID**: `io.github.darrindeyoung791.habitpulse`
-- **Version Code**: 1
-- **Version Name**: 0.1.31-alpha
+- **Version Code**: 89 (从当前 Git commit 数开始，之后每次发布手动递增)
+- **Version Name**: 0.4.15-alpha
 
 ## Screen Flow
 
