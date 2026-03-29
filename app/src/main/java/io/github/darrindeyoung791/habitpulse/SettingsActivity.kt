@@ -11,7 +11,7 @@ import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.material.icons.*
+import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.outlined.FavoriteBorder
 import androidx.compose.material.icons.outlined.Info
@@ -63,11 +63,11 @@ fun SettingsScreen() {
     // 收集强制平板横屏模式设置状态
     val forceTabletLandscape by userPreferences.forceTabletLandscapeFlow.collectAsStateWithLifecycle(initialValue = false)
 
-    // Detect tablet using screenWidthDp with 840dp threshold (Material Design breakpoint)
+    // 检测当前设备是否为平板（屏幕宽度 ≥ 1200dp）
     val configuration = LocalConfiguration.current
     val screenWidthDp = configuration.screenWidthDp
     val isLandscape = configuration.orientation == Configuration.ORIENTATION_LANDSCAPE
-    val isTabletLandscape = isLandscape && screenWidthDp >= 840
+    val isTabletLandscape = isLandscape && screenWidthDp >= 1200
     // 只有在非平板横屏设备上才显示此开关
     val showForceTabletLandscapeSwitch = !isTabletLandscape
 
