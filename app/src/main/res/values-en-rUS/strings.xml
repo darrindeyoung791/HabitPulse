@@ -29,6 +29,7 @@
     <string name="main_tab_contacts">Contacts</string>
     <string name="main_tab_records">Records</string>
     <string name="main_subtitle_habit_count">%d habit(s)</string>
+    <string name="main_subtitle_contact_count">%1$d contact(s), %2$d reminder habit(s)</string>
     <string name="main_blank_contacts_description">This is the contacts page placeholder content, to be filled with supervisor management in the future.</string>
     <string name="main_blank_records_description">This is the records page placeholder content, to be filled with habit history in the future.</string>
     <string name="main_expand_drawer">Expand drawer</string>
@@ -109,10 +110,10 @@
     
     <!-- Debug / Developer options -->
     <string name="debug_add_sample_data_dialog_title">Add Sample Data</string>
-    <string name="debug_add_sample_data_dialog_message">Add 20 sample habit data entries?\n\nThis feature is for debugging on new devices. It will add habits with different reminder methods, supervision methods, and notes.</string>
+    <string name="debug_add_sample_data_dialog_message">Add 40 sample habit data entries?\n\nThis feature is for debugging on new devices. It will add habits with different reminder methods, supervision methods, and notes. Some supervisors appear in multiple habits for testing UI scrolling performance.</string>
     <string name="debug_add_sample_data_yes">Add</string>
     <string name="debug_add_sample_data_no">Cancel</string>
-    <string name="debug_sample_data_added">Added 20 sample data entries</string>
+    <string name="debug_sample_data_added">Added 40 sample data entries</string>
 
     <!-- Accessibility -->
     <string name="accessibility_talkback_splash_ad_disabled">To avoid affecting users with visual impairments, the splash ad feature cannot be enabled</string>
@@ -176,6 +177,7 @@
     <string name="contacts_phone_type">Phone</string>
     <string name="contacts_used_in_habits">Used in %d habit(s)</string>
     <string name="contacts_bottom_sheet_title">Habits using this contact</string>
+    <string name="contacts_bottom_sheet_no_habits">This contact is not used in any habits</string>
     <string name="contacts_delete_from_habit">Delete from this habit</string>
     <string name="contacts_delete_from_all_habits">Delete from all habits</string>
     <string name="contacts_delete_confirm_title">Confirm Delete</string>

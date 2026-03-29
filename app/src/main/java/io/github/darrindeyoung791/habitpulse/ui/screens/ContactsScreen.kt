@@ -17,13 +17,16 @@ import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.WindowInsets
 import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.navigationBars
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.layout.windowInsetsPadding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyListState
 import androidx.compose.foundation.lazy.items
@@ -355,18 +358,13 @@ fun ContactsScreenContent(
                         } == true
 
                         if (isLastContact) {
-                            Spacer(modifier = Modifier.height(8.dp))
-                            Surface(
-                                color = MaterialTheme.colorScheme.errorContainer.copy(alpha = 0.3f),
-                                shape = RoundedCornerShape(8.dp)
-                            ) {
-                                Text(
-                                    text = stringResource(id = R.string.contacts_last_supervisor_warning),
-                                    style = MaterialTheme.typography.bodySmall,
-                                    color = MaterialTheme.colorScheme.onErrorContainer,
-                                    modifier = Modifier.padding(12.dp)
-                                )
-                            }
+                            Spacer(modifier = Modifier.height(12.dp))
+                            Text(
+                                text = stringResource(id = R.string.contacts_last_supervisor_warning),
+                                style = MaterialTheme.typography.bodySmall,
+                                color = MaterialTheme.colorScheme.error,
+                                modifier = Modifier.fillMaxWidth()
+                            )
                         }
                     }
                 }
@@ -541,7 +539,8 @@ fun ContactBottomSheetContent(
     Column(
         modifier = Modifier
             .fillMaxWidth()
-            .padding(16.dp),
+            .padding(horizontal = 16.dp)
+            .windowInsetsPadding(WindowInsets.navigationBars),
         verticalArrangement = Arrangement.spacedBy(16.dp)
     ) {
         // Header
@@ -556,28 +555,28 @@ fun ContactBottomSheetContent(
             Text(
                 text = contact.value,
                 style = MaterialTheme.typography.bodyLarge,
-                color = MaterialTheme.colorScheme.primary
+                color = MaterialTheme.colorScheme.onSurface
             )
         }
 
-        Spacer(modifier = Modifier.height(8.dp))
-
-        // Habits list
+        // Habits list - scrollable when there are many habits
         if (habits.isEmpty()) {
             Text(
-                text = "该联系人未用于任何习惯",
+                text = stringResource(id = R.string.contacts_bottom_sheet_no_habits),
                 style = MaterialTheme.typography.bodyMedium,
-                color = MaterialTheme.colorScheme.onSurfaceVariant
+                color = MaterialTheme.colorScheme.onSurface
             )
         } else {
-            Column(
+            LazyColumn(
+                modifier = Modifier.weight(1f, fill = false),
                 verticalArrangement = Arrangement.spacedBy(8.dp)
             ) {
-                habits.forEach { habit ->
+                items(habits.size) { index ->
+                    val habit = habits[index]
                     Surface(
                         modifier = Modifier.fillMaxWidth(),
                         shape = RoundedCornerShape(8.dp),
-                        color = MaterialTheme.colorScheme.surfaceVariant
+                        color = MaterialTheme.colorScheme.surfaceContainerHighest
                     ) {
                         Row(
                             modifier = Modifier
@@ -618,13 +617,13 @@ fun ContactBottomSheetContent(
                                 Icon(
                                     imageVector = Icons.Filled.Delete,
                                     contentDescription = null,
-                                    modifier = Modifier.size(18.dp)
+                                    modifier = Modifier.size(18.dp),
+                                    tint = MaterialTheme.colorScheme.error
                                 )
                                 Spacer(modifier = Modifier.width(4.dp))
                                 Text(
                                     text = stringResource(id = R.string.contacts_delete_from_habit),
-                                    style = MaterialTheme.typography.labelLarge,
-                                    color = MaterialTheme.colorScheme.onErrorContainer
+                                    style = MaterialTheme.typography.labelLarge
                                 )
                             }
                         }
@@ -633,17 +632,18 @@ fun ContactBottomSheetContent(
             }
         }
 
-        Spacer(modifier = Modifier.height(16.dp))
-
         // Delete from all habits button
         Surface(
             modifier = Modifier.fillMaxWidth(),
             shape = RoundedCornerShape(12.dp),
-            color = MaterialTheme.colorScheme.errorContainer.copy(alpha = 0.3f)
+            color = MaterialTheme.colorScheme.errorContainer.copy(alpha = 0.8f)
         ) {
             TextButton(
                 onClick = onDeleteFromAll,
-                modifier = Modifier.fillMaxWidth()
+                modifier = Modifier.fillMaxWidth(),
+                colors = ButtonDefaults.textButtonColors(
+                    contentColor = MaterialTheme.colorScheme.onErrorContainer
+                )
             ) {
                 Icon(
                     imageVector = Icons.Filled.Delete,
@@ -654,8 +654,7 @@ fun ContactBottomSheetContent(
                 Spacer(modifier = Modifier.width(8.dp))
                 Text(
                     text = stringResource(id = R.string.contacts_delete_from_all_habits),
-                    style = MaterialTheme.typography.labelLarge,
-                    color = MaterialTheme.colorScheme.onErrorContainer
+                    style = MaterialTheme.typography.labelLarge
                 )
             }
         }
@@ -682,7 +681,7 @@ fun EmptyContactsContent(
             imageVector = Icons.Outlined.Person,
             contentDescription = null,
             modifier = Modifier.size(80.dp),
-            tint = MaterialTheme.colorScheme.secondary
+            tint = MaterialTheme.colorScheme.onSurfaceVariant
         )
 
         Spacer(modifier = Modifier.height(24.dp))

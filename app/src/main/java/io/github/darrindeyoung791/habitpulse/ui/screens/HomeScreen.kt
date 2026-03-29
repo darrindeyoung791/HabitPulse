@@ -127,6 +127,9 @@ fun HomeScreen(
     // 收集搜索关键词
     val searchQuery by viewModel.searchQuery.collectAsStateWithLifecycle(initialValue = "")
 
+    // 收集联系人列表状态（用于 Contacts section 的副标题）
+    val allContacts by (application?.contactsViewModel?.allContactsFlow ?: kotlinx.coroutines.flow.flowOf(emptyList())).collectAsStateWithLifecycle(initialValue = emptyList())
+
     // 搜索状态（是否正在搜索）
     var isSearchActive by remember { mutableStateOf(false) }
     // 搜索焦点状态
@@ -537,6 +540,17 @@ fun HomeScreen(
                         if (currentSection == HomeSection.Habits && collapsedFraction < 0.5f) {
                             Text(
                                 text = stringResource(id = R.string.main_subtitle_habit_count, habits.size),
+                                style = MaterialTheme.typography.bodyMedium,
+                                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                                maxLines = 1,
+                                overflow = TextOverflow.Ellipsis
+                            )
+                        }
+                        // Subtitle - only show for Contacts section when expanded
+                        if (currentSection == HomeSection.Contacts && collapsedFraction < 0.5f) {
+                            val reminderHabitsCount = habits.count { it.supervisionMethod != io.github.darrindeyoung791.habitpulse.data.model.SupervisionMethod.NONE }
+                            Text(
+                                text = stringResource(id = R.string.main_subtitle_contact_count, allContacts.size, reminderHabitsCount),
                                 style = MaterialTheme.typography.bodyMedium,
                                 color = MaterialTheme.colorScheme.onSurfaceVariant,
                                 maxLines = 1,

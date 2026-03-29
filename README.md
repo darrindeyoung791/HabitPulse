@@ -51,7 +51,7 @@
 
 <div align="center">
 
-| <div align="center">**📱 手机界面**</div> | <div align="center">**📱 平板界面**</div> |
+| <div align="center">**手机界面**</div> | <div align="center">**平板界面**</div> |
 |---|---|
 | ![手机界面](doc/images/showcases/Screenshot_Pixel_6a_Habits_ZH-CN.png) | ![平板界面](doc/images/showcases/Screenshot_Pixel_Tablet_Habits_ZH-CN.png) |
 
@@ -75,6 +75,11 @@ cd HabitPulse
 ```
 
 ### 构建项目
+
+使用最新版 Android Studio 打开项目，根据提示操作。或使用其他 IDE。
+
+特别地，本项目配置使用了来自腾讯云、阿里云的镜像，若您是中国大陆外的开发者，需要自行修改。
+
 ```bash
 # 使用 Gradle Wrapper 构建
 ./gradlew assembleDebug
@@ -168,7 +173,7 @@ HabitPulse/
 | completedDateLocal | TEXT | 本地日期 (yyyy-MM-dd) |
 | timeZone | TEXT | 时区信息 |
 
-> 📚 详细的数据库设计文档请参阅 [Wiki - 数据库设计](https://github.com/darrindeyoung791/HabitPulse/wiki/Database-Design)
+> 📚 详细的数据库设计文档将在未来更新中给出
 
 ---
 

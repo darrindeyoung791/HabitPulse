@@ -31,6 +31,7 @@
     <string name="main_title_contacts">联系人</string>
     <string name="main_title_records">记录</string>
     <string name="main_subtitle_habit_count">%d 个打卡习惯</string>
+    <string name="main_subtitle_contact_count">%1$d 个联系人，%2$d 个提醒习惯</string>
     <string name="main_blank_contacts_description">这是联系人页面占位内容，未来用于管理监督人。</string>
     <string name="main_blank_records_description">这是记录页面占位内容，未来展示习惯历史记录。</string>
     <string name="main_expand_drawer">展开侧边栏</string>
@@ -111,10 +112,10 @@
     
     <!-- Debug / Developer options -->
     <string name="debug_add_sample_data_dialog_title">添加样例数据</string>
-    <string name="debug_add_sample_data_dialog_message">是否添加 20 条样例习惯数据？\n\n此功能用于新机调试，将添加包含不同提醒方式、监督方式和备注的习惯数据。</string>
+    <string name="debug_add_sample_data_dialog_message">是否添加 40 条样例习惯数据？\n\n此功能用于新机调试，将添加包含不同提醒方式、监督方式和备注的习惯数据。部分监督人会在多个习惯中出现，用于测试界面滚动性能。</string>
     <string name="debug_add_sample_data_yes">添加</string>
     <string name="debug_add_sample_data_no">取消</string>
-    <string name="debug_sample_data_added">已添加 20 条样例数据</string>
+    <string name="debug_sample_data_added">已添加 40 条样例数据</string>
 
     <!-- Accessibility -->
     <string name="accessibility_talkback_splash_ad_disabled">为了不影响视力障碍用户，开屏广告功能无法开启</string>
@@ -178,6 +179,7 @@
     <string name="contacts_phone_type">电话</string>
     <string name="contacts_used_in_habits">用于 %d 个习惯</string>
     <string name="contacts_bottom_sheet_title">使用该联系人的习惯</string>
+    <string name="contacts_bottom_sheet_no_habits">该联系人未用于任何习惯</string>
     <string name="contacts_delete_from_habit">从此习惯删除</string>
     <string name="contacts_delete_from_all_habits">从全部习惯删除</string>
     <string name="contacts_delete_confirm_title">确认删除</string>
