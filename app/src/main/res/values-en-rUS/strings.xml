@@ -135,6 +135,7 @@
     <string name="records_all_habits">All Habits</string>
     <string name="records_select_habit">Select Habit</string>
     <string name="records_completion_count">%d completion(s)</string>
+    <string name="records_subtitle_completion_days">%d day(s) with completions</string>
     <string name="records_date_format">MMM dd, yyyy</string>
     <string name="records_date_format_short">MM/dd/yyyy</string>
     <string name="records_time_format">HH:mm</string>
@@ -166,8 +167,8 @@
     <string name="settings_visual">Visual</string>
     <string name="settings_force_tablet_landscape">Force tablet landscape mode</string>
     <string name="settings_force_tablet_landscape_description">Use tablet landscape layout on small tablets in landscape orientation</string>
-    <string name="settings_force_tablet_landscape_warning_title">Caution!</string>
-    <string name="settings_force_tablet_landscape_warning_message">This feature is designed for small tablets. If enabled on a phone, the interface layout may display abnormally. Proceed?</string>
+    <string name="settings_force_tablet_landscape_warning_title"> Force enable tablet landscape mode?</string>
+    <string name="settings_force_tablet_landscape_warning_message">This feature is optimized for small-screen tablets. Enabling it on phones may cause layout issues. Proceed anyway?</string>
 
     <!-- Contacts Screen -->
     <string name="contacts_title">Contacts</string>

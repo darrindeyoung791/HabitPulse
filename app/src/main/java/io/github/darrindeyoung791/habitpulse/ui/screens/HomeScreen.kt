@@ -569,6 +569,20 @@ fun HomeScreen(
                                 overflow = TextOverflow.Ellipsis
                             )
                         }
+                        // Subtitle - only show for Records section when expanded
+                        if (currentSection == HomeSection.Records && collapsedFraction < 0.5f) {
+                            val recordsVM = application?.recordsViewModel
+                            if (recordsVM != null) {
+                                val completionDaysCount by recordsVM.completionDaysCountFlow.collectAsStateWithLifecycle()
+                                Text(
+                                    text = stringResource(id = R.string.records_subtitle_completion_days, completionDaysCount),
+                                    style = MaterialTheme.typography.bodyMedium,
+                                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                                    maxLines = 1,
+                                    overflow = TextOverflow.Ellipsis
+                                )
+                            }
+                        }
                     }
                 },
                 actions = {

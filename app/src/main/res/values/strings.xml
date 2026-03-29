@@ -137,6 +137,7 @@
     <string name="records_all_habits">全部习惯</string>
     <string name="records_select_habit">选择习惯</string>
     <string name="records_completion_count">打卡 %d 次</string>
+    <string name="records_subtitle_completion_days">%d 天打卡记录</string>
     <string name="records_date_format">yyyy 年 MM 月 dd 日</string>
     <string name="records_date_format_short">yyyy/MM/dd</string>
     <string name="records_time_format">HH:mm</string>
@@ -168,7 +169,7 @@
     <string name="settings_visual">视觉</string>
     <string name="settings_force_tablet_landscape">强制使用平板横屏模式</string>
     <string name="settings_force_tablet_landscape_description">在小平板横屏时，使用平板横屏的界面布局</string>
-    <string name="settings_force_tablet_landscape_warning_title">注意！</string>
+    <string name="settings_force_tablet_landscape_warning_title">强制开启平板横屏模式？</string>
     <string name="settings_force_tablet_landscape_warning_message">此功能专为小屏平板设计。如果在手机上开启，界面布局可能会显示异常。确定要开启吗？</string>
 
     <!-- Contacts Screen -->

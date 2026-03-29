@@ -6,6 +6,9 @@ import io.github.darrindeyoung791.habitpulse.HabitPulseApplication
 import io.github.darrindeyoung791.habitpulse.data.model.Habit
 import io.github.darrindeyoung791.habitpulse.data.model.HabitCompletion
 import io.github.darrindeyoung791.habitpulse.data.repository.HabitRepository
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -13,6 +16,8 @@ import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.combine
 import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.flow.onEach
+import kotlinx.coroutines.flow.SharingStarted
+import kotlinx.coroutines.flow.stateIn
 import java.time.LocalDate
 import java.util.UUID
 
@@ -94,6 +99,38 @@ class RecordsViewModel(
      * 标记是否已加载过数据（用于避免每次切换都显示加载指示器）
      */
     private var hasLoadedData = false
+
+    /**
+     * 打卡天数统计 Flow - 根据选中的习惯 ID 计算有多少天有打卡记录
+     * 选择全部习惯时统计所有有打卡的天数
+     */
+    val completionDaysCountFlow: StateFlow<Int>
+
+    init {
+        completionDaysCountFlow = combine(
+            habitsFlow,
+            _selectedHabitId
+        ) { habits, selectedId ->
+            // 获取所有打卡记录
+            val allCompletions = habits.flatMap { habit ->
+                repository.getCompletionsByHabitId(habit.id)
+            }
+
+            // 根据选中的习惯 ID 过滤
+            val filteredCompletions = if (selectedId == null) {
+                allCompletions
+            } else {
+                allCompletions.filter { it.habitId == selectedId }
+            }
+
+            // 统计不同的打卡天数（使用 completedDateLocal）
+            filteredCompletions.map { it.completedDateLocal }.distinct().size
+        }.stateIn(
+            scope = CoroutineScope(Dispatchers.Default + SupervisorJob()),
+            started = SharingStarted.Eagerly,
+            initialValue = 0
+        )
+    }
 
     /**
      * 合并后的打卡记录 Flow（按日期分组）

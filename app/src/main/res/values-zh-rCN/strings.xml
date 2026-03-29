@@ -31,6 +31,7 @@
     <string name="main_title_contacts">联系人</string>
     <string name="main_title_records">记录</string>
     <string name="main_subtitle_habit_count">%d 个打卡习惯</string>
+    <string name="main_subtitle_contact_count">%1$d 个联系人，%2$d 个提醒习惯</string>
     <string name="main_blank_contacts_description">这是联系人页面占位内容，未来用于管理监督人。</string>
     <string name="main_blank_records_description">这是记录页面占位内容，未来展示习惯历史记录。</string>
     <string name="main_expand_drawer">展开侧边栏</string>
@@ -136,6 +137,7 @@
     <string name="records_all_habits">全部习惯</string>
     <string name="records_select_habit">选择习惯</string>
     <string name="records_completion_count">打卡 %d 次</string>
+    <string name="records_subtitle_completion_days">%d 天打卡记录</string>
     <string name="records_date_format">yyyy 年 MM 月 dd 日</string>
     <string name="records_date_format_short">yyyy/MM/dd</string>
     <string name="records_time_format">HH:mm</string>
@@ -167,7 +169,7 @@
     <string name="settings_visual">视觉</string>
     <string name="settings_force_tablet_landscape">强制使用平板横屏模式</string>
     <string name="settings_force_tablet_landscape_description">在小平板横屏时，使用平板横屏的界面布局</string>
-    <string name="settings_force_tablet_landscape_warning_title">注意！</string>
+    <string name="settings_force_tablet_landscape_warning_title">强制开启平板横屏模式？</string>
     <string name="settings_force_tablet_landscape_warning_message">此功能专为小屏平板设计。如果在手机上开启，界面布局可能会显示异常。确定要开启吗？</string>
 
     <!-- Contacts Screen -->
@@ -178,6 +180,7 @@
     <string name="contacts_phone_type">电话</string>
     <string name="contacts_used_in_habits">用于 %d 个习惯</string>
     <string name="contacts_bottom_sheet_title">使用该联系人的习惯</string>
+    <string name="contacts_bottom_sheet_no_habits">该联系人未用于任何习惯</string>
     <string name="contacts_delete_from_habit">从此习惯删除</string>
     <string name="contacts_delete_from_all_habits">从全部习惯删除</string>
     <string name="contacts_delete_confirm_title">确认删除</string>
