@@ -42,9 +42,6 @@ import androidx.compose.material.icons.outlined.CalendarToday
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.CircularProgressIndicator
-import androidx.compose.material3.DatePicker
-import androidx.compose.material3.DatePickerDialog
-import androidx.compose.material3.DisplayMode
 import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.ExperimentalMaterial3Api
@@ -57,7 +54,6 @@ import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.material3.TopAppBarScrollBehavior
-import androidx.compose.material3.rememberDatePickerState
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.ExperimentalComposeUiApi
 import androidx.compose.animation.AnimatedVisibility
@@ -76,7 +72,6 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.input.nestedscroll.nestedScroll
-import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.contentDescription
@@ -87,7 +82,6 @@ import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
-import android.content.res.Configuration
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import io.github.darrindeyoung791.habitpulse.HabitPulseApplication
 import io.github.darrindeyoung791.habitpulse.R
@@ -199,13 +193,6 @@ fun RecordsScreenContent(
     val habitOptions by viewModel.habitOptionsFlow.collectAsStateWithLifecycle(initialValue = emptyList())
     val isLoading by viewModel.isLoading.collectAsStateWithLifecycle(initialValue = true)
     val selectedDate by viewModel.selectedDate.collectAsStateWithLifecycle()
-    val datePickerExpanded by viewModel.datePickerExpanded.collectAsStateWithLifecycle()
-
-    // Detect current screen orientation and device type (same logic as HomeScreen)
-    val configuration = LocalConfiguration.current
-    var screenWidthDp = configuration.screenWidthDp
-    val isLandscape = configuration.orientation == Configuration.ORIENTATION_LANDSCAPE
-    val isPhoneLandscape = screenWidthDp < 1200 && isLandscape
 
     // Get selected habit name for display
     val selectedHabitName = habitOptions.find { option ->
@@ -293,81 +280,6 @@ fun RecordsScreenContent(
                         Spacer(modifier = Modifier.height(100.dp))
                     }
                 }
-            }
-        }
-    }
-
-    // Date Picker Dialog - Two completely independent pickers based on orientation
-    // Using 'when' ensures only ONE branch is ever executed
-    when {
-        // Phone landscape: keyboard input mode
-        datePickerExpanded && isPhoneLandscape -> {
-            val datePickerState = rememberDatePickerState(
-                initialSelectedDateMillis = selectedDate?.atStartOfDay()?.toInstant(java.time.ZoneOffset.UTC)?.toEpochMilli()
-                    ?: System.currentTimeMillis(),
-                initialDisplayMode = DisplayMode.Input
-            )
-
-            DatePickerDialog(
-                onDismissRequest = { viewModel.setDatePickerExpanded(false) },
-                confirmButton = {
-                    TextButton(
-                        onClick = {
-                            datePickerState.selectedDateMillis?.let { millis ->
-                                val date = LocalDate.ofInstant(
-                                    java.time.Instant.ofEpochMilli(millis),
-                                    java.time.ZoneId.systemDefault()
-                                )
-                                viewModel.selectDate(date)
-                            }
-                            viewModel.setDatePickerExpanded(false)
-                        }
-                    ) {
-                        Text(text = stringResource(id = R.string.records_date_picker_confirm))
-                    }
-                },
-                dismissButton = {
-                    TextButton(onClick = { viewModel.setDatePickerExpanded(false) }) {
-                        Text(text = stringResource(id = R.string.records_date_picker_dismiss))
-                    }
-                }
-            ) {
-                DatePicker(state = datePickerState)
-            }
-        }
-        // All other cases: calendar picker mode
-        datePickerExpanded && !isPhoneLandscape -> {
-            val datePickerState = rememberDatePickerState(
-                initialSelectedDateMillis = selectedDate?.atStartOfDay()?.toInstant(java.time.ZoneOffset.UTC)?.toEpochMilli()
-                    ?: System.currentTimeMillis(),
-                initialDisplayMode = DisplayMode.Picker
-            )
-
-            DatePickerDialog(
-                onDismissRequest = { viewModel.setDatePickerExpanded(false) },
-                confirmButton = {
-                    TextButton(
-                        onClick = {
-                            datePickerState.selectedDateMillis?.let { millis ->
-                                val date = LocalDate.ofInstant(
-                                    java.time.Instant.ofEpochMilli(millis),
-                                    java.time.ZoneId.systemDefault()
-                                )
-                                viewModel.selectDate(date)
-                            }
-                            viewModel.setDatePickerExpanded(false)
-                        }
-                    ) {
-                        Text(text = stringResource(id = R.string.records_date_picker_confirm))
-                    }
-                },
-                dismissButton = {
-                    TextButton(onClick = { viewModel.setDatePickerExpanded(false) }) {
-                        Text(text = stringResource(id = R.string.records_date_picker_dismiss))
-                    }
-                }
-            ) {
-                DatePicker(state = datePickerState)
             }
         }
     }

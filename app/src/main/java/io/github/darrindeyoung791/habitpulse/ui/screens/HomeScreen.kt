@@ -423,46 +423,12 @@ fun HomeScreen(
                         val recordsVM = application?.recordsViewModel
                         if (recordsVM != null) {
                             val recSelectedDate by recordsVM.selectedDate.collectAsStateWithLifecycle()
-                            val recDatePickerExpanded by recordsVM.datePickerExpanded.collectAsStateWithLifecycle()
 
                             DateFilterButton(
                                 selectedDate = recSelectedDate,
                                 onDateSelected = { recordsVM.setDatePickerExpanded(true) },
                                 onDateCleared = { recordsVM.clearDate() }
                             )
-
-                            if (recDatePickerExpanded) {
-                                val datePickerState = rememberDatePickerState(
-                                    initialSelectedDateMillis = recSelectedDate?.atStartOfDay()?.toInstant(java.time.ZoneOffset.UTC)?.toEpochMilli()
-                                        ?: System.currentTimeMillis()
-                                )
-                                DatePickerDialog(
-                                    onDismissRequest = { recordsVM.setDatePickerExpanded(false) },
-                                    confirmButton = {
-                                        TextButton(
-                                            onClick = {
-                                                datePickerState.selectedDateMillis?.let { millis ->
-                                                    val date = LocalDate.ofInstant(
-                                                        java.time.Instant.ofEpochMilli(millis),
-                                                        java.time.ZoneId.systemDefault()
-                                                    )
-                                                    recordsVM.selectDate(date)
-                                                }
-                                                recordsVM.setDatePickerExpanded(false)
-                                            }
-                                        ) {
-                                            Text(text = stringResource(id = R.string.records_date_picker_confirm))
-                                        }
-                                    },
-                                    dismissButton = {
-                                        TextButton(onClick = { recordsVM.setDatePickerExpanded(false) }) {
-                                            Text(text = stringResource(id = R.string.records_date_picker_dismiss))
-                                        }
-                                    }
-                                ) {
-                                    DatePicker(state = datePickerState)
-                                }
-                            }
                         }
                     }
                     IconButton(
@@ -543,46 +509,12 @@ fun HomeScreen(
                         val recordsVM = application?.recordsViewModel
                         if (recordsVM != null) {
                             val recSelectedDate by recordsVM.selectedDate.collectAsStateWithLifecycle()
-                            val recDatePickerExpanded by recordsVM.datePickerExpanded.collectAsStateWithLifecycle()
 
                             DateFilterButton(
                                 selectedDate = recSelectedDate,
                                 onDateSelected = { recordsVM.setDatePickerExpanded(true) },
                                 onDateCleared = { recordsVM.clearDate() }
                             )
-
-                            if (recDatePickerExpanded) {
-                                val datePickerState = rememberDatePickerState(
-                                    initialSelectedDateMillis = recSelectedDate?.atStartOfDay()?.toInstant(java.time.ZoneOffset.UTC)?.toEpochMilli()
-                                        ?: System.currentTimeMillis()
-                                )
-                                DatePickerDialog(
-                                    onDismissRequest = { recordsVM.setDatePickerExpanded(false) },
-                                    confirmButton = {
-                                        TextButton(
-                                            onClick = {
-                                                datePickerState.selectedDateMillis?.let { millis ->
-                                                    val date = LocalDate.ofInstant(
-                                                        java.time.Instant.ofEpochMilli(millis),
-                                                        java.time.ZoneId.systemDefault()
-                                                    )
-                                                    recordsVM.selectDate(date)
-                                                }
-                                                recordsVM.setDatePickerExpanded(false)
-                                            }
-                                        ) {
-                                            Text(text = stringResource(id = R.string.records_date_picker_confirm))
-                                        }
-                                    },
-                                    dismissButton = {
-                                        TextButton(onClick = { recordsVM.setDatePickerExpanded(false) }) {
-                                            Text(text = stringResource(id = R.string.records_date_picker_dismiss))
-                                        }
-                                    }
-                                ) {
-                                    DatePicker(state = datePickerState)
-                                }
-                            }
                         }
                     }
                     IconButton(
@@ -947,6 +879,83 @@ fun HomeScreen(
                     homeBody(Modifier.fillMaxSize())
                 }
             }
+        }
+    }
+
+    // DatePicker Dialog - Single source of truth, managed by HomeScreen
+    // Using key() to force complete recreation when orientation changes
+    // This prevents both dialogs from appearing during recomposition
+    val recordsVM = application?.recordsViewModel
+    if (recordsVM != null) {
+        val recSelectedDate by recordsVM.selectedDate.collectAsStateWithLifecycle()
+        val recDatePickerExpanded by recordsVM.datePickerExpanded.collectAsStateWithLifecycle()
+
+        if (recDatePickerExpanded) {
+            DatePickerDialogContent(
+                isPhoneLandscape = useRail,
+                selectedDate = recSelectedDate,
+                onDismiss = { recordsVM.setDatePickerExpanded(false) },
+                onDateSelected = { recordsVM.selectDate(it) }
+            )
+        }
+    }
+}
+
+/**
+ * DatePicker Dialog Content - Handles orientation-dependent display mode
+ *
+ * Uses key() to force complete recreation when orientation changes,
+ * preventing both dialogs from appearing during recomposition.
+ *
+ * @param isPhoneLandscape True if phone in landscape mode (width < 1200dp)
+ * @param selectedDate Currently selected date
+ * @param onDismiss Callback when dialog is dismissed
+ * @param onDateSelected Callback when date is selected
+ */
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+private fun DatePickerDialogContent(
+    isPhoneLandscape: Boolean,
+    selectedDate: LocalDate?,
+    onDismiss: () -> Unit,
+    onDateSelected: (LocalDate) -> Unit
+) {
+    // CRITICAL: Use key() to force complete recreation when orientation changes
+    // This prevents state bleeding between orientation changes and ensures
+    // only one dialog appears at a time
+    key(isPhoneLandscape) {
+        val initialDisplayMode = if (isPhoneLandscape) DisplayMode.Input else DisplayMode.Picker
+        val datePickerState = rememberDatePickerState(
+            initialSelectedDateMillis = selectedDate?.atStartOfDay()?.toInstant(java.time.ZoneOffset.UTC)?.toEpochMilli()
+                ?: System.currentTimeMillis(),
+            initialDisplayMode = initialDisplayMode
+        )
+
+        DatePickerDialog(
+            onDismissRequest = onDismiss,
+            confirmButton = {
+                TextButton(
+                    onClick = {
+                        datePickerState.selectedDateMillis?.let { millis ->
+                            val date = LocalDate.ofInstant(
+                                java.time.Instant.ofEpochMilli(millis),
+                                java.time.ZoneId.systemDefault()
+                            )
+                            onDateSelected(date)
+                        }
+                        onDismiss()
+                    }
+                ) {
+                    Text(text = stringResource(id = R.string.records_date_picker_confirm))
+                }
+            },
+            dismissButton = {
+                TextButton(onClick = onDismiss) {
+                    Text(text = stringResource(id = R.string.records_date_picker_dismiss))
+                }
+            }
+        ) {
+            DatePicker(state = datePickerState)
         }
     }
 }

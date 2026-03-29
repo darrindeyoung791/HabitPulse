@@ -1,4 +1,4 @@
-![hero](doc\images\readme\hero.png)
+![hero](doc/images/readme/hero.png)
 
 # HabitPulse
 

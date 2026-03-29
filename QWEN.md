@@ -416,3 +416,108 @@ private fun DatePickerContent(
 **Device Detection Thresholds** (consistent with app navigation):
 - Phone Landscape: `screenWidthDp < 1200 && isLandscape` → Use `DisplayMode.Input`
 - All other cases (portrait, tablet): Use `DisplayMode.Picker`
+
+### Screen Architecture Pattern (April 2026)
+
+**Problem**: Child screens (RecordsScreen, ContactsScreen) should not manage TopAppBar or shared dialogs. When DatePicker dialog logic exists in both parent (HomeScreen) and child (RecordsScreen), clicking the date filter button triggers both dialogs simultaneously.
+
+**Solution**: Single Source of Truth architecture - Parent (HomeScreen) manages all chrome elements (TopAppBar, dialogs), child screens focus on content only.
+
+**Architecture**:
+```
+┌─────────────────────────────────────────────────────────────┐
+│                      HomeScreen                              │
+│  ┌────────────────────────────────────────────────────────┐  │
+│  │                    TopAppBar                            │  │
+│  │  - Title                                                │  │
+│  │  - Actions (Search, DateFilter, Settings)              │  │
+│  │  - DatePicker Dialog (managed here, single instance)   │  │
+│  └────────────────────────────────────────────────────────┘  │
+│  ┌────────────────────────────────────────────────────────┐  │
+│  │              Child Screen Content                      │  │
+│  │  - RecordsScreenContent (NO dialog, pure content)      │  │
+│  │  - ContactsScreenContent (NO dialog, pure content)     │  │
+│  │  - HabitListContent (NO dialog, pure content)          │  │
+│  └────────────────────────────────────────────────────────┘  │
+└─────────────────────────────────────────────────────────────┘
+```
+
+**Implementation Guidelines**:
+
+1. **State Ownership**:
+   - ViewModel owns UI state (e.g., `datePickerExpanded`, `selectedDate`)
+   - Parent (HomeScreen) reads/writes state to manage dialogs
+   - Child screens only read necessary states for content rendering
+
+2. **Dialog Management**:
+   - All dialogs are declared at the END of the parent composable, after Scaffold/NavigationDrawer
+   - Use `key()` pattern for orientation-dependent dialogs
+   - Child screens NEVER declare dialogs
+
+3. **TopAppBar Actions**:
+   - Action buttons (DateFilterButton, Search icon) are declared in TopAppBar actions
+   - Buttons trigger state changes in ViewModel (e.g., `setDatePickerExpanded(true)`)
+   - Dialog rendering is separate from button declaration
+
+**Example Structure**:
+```kotlin
+@Composable
+fun HomeScreen(...) {
+    // ... state collection
+
+    // TopAppBar with action buttons
+    val topAppBarContent: @Composable (Boolean) -> Unit = { isRailVisible ->
+        TopAppBar(
+            actions = {
+                // Button triggers state change, NOT dialog
+                if (currentSection == HomeSection.Records) {
+                    DateFilterButton(
+                        selectedDate = recSelectedDate,
+                        onDateSelected = { recordsVM.setDatePickerExpanded(true) },
+                        onDateCleared = { recordsVM.clearDate() }
+                    )
+                }
+            }
+        )
+    }
+
+    // Scaffold with child screen content
+    Scaffold(
+        topBar = { topAppBarContent(false) },
+        content = { paddingValues ->
+            when (currentSection) {
+                HomeSection.Records -> RecordsScreenContent(...)  // Pure content, no dialog
+                // ...
+            }
+        }
+    )
+
+    // Dialog declared ONCE at end of parent, after Scaffold
+    if (recDatePickerExpanded) {
+        DatePickerDialogContent(
+            isPhoneLandscape = useRail,
+            selectedDate = recSelectedDate,
+            onDismiss = { recordsVM.setDatePickerExpanded(false) },
+            onDateSelected = { recordsVM.selectDate(it) }
+        )
+    }
+}
+
+// Separate dialog composable with key() pattern
+@Composable
+private fun DatePickerDialogContent(...) {
+    key(isPhoneLandscape) {
+        // ... dialog implementation
+    }
+}
+```
+
+**Benefits**:
+- **No duplicate dialogs**: Single dialog instance managed by parent
+- **Clear separation of concerns**: Parent manages chrome, children manage content
+- **Maintainable**: Dialog logic changes only need to be made in one place
+- **Consistent**: All screens follow the same architecture pattern
+
+**Device Detection** (consistent across app):
+- Phone Landscape: `screenWidthDp < 1200 && isLandscape` (use `useRail` variable from HomeScreen)
+- Tablet/Portrait: All other cases
