@@ -16,8 +16,8 @@ android {
         applicationId = "io.github.darrindeyoung791.habitpulse"
         minSdk = 26
         targetSdk = 36
-        versionCode = 90
-        versionName = "0.4.16-alpha"
+        versionCode = 91
+        versionName = "0.4.17-alpha"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
         resourceConfigurations.addAll(listOf("zh-rCN", "en-rUS"))

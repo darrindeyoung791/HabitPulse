@@ -66,6 +66,13 @@ class RecordsViewModel(
     val lastNonEmptyData: StateFlow<List<DateGroup>> = _lastNonEmptyData.asStateFlow()
 
     /**
+     * 最后一次的非空数据对应的过滤条件 key
+     * 用于检测过滤条件变化，变化时清除 lastNonEmptyData
+     * key 格式："habitId_date"，例如："null_null" 或 "uuid-xxx_2026-03-30"
+     */
+    private var lastFilterKey: String = "null_null"
+
+    /**
      * 当前选中的日期（用于过滤），null 表示不过滤日期
      */
     private val _selectedDate = MutableStateFlow<LocalDate?>(null)
@@ -146,6 +153,15 @@ class RecordsViewModel(
             _isLoading.value = true
         }
 
+        // 构建当前过滤条件的 key
+        val currentFilterKey = "${selectedId ?: "null"}_${selectedDate ?: "null"}"
+        
+        // 如果过滤条件变化，清除 lastNonEmptyData
+        if (currentFilterKey != lastFilterKey) {
+            _lastNonEmptyData.value = emptyList()
+            lastFilterKey = currentFilterKey
+        }
+
         // 获取所有打卡记录
         val allCompletions = habits.flatMap { habit ->
             repository.getCompletionsByHabitId(habit.id)
@@ -189,7 +205,7 @@ class RecordsViewModel(
     }.onEach {
         _isLoading.value = false
         _hasLoadedDataOnce.value = true
-        // 保存最后一次的非空数据
+        // 保存最后一次的非空数据（只在数据非空时更新）
         if (it.isNotEmpty()) {
             _lastNonEmptyData.value = it
         }
