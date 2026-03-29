@@ -1,108 +1,231 @@
-![hero](doc/images/readme/hero.png)
+![HabitPulse Banner](doc/images/readme/hero.png)
 
 # HabitPulse
 
+<div align="center">
+
 [![MIT License](https://img.shields.io/badge/License-MIT-yellow.svg)](https://choosealicense.com/licenses/mit/)
+[![Platform](https://img.shields.io/badge/Platform-Android-green.svg)](https://developer.android.com/)
+[![Kotlin](https://img.shields.io/badge/Kotlin-2.3.10-purple.svg)](https://kotlinlang.org/)
+[![Compose](https://img.shields.io/badge/Compose-1.7.6-brightgreen.svg)](https://developer.android.com/jetpack/compose)
+[![Room](https://img.shields.io/badge/Room-2.8.4-blue.svg)](https://developer.android.com/training/data-storage/room)
+[![API](https://img.shields.io/badge/API-26%2B-orange.svg)](https://developer.android.com/about/versions/oreo/android-8.0-api-26)
 
-HabitPulse 是一个 Material Design 3 风格的、简洁的习惯追踪应用，帮助用户建立和维持良好的日常习惯。通过智能提醒和社交监督功能，让习惯养成更加有效。
+</div>
 
-HabitPulse 使用 AI 辅助开发。如果您使用 Qwen Code 或 Claude Code 进行二次开发，读取 `QWEN.md` 以获得重要信息。
+---
 
-## 功能特性
+## 📱 简介
 
-- **习惯追踪**：创建、管理和追踪日常习惯
-- **智能提醒**：基于时间的提醒功能，帮助用户坚持习惯
-- **社交监督**：习惯完成情况可通知指定联系人
-- **后台保活**：长期后台运行，确保提醒准时送达
-- **MD3设计**：采用 Material Design 3 风格，界面简洁美观
+**HabitPulse** 是一款采用 Material Design 3 设计风格的 Android 习惯追踪应用，致力于帮助用户建立和维持良好的日常习惯。通过简洁直观的界面设计和智能化的提醒机制，让习惯养成变得更加轻松有效。
 
-## 技术栈
+> 💡 HabitPulse 使用 AI 辅助开发。如果您使用 Qwen Code 或 Claude Code 进行二次开发，请阅读 [`QWEN.md`](QWEN.md) 以获取重要信息。
 
-- **语言**: Kotlin 2.3.10
-- **UI 框架**: Jetpack Compose with Material Design 3
-- **导航**: Navigation Compose
-- **数据库**: Room 2.8.4
-- **调度**: AlarmManager (计划中)
-- **构建系统**: Gradle Kotlin DSL
-- **最低 SDK**: 26 (Android 8.0)
-- **目标 SDK**: 36
+---
 
-## 当前版本
+## ✨ 功能特性
 
-**v0.3.5-alpha**（未发布）
+### 🎯 核心功能
+- **习惯追踪**：创建、管理和追踪日常习惯，记录每一次打卡
+- **打卡记录**：完整的打卡历史记录，支持查看任意日期的完成情况
+- **联系人监督**：添加监督人邮箱或电话，习惯完成情况可通知指定联系人（计划中）
+- **智能提醒**：基于时间的提醒功能，帮助用户坚持习惯（计划中）
 
-## 版本号规则
+### 🎨 UI/UX 特性
+- **Material Design 3**：采用最新的 MD3 设计规范，界面简洁美观
+- **动态配色**：支持 Android 12+ 的动态主题色（Material You）
+- **响应式布局**：完美适配手机和平板，支持横竖屏切换
+- **分屏支持**：支持多窗口和画中画模式
+- **无障碍优化**：完整的 TalkBack 支持，关怀每一位用户
+- **预测性返回手势**：Android 13+ 预测性返回手势支持
 
-HabitPulse 使用[语义化版本](https://semver.org/lang/zh-CN/)，版本格式为：`主版本号.次版本号.修订号`。版本号递增规则如下：
+### 🔧 技术特性
+- **Jetpack Compose**：声明式 UI 框架，现代化开发体验
+- **Room 数据库**：本地数据持久化，离线可用
+- **ViewModel + Flow**：响应式架构，数据驱动 UI
+- **导航组件**：Navigation Compose 实现流畅的页面切换动画
 
-1. 主版本号：当做了不兼容的 API 修改
-2. 次版本号：当做了向下兼容的功能性新增
-3. 修订号：当做了向下兼容的问题修正
+---
 
-其中，本项目约定：
+## 🖼️ 界面预览
 
-- 只有功能完全实现的正式版，主版本号才为 1 或更高
-- 只有当我认为新增的功能应该算作一次完整的实现，修订号才递增
-- ~~每次 commit 视作至少一次修订，需递增修订号，即便只是在文档等应用之外的地方变更也递增~~
+<div align="center">
 
-> 取消这个规定，是因为我经常忘记在 commit 前增加版本号，这样的事情发生得太多了。fk。
+| <div align="center">**📱 手机界面**</div> | <div align="center">**📱 平板界面**</div> |
+|---|---|
+| ![手机界面](doc/images/showcases/Screenshot_Pixel_6a_Habits_ZH-CN.png) | ![平板界面](doc/images/showcases/Screenshot_Pixel_Tablet_Habits_ZH-CN.png) |
 
-- 版本号后可附加 `alpha`、`beta` ，分别用于指示内部测试版（内测版）和公共测试版（公测版）
-- 主版本为 0 的版本必须添加 `alpha` 后缀
-- 正式发布版版本不带后缀
+</div>
 
-例如，`0.1.11-alpha`、`1.0.1`、`1.0.2-beta` 是正确的版本名，而 `0.1.1`、`0.1.11-beta` 是错误的版本名。
+---
 
-版本代号在每次正式发布后递增。
+## 🚀 快速开始
+
+### 环境要求
+- **Android Studio**：最新版（推荐 Hedgehog 或更新版本）
+- **JDK**：11 或更高版本
+- **Android SDK**：
+  - 最低 SDK：26 (Android 8.0)
+  - 目标 SDK：36 (Android 16)
+
+### 克隆项目
+```bash
+git clone https://github.com/darrindeyoung791/HabitPulse.git
+cd HabitPulse
+```
+
+### 构建项目
+```bash
+# 使用 Gradle Wrapper 构建
+./gradlew assembleDebug
+
+# 或使用 Android Studio 打开项目后直接运行
+```
+
+### 安装应用
+```bash
+# 通过 ADB 安装到连接的设备
+./gradlew installDebug
+```
+
+---
+
+## 🛠️ 技术栈
+
+| 组件 | 版本 | 说明 |
+|------|------|------|
+| **语言** | Kotlin 2.3.10 | 现代化 Android 开发语言 |
+| **UI 框架** | Jetpack Compose 1.7.6 | 声明式 UI 框架 |
+| **Material 3** | 1.4.0 | Material Design 3 组件库 |
+| **导航** | Navigation Compose 2.8.0 | 页面导航与动画 |
+| **数据库** | Room 2.8.4 | 本地数据持久化 |
+| **生命周期** | 2.10.0 | 生命周期感知组件 |
+| **ViewModel** | 2.8.7 | UI 状态管理 |
+| **构建工具** | Gradle 9.4.0 + AGP 9.1.0 | 项目构建系统 |
+
+---
+
+## 📦 项目结构
+
+```
+HabitPulse/
+├── app/
+│   ├── src/main/
+│   │   ├── java/io/github/darrindeyoung791/habitpulse/
+│   │   │   ├── MainActivity.kt              # 主入口
+│   │   │   ├── SettingsActivity.kt          # 设置页面
+│   │   │   ├── HabitPulseApplication.kt     # Application 类
+│   │   │   ├── navigation/                  # 导航图
+│   │   │   ├── data/                        # 数据层
+│   │   │   │   ├── model/                   # 数据模型
+│   │   │   │   ├── database/                # Room 数据库
+│   │   │   │   └── repository/              # 数据仓库
+│   │   │   ├── viewmodel/                   # ViewModel 层
+│   │   │   └── ui/                          # UI 层
+│   │   │       ├── screens/                 # 页面组件
+│   │   │       └── theme/                   # 主题样式
+│   │   └── res/                             # 资源文件
+│   └── build.gradle.kts                     # 模块构建配置
+├── gradle/                                  # Gradle 包装器
+├── QWEN.md                                  # 项目上下文文档
+└── README.md                                # 项目说明文档
+```
+
+---
+
+## 📄 数据库设计
+
+### 核心数据表
+
+#### habits（习惯表）
+存储用户创建的所有习惯信息。
+
+| 字段 | 类型 | 说明 |
+|------|------|------|
+| id | TEXT (PRIMARY KEY) | 习惯唯一标识符 (UUID) |
+| title | TEXT | 习惯标题 |
+| repeatCycle | TEXT | 重复周期 (DAILY/WEEKLY) |
+| repeatDays | TEXT | 重复日期 (JSON 格式) |
+| reminderTimes | TEXT | 提醒时间 (JSON 格式) |
+| notes | TEXT | 备注信息 |
+| supervisionMethod | TEXT | 监督方式 (NONE/EMAIL/SMS) |
+| supervisorEmails | TEXT | 监督人邮箱 (JSON 格式) |
+| supervisorPhones | TEXT | 监督人电话 (JSON 格式) |
+| completedToday | INTEGER | 今日完成状态 (0/1) |
+| completionCount | INTEGER | 总完成次数 |
+| lastCompletedDate | INTEGER | 最后完成时间戳 |
+| createdDate | INTEGER | 创建时间戳 |
+| modifiedDate | INTEGER | 修改时间戳 |
+
+#### habit_completions（打卡记录表）
+记录每次习惯打卡的详细信息。
+
+| 字段 | 类型 | 说明 |
+|------|------|------|
+| id | TEXT (PRIMARY KEY) | 记录唯一标识符 (UUID) |
+| habitId | TEXT (FOREIGN KEY) | 关联习惯 ID |
+| completedDate | INTEGER | 完成时间戳 |
+| completedDateLocal | TEXT | 本地日期 (yyyy-MM-dd) |
+| timeZone | TEXT | 时区信息 |
+
+> 📚 详细的数据库设计文档请参阅 [Wiki - 数据库设计](https://github.com/darrindeyoung791/HabitPulse/wiki/Database-Design)
+
+---
+
+## 🤝 贡献指南
+
+我们欢迎各种形式的贡献！
+
+### 如何贡献
+1. **Fork** 本项目
+2. 创建您的特性分支 (`git checkout -b feature/AmazingFeature`)
+3. 提交您的修改 (`git commit -m 'Add some AmazingFeature'`)
+4. 推送到分支 (`git push origin feature/AmazingFeature`)
+5. 开启一个 **Pull Request**
+
+### 开发环境设置
+1. 克隆项目后，使用 Android Studio 打开
+2. 同步 Gradle 项目
+3. 运行 `./gradlew assembleDebug` 确保构建成功
+4. 在模拟器或真机上运行调试
+
+### 代码规范
+- 遵循 [Kotlin 代码风格指南](https://kotlinlang.org/docs/coding-conventions.html)
+- 使用 KDoc 编写文档注释
+- 保持代码整洁，遵循 DRY 原则
+
+### 报告问题
+发现 Bug？请通过 [Issues](https://github.com/darrindeyoung791/HabitPulse/issues) 向我们报告。
+
+---
 
 
+## 📜 开源协议
 
-## 数据库结构
+本项目采用 [MIT 协议](LICENSE) 开源。
 
-### habits 表
+```
+Copyright (c) 2024-2026 darrindeyoung791
 
-| 列名                       | 类型 | 描述                                                             |
-|--------------------------|------|----------------------------------------------------------------|
-| id                       | TEXT (PRIMARY KEY) | 习惯的唯一标识符 (UUID)                                               |
-| title                    | TEXT | 习惯的标题                                                          |
-| repeatCycle              | TEXT | 重复周期（DAILY 或 WEEKLY）                                           |
-| repeatDays               | TEXT | 重复天数列表（用于每周习惯，以 JSON 格式存储，如 [1,3,5] 表示周一、三、五）                  |
-| reminderTimes            | TEXT | 提醒时间列表（以 JSON 格式存储，如 ["08:00","20:00"] 表示早上 8 点和晚上 8 点）        |
-| notes                    | TEXT | 习惯的备注信息                                                        |
-| supervisionMethod        | TEXT | 监督方式（NONE、EMAIL 或 SMS）                                     |
-| supervisorEmails         | TEXT | 监督人邮箱地址列表（以 JSON 格式存储）                                         |
-| supervisorPhones         | TEXT | 监督人手机号列表（以 JSON 格式存储）                                          |
-| completedToday           | INTEGER (BOOLEAN) | 今天是否已完成（0=未完成，1=已完成）                                           |
-| completionCount          | INTEGER | 总完成次数                                                          |
-| lastCompletedDate        | INTEGER | 最后完成日期（时间戳，可为 null）                                                      |
-| createdDate              | INTEGER | 创建日期（时间戳）                                                      |
-| modifiedDate             | INTEGER | 最后修改日期（时间戳）                                                  |
+Permission is hereby granted, free of charge, to any person obtaining a copy
+of this software and associated documentation files (the "Software"), to deal
+in the Software without restriction, including without limitation the rights
+to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+copies of the Software, and to permit persons to whom the Software is
+furnished to do so, subject to the following conditions:
 
-### 枚举类型说明
+The above copyright notice and this permission notice shall be included in all
+copies or substantial portions of the Software.
+```
 
-#### RepeatCycle（重复周期）
-- `DAILY`：每日重复
-- `WEEKLY`：每周重复
+---
 
-#### SupervisionMethod（监督方式）
-- `NONE`：不监督，仅本地提醒
-- `EMAIL`：邮件汇报
-- `SMS`：短信汇报
+<div align="center">
 
-### 数据库配置
-- 数据库名称：`habitpulse_database`
-- 数据库版本：1
-- 使用 `ListConverters` 和 `EnumConverters` 进行类型转换，支持 `List<Int>`、`List<String>`、`RepeatCycle`、`SupervisionMethod` 等类型的存储和读取
+**由 darrindeyoung791 用 ❤️ 制作**
 
-## 开发计划
+**Made with ❤️ by darrindeyoung791**
 
-1. 项目初始化：创建基础项目结构，配置 Gradle 依赖
-2. UI基础：实现原生 MD3 风格的主界面，保持简洁
-3. 数据层：创建 Room 数据库，用于存储习惯数据
-4. 核心功能：实现添加和管理习惯的功能
-5. 提醒功能：使用 AlarmManager 实现定时提醒
-6. 后台保活：实现长期后台运行机制（注意 Android 限制）
-7. 邮件短信集成：实现邮件和短信发送功能，当前仅跳转到发送页面
-8. 用户配置：创建设置界面，配置提醒时间和联系人
-9. 测试优化：功能测试和性能优化
-10. 打包发布：准备发布版本
+[⭐ Star this repo](https://github.com/darrindeyoung791/HabitPulse/stargazers) | [🍴 Fork](https://github.com/darrindeyoung791/HabitPulse/fork) | [📢 Issues](https://github.com/darrindeyoung791/HabitPulse/issues)
+
+</div>
