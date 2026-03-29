@@ -196,27 +196,38 @@ fun HomeScreen(
     }
 
     val configuration = LocalConfiguration.current
-    var screenWidthDp = configuration.screenWidthDp
+    val screenWidthDp = configuration.screenWidthDp
     val isLandscape = configuration.orientation == Configuration.ORIENTATION_LANDSCAPE
-
-    // 获取用户偏好设置
+    
+    // Get user preferences
     val userPreferences = application?.let {
         remember { io.github.darrindeyoung791.habitpulse.data.preferences.UserPreferences.getInstance(it) }
     }
     val forceTabletLandscape: Boolean by userPreferences?.forceTabletLandscapeFlow?.collectAsStateWithLifecycle(initialValue = false) ?: remember { mutableStateOf(false) }
 
-    // 如果启用了强制平板横屏模式，将屏幕宽度视为 ≥1200dp
-    if (forceTabletLandscape && isLandscape && screenWidthDp < 1200) {
-        screenWidthDp = 1200
-    }
-
-    // Navigation mode decision logic:
-    // - Tablet landscape (≥1200dp): PermanentNavigationDrawer with hamburger menu
-    // - Phone landscape (<1200dp): NavigationRail
+    // Navigation mode decision logic using screenWidthDp with improved threshold:
+    // - Expanded width (≥840dp) + landscape: PermanentNavigationDrawer with hamburger menu
+    // - Compact/Medium width (<840dp) + landscape: NavigationRail
     // - All portrait modes: BottomNavigationBar
-    val isPermanentDrawer = screenWidthDp >= 1200 && isLandscape
-    val useRail = screenWidthDp < 1200 && isLandscape
+    // Note: Using 840dp threshold (Material Design breakpoint) instead of 1200dp
+    // for better tablet detection in landscape mode
+    val isExpandedWidth = screenWidthDp >= 840
+    val isPermanentDrawer = isExpandedWidth && isLandscape
+    val useRail = !isExpandedWidth && isLandscape
     val useBottomBar = !isPermanentDrawer && !useRail
+    
+    // Fallback: If forceTabletLandscape is enabled but device is not detected as expanded,
+    // force expanded width detection
+    val effectiveIsPermanentDrawer = if (forceTabletLandscape && isLandscape && !isExpandedWidth) {
+        true
+    } else {
+        isPermanentDrawer
+    }
+    val effectiveUseRail = if (forceTabletLandscape && isLandscape && !isExpandedWidth) {
+        false
+    } else {
+        useRail
+    }
 
     var currentSection by rememberSaveable { mutableStateOf(HomeSection.Habits) }
     var isDrawerExpanded by rememberSaveable { mutableStateOf(true) }
@@ -248,8 +259,8 @@ fun HomeScreen(
 
     val displayCutout = WindowInsets.displayCutout
     val layoutDirection = LocalLayoutDirection.current
-    val isRailCutoutLeft = useRail && displayCutout.getLeft(LocalDensity.current, layoutDirection) > 0
-    val isRailCutoutRight = useRail && displayCutout.getRight(LocalDensity.current, layoutDirection) > 0
+    val isRailCutoutLeft = effectiveUseRail && displayCutout.getLeft(LocalDensity.current, layoutDirection) > 0
+    val isRailCutoutRight = effectiveUseRail && displayCutout.getRight(LocalDensity.current, layoutDirection) > 0
 
     val sectionItems = listOf(
         HomeSection.Habits,
@@ -635,7 +646,7 @@ fun HomeScreen(
     val showFab = currentSection == HomeSection.Habits
     val newHabitLabel = stringResource(id = R.string.main_new_habit)
 
-    if (isPermanentDrawer) {
+    if (effectiveIsPermanentDrawer) {
         PermanentNavigationDrawer(
             drawerContent = {
                 PermanentDrawerSheet(
@@ -776,7 +787,7 @@ fun HomeScreen(
                 }
             }
         }
-    } else if (useRail) {
+    } else if (effectiveUseRail) {
         // NavigationRail layout for landscape phones (<1200dp)
         // Rail occupies full height on left, content area on right
         Row(
@@ -940,7 +951,7 @@ fun HomeScreen(
             contentWindowInsets = WindowInsets(0, 0, 0, 0)
         ) { paddingValues ->
             // Collapsed NavigationBar for tablet landscape
-            if (isPermanentDrawer) {
+            if (effectiveIsPermanentDrawer) {
                 Row(
                     modifier = Modifier
                         .fillMaxSize()
@@ -986,7 +997,7 @@ fun HomeScreen(
 
         if (recDatePickerExpanded) {
             DatePickerDialogContent(
-                isPhoneLandscape = useRail,
+                isPhoneLandscape = effectiveUseRail,
                 selectedDate = recSelectedDate,
                 onDismiss = { recordsVM.setDatePickerExpanded(false) },
                 onDateSelected = { recordsVM.selectDate(it) }
@@ -1200,21 +1211,24 @@ fun HabitListContent(
     searchQuery: String = ""
 ) {
     val configuration = LocalConfiguration.current
-    var screenWidthDp = configuration.screenWidthDp
+    val screenWidthDp = configuration.screenWidthDp
     val isLandscape = configuration.orientation == Configuration.ORIENTATION_LANDSCAPE
-
-    // 如果启用了强制平板横屏模式，将屏幕宽度视为 ≥1200dp
-    if (forceTabletLandscape && isLandscape && screenWidthDp < 1200) {
-        screenWidthDp = 1200
+    
+    // Use staggered grid for expanded width devices (≥840dp) in landscape
+    val isExpandedWidth = screenWidthDp >= 840
+    val useStaggeredGrid = isExpandedWidth && isLandscape
+    
+    // Fallback for forceTabletLandscape
+    val effectiveUseStaggeredGrid = if (forceTabletLandscape && isLandscape && !isExpandedWidth) {
+        true
+    } else {
+        useStaggeredGrid
     }
-
-    // Use staggered grid only for tablets in landscape (≥1200dp)
-    val useStaggeredGrid = isLandscape && screenWidthDp >= 1200
 
     // Use consistent 16.dp horizontal padding to align with LargeTopAppBar title
     val horizontalPadding = 16.dp
 
-    if (useStaggeredGrid) {
+    if (effectiveUseStaggeredGrid) {
         // Waterfall layout with synchronized scrolling for landscape tablets
         // Split habits into two columns: odd and even indices
         val column1Habits = habits.filterIndexed { index, _ -> index % 2 == 0 }
