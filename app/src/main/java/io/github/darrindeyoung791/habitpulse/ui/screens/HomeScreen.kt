@@ -196,8 +196,13 @@ fun HomeScreen(
     }
 
     val configuration = LocalConfiguration.current
-    var screenWidthDp = configuration.screenWidthDp
+    val screenWidthDp = configuration.screenWidthDp
     val isLandscape = configuration.orientation == Configuration.ORIENTATION_LANDSCAPE
+    // Use smallestScreenWidthDp to detect device type (independent of orientation)
+    // Tablet: smallestScreenWidthDp >= 600dp
+    // Phone: smallestScreenWidthDp < 600dp
+    val smallestScreenWidthDp = configuration.smallestScreenWidthDp
+    val isTabletDevice = smallestScreenWidthDp >= 600
 
     // 获取用户偏好设置
     val userPreferences = application?.let {
@@ -205,18 +210,25 @@ fun HomeScreen(
     }
     val forceTabletLandscape: Boolean by userPreferences?.forceTabletLandscapeFlow?.collectAsStateWithLifecycle(initialValue = false) ?: remember { mutableStateOf(false) }
 
-    // 如果启用了强制平板横屏模式，将屏幕宽度视为 ≥1200dp
-    if (forceTabletLandscape && isLandscape && screenWidthDp < 1200) {
-        screenWidthDp = 1200
-    }
-
     // Navigation mode decision logic:
-    // - Tablet landscape (≥1200dp): PermanentNavigationDrawer with hamburger menu
-    // - Phone landscape (<1200dp): NavigationRail
+    // - Tablet in landscape: PermanentNavigationDrawer with hamburger menu
+    // - Phone in landscape: NavigationRail
     // - All portrait modes: BottomNavigationBar
-    val isPermanentDrawer = screenWidthDp >= 1200 && isLandscape
-    val useRail = screenWidthDp < 1200 && isLandscape
+    val isPermanentDrawer = isTabletDevice && isLandscape
+    val useRail = !isTabletDevice && isLandscape
     val useBottomBar = !isPermanentDrawer && !useRail
+    
+    // Fallback: forceTabletLandscape for edge cases
+    val effectiveIsPermanentDrawer = if (forceTabletLandscape && isLandscape && !isTabletDevice) {
+        true
+    } else {
+        isPermanentDrawer
+    }
+    val effectiveUseRail = if (forceTabletLandscape && isLandscape && !isTabletDevice) {
+        false
+    } else {
+        useRail
+    }
 
     var currentSection by rememberSaveable { mutableStateOf(HomeSection.Habits) }
     var isDrawerExpanded by rememberSaveable { mutableStateOf(true) }
@@ -248,8 +260,8 @@ fun HomeScreen(
 
     val displayCutout = WindowInsets.displayCutout
     val layoutDirection = LocalLayoutDirection.current
-    val isRailCutoutLeft = useRail && displayCutout.getLeft(LocalDensity.current, layoutDirection) > 0
-    val isRailCutoutRight = useRail && displayCutout.getRight(LocalDensity.current, layoutDirection) > 0
+    val isRailCutoutLeft = effectiveUseRail && displayCutout.getLeft(LocalDensity.current, layoutDirection) > 0
+    val isRailCutoutRight = effectiveUseRail && displayCutout.getRight(LocalDensity.current, layoutDirection) > 0
 
     val sectionItems = listOf(
         HomeSection.Habits,
@@ -635,7 +647,7 @@ fun HomeScreen(
     val showFab = currentSection == HomeSection.Habits
     val newHabitLabel = stringResource(id = R.string.main_new_habit)
 
-    if (isPermanentDrawer) {
+    if (effectiveIsPermanentDrawer) {
         PermanentNavigationDrawer(
             drawerContent = {
                 PermanentDrawerSheet(
@@ -776,8 +788,8 @@ fun HomeScreen(
                 }
             }
         }
-    } else if (useRail) {
-        // NavigationRail layout for landscape phones (<1200dp)
+    } else if (effectiveUseRail) {
+        // NavigationRail layout for landscape phones
         // Rail occupies full height on left, content area on right
         Row(
             modifier = Modifier
@@ -940,7 +952,7 @@ fun HomeScreen(
             contentWindowInsets = WindowInsets(0, 0, 0, 0)
         ) { paddingValues ->
             // Collapsed NavigationBar for tablet landscape
-            if (isPermanentDrawer) {
+            if (effectiveIsPermanentDrawer) {
                 Row(
                     modifier = Modifier
                         .fillMaxSize()
@@ -986,7 +998,7 @@ fun HomeScreen(
 
         if (recDatePickerExpanded) {
             DatePickerDialogContent(
-                isPhoneLandscape = useRail,
+                isPhoneLandscape = effectiveUseRail,
                 selectedDate = recSelectedDate,
                 onDismiss = { recordsVM.setDatePickerExpanded(false) },
                 onDateSelected = { recordsVM.selectDate(it) }
