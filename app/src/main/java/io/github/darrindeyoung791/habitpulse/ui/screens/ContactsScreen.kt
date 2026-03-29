@@ -315,7 +315,7 @@ fun ContactCard(
                 }
             ),
         shape = RoundedCornerShape(12.dp),
-        color = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f)
+        color = MaterialTheme.colorScheme.surfaceVariant
     ) {
         Row(
             modifier = Modifier
@@ -364,7 +364,8 @@ fun ContactCard(
                     style = MaterialTheme.typography.titleMedium,
                     fontWeight = FontWeight.Medium,
                     maxLines = 1,
-                    overflow = TextOverflow.Ellipsis
+                    overflow = TextOverflow.Ellipsis,
+                    color = MaterialTheme.colorScheme.onSurface
                 )
                 Text(
                     text = stringResource(
@@ -468,7 +469,7 @@ fun ContactBottomSheetContent(
                     Surface(
                         modifier = Modifier.fillMaxWidth(),
                         shape = RoundedCornerShape(8.dp),
-                        color = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.3f)
+                        color = MaterialTheme.colorScheme.surfaceVariant
                     ) {
                         Row(
                             modifier = Modifier
@@ -485,7 +486,8 @@ fun ContactBottomSheetContent(
                                     style = MaterialTheme.typography.bodyLarge,
                                     fontWeight = FontWeight.Medium,
                                     maxLines = 1,
-                                    overflow = TextOverflow.Ellipsis
+                                    overflow = TextOverflow.Ellipsis,
+                                    color = MaterialTheme.colorScheme.onSurface
                                 )
                                 Text(
                                     text = when (contact.type) {
@@ -513,7 +515,8 @@ fun ContactBottomSheetContent(
                                 Spacer(modifier = Modifier.width(4.dp))
                                 Text(
                                     text = stringResource(id = R.string.contacts_delete_from_habit),
-                                    style = MaterialTheme.typography.labelLarge
+                                    style = MaterialTheme.typography.labelLarge,
+                                    color = MaterialTheme.colorScheme.onErrorContainer
                                 )
                             }
                         }

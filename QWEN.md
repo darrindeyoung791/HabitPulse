@@ -346,3 +346,73 @@ The app uses a responsive navigation system that adapts to screen size and orien
 - Release builds have minification and resource shrinking enabled
 - All activities support multi-window and picture-in-picture modes
 - Back gesture handling uses `enableOnBackInvokedCallback`
+
+## Development Guidelines & Lessons Learned
+
+### DatePicker Implementation Pattern (March 2026)
+
+**Problem**: When implementing orientation-dependent DatePicker dialogs, using multiple `if` conditions can cause both dialogs to appear simultaneously during recomposition, even when conditions appear mutually exclusive.
+
+**Solution**: Extract the DatePicker into a separate `@Composable` function and use `key()` to force complete recreation when orientation changes.
+
+**Correct Pattern**:
+```kotlin
+// In main composable
+val configuration = LocalConfiguration.current
+val screenWidthDp = configuration.screenWidthDp
+val isLandscape = configuration.orientation == Configuration.ORIENTATION_LANDSCAPE
+val isPhoneLandscape = screenWidthDp < 1200 && isLandscape  // Match HomeScreen logic
+
+if (datePickerExpanded) {
+    DatePickerContent(
+        isPhoneLandscape = isPhoneLandscape,
+        selectedDate = selectedDate,
+        onDismiss = { viewModel.setDatePickerExpanded(false) },
+        onDateSelected = { date -> viewModel.selectDate(date) }
+    )
+}
+
+// Separate private composable function
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+private fun DatePickerContent(
+    isPhoneLandscape: Boolean,
+    selectedDate: LocalDate?,
+    onDismiss: () -> Unit,
+    onDateSelected: (LocalDate) -> Unit
+) {
+    // CRITICAL: Use key() to force complete recreation when orientation changes
+    key(isPhoneLandscape) {
+        val initialDisplayMode = if (isPhoneLandscape) DisplayMode.Input else DisplayMode.Picker
+        val datePickerState = rememberDatePickerState(
+            initialSelectedDateMillis = selectedDate?.atStartOfDay()?.toInstant(java.time.ZoneOffset.UTC)?.toEpochMilli()
+                ?: System.currentTimeMillis(),
+            initialDisplayMode = initialDisplayMode
+        )
+
+        DatePickerDialog(
+            onDismissRequest = onDismiss,
+            // ... buttons
+        ) {
+            DatePicker(state = datePickerState)
+        }
+    }
+}
+```
+
+**Key Points**:
+1. **Single `if` condition**: Only check `datePickerExpanded` in the main function, not orientation
+2. **Extract to separate composable**: Move DatePicker logic to a private `@Composable` function
+3. **Use `key()` wrapper**: Wrap the entire DatePicker creation in `key(isPhoneLandscape)` to force recreation
+4. **Pass callbacks**: Use lambda parameters for dismiss and date selection actions
+5. **Match HomeScreen logic**: Use `screenWidthDp < 1200 && isLandscape` for phone landscape detection (consistent with app's navigation logic)
+
+**Why This Works**:
+- `key()` forces Compose to completely destroy and recreate the composable when the key value changes
+- This prevents state bleeding between orientation changes
+- Separate function ensures clean composition scope
+- Single `if` condition eliminates race conditions during recomposition
+
+**Device Detection Thresholds** (consistent with app navigation):
+- Phone Landscape: `screenWidthDp < 1200 && isLandscape` → Use `DisplayMode.Input`
+- All other cases (portrait, tablet): Use `DisplayMode.Picker`
