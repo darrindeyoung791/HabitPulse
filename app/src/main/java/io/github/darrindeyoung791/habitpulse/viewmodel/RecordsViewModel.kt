@@ -49,6 +49,18 @@ class RecordsViewModel(
     val isLoading: StateFlow<Boolean> = _isLoading.asStateFlow()
 
     /**
+     * 数据是否已经加载过（用于避免切换页面时反复显示加载指示器）
+     */
+    private val _hasLoadedDataOnce = MutableStateFlow(false)
+    val hasLoadedDataOnce: StateFlow<Boolean> = _hasLoadedDataOnce.asStateFlow()
+
+    /**
+     * 最后一次的非空数据（用于避免切换页面时闪现空状态）
+     */
+    private val _lastNonEmptyData = MutableStateFlow<List<DateGroup>>(emptyList())
+    val lastNonEmptyData: StateFlow<List<DateGroup>> = _lastNonEmptyData.asStateFlow()
+
+    /**
      * 当前选中的日期（用于过滤），null 表示不过滤日期
      */
     private val _selectedDate = MutableStateFlow<LocalDate?>(null)
@@ -139,7 +151,11 @@ class RecordsViewModel(
             .sortedByDescending { it.date }
     }.onEach {
         _isLoading.value = false
-        hasLoadedData = true
+        _hasLoadedDataOnce.value = true
+        // 保存最后一次的非空数据
+        if (it.isNotEmpty()) {
+            _lastNonEmptyData.value = it
+        }
     }
 
     /**
@@ -147,7 +163,7 @@ class RecordsViewModel(
      */
     fun resetLoadingState() {
         _isLoading.value = true
-        hasLoadedData = false
+        // 注意：不重置 hasLoadedDataOnce，避免切换页面时反复显示加载指示器
     }
 
     /**

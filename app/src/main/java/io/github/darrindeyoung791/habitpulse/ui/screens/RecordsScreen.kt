@@ -38,6 +38,7 @@ import androidx.compose.material.icons.filled.ArrowDropDown
 import androidx.compose.material.icons.filled.Check
 import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.outlined.Assessment
+import androidx.compose.material.icons.outlined.CalendarMonth
 import androidx.compose.material.icons.outlined.CalendarToday
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
@@ -56,13 +57,6 @@ import androidx.compose.material3.TextButton
 import androidx.compose.material3.TopAppBarScrollBehavior
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.ExperimentalComposeUiApi
-import androidx.compose.animation.AnimatedVisibility
-import androidx.compose.animation.fadeIn
-import androidx.compose.animation.fadeOut
-import androidx.compose.animation.slideInHorizontally
-import androidx.compose.animation.slideOutHorizontally
-import androidx.compose.material.icons.outlined.CalendarMonth
-import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -98,16 +92,6 @@ import java.util.Calendar
 import java.util.Date
 import java.util.Locale
 import java.util.UUID
-
-/**
- * 重置加载状态
- */
-@Composable
-private fun ResetLoadingStateOnEnter(viewModel: RecordsViewModel) {
-    LaunchedEffect(Unit) {
-        viewModel.resetLoadingState()
-    }
-}
 
 /**
  * 格式化相对日期
@@ -185,14 +169,17 @@ fun RecordsScreenContent(
         }
     }
 
-    ResetLoadingStateOnEnter(viewModel)
-
     // Collect ViewModel states
     val groupedRecords by viewModel.groupedRecordsFlow.collectAsStateWithLifecycle(initialValue = emptyList())
     val selectedHabitId by viewModel.selectedHabitId.collectAsStateWithLifecycle()
     val habitOptions by viewModel.habitOptionsFlow.collectAsStateWithLifecycle(initialValue = emptyList())
-    val isLoading by viewModel.isLoading.collectAsStateWithLifecycle(initialValue = true)
+    val isLoading by viewModel.isLoading.collectAsStateWithLifecycle(initialValue = false)
+    val hasLoadedDataOnce by viewModel.hasLoadedDataOnce.collectAsStateWithLifecycle(initialValue = false)
+    val lastNonEmptyData by viewModel.lastNonEmptyData.collectAsStateWithLifecycle(initialValue = emptyList())
     val selectedDate by viewModel.selectedDate.collectAsStateWithLifecycle()
+
+    // 使用最后一次的非空数据，避免切换页面时闪现空状态
+    val displayRecords = if (groupedRecords.isNotEmpty()) groupedRecords else lastNonEmptyData
 
     // Get selected habit name for display
     val selectedHabitName = habitOptions.find { option ->
@@ -233,7 +220,8 @@ fun RecordsScreenContent(
 
         // === Content Section ===
         when {
-            isLoading -> {
+            // 只在首次加载时显示加载指示器，切换页面时不显示
+            isLoading && !hasLoadedDataOnce -> {
                 Box(
                     modifier = Modifier.fillMaxSize(),
                     contentAlignment = Alignment.Center
@@ -241,7 +229,7 @@ fun RecordsScreenContent(
                     CircularProgressIndicator()
                 }
             }
-            groupedRecords.isEmpty() -> {
+            displayRecords.isEmpty() -> {
                 EmptyRecordsContent(
                     modifier = Modifier.fillMaxSize()
                 )
@@ -253,7 +241,7 @@ fun RecordsScreenContent(
                     contentPadding = PaddingValues(horizontal = 16.dp, vertical = 8.dp),
                     verticalArrangement = Arrangement.spacedBy(4.dp)
                 ) {
-                    groupedRecords.forEach { dateGroup ->
+                    displayRecords.forEach { dateGroup ->
                         item(key = "header_${dateGroup.date}") {
                             DateSectionHeader(
                                 date = dateGroup.date,

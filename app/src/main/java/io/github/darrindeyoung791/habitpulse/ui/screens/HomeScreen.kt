@@ -2,6 +2,7 @@ package io.github.darrindeyoung791.habitpulse.ui.screens
 
 import android.content.res.Configuration
 import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.AnimatedContent
 import androidx.compose.animation.core.animateDpAsState
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.core.spring
@@ -13,6 +14,7 @@ import androidx.compose.animation.scaleOut
 import androidx.compose.animation.slideInVertically
 import androidx.compose.animation.slideOutVertically
 import androidx.compose.animation.animateContentSize
+import androidx.compose.animation.togetherWith
 import androidx.compose.foundation.combinedClickable
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.background
@@ -234,21 +236,27 @@ fun HomeScreen(
 
     val navigateToSection: (HomeSection) -> Unit = { targetSection ->
         if (currentSection == targetSection) {
-            // 如果点击的是当前页面，滚动到顶部
+            // 如果点击的是当前页面，滚动到顶部并展开 AppBar
             when (targetSection) {
                 HomeSection.Habits -> {
                     scope.launch {
                         habitsScrollState.animateScrollToItem(0)
+                        // 同时展开 AppBar
+                        habitsScrollBehavior.state.heightOffset = 0f
                     }
                 }
                 HomeSection.Records -> {
                     scope.launch {
                         recordsScrollState.animateScrollToItem(0)
+                        // 同时展开 AppBar
+                        recordsScrollBehavior.state.heightOffset = 0f
                     }
                 }
                 HomeSection.Contacts -> {
                     scope.launch {
                         contactsScrollState.animateScrollToItem(0)
+                        // 同时展开 AppBar
+                        contactsScrollBehavior.state.heightOffset = 0f
                     }
                 }
             }
@@ -259,107 +267,116 @@ fun HomeScreen(
     }
 
     // 主页主体内容 - 不再接收 nestedScrollConn，由各组件自己处理
+    // 使用 AnimatedContent 实现 Section 切换时的淡入淡出动画
     val homeBody: @Composable (Modifier) -> Unit = { modifier ->
-        when (currentSection) {
-            HomeSection.Habits -> {
-                if (isLoading) {
-                    Box(
-                        modifier = modifier.fillMaxSize(),
-                        contentAlignment = Alignment.Center
-                    ) {
-                        CircularProgressIndicator()
-                    }
-                } else {
-                    // 使用 Column 布局，搜索框和内容区域垂直排列
-                    Column(
-                        modifier = modifier.fillMaxSize()
-                    ) {
-                        // 搜索框 - 使用 AnimatedVisibility 带滑入/滑出动画
-                        // 搜索框的高度变化会自动推动下方内容
-                        AnimatedVisibility(
-                            visible = isSearchActive,
-                            enter = slideInVertically(
-                                initialOffsetY = { -it },
-                                animationSpec = spring(dampingRatio = 0.8f, stiffness = 200f)
-                            ) + fadeIn(animationSpec = tween(200)),
-                            exit = slideOutVertically(
-                                targetOffsetY = { -it },
-                                animationSpec = tween(200)
-                            ) + fadeOut(animationSpec = tween(200))
-                        ) {
-                            SearchBarFixed(
-                                searchQuery = searchQuery,
-                                onSearchQueryChange = { viewModel.setSearchQuery(it) },
-                                onClearSearch = { viewModel.clearSearch() },
-                                onBackClick = { isSearchActive = false },
-                                placeholder = stringResource(id = R.string.search_habits_hint),
-                                accessibilityLabel = stringResource(id = R.string.accessibility_search_habits),
-                                focusRequester = searchFocusRequester,
-                                isFocused = isSearchFocused,
-                                onFocusedChange = { isSearchFocused = it }
-                            )
-                        }
-
-                        // 内容区域 - 使用 animateContentSize 让列表项平滑移动
+        AnimatedContent(
+            targetState = currentSection,
+            transitionSpec = {
+                fadeIn(animationSpec = tween(150)) togetherWith fadeOut(animationSpec = tween(150))
+            },
+            label = "sectionTransition"
+        ) { targetSection ->
+            when (targetSection) {
+                HomeSection.Habits -> {
+                    if (isLoading) {
                         Box(
-                            modifier = Modifier
-                                .weight(1f)
-                                .animateContentSize(
-                                    animationSpec = spring(dampingRatio = 0.8f, stiffness = 200f)
-                                )
+                            modifier = modifier.fillMaxSize(),
+                            contentAlignment = Alignment.Center
                         ) {
-                            if (filteredHabits.isEmpty() && searchQuery.isNotEmpty()) {
-                                // 搜索但无结果
-                                SearchEmptyState(
-                                    modifier = Modifier.fillMaxSize(),
-                                    onClearSearch = { viewModel.clearSearch() }
+                            CircularProgressIndicator()
+                        }
+                    } else {
+                        // 使用 Column 布局，搜索框和内容区域垂直排列
+                        Column(
+                            modifier = modifier.fillMaxSize()
+                        ) {
+                            // 搜索框 - 使用 AnimatedVisibility 带滑入/滑出动画
+                            // 搜索框的高度变化会自动推动下方内容
+                            AnimatedVisibility(
+                                visible = isSearchActive,
+                                enter = slideInVertically(
+                                    initialOffsetY = { -it },
+                                    animationSpec = spring(dampingRatio = 0.8f, stiffness = 200f)
+                                ) + fadeIn(animationSpec = tween(200)),
+                                exit = slideOutVertically(
+                                    targetOffsetY = { -it },
+                                    animationSpec = tween(200)
+                                ) + fadeOut(animationSpec = tween(200))
+                            ) {
+                                SearchBarFixed(
+                                    searchQuery = searchQuery,
+                                    onSearchQueryChange = { viewModel.setSearchQuery(it) },
+                                    onClearSearch = { viewModel.clearSearch() },
+                                    onBackClick = { isSearchActive = false },
+                                    placeholder = stringResource(id = R.string.search_habits_hint),
+                                    accessibilityLabel = stringResource(id = R.string.accessibility_search_habits),
+                                    focusRequester = searchFocusRequester,
+                                    isFocused = isSearchFocused,
+                                    onFocusedChange = { isSearchFocused = it }
                                 )
-                            } else if (filteredHabits.isEmpty()) {
-                                // 所有习惯为空
-                                EmptyStateContent(
-                                    modifier = Modifier.fillMaxSize(),
-                                    onCreateHabit = {
-                                        scope.launch {
-                                            clickHandler.processClick {
-                                                onCreateHabit()
+                            }
+
+                            // 内容区域 - 使用 animateContentSize 让列表项平滑移动
+                            Box(
+                                modifier = Modifier
+                                    .weight(1f)
+                                    .animateContentSize(
+                                        animationSpec = spring(dampingRatio = 0.8f, stiffness = 200f)
+                                    )
+                            ) {
+                                if (filteredHabits.isEmpty() && searchQuery.isNotEmpty()) {
+                                    // 搜索但无结果
+                                    SearchEmptyState(
+                                        modifier = Modifier.fillMaxSize(),
+                                        onClearSearch = { viewModel.clearSearch() }
+                                    )
+                                } else if (filteredHabits.isEmpty()) {
+                                    // 所有习惯为空
+                                    EmptyStateContent(
+                                        modifier = Modifier.fillMaxSize(),
+                                        onCreateHabit = {
+                                            scope.launch {
+                                                clickHandler.processClick {
+                                                    onCreateHabit()
+                                                }
                                             }
                                         }
-                                    }
-                                )
-                            } else {
-                                HabitListContent(
-                                    modifier = Modifier.fillMaxSize(),
-                                    habits = filteredHabits,
-                                    onHabitClick = { onEditHabit(it) },
-                                    onCheckIn = { viewModel.incrementCompletionCount(it) },
-                                    onUndoCompletion = { viewModel.undoHabitCompletion(it) },
-                                    onDeleteHabit = { viewModel.deleteHabit(it) },
-                                    nestedScrollConnection = habitsScrollBehavior.nestedScrollConnection,
-                                    newlyAddedHabitId = newlyAddedHabitId,
-                                    listState = habitsScrollState,
-                                    forceTabletLandscape = forceTabletLandscape == true,
-                                    searchQuery = searchQuery
-                                )
+                                    )
+                                } else {
+                                    HabitListContent(
+                                        modifier = Modifier.fillMaxSize(),
+                                        habits = filteredHabits,
+                                        onHabitClick = { onEditHabit(it) },
+                                        onCheckIn = { viewModel.incrementCompletionCount(it) },
+                                        onUndoCompletion = { viewModel.undoHabitCompletion(it) },
+                                        onDeleteHabit = { viewModel.deleteHabit(it) },
+                                        nestedScrollConnection = habitsScrollBehavior.nestedScrollConnection,
+                                        newlyAddedHabitId = newlyAddedHabitId,
+                                        listState = habitsScrollState,
+                                        forceTabletLandscape = forceTabletLandscape == true,
+                                        searchQuery = searchQuery
+                                    )
+                                }
                             }
                         }
                     }
                 }
-            }
-            HomeSection.Contacts -> {
-                ContactsScreenContent(
-                    modifier = modifier,
-                    application = application,
-                    scrollBehavior = contactsScrollBehavior,
-                    listState = contactsScrollState
-                )
-            }
-            HomeSection.Records -> {
-                RecordsScreenContent(
-                    modifier = modifier,
-                    application = application,
-                    scrollBehavior = recordsScrollBehavior,
-                    listState = recordsScrollState
-                )
+                HomeSection.Contacts -> {
+                    ContactsScreenContent(
+                        modifier = modifier,
+                        application = application,
+                        scrollBehavior = contactsScrollBehavior,
+                        listState = contactsScrollState
+                    )
+                }
+                HomeSection.Records -> {
+                    RecordsScreenContent(
+                        modifier = modifier,
+                        application = application,
+                        scrollBehavior = recordsScrollBehavior,
+                        listState = recordsScrollState
+                    )
+                }
             }
         }
     }

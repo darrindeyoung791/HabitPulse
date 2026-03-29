@@ -63,6 +63,18 @@ class ContactsViewModel(
     private val _isLoading = MutableStateFlow(true)
     val isLoading: StateFlow<Boolean> = _isLoading.asStateFlow()
 
+    /**
+     * 数据是否已经加载过（用于避免切换页面时反复显示加载指示器）
+     */
+    private val _hasLoadedDataOnce = MutableStateFlow(false)
+    val hasLoadedDataOnce: StateFlow<Boolean> = _hasLoadedDataOnce.asStateFlow()
+
+    /**
+     * 最后一次的非空数据（用于避免切换页面时闪现空状态）
+     */
+    private val _lastNonEmptyData = MutableStateFlow<List<ContactInfo>>(emptyList())
+    val lastNonEmptyData: StateFlow<List<ContactInfo>> = _lastNonEmptyData.asStateFlow()
+
     init {
         viewModelScope.launch {
             habitsFlow.collect { habits ->
@@ -105,10 +117,16 @@ class ContactsViewModel(
                 }
 
                 // 排序：先按类型，再按值
-                _allContactsFlow.value = contactMap.values.sortedWith(
+                val sortedContacts = contactMap.values.sortedWith(
                     compareBy({ it.type }, { it.value })
                 )
+                _allContactsFlow.value = sortedContacts
                 _isLoading.value = false
+                _hasLoadedDataOnce.value = true
+                // 保存最后一次的非空数据
+                if (sortedContacts.isNotEmpty()) {
+                    _lastNonEmptyData.value = sortedContacts
+                }
             }
         }
     }

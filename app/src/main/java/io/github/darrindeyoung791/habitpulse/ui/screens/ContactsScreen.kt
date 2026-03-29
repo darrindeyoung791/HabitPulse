@@ -46,7 +46,6 @@ import androidx.compose.material3.TextButton
 import androidx.compose.material3.TopAppBarScrollBehavior
 import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
@@ -105,8 +104,13 @@ fun ContactsScreenContent(
 
     // Collect ViewModel states
     val contacts by viewModel.allContactsFlow.collectAsStateWithLifecycle()
-    val isLoading by viewModel.isLoading.collectAsStateWithLifecycle(initialValue = true)
+    val isLoading by viewModel.isLoading.collectAsStateWithLifecycle(initialValue = false)
+    val hasLoadedDataOnce by viewModel.hasLoadedDataOnce.collectAsStateWithLifecycle(initialValue = false)
+    val lastNonEmptyData by viewModel.lastNonEmptyData.collectAsStateWithLifecycle(initialValue = emptyList())
     val selectedContact by viewModel.selectedContact.collectAsStateWithLifecycle()
+
+    // 使用最后一次的非空数据，避免切换页面时闪现空状态
+    val displayContacts = if (contacts.isNotEmpty()) contacts else lastNonEmptyData
     val showBottomSheet by viewModel.showBottomSheet.collectAsStateWithLifecycle()
     val showDeleteConfirmDialog by viewModel.showDeleteConfirmDialog.collectAsStateWithLifecycle()
     val deleteConfirmContext by viewModel.deleteConfirmContext.collectAsStateWithLifecycle()
@@ -121,16 +125,12 @@ fun ContactsScreenContent(
     // Apply nested scroll
     val nestedScrollModifier = scrollBehavior?.let { modifier.nestedScroll(it.nestedScrollConnection) } ?: modifier
 
-    // Reset loading state when entering the screen
-    LaunchedEffect(Unit) {
-        viewModel.resetLoadingState()
-    }
-
     Column(
         modifier = nestedScrollModifier.fillMaxSize()
     ) {
         when {
-            isLoading -> {
+            // 只在首次加载时显示加载指示器，切换页面时不显示
+            isLoading && !hasLoadedDataOnce -> {
                 Box(
                     modifier = Modifier.fillMaxSize(),
                     contentAlignment = Alignment.Center
@@ -138,7 +138,7 @@ fun ContactsScreenContent(
                     CircularProgressIndicator()
                 }
             }
-            contacts.isEmpty() -> {
+            displayContacts.isEmpty() -> {
                 EmptyContactsContent(
                     modifier = Modifier.fillMaxSize()
                 )
@@ -151,7 +151,7 @@ fun ContactsScreenContent(
                     verticalArrangement = Arrangement.spacedBy(8.dp)
                 ) {
                     items(
-                        items = contacts,
+                        items = displayContacts,
                         key = { "${it.type}_${it.value}" }
                     ) { contact ->
                         ContactCard(
