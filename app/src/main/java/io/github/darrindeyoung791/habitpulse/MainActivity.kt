@@ -17,6 +17,7 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import io.github.darrindeyoung791.habitpulse.data.preferences.UserPreferences
 import io.github.darrindeyoung791.habitpulse.navigation.HabitPulseNavGraph
 import io.github.darrindeyoung791.habitpulse.ui.screens.AdScreen
+import io.github.darrindeyoung791.habitpulse.ui.screens.HomeScreen
 import io.github.darrindeyoung791.habitpulse.ui.theme.HabitPulseTheme
 import kotlinx.coroutines.flow.first
 
@@ -149,6 +150,14 @@ fun HandleSystemBackPress(
 @Composable
 fun MainScreenPreview() {
     HabitPulseTheme {
-        // Preview content can be added here if needed
+        // Preview HomeScreen directly to avoid ClassCastException in preview
+        // Full navigation preview requires HabitPulseApplication context
+        HomeScreen(
+            onCreateHabit = {},
+            onNavigateToSettings = {},
+            onEditHabit = {},
+            application = null,
+            onHomeDataLoaded = {}
+        )
     }
 }
