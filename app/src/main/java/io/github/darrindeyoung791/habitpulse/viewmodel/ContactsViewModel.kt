@@ -7,9 +7,14 @@ import io.github.darrindeyoung791.habitpulse.HabitPulseApplication
 import io.github.darrindeyoung791.habitpulse.data.model.Habit
 import io.github.darrindeyoung791.habitpulse.data.model.SupervisionMethod
 import io.github.darrindeyoung791.habitpulse.data.repository.HabitRepository
+import kotlinx.coroutines.FlowPreview
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.combine
+import kotlinx.coroutines.flow.debounce
+import kotlinx.coroutines.flow.SharingStarted
+import kotlinx.coroutines.flow.stateIn
 import kotlinx.coroutines.launch
 import java.util.UUID
 
@@ -74,6 +79,38 @@ class ContactsViewModel(
      */
     private val _lastNonEmptyData = MutableStateFlow<List<ContactInfo>>(emptyList())
     val lastNonEmptyData: StateFlow<List<ContactInfo>> = _lastNonEmptyData.asStateFlow()
+
+    /**
+     * 搜索关键词
+     */
+    private val _searchQuery = MutableStateFlow("")
+    val searchQuery: StateFlow<String> = _searchQuery.asStateFlow()
+
+    /**
+     * 用于 debounce 的搜索词（用户输入时延迟处理）
+     */
+    @OptIn(FlowPreview::class)
+    private val debouncedSearchQuery: StateFlow<String> = _searchQuery
+        .debounce(200)  // 200ms debounce to avoid excessive filtering during typing
+        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), "")
+
+    /**
+     * 搜索后的联系人列表（根据搜索关键词过滤）
+     * 当搜索词为空时返回所有联系人，否则返回搜索结果
+     */
+    val filteredContactsFlow: StateFlow<List<ContactInfo>> = _allContactsFlow
+        .combine(debouncedSearchQuery) { allContacts, query ->
+            if (query.isNullOrBlank()) {
+                allContacts
+            } else {
+                // Client-side search for simplicity and responsiveness
+                val searchQuery = query.trim()
+                allContacts.filter { contact ->
+                    contact.value.contains(searchQuery, ignoreCase = true)
+                }
+            }
+        }
+        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyList())
 
     init {
         viewModelScope.launch {
@@ -292,6 +329,20 @@ class ContactsViewModel(
 
             closeBottomSheet()
         }
+    }
+
+    /**
+     * 设置搜索关键词
+     */
+    fun setSearchQuery(query: String) {
+        _searchQuery.value = query
+    }
+
+    /**
+     * 清除搜索关键词
+     */
+    fun clearSearch() {
+        _searchQuery.value = ""
     }
 
     /**

@@ -1,5 +1,12 @@
 package io.github.darrindeyoung791.habitpulse.ui.screens
 
+import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.core.spring
+import androidx.compose.animation.core.tween
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
+import androidx.compose.animation.slideInVertically
+import androidx.compose.animation.slideOutVertically
 import androidx.compose.foundation.LocalIndication
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.combinedClickable
@@ -23,6 +30,8 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.ArrowBack
+import androidx.compose.material.icons.filled.Clear
 import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.MoreVert
 import androidx.compose.material.icons.outlined.Email
@@ -42,6 +51,8 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.ModalBottomSheet
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextField
+import androidx.compose.material3.TextFieldDefaults
 import androidx.compose.material3.TextButton
 import androidx.compose.material3.TopAppBarScrollBehavior
 import androidx.compose.material3.rememberModalBottomSheetState
@@ -54,10 +65,13 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.focus.FocusRequester
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.hapticfeedback.HapticFeedbackType
 import androidx.compose.ui.input.nestedscroll.nestedScroll
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalHapticFeedback
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.onClick
@@ -89,7 +103,12 @@ fun ContactsScreenContent(
     modifier: Modifier = Modifier,
     application: HabitPulseApplication? = null,
     scrollBehavior: TopAppBarScrollBehavior? = null,
-    listState: LazyListState = remember { LazyListState() }
+    listState: LazyListState = remember { LazyListState() },
+    // Search parameters
+    searchQuery: String = "",
+    onSearchQueryChange: (String) -> Unit = {},
+    isSearchActive: Boolean = false,
+    onSearchActiveChange: (Boolean) -> Unit = {}
 ) {
     val viewModel: ContactsViewModel = if (application != null) {
         application.contactsViewModel
@@ -111,6 +130,18 @@ fun ContactsScreenContent(
 
     // 使用最后一次的非空数据，避免切换页面时闪现空状态
     val displayContacts = if (contacts.isNotEmpty()) contacts else lastNonEmptyData
+    
+    // 使用过滤后的联系人列表（如果搜索激活）
+    // 当搜索词为空时，直接使用 displayContacts，避免等待 Flow 收集导致闪现空列表
+    val filteredContactsFlowValue by viewModel.filteredContactsFlow.collectAsStateWithLifecycle(initialValue = displayContacts)
+    val filteredContacts = if (isSearchActive && searchQuery.isNotEmpty()) {
+        filteredContactsFlowValue
+    } else if (isSearchActive) {
+        // 搜索激活但搜索词为空，显示所有联系人
+        displayContacts
+    } else {
+        displayContacts
+    }
     val showBottomSheet by viewModel.showBottomSheet.collectAsStateWithLifecycle()
     val showDeleteConfirmDialog by viewModel.showDeleteConfirmDialog.collectAsStateWithLifecycle()
     val deleteConfirmContext by viewModel.deleteConfirmContext.collectAsStateWithLifecycle()
@@ -128,6 +159,41 @@ fun ContactsScreenContent(
     Column(
         modifier = nestedScrollModifier.fillMaxSize()
     ) {
+        // 搜索框 - 使用 AnimatedVisibility 带滑入/滑出动画
+        // 搜索框的高度变化会自动推动下方内容
+        val searchFocusRequester = remember { FocusRequester() }
+        
+        // 请求焦点到搜索框
+        LaunchedEffect(isSearchActive) {
+            if (isSearchActive) {
+                searchFocusRequester.requestFocus()
+            }
+        }
+        
+        AnimatedVisibility(
+            visible = isSearchActive,
+            enter = slideInVertically(
+                initialOffsetY = { height -> -height },
+                animationSpec = spring(dampingRatio = 0.8f, stiffness = 200f)
+            ) + fadeIn(animationSpec = tween(200)),
+            exit = slideOutVertically(
+                targetOffsetY = { height -> -height },
+                animationSpec = tween(200)
+            ) + fadeOut(animationSpec = tween(200))
+        ) {
+            SearchBarFixed(
+                searchQuery = searchQuery,
+                onSearchQueryChange = onSearchQueryChange,
+                onClearSearch = { onSearchQueryChange("") },
+                onBackClick = { onSearchActiveChange(false) },
+                placeholder = stringResource(id = R.string.search_contacts_hint),
+                accessibilityLabel = stringResource(id = R.string.accessibility_search_contacts),
+                focusRequester = searchFocusRequester,
+                isFocused = true,
+                onFocusedChange = { }
+            )
+        }
+
         when {
             // 只在首次加载时显示加载指示器，切换页面时不显示
             isLoading && !hasLoadedDataOnce -> {
@@ -138,7 +204,49 @@ fun ContactsScreenContent(
                     CircularProgressIndicator()
                 }
             }
-            displayContacts.isEmpty() -> {
+            // 搜索时显示搜索结果（包括空结果），不搜索时显示正常状态
+            isSearchActive -> {
+                if (filteredContacts.isEmpty()) {
+                    // 搜索但无结果
+                    EmptyContactsContent(
+                        modifier = Modifier.fillMaxSize(),
+                        title = stringResource(id = R.string.contacts_no_search_results),
+                        description = stringResource(id = R.string.contacts_no_search_results_description)
+                    )
+                } else {
+                    // 显示搜索结果
+                    LazyColumn(
+                        modifier = Modifier.fillMaxSize(),
+                        state = listState,
+                        contentPadding = PaddingValues(horizontal = 16.dp, vertical = 8.dp),
+                        verticalArrangement = Arrangement.spacedBy(8.dp)
+                    ) {
+                        items(
+                            items = filteredContacts,
+                            key = { "${it.type}_${it.value}" }
+                        ) { contact ->
+                            ContactCard(
+                                contact = contact,
+                                habits = habits.filter { it.id in contact.habitIds },
+                                onClick = { viewModel.selectContact(contact) },
+                                onDeleteFromAll = {
+                                    viewModel.showDeleteConfirmDialog(
+                                        ContactsViewModel.DeleteConfirmType.FROM_ALL_HABITS,
+                                        contact = contact
+                                    )
+                                }
+                            )
+                        }
+
+                        item {
+                            Spacer(modifier = Modifier.height(100.dp))
+                        }
+                    }
+                }
+            }
+            // 非搜索状态
+            filteredContacts.isEmpty() -> {
+                // 所有联系人为空
                 EmptyContactsContent(
                     modifier = Modifier.fillMaxSize()
                 )
@@ -151,7 +259,7 @@ fun ContactsScreenContent(
                     verticalArrangement = Arrangement.spacedBy(8.dp)
                 ) {
                     items(
-                        items = displayContacts,
+                        items = filteredContacts,
                         key = { "${it.type}_${it.value}" }
                     ) { contact ->
                         ContactCard(
@@ -558,7 +666,11 @@ fun ContactBottomSheetContent(
  * 空联系人状态
  */
 @Composable
-fun EmptyContactsContent(modifier: Modifier = Modifier) {
+fun EmptyContactsContent(
+    modifier: Modifier = Modifier,
+    title: String = stringResource(id = R.string.contacts_no_contacts),
+    description: String = stringResource(id = R.string.contacts_no_contacts_description)
+) {
     Column(
         modifier = modifier
             .fillMaxSize()
@@ -576,7 +688,7 @@ fun EmptyContactsContent(modifier: Modifier = Modifier) {
         Spacer(modifier = Modifier.height(24.dp))
 
         Text(
-            text = stringResource(id = R.string.contacts_no_contacts),
+            text = title,
             style = MaterialTheme.typography.titleLarge.copy(fontWeight = FontWeight.Normal),
             color = MaterialTheme.colorScheme.onSurface
         )
@@ -584,7 +696,7 @@ fun EmptyContactsContent(modifier: Modifier = Modifier) {
         Spacer(modifier = Modifier.height(8.dp))
 
         Text(
-            text = stringResource(id = R.string.contacts_no_contacts_description),
+            text = description,
             style = MaterialTheme.typography.bodyMedium.copy(fontWeight = FontWeight.Normal),
             color = MaterialTheme.colorScheme.onSurfaceVariant,
             textAlign = androidx.compose.ui.text.style.TextAlign.Center

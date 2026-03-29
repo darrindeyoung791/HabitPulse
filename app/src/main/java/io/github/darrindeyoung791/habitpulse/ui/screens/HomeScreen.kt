@@ -27,6 +27,7 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.*
+import androidx.compose.material.icons.automirrored.filled.*
 import androidx.compose.material.icons.filled.*
 import androidx.compose.material.icons.outlined.*
 import androidx.compose.material3.*
@@ -133,11 +134,21 @@ fun HomeScreen(
     val searchFocusRequester = remember { FocusRequester() }
     val focusManager = LocalFocusManager.current
 
+    // 联系人搜索状态
+    var contactsSearchQuery by remember { mutableStateOf("") }
+    var isContactsSearchActive by remember { mutableStateOf(false) }
+    val contactsFocusManager = LocalFocusManager.current
+
     // 当搜索激活时，拦截系统返回键
-    BackHandler(enabled = isSearchActive) {
-        isSearchActive = false
-        viewModel.clearSearch()
-        focusManager.clearFocus()
+    BackHandler(enabled = isSearchActive || isContactsSearchActive) {
+        if (isContactsSearchActive) {
+            isContactsSearchActive = false
+            contactsFocusManager.clearFocus()
+        } else {
+            isSearchActive = false
+            viewModel.clearSearch()
+            focusManager.clearFocus()
+        }
     }
 
     // 当退出搜索模式时，清除搜索关键词
@@ -145,6 +156,15 @@ fun HomeScreen(
         if (!isSearchActive) {
             viewModel.clearSearch()
             focusManager.clearFocus()
+        }
+    }
+
+    // 当退出联系人搜索时，清除搜索关键词
+    LaunchedEffect(isContactsSearchActive) {
+        if (!isContactsSearchActive) {
+            contactsSearchQuery = ""
+            application?.contactsViewModel?.clearSearch()
+            contactsFocusManager.clearFocus()
         }
     }
 
@@ -295,24 +315,24 @@ fun HomeScreen(
                             AnimatedVisibility(
                                 visible = isSearchActive,
                                 enter = slideInVertically(
-                                    initialOffsetY = { -it },
+                                    initialOffsetY = { height -> -height },
                                     animationSpec = spring(dampingRatio = 0.8f, stiffness = 200f)
                                 ) + fadeIn(animationSpec = tween(200)),
                                 exit = slideOutVertically(
-                                    targetOffsetY = { -it },
+                                    targetOffsetY = { height -> -height },
                                     animationSpec = tween(200)
                                 ) + fadeOut(animationSpec = tween(200))
                             ) {
                                 SearchBarFixed(
                                     searchQuery = searchQuery,
-                                    onSearchQueryChange = { viewModel.setSearchQuery(it) },
+                                    onSearchQueryChange = { query -> viewModel.setSearchQuery(query) },
                                     onClearSearch = { viewModel.clearSearch() },
                                     onBackClick = { isSearchActive = false },
                                     placeholder = stringResource(id = R.string.search_habits_hint),
                                     accessibilityLabel = stringResource(id = R.string.accessibility_search_habits),
                                     focusRequester = searchFocusRequester,
                                     isFocused = isSearchFocused,
-                                    onFocusedChange = { isSearchFocused = it }
+                                    onFocusedChange = { focused -> isSearchFocused = focused }
                                 )
                             }
 
@@ -366,7 +386,14 @@ fun HomeScreen(
                         modifier = modifier,
                         application = application,
                         scrollBehavior = contactsScrollBehavior,
-                        listState = contactsScrollState
+                        listState = contactsScrollState,
+                        searchQuery = contactsSearchQuery,
+                        onSearchQueryChange = { 
+                            contactsSearchQuery = it
+                            application?.contactsViewModel?.setSearchQuery(it)
+                        },
+                        isSearchActive = isContactsSearchActive,
+                        onSearchActiveChange = { isContactsSearchActive = it }
                     )
                 }
                 HomeSection.Records -> {
@@ -432,6 +459,24 @@ fun HomeScreen(
                             Icon(
                                 imageVector = Icons.Filled.Search,
                                 contentDescription = stringResource(id = R.string.accessibility_search_habits)
+                            )
+                        }
+                    }
+                    // Search button - only show in Contacts section
+                    if (currentSection == HomeSection.Contacts) {
+                        IconButton(
+                            onClick = {
+                                if (isContactsSearchActive) {
+                                    isContactsSearchActive = false
+                                    contactsFocusManager.clearFocus()
+                                } else {
+                                    isContactsSearchActive = true
+                                }
+                            }
+                        ) {
+                            Icon(
+                                imageVector = Icons.Filled.Search,
+                                contentDescription = stringResource(id = R.string.accessibility_search_contacts)
                             )
                         }
                     }
@@ -518,6 +563,24 @@ fun HomeScreen(
                             Icon(
                                 imageVector = Icons.Filled.Search,
                                 contentDescription = stringResource(id = R.string.accessibility_search_habits)
+                            )
+                        }
+                    }
+                    // Search button - only show in Contacts section
+                    if (currentSection == HomeSection.Contacts) {
+                        IconButton(
+                            onClick = {
+                                if (isContactsSearchActive) {
+                                    isContactsSearchActive = false
+                                    contactsFocusManager.clearFocus()
+                                } else {
+                                    isContactsSearchActive = true
+                                }
+                            }
+                        ) {
+                            Icon(
+                                imageVector = Icons.Filled.Search,
+                                contentDescription = stringResource(id = R.string.accessibility_search_contacts)
                             )
                         }
                     }
@@ -2001,7 +2064,7 @@ private class FakeHabitCompletionDao : io.github.darrindeyoung791.habitpulse.dat
  * Does not overlap content - content scrolls underneath
  */
 @Composable
-private fun SearchBarFixed(
+internal fun SearchBarFixed(
     searchQuery: String,
     onSearchQueryChange: (String) -> Unit,
     onClearSearch: () -> Unit,
@@ -2036,7 +2099,7 @@ private fun SearchBarFixed(
                     modifier = Modifier.size(40.dp)
                 ) {
                     Icon(
-                        imageVector = Icons.Default.ArrowBack,
+                        imageVector = Icons.AutoMirrored.Filled.ArrowBack,
                         contentDescription = stringResource(id = R.string.settings_back),
                         tint = MaterialTheme.colorScheme.onSurfaceVariant
                     )
@@ -2049,7 +2112,7 @@ private fun SearchBarFixed(
                     modifier = Modifier
                         .weight(1f)
                         .focusRequester(focusRequester)
-                        .onFocusChanged { onFocusedChange(it.isFocused) },
+                        .onFocusChanged { focusState -> onFocusedChange(focusState.isFocused) },
                     placeholder = {
                         Text(
                             text = placeholder,
