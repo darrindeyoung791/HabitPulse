@@ -2152,7 +2152,10 @@ internal fun SearchBarFixed(
                     modifier = Modifier
                         .weight(1f)
                         .focusRequester(focusRequester)
-                        .onFocusChanged { focusState -> onFocusedChange(focusState.isFocused) },
+                        .onFocusChanged { focusState -> onFocusedChange(focusState.isFocused) }
+                        .semantics {
+                            paneTitle = accessibilityLabel
+                        },
                     placeholder = {
                         Text(
                             text = placeholder,
@@ -2183,7 +2186,7 @@ internal fun SearchBarFixed(
                     ) {
                         Icon(
                             imageVector = Icons.Filled.Clear,
-                            contentDescription = accessibilityLabel,
+                            contentDescription = stringResource(id = R.string.accessibility_clear_search),
                             tint = MaterialTheme.colorScheme.onSurfaceVariant
                         )
                     }
@@ -2192,8 +2195,9 @@ internal fun SearchBarFixed(
         }
     }
 
-    // Request focus when search bar appears
+    // Request focus when search bar appears - with delay to ensure UI is rendered
     LaunchedEffect(Unit) {
+        delay(100)  // Small delay to ensure the search bar is fully rendered
         focusRequester.requestFocus()
     }
 }

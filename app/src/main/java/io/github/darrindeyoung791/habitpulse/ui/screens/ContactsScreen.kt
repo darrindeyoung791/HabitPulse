@@ -288,7 +288,9 @@ fun ContactsScreenContent(
 
     // Bottom Sheet - Show habits using this contact
     if (showBottomSheet && selectedContact != null) {
-        val sheetState = rememberModalBottomSheetState()
+        val sheetState = rememberModalBottomSheetState(
+            skipPartiallyExpanded = true
+        )
         val scope = rememberCoroutineScope()
 
         ModalBottomSheet(
@@ -573,15 +575,26 @@ fun ContactBottomSheetContent(
             ) {
                 items(habits.size) { index ->
                     val habit = habits[index]
+                    val hapticFeedback = LocalHapticFeedback.current
+                    var showDropdown by remember { mutableStateOf(false) }
+
                     Surface(
-                        modifier = Modifier.fillMaxWidth(),
-                        shape = RoundedCornerShape(8.dp),
-                        color = MaterialTheme.colorScheme.surfaceContainerHighest
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .combinedClickable(
+                                onClick = { onDeleteFromHabit(habit.id) },
+                                onLongClick = {
+                                    hapticFeedback.performHapticFeedback(HapticFeedbackType.LongPress)
+                                    showDropdown = true
+                                }
+                            ),
+                        shape = RoundedCornerShape(12.dp),
+                        color = MaterialTheme.colorScheme.surfaceVariant
                     ) {
                         Row(
                             modifier = Modifier
                                 .fillMaxWidth()
-                                .padding(12.dp),
+                                .padding(16.dp),
                             horizontalArrangement = Arrangement.SpaceBetween,
                             verticalAlignment = Alignment.CenterVertically
                         ) {
@@ -590,7 +603,7 @@ fun ContactBottomSheetContent(
                             ) {
                                 Text(
                                     text = habit.title,
-                                    style = MaterialTheme.typography.bodyLarge,
+                                    style = MaterialTheme.typography.titleMedium,
                                     fontWeight = FontWeight.Medium,
                                     maxLines = 1,
                                     overflow = TextOverflow.Ellipsis,
@@ -608,22 +621,13 @@ fun ContactBottomSheetContent(
                                 )
                             }
 
-                            TextButton(
-                                onClick = { onDeleteFromHabit(habit.id) },
-                                colors = ButtonDefaults.textButtonColors(
-                                    contentColor = MaterialTheme.colorScheme.error
-                                )
+                            IconButton(
+                                onClick = { onDeleteFromHabit(habit.id) }
                             ) {
                                 Icon(
                                     imageVector = Icons.Filled.Delete,
-                                    contentDescription = null,
-                                    modifier = Modifier.size(18.dp),
+                                    contentDescription = stringResource(id = R.string.contacts_delete_from_habit),
                                     tint = MaterialTheme.colorScheme.error
-                                )
-                                Spacer(modifier = Modifier.width(4.dp))
-                                Text(
-                                    text = stringResource(id = R.string.contacts_delete_from_habit),
-                                    style = MaterialTheme.typography.labelLarge
                                 )
                             }
                         }
@@ -636,20 +640,20 @@ fun ContactBottomSheetContent(
         Surface(
             modifier = Modifier.fillMaxWidth(),
             shape = RoundedCornerShape(12.dp),
-            color = MaterialTheme.colorScheme.errorContainer.copy(alpha = 0.8f)
+            color = MaterialTheme.colorScheme.error
         ) {
             TextButton(
                 onClick = onDeleteFromAll,
                 modifier = Modifier.fillMaxWidth(),
                 colors = ButtonDefaults.textButtonColors(
-                    contentColor = MaterialTheme.colorScheme.onErrorContainer
+                    contentColor = MaterialTheme.colorScheme.onError
                 )
             ) {
                 Icon(
                     imageVector = Icons.Filled.Delete,
                     contentDescription = null,
                     modifier = Modifier.size(20.dp),
-                    tint = MaterialTheme.colorScheme.onErrorContainer
+                    tint = MaterialTheme.colorScheme.onError
                 )
                 Spacer(modifier = Modifier.width(8.dp))
                 Text(
