@@ -62,7 +62,7 @@
 ## 🚀 快速开始
 
 ### 环境要求
-- **Android Studio**：最新版（推荐 Hedgehog 或更新版本）
+- **Android Studio**：最新版
 - **JDK**：17 或更高版本
 - **Android SDK**：
   - 最低 SDK：26 (Android 8.0)

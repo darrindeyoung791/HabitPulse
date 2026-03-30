@@ -15,6 +15,8 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardActions
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
+import androidx.compose.ui.focus.FocusRequester
+import androidx.compose.ui.focus.focusRequester
 import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.material.icons.*
@@ -187,7 +189,17 @@ fun HabitCreationScreen(
     // Notes state
     var notes by remember { mutableStateOf("") }
     var showNotesMaxToast by remember { mutableStateOf(false) }
-    
+
+    // Focus requester for habit name field (only for CREATE mode)
+    val habitNameFocusRequester = remember { FocusRequester() }
+
+    // Request focus on habit name field when creating new habit
+    LaunchedEffect(editMode) {
+        if (editMode == EditMode.CREATE) {
+            habitNameFocusRequester.requestFocus()
+        }
+    }
+
     // 加载现有习惯数据（编辑模式）
     LaunchedEffect(habitId, editMode) {
         if (editMode == EditMode.EDIT && habitId != null) {
@@ -612,7 +624,9 @@ fun HabitCreationScreen(
                 placeholder = {
                     Text(text = stringResource(id = R.string.create_habit_habit_name_placeholder))
                 },
-                modifier = Modifier.fillMaxWidth(),
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .focusRequester(habitNameFocusRequester),
                 singleLine = true,
                 keyboardOptions = KeyboardOptions(
                     capitalization = KeyboardCapitalization.Sentences,
