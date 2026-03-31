@@ -2,6 +2,7 @@ plugins {
     alias(libs.plugins.android.application)
     alias(libs.plugins.kotlin.compose)
     id("com.google.devtools.ksp") version "2.3.6"
+    id("com.mikepenz.aboutlibraries.plugin") version "13.2.1"
 }
 
 android {
@@ -16,8 +17,8 @@ android {
         applicationId = "io.github.darrindeyoung791.habitpulse"
         minSdk = 26
         targetSdk = 36
-        versionCode = 96
-        versionName = "0.4.22-alpha"
+        versionCode = 97
+        versionName = "0.4.23-alpha"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
         resourceConfigurations.addAll(listOf("zh-rCN", "en-rUS"))
@@ -95,4 +96,7 @@ dependencies {
     androidTestImplementation(libs.androidx.compose.ui.test.junit4)
     debugImplementation(libs.androidx.compose.ui.tooling)
     debugImplementation(libs.androidx.compose.ui.test.manifest)
+
+    // AboutLibraries for open source licenses display
+    implementation("com.mikepenz:aboutlibraries-compose-m3:13.2.1")
 }

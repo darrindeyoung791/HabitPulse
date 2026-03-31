@@ -191,4 +191,8 @@
     <!-- Dialog buttons -->
     <string name="dialog_confirm">OK</string>
     <string name="dialog_cancel">Cancel</string>
+
+    <!-- Open Source Licenses -->
+    <string name="settings_open_source_licenses">Open Source Licenses</string>
+    <string name="settings_open_source_licenses_description">View open source library licenses used in this project</string>
 </resources>

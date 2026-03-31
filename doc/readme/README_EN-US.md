@@ -55,7 +55,7 @@
 
 | <div align="center">**Phone Interface**</div> | <div align="center">**Tablet Interface**</div> |
 |---|---|
-| ![Phone Interface](../images/showcases/Screenshot_Pixel_6a_Habits_ZH-CN.png) | ![Tablet Interface](../images/showcases/Screenshot_Pixel_Tablet_Habits_ZH-CN.png) |
+| ![Phone Interface](../images/showcases/Screenshot_Pixel_6a_Habits_EN-US.png) | ![Tablet Interface](../images/showcases/Screenshot_Pixel_Tablet_Habits_EN-US.png) |
 
 </div>
 

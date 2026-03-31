@@ -38,6 +38,15 @@
             android:resizeableActivity="true"
             android:supportsPictureInPicture="true"
             android:configChanges="orientation|screenSize|screenLayout|smallestScreenSize" />
+        <activity
+            android:name=".OpenSourceLicensesActivity"
+            android:exported="false"
+            android:label="@string/settings_open_source_licenses"
+            android:theme="@style/Theme.HabitPulse"
+            android:enableOnBackInvokedCallback="true"
+            android:resizeableActivity="true"
+            android:supportsPictureInPicture="true"
+            android:configChanges="orientation|screenSize|screenLayout|smallestScreenSize" />
     </application>
 
 </manifest>

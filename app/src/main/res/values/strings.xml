@@ -193,4 +193,8 @@
     <!-- Dialog buttons -->
     <string name="dialog_confirm">确定</string>
     <string name="dialog_cancel">取消</string>
+
+    <!-- Open Source Licenses -->
+    <string name="settings_open_source_licenses">开放源代码许可</string>
+    <string name="settings_open_source_licenses_description">查看本项目使用的开源库许可证</string>
 </resources>

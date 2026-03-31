@@ -13,6 +13,7 @@ import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
+import androidx.compose.material.icons.automirrored.filled.Article
 import androidx.compose.material.icons.outlined.FavoriteBorder
 import androidx.compose.material.icons.outlined.Info
 import androidx.compose.material.icons.outlined.Person
@@ -369,6 +370,21 @@ fun SettingsScreen() {
                             imageVector = Icons.Outlined.Person,
                             contentDescription = null
                         )
+                    }
+                )
+
+                SettingsListItem(
+                    headline = stringResource(id = R.string.settings_open_source_licenses),
+                    supportingText = stringResource(id = R.string.settings_open_source_licenses_description),
+                    leadingIcon = {
+                        Icon(
+                            imageVector = Icons.AutoMirrored.Filled.Article,
+                            contentDescription = null
+                        )
+                    },
+                    onClick = {
+                        val intent = Intent(context, OpenSourceLicensesActivity::class.java)
+                        context.startActivity(intent)
                     }
                 )
 
