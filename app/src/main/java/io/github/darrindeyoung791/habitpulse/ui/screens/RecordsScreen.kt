@@ -1,5 +1,6 @@
 package io.github.darrindeyoung791.habitpulse.ui.screens
 
+import android.content.res.Configuration
 import androidx.compose.animation.core.animateDpAsState
 import androidx.compose.animation.core.tween
 import androidx.compose.animation.AnimatedContent
@@ -40,9 +41,9 @@ import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.outlined.Assessment
 import androidx.compose.material.icons.outlined.CalendarMonth
 import androidx.compose.material.icons.outlined.CalendarToday
-import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.material3.OutlinedCard
 import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.ExperimentalMaterial3Api
@@ -66,6 +67,7 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.input.nestedscroll.nestedScroll
+import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.contentDescription
@@ -207,6 +209,13 @@ fun RecordsScreenContent(
     // Apply nested scroll
     val nestedScrollModifier = scrollBehavior?.let { modifier.nestedScroll(it.nestedScrollConnection) } ?: modifier
 
+    // Get screen configuration for two-column layout
+    val configuration = LocalConfiguration.current
+    val screenWidthDp = configuration.screenWidthDp
+    val isLandscape = configuration.orientation == Configuration.ORIENTATION_LANDSCAPE
+    // Use two-column layout for tablets in landscape (≥1200dp), same as HomeScreen
+    val useTwoColumnLayout = isLandscape && screenWidthDp >= 1200
+
     Column(
         modifier = nestedScrollModifier.fillMaxSize()
     ) {
@@ -235,37 +244,116 @@ fun RecordsScreenContent(
                 )
             }
             else -> {
-                LazyColumn(
-                    modifier = Modifier.fillMaxSize(),
-                    state = listState,
-                    contentPadding = PaddingValues(horizontal = 16.dp, vertical = 8.dp),
-                    verticalArrangement = Arrangement.spacedBy(4.dp)
-                ) {
-                    displayRecords.forEach { dateGroup ->
-                        item(key = "header_${dateGroup.date}") {
-                            DateSectionHeader(
-                                date = dateGroup.date,
-                                dateFormat = displayDateFormat,
-                                modifier = Modifier.fillMaxWidth()
-                            )
+                if (useTwoColumnLayout) {
+                    // Two-column layout for tablet landscape
+                    // Date headers span full width, records are split into two columns
+                    LazyColumn(
+                        modifier = Modifier.fillMaxSize(),
+                        state = listState,
+                        contentPadding = PaddingValues(horizontal = 16.dp, vertical = 16.dp),
+                        verticalArrangement = Arrangement.spacedBy(16.dp)
+                    ) {
+                        // Group records by date
+                        val groupedByDate = displayRecords.flatMap { it.records }
+                            .groupBy { it.completion.completedDateLocal }
+                            .toSortedMap(compareByDescending { it })
+
+                        groupedByDate.forEach { (date, recordsForDate) ->
+                            // Date header spans full width
+                            item(key = "header_$date") {
+                                DateSectionHeader(
+                                    date = date,
+                                    dateFormat = displayDateFormat,
+                                    modifier = Modifier.fillMaxWidth()
+                                )
+                            }
+
+                            // Records for this date in two columns
+                            item(key = "records_$date") {
+                                Row(
+                                    modifier = Modifier.fillMaxWidth(),
+                                    horizontalArrangement = Arrangement.spacedBy(16.dp)
+                                ) {
+                                    // Split records into two columns
+                                    val column1Records = recordsForDate.filterIndexed { index, _ -> index % 2 == 0 }
+                                    val column2Records = recordsForDate.filterIndexed { index, _ -> index % 2 == 1 }
+
+                                    // Left column
+                                    Column(
+                                        modifier = Modifier.weight(1f),
+                                        verticalArrangement = Arrangement.spacedBy(8.dp)
+                                    ) {
+                                        column1Records.forEach { record ->
+                                            CompletionRecordCard(
+                                                completion = record.completion,
+                                                habitTitle = record.habit.title,
+                                                timeFormat = timeFormat,
+                                                completionSequence = record.completionSequence,
+                                                modifier = Modifier.fillMaxWidth()
+                                            )
+                                        }
+                                    }
+
+                                    // Right column (only show if there are records)
+                                    if (column2Records.isNotEmpty()) {
+                                        Column(
+                                            modifier = Modifier.weight(1f),
+                                            verticalArrangement = Arrangement.spacedBy(8.dp)
+                                        ) {
+                                            column2Records.forEach { record ->
+                                                CompletionRecordCard(
+                                                    completion = record.completion,
+                                                    habitTitle = record.habit.title,
+                                                    timeFormat = timeFormat,
+                                                    completionSequence = record.completionSequence,
+                                                    modifier = Modifier.fillMaxWidth()
+                                                )
+                                            }
+                                        }
+                                    }
+                                }
+                            }
                         }
 
-                        items(
-                            items = dateGroup.records,
-                            key = { it.completion.id }
-                        ) { record ->
-                            CompletionRecordCard(
-                                completion = record.completion,
-                                habitTitle = record.habit.title,
-                                timeFormat = timeFormat,
-                                completionSequence = record.completionSequence,
-                                modifier = Modifier.fillMaxWidth()
-                            )
+                        // Add bottom spacer to prevent FAB from covering last item
+                        item {
+                            Spacer(modifier = Modifier.height(100.dp))
                         }
                     }
+                } else {
+                    // Single column layout for phones and portrait mode
+                    LazyColumn(
+                        modifier = Modifier.fillMaxSize(),
+                        state = listState,
+                        contentPadding = PaddingValues(horizontal = 16.dp, vertical = 8.dp),
+                        verticalArrangement = Arrangement.spacedBy(4.dp)
+                    ) {
+                        displayRecords.forEach { dateGroup ->
+                            item(key = "header_${dateGroup.date}") {
+                                DateSectionHeader(
+                                    date = dateGroup.date,
+                                    dateFormat = displayDateFormat,
+                                    modifier = Modifier.fillMaxWidth()
+                                )
+                            }
 
-                    item {
-                        Spacer(modifier = Modifier.height(100.dp))
+                            items(
+                                items = dateGroup.records,
+                                key = { it.completion.id }
+                            ) { record ->
+                                CompletionRecordCard(
+                                    completion = record.completion,
+                                    habitTitle = record.habit.title,
+                                    timeFormat = timeFormat,
+                                    completionSequence = record.completionSequence,
+                                    modifier = Modifier.fillMaxWidth()
+                                )
+                            }
+                        }
+
+                        item {
+                            Spacer(modifier = Modifier.height(100.dp))
+                        }
                     }
                 }
             }
@@ -524,7 +612,7 @@ fun CompletionRecordCard(
         formattedTime
     )
 
-    Card(
+    OutlinedCard(
         modifier = modifier
             .clickable(
                 interactionSource = interactionSource,
@@ -535,8 +623,8 @@ fun CompletionRecordCard(
                 this.contentDescription = contentDescription
                 onClick { true }
             },
-        colors = CardDefaults.cardColors(
-            containerColor = MaterialTheme.colorScheme.surfaceVariant
+        colors = CardDefaults.outlinedCardColors(
+            containerColor = MaterialTheme.colorScheme.surfaceContainerLowest
         )
     ) {
         Row(

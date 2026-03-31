@@ -1,5 +1,6 @@
 package io.github.darrindeyoung791.habitpulse.ui.screens
 
+import android.content.res.Configuration
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.core.spring
 import androidx.compose.animation.core.tween
@@ -43,7 +44,6 @@ import androidx.compose.material.icons.outlined.Person
 import androidx.compose.material.icons.outlined.Phone
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.ButtonDefaults
-import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.DropdownMenu
@@ -53,6 +53,7 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.ModalBottomSheet
+import androidx.compose.material3.OutlinedCard
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextField
@@ -73,6 +74,7 @@ import androidx.compose.ui.focus.FocusRequester
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.hapticfeedback.HapticFeedbackType
 import androidx.compose.ui.input.nestedscroll.nestedScroll
+import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalHapticFeedback
 import androidx.compose.runtime.LaunchedEffect
@@ -160,6 +162,13 @@ fun ContactsScreenContent(
     // Apply nested scroll
     val nestedScrollModifier = scrollBehavior?.let { modifier.nestedScroll(it.nestedScrollConnection) } ?: modifier
 
+    // Get screen configuration for two-column layout
+    val configuration = LocalConfiguration.current
+    val screenWidthDp = configuration.screenWidthDp
+    val isLandscape = configuration.orientation == Configuration.ORIENTATION_LANDSCAPE
+    // Use two-column layout for tablets in landscape (≥1200dp), same as HomeScreen
+    val useTwoColumnLayout = isLandscape && screenWidthDp >= 1200
+
     Column(
         modifier = nestedScrollModifier.fillMaxSize()
     ) {
@@ -217,8 +226,70 @@ fun ContactsScreenContent(
                         title = stringResource(id = R.string.contacts_no_search_results),
                         description = stringResource(id = R.string.contacts_no_search_results_description)
                     )
+                } else if (useTwoColumnLayout) {
+                    // Two-column layout for tablet landscape
+                    LazyColumn(
+                        modifier = Modifier.fillMaxSize(),
+                        state = listState,
+                        contentPadding = PaddingValues(horizontal = 16.dp, vertical = 16.dp),
+                        verticalArrangement = Arrangement.spacedBy(8.dp)
+                    ) {
+                        item {
+                            Row(
+                                modifier = Modifier.fillMaxWidth(),
+                                horizontalArrangement = Arrangement.spacedBy(16.dp)
+                            ) {
+                                // Split contacts into two columns
+                                val column1Contacts = filteredContacts.filterIndexed { index, _ -> index % 2 == 0 }
+                                val column2Contacts = filteredContacts.filterIndexed { index, _ -> index % 2 == 1 }
+
+                                // Left column
+                                Column(
+                                    modifier = Modifier.weight(1f),
+                                    verticalArrangement = Arrangement.spacedBy(8.dp)
+                                ) {
+                                    column1Contacts.forEach { contact ->
+                                        ContactCard(
+                                            contact = contact,
+                                            habits = habits.filter { it.id in contact.habitIds },
+                                            onClick = { viewModel.selectContact(contact) },
+                                            onDeleteFromAll = {
+                                                viewModel.showDeleteConfirmDialog(
+                                                    ContactsViewModel.DeleteConfirmType.FROM_ALL_HABITS,
+                                                    contact = contact
+                                                )
+                                            }
+                                        )
+                                    }
+                                }
+
+                                // Right column
+                                Column(
+                                    modifier = Modifier.weight(1f),
+                                    verticalArrangement = Arrangement.spacedBy(8.dp)
+                                ) {
+                                    column2Contacts.forEach { contact ->
+                                        ContactCard(
+                                            contact = contact,
+                                            habits = habits.filter { it.id in contact.habitIds },
+                                            onClick = { viewModel.selectContact(contact) },
+                                            onDeleteFromAll = {
+                                                viewModel.showDeleteConfirmDialog(
+                                                    ContactsViewModel.DeleteConfirmType.FROM_ALL_HABITS,
+                                                    contact = contact
+                                                )
+                                            }
+                                        )
+                                    }
+                                }
+                            }
+                        }
+                        item {
+                            Spacer(modifier = Modifier.height(100.dp))
+                        }
+                    }
                 } else {
-                    // 显示搜索结果
+                    // 显示搜索结果 - single column
                     LazyColumn(
                         modifier = Modifier.fillMaxSize(),
                         state = listState,
@@ -256,31 +327,96 @@ fun ContactsScreenContent(
                 )
             }
             else -> {
-                LazyColumn(
-                    modifier = Modifier.fillMaxSize(),
-                    state = listState,
-                    contentPadding = PaddingValues(horizontal = 16.dp, vertical = 8.dp),
-                    verticalArrangement = Arrangement.spacedBy(8.dp)
-                ) {
-                    items(
-                        items = filteredContacts,
-                        key = { "${it.type}_${it.value}" }
-                    ) { contact ->
-                        ContactCard(
-                            contact = contact,
-                            habits = habits.filter { it.id in contact.habitIds },
-                            onClick = { viewModel.selectContact(contact) },
-                            onDeleteFromAll = {
-                                viewModel.showDeleteConfirmDialog(
-                                    ContactsViewModel.DeleteConfirmType.FROM_ALL_HABITS,
-                                    contact = contact
-                                )
-                            }
-                        )
-                    }
+                if (useTwoColumnLayout) {
+                    // Two-column layout for tablet landscape
+                    LazyColumn(
+                        modifier = Modifier.fillMaxSize(),
+                        state = listState,
+                        contentPadding = PaddingValues(horizontal = 16.dp, vertical = 16.dp),
+                        verticalArrangement = Arrangement.spacedBy(8.dp)
+                    ) {
+                        item {
+                            Row(
+                                modifier = Modifier.fillMaxWidth(),
+                                horizontalArrangement = Arrangement.spacedBy(16.dp)
+                            ) {
+                                // Split contacts into two columns
+                                val column1Contacts = filteredContacts.filterIndexed { index, _ -> index % 2 == 0 }
+                                val column2Contacts = filteredContacts.filterIndexed { index, _ -> index % 2 == 1 }
 
-                    item {
-                        Spacer(modifier = Modifier.height(100.dp))
+                                // Left column
+                                Column(
+                                    modifier = Modifier.weight(1f),
+                                    verticalArrangement = Arrangement.spacedBy(8.dp)
+                                ) {
+                                    column1Contacts.forEach { contact ->
+                                        ContactCard(
+                                            contact = contact,
+                                            habits = habits.filter { it.id in contact.habitIds },
+                                            onClick = { viewModel.selectContact(contact) },
+                                            onDeleteFromAll = {
+                                                viewModel.showDeleteConfirmDialog(
+                                                    ContactsViewModel.DeleteConfirmType.FROM_ALL_HABITS,
+                                                    contact = contact
+                                                )
+                                            }
+                                        )
+                                    }
+                                }
+
+                                // Right column
+                                Column(
+                                    modifier = Modifier.weight(1f),
+                                    verticalArrangement = Arrangement.spacedBy(8.dp)
+                                ) {
+                                    column2Contacts.forEach { contact ->
+                                        ContactCard(
+                                            contact = contact,
+                                            habits = habits.filter { it.id in contact.habitIds },
+                                            onClick = { viewModel.selectContact(contact) },
+                                            onDeleteFromAll = {
+                                                viewModel.showDeleteConfirmDialog(
+                                                    ContactsViewModel.DeleteConfirmType.FROM_ALL_HABITS,
+                                                    contact = contact
+                                                )
+                                            }
+                                        )
+                                    }
+                                }
+                            }
+                        }
+                        item {
+                            Spacer(modifier = Modifier.height(100.dp))
+                        }
+                    }
+                } else {
+                    // Single column layout for phones and portrait mode
+                    LazyColumn(
+                        modifier = Modifier.fillMaxSize(),
+                        state = listState,
+                        contentPadding = PaddingValues(horizontal = 16.dp, vertical = 8.dp),
+                        verticalArrangement = Arrangement.spacedBy(8.dp)
+                    ) {
+                        items(
+                            items = filteredContacts,
+                            key = { "${it.type}_${it.value}" }
+                        ) { contact ->
+                            ContactCard(
+                                contact = contact,
+                                habits = habits.filter { it.id in contact.habitIds },
+                                onClick = { viewModel.selectContact(contact) },
+                                onDeleteFromAll = {
+                                    viewModel.showDeleteConfirmDialog(
+                                        ContactsViewModel.DeleteConfirmType.FROM_ALL_HABITS,
+                                        contact = contact
+                                    )
+                                }
+                            )
+                        }
+
+                        item {
+                            Spacer(modifier = Modifier.height(100.dp))
+                        }
                     }
                 }
             }
@@ -413,7 +549,7 @@ fun ContactCard(
     var showDropdown by remember { mutableStateOf(false) }
     val hapticFeedback = LocalHapticFeedback.current
 
-    Surface(
+    OutlinedCard(
         modifier = Modifier
             .fillMaxWidth()
             .combinedClickable(
@@ -423,8 +559,9 @@ fun ContactCard(
                     showDropdown = true
                 }
             ),
-        shape = RoundedCornerShape(12.dp),
-        color = MaterialTheme.colorScheme.surfaceVariant
+        colors = CardDefaults.outlinedCardColors(
+            containerColor = MaterialTheme.colorScheme.surfaceContainerLowest
+        )
     ) {
         Row(
             modifier = Modifier
@@ -579,7 +716,7 @@ fun ContactBottomSheetContent(
                     val hapticFeedback = LocalHapticFeedback.current
                     var showDropdown by remember { mutableStateOf(false) }
 
-                    Surface(
+                    OutlinedCard(
                         modifier = Modifier
                             .fillMaxWidth()
                             .combinedClickable(
@@ -589,8 +726,9 @@ fun ContactBottomSheetContent(
                                     showDropdown = true
                                 }
                             ),
-                        shape = RoundedCornerShape(12.dp),
-                        color = MaterialTheme.colorScheme.surfaceVariant
+                        colors = CardDefaults.outlinedCardColors(
+                            containerColor = MaterialTheme.colorScheme.surfaceContainerLowest
+                        )
                     ) {
                         Row(
                             modifier = Modifier
@@ -637,7 +775,7 @@ fun ContactBottomSheetContent(
             }
         }
 
-        // Delete from all habits button
+        // Delete from all habits button - Keep as Surface (not outlined)
         Surface(
             modifier = Modifier.fillMaxWidth(),
             shape = RoundedCornerShape(12.dp),

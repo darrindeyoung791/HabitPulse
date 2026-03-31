@@ -233,6 +233,14 @@ fun HomeScreen(
     var currentSection by rememberSaveable { mutableStateOf(HomeSection.Habits) }
     var isDrawerExpanded by rememberSaveable { mutableStateOf(true) }
 
+    // Reset Records filter when navigating to Records section
+    // This ensures users always see all records when entering Records screen
+    LaunchedEffect(currentSection) {
+        if (currentSection == HomeSection.Records) {
+            application?.recordsViewModel?.selectHabit(null)
+        }
+    }
+
     // 为每个 Section 保存独立的滚动状态
     val habitsScrollState = remember { androidx.compose.foundation.lazy.LazyListState() }
     val recordsScrollState = remember { androidx.compose.foundation.lazy.LazyListState() }

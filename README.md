@@ -21,6 +21,8 @@
 
 > 💡 HabitPulse 使用 AI 辅助开发。如果您使用 Qwen Code 或 Claude Code 进行二次开发，请阅读 [`QWEN.md`](QWEN.md) 以获取重要信息。
 
+> 🌏 [English Version](doc/readme/README_EN-US.md) | 中文版本
+
 ---
 
 ## ✨ 功能特性
