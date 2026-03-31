@@ -367,7 +367,7 @@ fun HomeScreen(
                                         animationSpec = spring(dampingRatio = 0.8f, stiffness = 200f)
                                     )
                             ) {
-                                if (filteredHabits.isEmpty() && searchQuery.isNotEmpty()) {
+                                if (isSearchActive && filteredHabits.isEmpty()) {
                                     // 搜索但无结果
                                     SearchEmptyState(
                                         modifier = Modifier.fillMaxSize(),

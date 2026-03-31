@@ -17,8 +17,8 @@ android {
         applicationId = "io.github.darrindeyoung791.habitpulse"
         minSdk = 26
         targetSdk = 36
-        versionCode = 97
-        versionName = "0.4.23-alpha"
+        versionCode = 98
+        versionName = "0.4.24-alpha"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
         resourceConfigurations.addAll(listOf("zh-rCN", "en-rUS"))
@@ -48,7 +48,7 @@ android {
         compose = true
     }
     androidResources {
-        generateLocaleConfig = false
+        generateLocaleConfig = true
     }
     ksp {
         arg("room.schemaLocation", "$projectDir/schemas")

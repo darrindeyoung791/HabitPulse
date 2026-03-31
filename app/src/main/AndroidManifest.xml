@@ -21,7 +21,6 @@
             android:theme="@style/Theme.HabitPulse"
             android:enableOnBackInvokedCallback="true"
             android:resizeableActivity="true"
-            android:supportsPictureInPicture="true"
             android:configChanges="orientation|screenSize|screenLayout|smallestScreenSize">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
@@ -36,7 +35,6 @@
             android:theme="@style/Theme.HabitPulse"
             android:enableOnBackInvokedCallback="true"
             android:resizeableActivity="true"
-            android:supportsPictureInPicture="true"
             android:configChanges="orientation|screenSize|screenLayout|smallestScreenSize" />
         <activity
             android:name=".OpenSourceLicensesActivity"
@@ -45,7 +43,6 @@
             android:theme="@style/Theme.HabitPulse"
             android:enableOnBackInvokedCallback="true"
             android:resizeableActivity="true"
-            android:supportsPictureInPicture="true"
             android:configChanges="orientation|screenSize|screenLayout|smallestScreenSize" />
     </application>
 

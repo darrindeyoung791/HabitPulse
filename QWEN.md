@@ -12,7 +12,7 @@ This project is rapidly developing, AI agents should update this page when big c
 - **Social Supervision**: Habit completion notifications to designated contacts (planned)
 - **Background Service**: Long-running background service for reliable reminders (planned)
 - **Material Design 3**: Clean, modern UI following MD3 guidelines
-- **Split-screen Support**: Multi-window and picture-in-picture mode enabled
+- **Split-screen Support**: Multi-window support enabled
 - **Predictive Back Gesture**: Android 13+ predictive back gesture support
 - **Localization**: Chinese (Simplified) and English (US) support
 
@@ -251,7 +251,7 @@ The project is in **early development stage** (v0.1.31-alpha):
 - ✅ Custom screen transition animations
 - ✅ Device corner radius support (Android 12+)
 - ✅ Predictive back gesture support
-- ✅ Split-screen and PiP support
+- ✅ Split-screen support
 - ✅ Localization (Chinese & English)
 - ✅ Room database integration (v2.8.4)
 - ✅ Habit entity with UUID primary key
@@ -342,11 +342,10 @@ The app uses a responsive navigation system that adapts to screen size and orien
 ## Notes
 
 - The app uses Aliyun Maven mirrors for better connectivity in China (`maven.aliyun.com`)
-- `generateLocaleConfig` is disabled due to AGP 9.1.0 bug
 - Dynamic color theming is enabled for Android 12+ (API 31+)
 - Edge-to-edge display is enabled in all activities
 - Release builds have minification and resource shrinking enabled
-- All activities support multi-window and picture-in-picture modes
+- All activities support multi-window modes
 - Back gesture handling uses `enableOnBackInvokedCallback`
 
 ## Development Guidelines & Lessons Learned
