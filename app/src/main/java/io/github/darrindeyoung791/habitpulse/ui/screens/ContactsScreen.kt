@@ -37,6 +37,7 @@ import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.Clear
 import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.MoreVert
+import androidx.compose.material.icons.outlined.Delete
 import androidx.compose.material.icons.outlined.Email
 import androidx.compose.material.icons.outlined.Person
 import androidx.compose.material.icons.outlined.Phone
@@ -625,7 +626,7 @@ fun ContactBottomSheetContent(
                                 onClick = { onDeleteFromHabit(habit.id) }
                             ) {
                                 Icon(
-                                    imageVector = Icons.Filled.Delete,
+                                    imageVector = Icons.Outlined.Delete,
                                     contentDescription = stringResource(id = R.string.contacts_delete_from_habit),
                                     tint = MaterialTheme.colorScheme.error
                                 )

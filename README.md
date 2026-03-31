@@ -76,9 +76,13 @@ cd HabitPulse
 
 ### 构建项目
 
-使用最新版 Android Studio 打开项目，根据提示操作。或使用其他 IDE。
+使用最新版 Android Studio 打开项目，根据提示操作。
 
-特别地，本项目配置使用了来自腾讯云、阿里云的镜像，若您是中国大陆外的开发者，需要自行修改。
+或使用其他 IDE 或编辑器。
+
+> [!IMPORTANT]
+> - 您可能需要在项目中手动修改 [`gradle.properties`](gradle.properties) 中的 JDK 路径。
+> - 本项目配置使用了来自腾讯云、阿里云的镜像，若您是中国大陆外的开发者，需要自行修改。
 
 ```bash
 # 使用 Gradle Wrapper 构建
