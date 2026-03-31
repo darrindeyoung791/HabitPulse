@@ -11,41 +11,41 @@ import java.util.UUID
  */
 @Dao
 interface HabitDao {
-    
+
     /**
-     * 获取所有习惯（按创建日期倒序）
+     * 获取所有习惯（按最后修改日期倒序）
      */
-    @Query("SELECT * FROM habits ORDER BY createdDate DESC")
+    @Query("SELECT * FROM habits ORDER BY modifiedDate DESC")
     fun getAllHabitsFlow(): Flow<List<Habit>>
-    
+
     /**
      * 获取所有习惯（同步版本，用于后台操作）
      */
-    @Query("SELECT * FROM habits ORDER BY createdDate DESC")
+    @Query("SELECT * FROM habits ORDER BY modifiedDate DESC")
     suspend fun getAllHabits(): List<Habit>
-    
+
     /**
      * 根据 ID 获取习惯
      */
     @Query("SELECT * FROM habits WHERE id = :id")
     fun getHabitByIdFlow(id: UUID): Flow<Habit?>
-    
+
     /**
      * 根据 ID 获取习惯（同步版本）
      */
     @Query("SELECT * FROM habits WHERE id = :id")
     suspend fun getHabitById(id: UUID): Habit?
-    
+
     /**
      * 获取今日未完成的所有习惯
      */
-    @Query("SELECT * FROM habits WHERE completedToday = 0 ORDER BY createdDate DESC")
+    @Query("SELECT * FROM habits WHERE completedToday = 0 ORDER BY modifiedDate DESC")
     fun getIncompleteHabitsFlow(): Flow<List<Habit>>
-    
+
     /**
      * 获取今日已完成的所有习惯
      */
-    @Query("SELECT * FROM habits WHERE completedToday = 1 ORDER BY createdDate DESC")
+    @Query("SELECT * FROM habits WHERE completedToday = 1 ORDER BY modifiedDate DESC")
     fun getCompletedHabitsFlow(): Flow<List<Habit>>
     
     /**
@@ -107,6 +107,6 @@ interface HabitDao {
      * 搜索习惯（根据标题或备注）
      * @param query 搜索关键词，使用 LIKE 匹配（自动添加 % 通配符）
      */
-    @Query("SELECT * FROM habits WHERE title LIKE :query OR notes LIKE :query ORDER BY createdDate DESC")
+    @Query("SELECT * FROM habits WHERE title LIKE :query OR notes LIKE :query ORDER BY modifiedDate DESC")
     fun searchHabitsFlow(query: String): Flow<List<Habit>>
 }

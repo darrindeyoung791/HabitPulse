@@ -82,16 +82,31 @@ Open the project in the latest version of Android Studio and follow the prompts.
 
 Or use other IDEs or editors.
 
-> [!IMPORTANT]
-> - You may need to manually modify the JDK path in [`gradle.properties`](../../gradle.properties) in the project.
-> - This project is configured to use mirrors from Tencent Cloud and Aliyun. If you are a developer outside mainland China, you will need to modify these settings.
-
 ```bash
 # Build using Gradle Wrapper
 ./gradlew assembleDebug
 
 # Or open the project in Android Studio and run directly
 ```
+
+> [!IMPORTANT]
+> - You may need to manually modify the JDK path in [`gradle.properties`](../../gradle.properties) in the project.
+> - This project is configured to use mirrors from Tencent Cloud and Aliyun. If you are a developer outside mainland China, you will need to modify these settings.
+
+#### VSCode Users
+
+If you are using VSCode for development, you need to configure the JDK 17 path in [`.vscode/settings.json`](../../.vscode/settings.json):
+
+```json
+{
+    "java.jdt.ls.java.home": "C:\\\\Program Files\\\\Java\\\\jdk-17",
+    "java.home": "C:\\\\Program Files\\\\Java\\\\jdk-17"
+}
+```
+
+> ⚠️ **Important**: Please modify the above configuration according to your actual JDK installation path. The default path on Windows is usually `C:\Program Files\Java\jdk-17`, and on macOS it is typically `/Library/Java/JavaVirtualMachines/jdk-17.jdk/Contents/Home`.
+
+After configuration, press `Ctrl+Shift+P` and select **"Java: Clean Java Language Server Workspace"**, or reload the VSCode window for the configuration to take effect.
 
 ### Install the Application
 ```bash

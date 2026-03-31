@@ -82,16 +82,31 @@ cd HabitPulse
 
 或使用其他 IDE 或编辑器。
 
-> [!IMPORTANT]
-> - 您可能需要在项目中手动修改 [`gradle.properties`](gradle.properties) 中的 JDK 路径。
-> - 本项目配置使用了来自腾讯云、阿里云的镜像，若您是中国大陆外的开发者，需要自行修改。
-
 ```bash
 # 使用 Gradle Wrapper 构建
 ./gradlew assembleDebug
 
 # 或使用 Android Studio 打开项目后直接运行
 ```
+
+> [!IMPORTANT]
+> - 您可能需要在项目中手动修改 [`gradle.properties`](gradle.properties) 中的 JDK 路径。
+> - 本项目配置使用了来自腾讯云、阿里云的镜像，若您是中国大陆外的开发者，需要自行修改。
+
+#### VSCode 用户
+
+如果您使用 VSCode 进行开发，需要在 [`.vscode/settings.json`](.vscode/settings.json) 中配置 JDK 17 路径：
+
+```json
+{
+    "java.jdt.ls.java.home": "C:\\\\Program Files\\\\Java\\\\jdk-17",
+    "java.home": "C:\\\\Program Files\\\\Java\\\\jdk-17"
+}
+```
+
+> ⚠️ **重要**：请根据您的实际 JDK 安装路径修改上述配置。Windows 系统默认路径通常为 `C:\\Program Files\\Java\\jdk-17`，macOS 通常为 `/Library/Java/JavaVirtualMachines/jdk-17.jdk/Contents/Home`。
+
+配置完成后，按 `Ctrl+Shift+P` 并选择 **"Java: Clean Java Language Server Workspace"**，或重新加载 VSCode 窗口以使配置生效。
 
 ### 安装应用
 ```bash
