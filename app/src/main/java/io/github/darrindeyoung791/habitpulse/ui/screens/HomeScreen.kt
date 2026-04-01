@@ -93,6 +93,7 @@ fun HomeScreen(
     onCreateHabit: () -> Unit,
     onNavigateToSettings: () -> Unit,
     onEditHabit: (Habit) -> Unit,
+    onNavigateToMultiSelect: () -> Unit = {},
     application: HabitPulseApplication? = null,
     onHomeDataLoaded: () -> Unit = {}
 ) {
@@ -246,6 +247,15 @@ fun HomeScreen(
     val recordsScrollState = remember { androidx.compose.foundation.lazy.LazyListState() }
     val contactsScrollState = remember { androidx.compose.foundation.lazy.LazyListState() }
 
+    val scrollToTop by viewModel.scrollToTop.collectAsStateWithLifecycle(initialValue = false)
+
+    LaunchedEffect(scrollToTop) {
+        if (scrollToTop) {
+            habitsScrollState.animateScrollToItem(0)
+            viewModel.consumeScrollToTop()
+        }
+    }
+
     // Animated drawer width
     val animatedDrawerWidth by animateDpAsState(
         targetValue = if (isDrawerExpanded) 240.dp else 80.dp,
@@ -349,17 +359,26 @@ fun HomeScreen(
                                 SearchBarFixed(
                                     searchQuery = searchQuery,
                                     onSearchQueryChange = { query -> viewModel.setSearchQuery(query) },
-                                    onClearSearch = { viewModel.clearSearch() },
-                                    onBackClick = { isSearchActive = false },
+                                    onClearSearch = {
+                                        viewModel.clearSearch()
+                                        isSearchActive = false
+                                    },
+                                    onBackClick = {
+                                        isSearchActive = false
+                                        viewModel.clearSearch()
+                                    },
                                     placeholder = stringResource(id = R.string.search_habits_hint),
                                     accessibilityLabel = stringResource(id = R.string.accessibility_search_habits),
                                     focusRequester = searchFocusRequester,
                                     isFocused = isSearchFocused,
-                                    onFocusedChange = { focused -> isSearchFocused = focused }
+                                    onFocusedChange = { focused -> isSearchFocused = focused },
+                                    isSearchActive = isSearchActive
                                 )
                             }
 
                             // 内容区域 - 使用 animateContentSize 让列表项平滑移动
+                            val shownHabits = if (isSearchActive) filteredHabits else habits
+
                             Box(
                                 modifier = Modifier
                                     .weight(1f)
@@ -371,9 +390,12 @@ fun HomeScreen(
                                     // 搜索但无结果
                                     SearchEmptyState(
                                         modifier = Modifier.fillMaxSize(),
-                                        onClearSearch = { viewModel.clearSearch() }
+                                        onClearSearch = {
+                                            viewModel.clearSearch()
+                                            isSearchActive = false
+                                        }
                                     )
-                                } else if (filteredHabits.isEmpty()) {
+                                } else if (!isSearchActive && habits.isEmpty()) {
                                     // 所有习惯为空
                                     EmptyStateContent(
                                         modifier = Modifier.fillMaxSize(),
@@ -393,6 +415,7 @@ fun HomeScreen(
                                         onCheckIn = { viewModel.incrementCompletionCount(it) },
                                         onUndoCompletion = { viewModel.undoHabitCompletion(it) },
                                         onDeleteHabit = { viewModel.deleteHabit(it) },
+                                        onNavigateToMultiSelect = onNavigateToMultiSelect,
                                         nestedScrollConnection = habitsScrollBehavior.nestedScrollConnection,
                                         newlyAddedHabitId = newlyAddedHabitId,
                                         listState = habitsScrollState,
@@ -1227,6 +1250,7 @@ fun HabitListContent(
     onCheckIn: (Habit) -> Unit,
     onUndoCompletion: (Habit) -> Unit,
     onDeleteHabit: (Habit) -> Unit,
+    onNavigateToMultiSelect: () -> Unit,
     nestedScrollConnection: androidx.compose.ui.input.nestedscroll.NestedScrollConnection? = null,
     newlyAddedHabitId: UUID? = null,
     listState: androidx.compose.foundation.lazy.LazyListState = remember { androidx.compose.foundation.lazy.LazyListState() },
@@ -1281,6 +1305,7 @@ fun HabitListContent(
                                 onUndoCompletion = { onUndoCompletion(habit) },
                                 onEditHabit = { onHabitClick(habit) },
                                 onDeleteHabit = { onDeleteHabit(habit) },
+                                onNavigateToMultiSelect = { onNavigateToMultiSelect() },
                                 isNewlyAdded = (habit.id == newlyAddedHabitId),
                                 searchQuery = searchQuery
                             )
@@ -1300,6 +1325,7 @@ fun HabitListContent(
                                 onUndoCompletion = { onUndoCompletion(habit) },
                                 onEditHabit = { onHabitClick(habit) },
                                 onDeleteHabit = { onDeleteHabit(habit) },
+                                onNavigateToMultiSelect = { onNavigateToMultiSelect() },
                                 isNewlyAdded = (habit.id == newlyAddedHabitId),
                                 searchQuery = searchQuery
                             )
@@ -1333,6 +1359,7 @@ fun HabitListContent(
                     onUndoCompletion = { onUndoCompletion(habit) },
                     onEditHabit = { onHabitClick(habit) },
                     onDeleteHabit = { onDeleteHabit(habit) },
+                    onNavigateToMultiSelect = { onNavigateToMultiSelect() },
                     isNewlyAdded = (habit.id == newlyAddedHabitId),
                     searchQuery = searchQuery
                 )
@@ -1354,6 +1381,7 @@ fun HabitCard(
     onUndoCompletion: () -> Unit,
     onEditHabit: () -> Unit,
     onDeleteHabit: () -> Unit,
+    onNavigateToMultiSelect: () -> Unit = {},
     modifier: Modifier = Modifier,
     isNewlyAdded: Boolean = false,
     searchQuery: String = ""
@@ -1570,6 +1598,24 @@ fun HabitCard(
                     },
                     onClick = {
                         onEditHabit()
+                        showMenu = false
+                    }
+                )
+
+                // 多选与排序
+                DropdownMenuItem(
+                    text = {
+                        Text(text = stringResource(id = R.string.habit_context_menu_multi_select))
+                    },
+                    leadingIcon = {
+                        Icon(
+                            imageVector = Icons.Filled.DragHandle,
+                            contentDescription = null,
+                            modifier = Modifier.size(24.dp)
+                        )
+                    },
+                    onClick = {
+                        onNavigateToMultiSelect()
                         showMenu = false
                     }
                 )
@@ -1962,6 +2008,21 @@ private class FakeHabitDao : io.github.darrindeyoung791.habitpulse.data.database
             }
         )
     }
+
+    override fun getHabitsBySortOrderFlow(): kotlinx.coroutines.flow.Flow<List<io.github.darrindeyoung791.habitpulse.data.model.Habit>> {
+        return kotlinx.coroutines.flow.flowOf(habits.sortedBy { it.sortOrder })
+    }
+
+    override suspend fun updateSortOrder(id: java.util.UUID, sortOrder: Int, timestamp: Long) {
+        val index = habits.indexOfFirst { it.id == id }
+        if (index >= 0) {
+            habits[index] = habits[index].copy(sortOrder = sortOrder, modifiedDate = timestamp)
+        }
+    }
+
+    override suspend fun deleteHabitsByIds(habitIds: Set<java.util.UUID>) {
+        habits.removeAll { it.id in habitIds }
+    }
 }
 
 @Preview
@@ -1981,7 +2042,8 @@ fun HabitCardPreview() {
             onCheckIn = {},
             onUndoCompletion = {},
             onEditHabit = {},
-            onDeleteHabit = {}
+            onDeleteHabit = {},
+            onNavigateToMultiSelect = {}
         )
     }
 }
@@ -2004,7 +2066,8 @@ fun HabitCardCompletedPreview() {
             onCheckIn = {},
             onUndoCompletion = {},
             onEditHabit = {},
-            onDeleteHabit = {}
+            onDeleteHabit = {},
+            onNavigateToMultiSelect = {}
         )
     }
 }
@@ -2026,7 +2089,8 @@ fun HabitCardWithNotesPreview() {
             onCheckIn = {},
             onUndoCompletion = {},
             onEditHabit = {},
-            onDeleteHabit = {}
+            onDeleteHabit = {},
+            onNavigateToMultiSelect = {}
         )
     }
 }
@@ -2121,7 +2185,8 @@ internal fun SearchBarFixed(
     accessibilityLabel: String,
     focusRequester: FocusRequester,
     isFocused: Boolean,
-    onFocusedChange: (Boolean) -> Unit
+    onFocusedChange: (Boolean) -> Unit,
+    isSearchActive: Boolean
 ) {
     // Fixed height container with padding
     Box(
@@ -2187,7 +2252,7 @@ internal fun SearchBarFixed(
                 )
 
                 // Clear button
-                if (searchQuery.isNotEmpty()) {
+                if (isSearchActive) {
                     IconButton(
                         onClick = onClearSearch,
                         modifier = Modifier.size(40.dp)

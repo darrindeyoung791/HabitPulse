@@ -22,6 +22,7 @@ import io.github.darrindeyoung791.habitpulse.data.model.Habit
 import io.github.darrindeyoung791.habitpulse.ui.screens.EditMode
 import io.github.darrindeyoung791.habitpulse.ui.screens.HabitCreationScreen
 import io.github.darrindeyoung791.habitpulse.ui.screens.HomeScreen
+import io.github.darrindeyoung791.habitpulse.ui.screens.MultiSelectSortScreen
 import java.util.UUID
 
 /**
@@ -119,6 +120,14 @@ fun HabitPulseNavGraph(
                             }
                         }
                     },
+                    onNavigateToMultiSelect = {
+                        navController.navigate(Route.MultiSelectSort.route) {
+                            launchSingleTop = true
+                            popUpTo(Route.Home.route) {
+                                inclusive = false
+                            }
+                        }
+                    },
                     application = context.applicationContext as HabitPulseApplication,
                     onHomeDataLoaded = onHomeDataLoaded
                 )
@@ -191,6 +200,38 @@ fun HabitPulseNavGraph(
                     editMode = EditMode.EDIT,
                     habitId = habitId,
                     navController = navController,
+                    application = context.applicationContext as HabitPulseApplication
+                )
+            }
+        }
+        composable(
+            route = Route.MultiSelectSort.route,
+            enterTransition = {
+                slideInVertically(
+                    initialOffsetY = { fullHeight -> fullHeight },
+                    animationSpec = spring(
+                        dampingRatio = 0.75f,
+                        stiffness = Spring.StiffnessLow
+                    )
+                ) + fadeIn(animationSpec = tween(durationMillis = 400))
+            },
+            exitTransition = {
+                slideOutVertically(
+                    targetOffsetY = { fullHeight -> fullHeight },
+                    animationSpec = tween(durationMillis = 200)
+                ) + fadeOut(animationSpec = tween(durationMillis = 200))
+            }
+        ) {
+            Box(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .clip(RoundedCornerShape(cornerRadius))
+            ) {
+                MultiSelectSortScreen(
+                    onNavigateBack = {
+                        navController.popBackStack()
+                    },
+                    viewModel = (context.applicationContext as HabitPulseApplication).habitViewModel,
                     application = context.applicationContext as HabitPulseApplication
                 )
             }

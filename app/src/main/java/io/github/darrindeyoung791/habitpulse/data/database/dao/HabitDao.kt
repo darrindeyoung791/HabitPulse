@@ -13,15 +13,15 @@ import java.util.UUID
 interface HabitDao {
 
     /**
-     * 获取所有习惯（按最后修改日期倒序）
+     * 获取所有习惯（按 sortOrder 升序，创建时间降序）
      */
-    @Query("SELECT * FROM habits ORDER BY modifiedDate DESC")
+    @Query("SELECT * FROM habits ORDER BY sortOrder ASC, createdDate DESC")
     fun getAllHabitsFlow(): Flow<List<Habit>>
 
     /**
      * 获取所有习惯（同步版本，用于后台操作）
      */
-    @Query("SELECT * FROM habits ORDER BY modifiedDate DESC")
+    @Query("SELECT * FROM habits ORDER BY sortOrder ASC, createdDate DESC")
     suspend fun getAllHabits(): List<Habit>
 
     /**
@@ -37,15 +37,15 @@ interface HabitDao {
     suspend fun getHabitById(id: UUID): Habit?
 
     /**
-     * 获取今日未完成的所有习惯
+     * 获取今日未完成的所有习惯（按 sortOrder 排序）
      */
-    @Query("SELECT * FROM habits WHERE completedToday = 0 ORDER BY modifiedDate DESC")
+    @Query("SELECT * FROM habits WHERE completedToday = 0 ORDER BY sortOrder ASC, createdDate DESC")
     fun getIncompleteHabitsFlow(): Flow<List<Habit>>
 
     /**
-     * 获取今日已完成的所有习惯
+     * 获取今日已完成的所有习惯（按 sortOrder 排序）
      */
-    @Query("SELECT * FROM habits WHERE completedToday = 1 ORDER BY modifiedDate DESC")
+    @Query("SELECT * FROM habits WHERE completedToday = 1 ORDER BY sortOrder ASC, createdDate DESC")
     fun getCompletedHabitsFlow(): Flow<List<Habit>>
     
     /**
@@ -107,6 +107,35 @@ interface HabitDao {
      * 搜索习惯（根据标题或备注）
      * @param query 搜索关键词，使用 LIKE 匹配（自动添加 % 通配符）
      */
-    @Query("SELECT * FROM habits WHERE title LIKE :query OR notes LIKE :query ORDER BY modifiedDate DESC")
+    @Query("SELECT * FROM habits WHERE title LIKE :query OR notes LIKE :query ORDER BY sortOrder ASC, createdDate DESC")
     fun searchHabitsFlow(query: String): Flow<List<Habit>>
+
+    /**
+     * 获取所有习惯（按 sortOrder 排序）
+     */
+    @Query("SELECT * FROM habits ORDER BY sortOrder ASC, createdDate DESC")
+    fun getHabitsBySortOrderFlow(): Flow<List<Habit>>
+
+    /**
+     * 更新习惯的排序顺序
+     */
+    @Query("UPDATE habits SET sortOrder = :sortOrder, modifiedDate = :timestamp WHERE id = :id")
+    suspend fun updateSortOrder(id: UUID, sortOrder: Int, timestamp: Long)
+
+    /**
+     * 批量更新多个习惯的排序顺序
+     */
+    @Transaction
+    suspend fun updateMultipleSortOrders(habitsWithOrder: List<Pair<UUID, Int>>) {
+        val timestamp = System.currentTimeMillis()
+        habitsWithOrder.forEach { (id, sortOrder) ->
+            updateSortOrder(id, sortOrder, timestamp)
+        }
+    }
+
+    /**
+     * 根据 ID 列表删除多个习惯
+     */
+    @Query("DELETE FROM habits WHERE id IN (:habitIds)")
+    suspend fun deleteHabitsByIds(habitIds: Set<UUID>)
 }

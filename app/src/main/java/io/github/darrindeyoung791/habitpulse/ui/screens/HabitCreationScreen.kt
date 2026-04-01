@@ -1355,6 +1355,21 @@ private class FakeHabitDaoForCreation : io.github.darrindeyoung791.habitpulse.da
             }
         )
     }
+
+    override fun getHabitsBySortOrderFlow(): kotlinx.coroutines.flow.Flow<List<io.github.darrindeyoung791.habitpulse.data.model.Habit>> {
+        return kotlinx.coroutines.flow.flowOf(habits.sortedBy { it.sortOrder })
+    }
+
+    override suspend fun updateSortOrder(id: java.util.UUID, sortOrder: Int, timestamp: Long) {
+        val index = habits.indexOfFirst { it.id == id }
+        if (index >= 0) {
+            habits[index] = habits[index].copy(sortOrder = sortOrder, modifiedDate = timestamp)
+        }
+    }
+
+    override suspend fun deleteHabitsByIds(habitIds: Set<java.util.UUID>) {
+        habits.removeAll { it.id in habitIds }
+    }
 }
 
 /**

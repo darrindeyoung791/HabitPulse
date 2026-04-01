@@ -17,8 +17,8 @@ android {
         applicationId = "io.github.darrindeyoung791.habitpulse"
         minSdk = 26
         targetSdk = 36
-        versionCode = 98
-        versionName = "0.4.24-alpha"
+        versionCode = 99
+        versionName = "0.5.00-alpha"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
         resourceConfigurations.addAll(listOf("zh-rCN", "en-rUS"))
@@ -99,4 +99,7 @@ dependencies {
 
     // AboutLibraries for open source licenses display
     implementation("com.mikepenz:aboutlibraries-compose-m3:13.2.1")
+
+    // Reorderable for drag-and-drop sorting
+    implementation("sh.calvin.reorderable:reorderable:3.0.0")
 }

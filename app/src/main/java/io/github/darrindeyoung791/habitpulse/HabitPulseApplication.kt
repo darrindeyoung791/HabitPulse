@@ -26,7 +26,7 @@ class HabitPulseApplication : Application() {
             HabitDatabase::class.java,
             HabitDatabase.DATABASE_NAME
         )
-        .fallbackToDestructiveMigration()  // Alpha 阶段使用破坏性迁移
+        .addMigrations(HabitDatabase.MIGRATION_2_3)  // Migration from v2 to v3
         .build()
     }
 

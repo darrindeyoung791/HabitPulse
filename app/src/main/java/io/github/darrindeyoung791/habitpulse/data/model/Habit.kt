@@ -24,7 +24,7 @@ enum class SupervisionMethod {
 
 /**
  * 习惯实体类
- * 
+ *
  * @property id 习惯唯一标识符 (UUID)
  * @property title 习惯标题
  * @property repeatCycle 重复周期 (DAILY/WEEKLY)
@@ -39,37 +39,43 @@ enum class SupervisionMethod {
  * @property lastCompletedDate 最后完成日期时间戳
  * @property createdDate 创建日期时间戳
  * @property modifiedDate 最后修改日期时间戳
+ * @property sortOrder 排序顺序，数值越小越靠前，用于自定义排序
+ * @property timeZone 时区 ID，用于处理跨时区场景
  */
 @Entity(tableName = "habits")
 data class Habit(
     @PrimaryKey
     val id: UUID = UUID.randomUUID(),
-    
+
     val title: String,
-    
+
     val repeatCycle: RepeatCycle = RepeatCycle.DAILY,
-    
+
     val repeatDays: String = "[]",  // JSON format: [0,1,2,3,4,5,6]
-    
+
     val reminderTimes: String = "[]",  // JSON format: ["08:00","20:00"]
-    
+
     val notes: String = "",
-    
+
     val supervisionMethod: SupervisionMethod = SupervisionMethod.NONE,
-    
+
     val supervisorEmails: String = "[]",  // JSON format: ["email1@example.com"]
-    
+
     val supervisorPhones: String = "[]",  // JSON format: ["+1234567890"]
-    
+
     val completedToday: Boolean = false,
-    
+
     val completionCount: Int = 0,
-    
+
     val lastCompletedDate: Long? = null,
-    
+
     val createdDate: Long = System.currentTimeMillis(),
-    
-    val modifiedDate: Long = System.currentTimeMillis()
+
+    val modifiedDate: Long = System.currentTimeMillis(),
+
+    val sortOrder: Int = 0,
+
+    val timeZone: String = java.util.TimeZone.getDefault().id
 ) {
     
     // ============ Helper methods for list properties ============
@@ -132,5 +138,9 @@ data class Habit(
         val jsonArray = JSONArray()
         phones.forEach { jsonArray.put(it) }
         return copy(supervisorPhones = jsonArray.toString(), modifiedDate = System.currentTimeMillis())
+    }
+
+    fun copyWithSortOrder(order: Int): Habit {
+        return copy(sortOrder = order, modifiedDate = System.currentTimeMillis())
     }
 }

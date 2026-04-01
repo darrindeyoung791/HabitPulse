@@ -9,4 +9,5 @@ sealed class Route(val route: String) {
         fun createRoute(habitId: UUID): String = "edit_habit/$habitId"
     }
     object Settings : Route("settings")
+    object MultiSelectSort : Route("multi_select_sort")
 }

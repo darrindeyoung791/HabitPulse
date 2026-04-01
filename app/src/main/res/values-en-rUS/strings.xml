@@ -195,4 +195,19 @@
     <!-- Open Source Licenses -->
     <string name="settings_open_source_licenses">Open Source Licenses</string>
     <string name="settings_open_source_licenses_description">View open source library licenses used in this project</string>
+
+    <!-- Multi-Select & Sort -->
+    <string name="multi_select_sort_title">Multi-Select &amp; Sort</string>
+    <string name="multi_select_sort_cancel">Cancel</string>
+    <string name="multi_select_sort_delete">Delete</string>
+    <string name="multi_select_sort_save">Save</string>
+    <string name="multi_select_sort_select_all">Select All</string>
+    <string name="multi_select_sort_empty">No habits</string>
+    <string name="multi_select_sort_delete_confirm_title">Confirm Delete</string>
+    <string name="multi_select_sort_delete_confirm_message">Delete %1$s selected habits? This action cannot be undone.</string>
+    <string name="multi_select_sort_delete_confirm">Delete</string>
+    <string name="multi_select_sort_delete_cancel">Cancel</string>
+    <string name="accessibility_drag_handle">Drag handle</string>
+    <string name="accessibility_drag_to_reorder">Drag to reorder</string>
+    <string name="habit_context_menu_multi_select">Multi-Select &amp; Sort</string>
 </resources>

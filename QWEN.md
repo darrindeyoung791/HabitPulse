@@ -103,6 +103,8 @@ HabitPulse/
 | lastCompletedDate | INTEGER | Last completion timestamp |
 | createdDate | INTEGER | Creation timestamp |
 | modifiedDate | INTEGER | Last modification timestamp |
+| sortOrder | INTEGER | Sort order for custom reordering (lower values appear first) |
+| timeZone | TEXT | Timezone ID for cross-timezone scenarios |
 
 ### habit_completions Table
 
@@ -183,6 +185,7 @@ Records every habit completion with timestamp.
 ### Other
 - `androidx.core:core-splashscreen` (1.0.1) - Splash screen compatibility
 - `com.google.android.material:material` (1.10.0) - Material components for dynamic colors
+- `sh.calvin.reorderable:reorderable` (3.0.0) - Drag-and-drop reordering library
 
 ### Testing
 - `junit` (4.13.2) - Unit testing framework
@@ -287,6 +290,12 @@ The project is in **early development stage** (v0.1.31-alpha):
 - ✅ Dynamic app bar title font size (changes on scroll)
 - ✅ Delayed enter animation for newly added habits (after navigation completes)
 - ✅ Smooth reposition animation for other cards (animateContentSize)
+- ✅ **Multi-Select & Sort** - Long-press habit card to enter multi-select mode, drag-and-drop to reorder, batch delete
+- ✅ **Multi-Select & Sort UX优化** - 批量删除确认框对齐 Settings 对话框样式（标题大小一致、无警告图标），保存退出后自动回到主页顶部
+- ✅ **搜索体验优化** - 退出搜索时不再出现短时“暂无习惯”状态，清空搜索同时恢复全量列表
+- ✅ **Reorderable integration** - Using sh.calvin.reorderable:reorderable:3.0.0 library
+- ✅ **sortOrder field** - Added to Habit entity for custom sort order
+- ✅ **Database v3** - Added sortOrder and timeZone columns to habits table with migration
 
 ### In Progress
 - 🔄 Count section (track unplanned events, such as game scores)
@@ -304,8 +313,8 @@ The project is in **early development stage** (v0.1.31-alpha):
 
 - **Namespace**: `io.github.darrindeyoung791.habitpulse`
 - **Application ID**: `io.github.darrindeyoung791.habitpulse`
-- **Version Code**: 89 (从当前 Git commit 数开始，之后每次发布手动递增)
-- **Version Name**: 0.4.15-alpha
+- **Version Code**: 99 (incremented for multi-select & sort feature)
+- **Version Name**: 0.4.25-alpha
 
 ## Screen Flow
 
@@ -319,6 +328,17 @@ The project is in **early development stage** (v0.1.31-alpha):
 │  - FAB (create) │     │  - More settings...  │     │  - GitHub link  │
 │                 │     │                      │     │                 │
 └─────────────────┘     └──────────────────────┘     └─────────────────┘
+         │
+         ▼
+┌──────────────────────┐
+│                      │
+│MultiSelectSortScreen │
+│                      │
+│  - Multi-select      │
+│  - Drag to reorder   │
+│  - Batch delete      │
+│                      │
+└──────────────────────┘
 ```
 
 ### Responsive Navigation System

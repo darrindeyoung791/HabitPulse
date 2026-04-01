@@ -203,7 +203,8 @@ fun ContactsScreenContent(
                 accessibilityLabel = stringResource(id = R.string.accessibility_search_contacts),
                 focusRequester = searchFocusRequester,
                 isFocused = true,
-                onFocusedChange = { }
+                onFocusedChange = { },
+                isSearchActive = isSearchActive
             )
         }
 
@@ -850,7 +851,7 @@ fun EmptyContactsContent(
 
 @Suppress("unused")
 private class FakeHabitDaoForContacts : io.github.darrindeyoung791.habitpulse.data.database.dao.HabitDao {
-    private val habits = listOf(
+    private val habits = mutableListOf(
         Habit(
             id = UUID.fromString("00000000-0000-0000-0000-000000000001"),
             title = "每天喝水",
@@ -909,6 +910,21 @@ private class FakeHabitDaoForContacts : io.github.darrindeyoung791.habitpulse.da
                 habit.title.contains(searchQuery, ignoreCase = true)
             }
         )
+    }
+
+    override fun getHabitsBySortOrderFlow(): kotlinx.coroutines.flow.Flow<List<Habit>> {
+        return kotlinx.coroutines.flow.flowOf(habits.sortedBy { it.sortOrder })
+    }
+
+    override suspend fun updateSortOrder(id: UUID, sortOrder: Int, timestamp: Long) {
+        val index = habits.indexOfFirst { it.id == id }
+        if (index >= 0) {
+            habits[index] = habits[index].copy(sortOrder = sortOrder, modifiedDate = timestamp)
+        }
+    }
+
+    override suspend fun deleteHabitsByIds(habitIds: Set<UUID>) {
+        habits.removeAll { it.id in habitIds }
     }
 }
 

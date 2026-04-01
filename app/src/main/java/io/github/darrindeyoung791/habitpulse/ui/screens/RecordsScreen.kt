@@ -702,7 +702,7 @@ fun EmptyRecordsContent(modifier: Modifier = Modifier) {
 
 @Suppress("unused")
 private class FakeHabitDaoForRecords : io.github.darrindeyoung791.habitpulse.data.database.dao.HabitDao {
-    private val habits = listOf(
+    private val habits = mutableListOf(
         Habit(
             id = UUID.fromString("00000000-0000-0000-0000-000000000001"),
             title = "每天喝水",
@@ -758,6 +758,21 @@ private class FakeHabitDaoForRecords : io.github.darrindeyoung791.habitpulse.dat
                 habit.title.contains(searchQuery, ignoreCase = true)
             }
         )
+    }
+
+    override fun getHabitsBySortOrderFlow(): kotlinx.coroutines.flow.Flow<List<Habit>> {
+        return kotlinx.coroutines.flow.flowOf(habits.sortedBy { it.sortOrder })
+    }
+
+    override suspend fun updateSortOrder(id: UUID, sortOrder: Int, timestamp: Long) {
+        val index = habits.indexOfFirst { it.id == id }
+        if (index >= 0) {
+            habits[index] = habits[index].copy(sortOrder = sortOrder, modifiedDate = timestamp)
+        }
+    }
+
+    override suspend fun deleteHabitsByIds(habitIds: Set<UUID>) {
+        habits.removeAll { it.id in habitIds }
     }
 }
 

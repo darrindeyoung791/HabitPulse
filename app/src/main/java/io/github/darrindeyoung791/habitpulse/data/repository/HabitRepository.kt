@@ -207,4 +207,30 @@ class HabitRepository(
         val searchQuery = "%${query}%"
         return habitDao.searchHabitsFlow(searchQuery)
     }
+
+    /**
+     * 获取按 sortOrder 排序的所有习惯 Flow
+     */
+    val habitsBySortOrderFlow: Flow<List<Habit>> = habitDao.getHabitsBySortOrderFlow()
+
+    /**
+     * 更新习惯的排序顺序
+     */
+    suspend fun updateHabitSortOrder(id: UUID, sortOrder: Int) {
+        habitDao.updateSortOrder(id, sortOrder, System.currentTimeMillis())
+    }
+
+    /**
+     * 批量更新多个习惯的排序顺序
+     */
+    suspend fun updateMultipleHabitSortOrders(habitsWithOrder: List<Pair<UUID, Int>>) {
+        habitDao.updateMultipleSortOrders(habitsWithOrder)
+    }
+
+    /**
+     * 根据 ID 列表删除多个习惯
+     */
+    suspend fun deleteHabitsByIds(habitIds: Set<UUID>) {
+        habitDao.deleteHabitsByIds(habitIds)
+    }
 }

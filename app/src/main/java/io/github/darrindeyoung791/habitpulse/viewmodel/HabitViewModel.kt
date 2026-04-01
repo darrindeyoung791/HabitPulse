@@ -34,11 +34,31 @@ class HabitViewModel(
     // ============= UI State Flows =============
 
     /**
-     * 所有习惯列表（按创建日期倒序）
+     * 所有习惯列表（按 sortOrder,  createdDate）
      * 收到第一个数据后会自动将 isLoading 设置为 false
      */
-    val habitsFlow: Flow<List<Habit>> = repository.allHabitsFlow
+    val habitsFlow: Flow<List<Habit>> = repository.habitsBySortOrderFlow
         .onEach { _isLoading.value = false }
+
+    /**
+     * 是否需要 Home 列表滚动到顶部（用于多选排序保存后，统一回到顶部）
+     */
+    private val _scrollToTop = MutableStateFlow(false)
+    val scrollToTop: StateFlow<Boolean> = _scrollToTop.asStateFlow()
+
+    /**
+     * 请求 Home 列表滚动到顶部
+     */
+    fun requestScrollToTop() {
+        _scrollToTop.value = true
+    }
+
+    /**
+     * 处理 Home 列表滚动到顶部请求
+     */
+    fun consumeScrollToTop() {
+        _scrollToTop.value = false
+    }
 
     /**
      * 习惯总数
@@ -101,7 +121,7 @@ class HabitViewModel(
      * 当搜索词为空时返回所有习惯，否则返回搜索结果
      * 使用 debounce 后的搜索词，避免用户输入时频繁过滤
      */
-    val filteredHabitsFlow: Flow<List<Habit>> = repository.allHabitsFlow
+    val filteredHabitsFlow: Flow<List<Habit>> = repository.habitsBySortOrderFlow
         .combine(debouncedSearchQuery) { allHabits, query ->
             if (query.isNullOrBlank()) {
                 allHabits
@@ -160,8 +180,14 @@ class HabitViewModel(
         _editingHabit.value = habit
     }
 
+    private suspend fun getTopSortOrder(): Int {
+        val allHabits = repository.getAllHabits()
+        return if (allHabits.isEmpty()) 0 else allHabits.minOf { it.sortOrder } - 1
+    }
+
     /**
-     * 保存习惯（新建或更新）
+     * 保存习惯（新建或更新，都可通过这个接口）
+     * 新建/编辑后的习惯会靠上展示。
      *
      * @param habit 要保存的习惯
      */
@@ -169,7 +195,16 @@ class HabitViewModel(
         viewModelScope.launch {
             _isSaving.value = true
             try {
-                repository.insertHabit(habit)
+                val topSort = getTopSortOrder()
+                val habitToSave = habit.copy(sortOrder = topSort, modifiedDate = System.currentTimeMillis())
+                val existing = repository.getHabitById(habit.id)
+
+                if (existing == null) {
+                    repository.insertHabit(habitToSave)
+                } else {
+                    repository.updateHabit(habitToSave)
+                }
+
                 // Set newly added habit ID for animation trigger
                 _newlyAddedHabitId.value = habit.id
                 _saveSuccess.value = true
@@ -182,7 +217,7 @@ class HabitViewModel(
     }
 
     /**
-     * 更新习惯
+     * 更新习惯（仅更新，不自动移动至顶部）
      */
     fun updateHabit(habit: Habit) {
         viewModelScope.launch {
@@ -265,6 +300,95 @@ class HabitViewModel(
     fun clearSearch() {
         _searchQuery.value = ""
     }
+
+    // ============= Multi-Select & Sort =============
+
+    /**
+     * 选中的习惯 ID 列表（用于多选模式）
+     */
+    private val _selectedHabitIds = MutableStateFlow<Set<UUID>>(emptySet())
+    val selectedHabitIds: StateFlow<Set<UUID>> = _selectedHabitIds.asStateFlow()
+
+    /**
+     * 是否处于多选模式
+     */
+    private val _isMultiSelecting = MutableStateFlow(false)
+    val isMultiSelecting: StateFlow<Boolean> = _isMultiSelecting.asStateFlow()
+
+    /**
+     * 进入多选模式
+     */
+    fun enterMultiSelectMode(initialHabitId: UUID? = null) {
+        _isMultiSelecting.value = true
+        _selectedHabitIds.value = if (initialHabitId != null) setOf(initialHabitId) else emptySet()
+    }
+
+    /**
+     * 退出多选模式
+     */
+    fun exitMultiSelectMode() {
+        _isMultiSelecting.value = false
+        _selectedHabitIds.value = emptySet()
+    }
+
+    /**
+     * 切换习惯的选中状态
+     */
+    fun toggleHabitSelection(habitId: UUID) {
+        val current = _selectedHabitIds.value
+        _selectedHabitIds.value = if (habitId in current) {
+            current - habitId
+        } else {
+            current + habitId
+        }
+    }
+
+    /**
+     * 全选/取消全选
+     */
+    fun toggleSelectAll(allHabitIds: List<UUID>) {
+        _selectedHabitIds.value = if (_selectedHabitIds.value.size == allHabitIds.size) {
+            emptySet()
+        } else {
+            allHabitIds.toSet()
+        }
+    }
+
+    /**
+     * 更新习惯的排序顺序
+     */
+    fun updateHabitSortOrder(habitId: UUID, newOrder: Int) {
+        viewModelScope.launch {
+            repository.updateHabitSortOrder(habitId, newOrder)
+        }
+    }
+
+    /**
+     * 批量更新多个习惯的排序顺序
+     */
+    fun updateMultipleHabitSortOrders(habitsWithOrder: List<Pair<UUID, Int>>) {
+        viewModelScope.launch {
+            repository.updateMultipleHabitSortOrders(habitsWithOrder)
+        }
+    }
+
+    /**
+     * 批量删除选中的习惯
+     */
+    fun deleteSelectedHabits() {
+        viewModelScope.launch {
+            val habitsToDelete = _selectedHabitIds.value
+            repository.deleteHabitsByIds(habitsToDelete)
+            _selectedHabitIds.value = emptySet()
+            _isMultiSelecting.value = false
+        }
+    }
+
+    /**
+     * 获取按 sortOrder 排序的习惯列表 Flow
+     */
+    val habitsBySortOrderFlow: Flow<List<Habit>> = repository.habitsBySortOrderFlow
+        .onEach { _isLoading.value = false }
 
     /**
      * ViewModel Provider Factory
