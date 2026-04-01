@@ -197,4 +197,19 @@
     <!-- Open Source Licenses -->
     <string name="settings_open_source_licenses">开放源代码许可</string>
     <string name="settings_open_source_licenses_description">查看本项目使用的开源库许可证</string>
+
+    <!-- Multi-Select & Sort -->
+    <string name="multi_select_sort_title">多选与排序</string>
+    <string name="multi_select_sort_cancel">取消</string>
+    <string name="multi_select_sort_delete">删除</string>
+    <string name="multi_select_sort_save">保存</string>
+    <string name="multi_select_sort_select_all">全选</string>
+    <string name="multi_select_sort_empty">暂无习惯</string>
+    <string name="multi_select_sort_delete_confirm_title">确认删除</string>
+    <string name="multi_select_sort_delete_confirm_message">确定要删除选中的 %1$s 个习惯吗？此操作无法撤销。</string>
+    <string name="multi_select_sort_delete_confirm">删除</string>
+    <string name="multi_select_sort_delete_cancel">取消</string>
+    <string name="accessibility_drag_handle">拖拽把手</string>
+    <string name="accessibility_drag_to_reorder">拖拽以重新排序</string>
+    <string name="habit_context_menu_multi_select">多选与排序</string>
 </resources>

@@ -93,11 +93,8 @@ fun MultiSelectSortScreen(
     // Dialog state for delete confirmation
     var showDeleteDialog by remember { mutableStateOf(false) }
 
-    // Back handler
-    androidx.activity.compose.BackHandler {
-        viewModel.exitMultiSelectMode()
-        onNavigateBack()
-    }
+    // Note: No BackHandler needed - navigation system handles back gesture automatically
+    // Just like HabitCreationScreen, we rely on navController.popBackStack() in onNavigateBack
 
     val displayHabits = if (draggedOrder.value.isNotEmpty()) draggedOrder.value else allHabits
 

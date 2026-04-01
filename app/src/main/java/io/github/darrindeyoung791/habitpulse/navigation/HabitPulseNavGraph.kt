@@ -222,6 +222,7 @@ fun HabitPulseNavGraph(
                 ) + fadeOut(animationSpec = tween(durationMillis = 200))
             }
         ) {
+            val viewModel = (context.applicationContext as HabitPulseApplication).habitViewModel
             Box(
                 modifier = Modifier
                     .fillMaxSize()
@@ -229,9 +230,11 @@ fun HabitPulseNavGraph(
             ) {
                 MultiSelectSortScreen(
                     onNavigateBack = {
+                        // Exit multi-select mode before navigating back
+                        viewModel.exitMultiSelectMode()
                         navController.popBackStack()
                     },
-                    viewModel = (context.applicationContext as HabitPulseApplication).habitViewModel,
+                    viewModel = viewModel,
                     application = context.applicationContext as HabitPulseApplication
                 )
             }
