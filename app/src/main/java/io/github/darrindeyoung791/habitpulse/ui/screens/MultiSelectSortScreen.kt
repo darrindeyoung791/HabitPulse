@@ -29,7 +29,10 @@ import io.github.darrindeyoung791.habitpulse.HabitPulseApplication
 import io.github.darrindeyoung791.habitpulse.R
 import io.github.darrindeyoung791.habitpulse.data.model.Habit
 import io.github.darrindeyoung791.habitpulse.ui.theme.HabitPulseTheme
+import io.github.darrindeyoung791.habitpulse.ui.utils.rememberDebounceClickHandler
+import io.github.darrindeyoung791.habitpulse.ui.utils.rememberNavigationGuard
 import io.github.darrindeyoung791.habitpulse.viewmodel.HabitViewModel
+import kotlinx.coroutines.launch
 import sh.calvin.reorderable.ReorderableItem
 import sh.calvin.reorderable.rememberReorderableLazyListState
 import java.util.UUID
@@ -48,7 +51,8 @@ import java.util.UUID
 fun MultiSelectSortScreen(
     onNavigateBack: () -> Unit,
     viewModel: HabitViewModel,
-    application: HabitPulseApplication? = null
+    application: HabitPulseApplication? = null,
+    navController: androidx.navigation.NavHostController? = null
 ) {
     val hapticFeedback = LocalHapticFeedback.current
     val scope = rememberCoroutineScope()
@@ -93,8 +97,10 @@ fun MultiSelectSortScreen(
     // Dialog state for delete confirmation
     var showDeleteDialog by remember { mutableStateOf(false) }
 
-    // Note: No BackHandler needed - navigation system handles back gesture automatically
-    // Just like HabitCreationScreen, we rely on navController.popBackStack() in onNavigateBack
+    // Debounce click handler to prevent rapid consecutive clicks
+    val clickHandler = rememberDebounceClickHandler()
+    // Navigation guard to prevent navigating back beyond home screen
+    val navigationGuard = navController?.let { rememberNavigationGuard(it) }
 
     val displayHabits = if (draggedOrder.value.isNotEmpty()) draggedOrder.value else allHabits
 
@@ -110,8 +116,18 @@ fun MultiSelectSortScreen(
                 navigationIcon = {
                     TextButton(
                         onClick = {
-                            viewModel.exitMultiSelectMode()
-                            onNavigateBack()
+                            scope.launch {
+                                clickHandler.processClick {
+                                    // Exit multi-select mode without scrolling to top
+                                    viewModel.exitMultiSelectMode()
+                                    // Use navigation guard for safe back navigation
+                                    if (navigationGuard != null) {
+                                        navigationGuard.safePopBackStack()
+                                    } else {
+                                        onNavigateBack()
+                                    }
+                                }
+                            }
                         }
                     ) {
                         Text(
@@ -124,16 +140,26 @@ fun MultiSelectSortScreen(
                     // Show "Delete" when items are selected, "Save" when no items selected
                     TextButton(
                         onClick = {
-                            if (selectedHabitIds.isNotEmpty()) {
-                                showDeleteDialog = true
-                            } else {
-                                // Save the current order to database using draggedOrder.value
-                                draggedOrder.value.forEachIndexed { index, habit ->
-                                    viewModel.updateHabitSortOrder(habit.id, index)
+                            scope.launch {
+                                clickHandler.processClick {
+                                    if (selectedHabitIds.isNotEmpty()) {
+                                        showDeleteDialog = true
+                                    } else {
+                                        // Save the current order to database using draggedOrder.value
+                                        draggedOrder.value.forEachIndexed { index, habit ->
+                                            viewModel.updateHabitSortOrder(habit.id, index)
+                                        }
+                                        viewModel.exitMultiSelectMode()
+                                        // Scroll to top only when saving
+                                        viewModel.requestScrollToTop()
+                                        // Use navigation guard for safe back navigation
+                                        if (navigationGuard != null) {
+                                            navigationGuard.safePopBackStack()
+                                        } else {
+                                            onNavigateBack()
+                                        }
+                                    }
                                 }
-                                viewModel.exitMultiSelectMode()
-                                viewModel.requestScrollToTop()
-                                onNavigateBack()
                             }
                         },
                         enabled = true
@@ -243,9 +269,20 @@ fun MultiSelectSortScreen(
             confirmButton = {
                 TextButton(
                     onClick = {
-                        viewModel.deleteSelectedHabits()
-                        showDeleteDialog = false
-                        onNavigateBack()
+                        scope.launch {
+                            clickHandler.processClick {
+                                viewModel.deleteSelectedHabits()
+                                showDeleteDialog = false
+                                // Scroll to top only when deleting
+                                viewModel.requestScrollToTop()
+                                // Use navigation guard for safe back navigation
+                                if (navigationGuard != null) {
+                                    navigationGuard.safePopBackStack()
+                                } else {
+                                    onNavigateBack()
+                                }
+                            }
+                        }
                     },
                     colors = ButtonDefaults.textButtonColors(
                         contentColor = MaterialTheme.colorScheme.error

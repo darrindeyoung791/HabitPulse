@@ -69,11 +69,11 @@
     <string name="create_habit_supervision_none">No supervisor, local notification only</string>
     <string name="create_habit_supervision_email">Email reporting</string>
     <string name="create_habit_supervision_sms">SMS reporting</string>
-    <string name="create_habit_supervisor_email_label">Supervisor Email Address</string>
+    <string name="create_habit_supervisor_email_label">Supervisor Email</string>
     <string name="create_habit_supervisor_email_hint">Enter email address</string>
     <string name="create_habit_supervisor_email_add">Add Email</string>
     <string name="create_habit_supervisor_email_invalid">Please enter a valid email address</string>
-    <string name="create_habit_supervisor_phone_label">Supervisor Phone Number</string>
+    <string name="create_habit_supervisor_phone_label">Supervisor Phone</string>
     <string name="create_habit_supervisor_phone_hint">Enter phone number</string>
     <string name="create_habit_supervisor_phone_add">Add Number</string>
     <string name="create_habit_supervisor_phone_invalid">Please enter a valid phone number</string>
@@ -86,6 +86,10 @@
     <string name="habit_card_menu_undo">Undo check-in</string>
     <string name="habit_card_menu_edit">Edit</string>
     <string name="habit_card_menu_delete">Delete</string>
+    <string name="habit_card_delete_confirm_title">Confirm Delete</string>
+    <string name="habit_card_delete_confirm_message">Are you sure you want to delete the habit \"%1$s\"? This action cannot be undone.</string>
+    <string name="habit_card_delete_confirm">Delete</string>
+    <string name="habit_card_delete_cancel">Cancel</string>
     <string name="habit_card_completed_count">Completed %d times</string>
     <string name="habit_card_repeat_daily">Daily</string>
     <string name="habit_card_repeat_weekly">Mon, Tue, Wed</string>

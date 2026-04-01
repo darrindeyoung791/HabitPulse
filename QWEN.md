@@ -283,12 +283,17 @@ The project is in **early development stage** (v0.4.25-alpha):
 - ✅ **Habit filtering** - Dropdown menu to filter records by specific habit or show all
 - ✅ **i18n support** - Chinese and English strings for records screen
 - ✅ **Multi-Select & Sort** - Long-press habit card to enter multi-select mode, drag-and-drop to reorder, batch delete
-- ✅ **Multi-Select & Sort UX Optimization** - Batch delete confirmation dialog aligned with Settings dialog style (consistent title size, no warning icon), auto-scroll to home page top after saving and exiting
+- ✅ **Multi-Select & Sort UX Optimization** - Batch delete confirmation dialog aligned with Settings dialog style (consistent title size, no warning icon); auto-scroll to home page top after saving or deleting; cancel/back gesture return keeps current scroll position.
 - ✅ **Search Experience Optimization** - No brief "No habits" state when exiting search, full list restored when clearing search
 - ✅ **Reorderable integration** - Using sh.calvin.reorderable:reorderable:3.0.0 library
 - ✅ **sortOrder field** - Added to Habit entity for custom sort order
 - ✅ **Database v3** - Added sortOrder and timeZone columns to habits table with migration
 - ✅ **Predictive Back Gesture for MultiSelectSort** - Navigation system handles back gesture automatically (like HabitCreationScreen), no BackHandler needed
+- ✅ **Delete Confirmation Dialog** - Long-press habit card to delete shows confirmation dialog (consistent with MultiSelectSort delete dialog style)
+- ✅ **Supervisor Display in Reminder Dialog** - Show supervisor emails and phones in reminder detail dialog when habit has supervisors
+- ✅ **Debounce & Navigation Guard for MultiSelectSort** - Added debounce click handler and navigation guard to prevent rapid consecutive clicks and navigation errors; only scroll to top on save/delete, not on cancel/back
+- ✅ **Debounce & Navigation Guard for HabitCreationScreen** - Modified to scroll to top only on save, not on cancel
+- ✅ **ScrollToTop Fix** - Changed scrollToTop from Boolean to Int counter to ensure LaunchedEffect triggers on every save/delete; also expands AppBar when scrolling to top
 
 ### In Progress
 - 🔄 Count section (track unplanned events, such as game scores)

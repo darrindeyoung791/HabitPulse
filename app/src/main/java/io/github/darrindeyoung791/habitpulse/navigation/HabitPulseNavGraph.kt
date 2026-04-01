@@ -230,12 +230,12 @@ fun HabitPulseNavGraph(
             ) {
                 MultiSelectSortScreen(
                     onNavigateBack = {
-                        // Exit multi-select mode before navigating back
+                        // Exit multi-select mode - called as fallback if navigation guard fails
                         viewModel.exitMultiSelectMode()
-                        navController.popBackStack()
                     },
                     viewModel = viewModel,
-                    application = context.applicationContext as HabitPulseApplication
+                    application = context.applicationContext as HabitPulseApplication,
+                    navController = navController
                 )
             }
         }

@@ -43,21 +43,22 @@ class HabitViewModel(
     /**
      * 是否需要 Home 列表滚动到顶部（用于多选排序保存后，统一回到顶部）
      */
-    private val _scrollToTop = MutableStateFlow(false)
-    val scrollToTop: StateFlow<Boolean> = _scrollToTop.asStateFlow()
+    private val _scrollToTop = MutableStateFlow(0)
+    val scrollToTop: StateFlow<Int> = _scrollToTop.asStateFlow()
 
     /**
      * 请求 Home 列表滚动到顶部
+     * 每次调用都会增加计数器，确保触发收集器
      */
     fun requestScrollToTop() {
-        _scrollToTop.value = true
+        _scrollToTop.value += 1
     }
 
     /**
      * 处理 Home 列表滚动到顶部请求
      */
     fun consumeScrollToTop() {
-        _scrollToTop.value = false
+        _scrollToTop.value = 0
     }
 
     /**

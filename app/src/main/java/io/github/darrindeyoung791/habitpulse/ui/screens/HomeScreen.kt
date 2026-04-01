@@ -123,6 +123,15 @@ fun HomeScreen(
     val filteredHabits by viewModel.filteredHabitsFlow.collectAsStateWithLifecycle(initialValue = emptyList())
     // 收集加载状态
     val isLoading by viewModel.isLoading.collectAsStateWithLifecycle(initialValue = true)
+
+    // 记录是否已加载过一次习惯数据，用于避免场景切换时闪烁“暂无习惯”空页面
+    var hasLoadedHabits by rememberSaveable { mutableStateOf(false) }
+
+    LaunchedEffect(isLoading) {
+        if (!isLoading) {
+            hasLoadedHabits = true
+        }
+    }
     // 收集新添加的习惯 ID（用于触发动画）
     val newlyAddedHabitId by viewModel.newlyAddedHabitId.collectAsStateWithLifecycle(initialValue = null)
     // 收集搜索关键词
@@ -243,17 +252,15 @@ fun HomeScreen(
     }
 
     // 为每个 Section 保存独立的滚动状态
-    val habitsScrollState = remember { androidx.compose.foundation.lazy.LazyListState() }
-    val recordsScrollState = remember { androidx.compose.foundation.lazy.LazyListState() }
-    val contactsScrollState = remember { androidx.compose.foundation.lazy.LazyListState() }
-
-    val scrollToTop by viewModel.scrollToTop.collectAsStateWithLifecycle(initialValue = false)
-
-    LaunchedEffect(scrollToTop) {
-        if (scrollToTop) {
-            habitsScrollState.animateScrollToItem(0)
-            viewModel.consumeScrollToTop()
-        }
+    // 使用 rememberSaveable 让导航进出后保持滚动位置（取消/返回不应回到顶部）
+    val habitsScrollState = rememberSaveable(saver = androidx.compose.foundation.lazy.LazyListState.Saver) {
+        androidx.compose.foundation.lazy.LazyListState()
+    }
+    val recordsScrollState = rememberSaveable(saver = androidx.compose.foundation.lazy.LazyListState.Saver) {
+        androidx.compose.foundation.lazy.LazyListState()
+    }
+    val contactsScrollState = rememberSaveable(saver = androidx.compose.foundation.lazy.LazyListState.Saver) {
+        androidx.compose.foundation.lazy.LazyListState()
     }
 
     // Animated drawer width
@@ -267,6 +274,18 @@ fun HomeScreen(
     val habitsScrollBehavior = TopAppBarDefaults.exitUntilCollapsedScrollBehavior()
     val recordsScrollBehavior = TopAppBarDefaults.exitUntilCollapsedScrollBehavior()
     val contactsScrollBehavior = TopAppBarDefaults.exitUntilCollapsedScrollBehavior()
+
+    // 监听 scrollToTop 请求，滚动到顶部并展开 AppBar
+    val scrollToTop by viewModel.scrollToTop.collectAsStateWithLifecycle(initialValue = 0)
+
+    LaunchedEffect(scrollToTop) {
+        if (scrollToTop > 0) {
+            // Scroll to top and expand app bar
+            habitsScrollState.animateScrollToItem(0)
+            habitsScrollBehavior.state.heightOffset = 0f
+            viewModel.consumeScrollToTop()
+        }
+    }
 
     // 根据当前 Section 切换 scrollBehavior
     val currentScrollBehavior = when (currentSection) {
@@ -391,10 +410,13 @@ fun HomeScreen(
                                     SearchEmptyState(
                                         modifier = Modifier.fillMaxSize(),
                                         onClearSearch = {
-                                            viewModel.clearSearch()
                                             isSearchActive = false
+                                            viewModel.clearSearch()
                                         }
                                     )
+                                } else if (!isSearchActive && !hasLoadedHabits) {
+                                    // 正在加载或刚从编辑/多选页面回来，避免闪烁“暂无习惯”
+                                    Box(modifier = Modifier.fillMaxSize()) {}
                                 } else if (!isSearchActive && habits.isEmpty()) {
                                     // 所有习惯为空
                                     EmptyStateContent(
@@ -1389,10 +1411,13 @@ fun HabitCard(
     var showMenu by remember { mutableStateOf(false) }
     var showReminderDialog by remember { mutableStateOf(false) }
     var showNotesDialog by remember { mutableStateOf(false) }
+    var showDeleteDialog by remember { mutableStateOf(false) }
     val hapticFeedback = LocalHapticFeedback.current
 
     val reminderTimes = habit.getReminderTimesList()
     val repeatDays = habit.getRepeatDaysList()
+    val supervisorEmails = habit.getSupervisorEmailsList()
+    val supervisorPhones = habit.getSupervisorPhonesList()
 
     // Animation states for enter/exit effects
     var isVisible by remember { mutableStateOf(true) }
@@ -1633,13 +1658,56 @@ fun HabitCard(
                         )
                     },
                     onClick = {
-                        // Start exit animation first, then call actual delete after animation completes
-                        isVisible = false
-                        scope.launch {
-                            kotlinx.coroutines.delay(150) // Wait for exit animation to complete
-                            onDeleteHabit()
-                        }
+                        showDeleteDialog = true
                         showMenu = false
+                    }
+                )
+            }
+
+            // 删除确认对话框
+            if (showDeleteDialog) {
+                AlertDialog(
+                    onDismissRequest = { showDeleteDialog = false },
+                    title = {
+                        Text(
+                            text = stringResource(id = R.string.habit_card_delete_confirm_title),
+                            modifier = Modifier.fillMaxWidth(),
+                            textAlign = androidx.compose.ui.text.style.TextAlign.Start,
+                            style = MaterialTheme.typography.titleLarge
+                        )
+                    },
+                    text = {
+                        Text(
+                            text = stringResource(
+                                id = R.string.habit_card_delete_confirm_message,
+                                habit.title
+                            )
+                        )
+                    },
+                    confirmButton = {
+                        TextButton(
+                            onClick = {
+                                // Start exit animation first, then call actual delete after animation completes
+                                isVisible = false
+                                scope.launch {
+                                    kotlinx.coroutines.delay(150) // Wait for exit animation to complete
+                                    onDeleteHabit()
+                                }
+                                showDeleteDialog = false
+                            },
+                            colors = ButtonDefaults.textButtonColors(
+                                contentColor = MaterialTheme.colorScheme.error
+                            )
+                        ) {
+                            Text(text = stringResource(id = R.string.habit_card_delete_confirm))
+                        }
+                    },
+                    dismissButton = {
+                        TextButton(
+                            onClick = { showDeleteDialog = false }
+                        ) {
+                            Text(text = stringResource(id = R.string.habit_card_delete_cancel))
+                        }
                     }
                 )
             }
@@ -1650,6 +1718,8 @@ fun HabitCard(
                     reminderTimes = reminderTimes,
                     repeatCycle = habit.repeatCycle,
                     repeatDays = repeatDays,
+                    supervisorEmails = supervisorEmails,
+                    supervisorPhones = supervisorPhones,
                     onDismiss = { showReminderDialog = false }
                 )
             }
@@ -1731,6 +1801,8 @@ fun ReminderDetailDialog(
     reminderTimes: List<String>,
     repeatCycle: RepeatCycle,
     repeatDays: List<Int>,
+    supervisorEmails: List<String> = emptyList(),
+    supervisorPhones: List<String> = emptyList(),
     onDismiss: () -> Unit
 ) {
     AlertDialog(
@@ -1808,6 +1880,71 @@ fun ReminderDetailDialog(
                         style = MaterialTheme.typography.bodyMedium,
                         color = MaterialTheme.colorScheme.onSurfaceVariant
                     )
+                }
+
+                // 监督人信息（如有）
+                val hasSupervisors = supervisorEmails.isNotEmpty() || supervisorPhones.isNotEmpty()
+                if (hasSupervisors) {
+                    Spacer(modifier = Modifier.height(16.dp))
+
+                    // 监督人邮箱
+                    if (supervisorEmails.isNotEmpty()) {
+                        Text(
+                            text = stringResource(id = R.string.create_habit_supervisor_email_label),
+                            style = MaterialTheme.typography.labelMedium,
+                            color = MaterialTheme.colorScheme.primary
+                        )
+                        Spacer(modifier = Modifier.height(8.dp))
+                        supervisorEmails.forEach { email ->
+                            Row(
+                                verticalAlignment = Alignment.CenterVertically
+                            ) {
+                                Icon(
+                                    imageVector = Icons.Filled.Email,
+                                    contentDescription = null,
+                                    modifier = Modifier.size(16.dp),
+                                    tint = MaterialTheme.colorScheme.onSurfaceVariant
+                                )
+                                Spacer(modifier = Modifier.width(8.dp))
+                                Text(
+                                    text = email,
+                                    style = MaterialTheme.typography.bodyMedium,
+                                    color = MaterialTheme.colorScheme.onSurface
+                                )
+                            }
+                            Spacer(modifier = Modifier.height(4.dp))
+                        }
+                    }
+
+                    // 监督人电话
+                    if (supervisorPhones.isNotEmpty()) {
+                        Spacer(modifier = Modifier.height(8.dp))
+                        Text(
+                            text = stringResource(id = R.string.create_habit_supervisor_phone_label),
+                            style = MaterialTheme.typography.labelMedium,
+                            color = MaterialTheme.colorScheme.primary
+                        )
+                        Spacer(modifier = Modifier.height(8.dp))
+                        supervisorPhones.forEach { phone ->
+                            Row(
+                                verticalAlignment = Alignment.CenterVertically
+                            ) {
+                                Icon(
+                                    imageVector = Icons.Filled.Phone,
+                                    contentDescription = null,
+                                    modifier = Modifier.size(16.dp),
+                                    tint = MaterialTheme.colorScheme.onSurfaceVariant
+                                )
+                                Spacer(modifier = Modifier.width(8.dp))
+                                Text(
+                                    text = phone,
+                                    style = MaterialTheme.typography.bodyMedium,
+                                    color = MaterialTheme.colorScheme.onSurface
+                                )
+                            }
+                            Spacer(modifier = Modifier.height(4.dp))
+                        }
+                    }
                 }
             }
         },

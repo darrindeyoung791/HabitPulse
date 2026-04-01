@@ -159,6 +159,11 @@ fun HabitCreationScreen(
     val isSaving by viewModel.isSaving.collectAsStateWithLifecycle()
     val saveSuccess by viewModel.saveSuccess.collectAsStateWithLifecycle()
 
+    // 避免旧的保存成功状态在进入创建/编辑页面后被误触发导致立即跳转和回到顶部
+    LaunchedEffect(Unit) {
+        viewModel.resetSaveSuccess()
+    }
+
     // UI 状态变量
     var habitName by remember { mutableStateOf("") }
     var repeatCycle by remember { mutableStateOf(RepeatCycle.DAILY) }
@@ -220,6 +225,7 @@ fun HabitCreationScreen(
     // 处理保存成功后的导航
     LaunchedEffect(saveSuccess) {
         if (saveSuccess == true) {
+            viewModel.requestScrollToTop()
             onNavigateBack()
             viewModel.resetSaveSuccess()
         }
@@ -457,6 +463,8 @@ fun HabitCreationScreen(
                                         // 保存习惯
                                         if (habit != null) {
                                             viewModel.saveHabit(habit)
+                                            // Scroll to top only when saving
+                                            viewModel.requestScrollToTop()
                                         }
                                     }
                                 }
