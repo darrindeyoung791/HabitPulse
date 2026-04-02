@@ -15,12 +15,15 @@ import androidx.compose.animation.slideInVertically
 import androidx.compose.animation.slideOutVertically
 import androidx.compose.animation.animateContentSize
 import androidx.compose.animation.togetherWith
-import androidx.compose.foundation.combinedClickable
+import androidx.compose.foundation.ScrollState
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.combinedClickable
 import androidx.compose.foundation.background
 import androidx.compose.foundation.focusable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.LazyListScope
+import androidx.compose.foundation.lazy.LazyListState
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.CircleShape
@@ -38,6 +41,7 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.platform.LocalLayoutDirection
 import androidx.compose.ui.*
+import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.hapticfeedback.HapticFeedbackType
@@ -1295,77 +1299,72 @@ fun HabitListContent(
     val horizontalPadding = 16.dp
 
     if (useStaggeredGrid) {
-        // Waterfall layout with synchronized scrolling for landscape tablets
-        // Split habits into two columns: odd and even indices
+        // Waterfall layout for tablets in landscape (瀑布流)
         val column1Habits = habits.filterIndexed { index, _ -> index % 2 == 0 }
         val column2Habits = habits.filterIndexed { index, _ -> index % 2 == 1 }
 
-        val staggeredModifier = if (nestedScrollConnection != null) modifier.nestedScroll(nestedScrollConnection) else modifier
-        
-        // Use LazyColumn with listState for proper scroll control
-        LazyColumn(
-            modifier = staggeredModifier.fillMaxSize(),
-            state = listState,
-            contentPadding = PaddingValues(horizontal = horizontalPadding, vertical = 16.dp),
-            verticalArrangement = Arrangement.spacedBy(8.dp)
-        ) {
-            item {
-                Row(
-                    modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.spacedBy(16.dp)
-                ) {
-                    // Left column
-                    Column(
-                        modifier = Modifier.weight(1f),
-                        verticalArrangement = Arrangement.spacedBy(8.dp)
-                    ) {
-                        column1Habits.forEach { habit ->
-                            HabitCard(
-                                habit = habit,
-                                onClick = { onHabitClick(habit) },
-                                onCheckIn = { onCheckIn(habit) },
-                                onUndoCompletion = { onUndoCompletion(habit) },
-                                onEditHabit = { onHabitClick(habit) },
-                                onDeleteHabit = { onDeleteHabit(habit) },
-                                onNavigateToMultiSelect = { onNavigateToMultiSelect() },
-                                isNewlyAdded = (habit.id == newlyAddedHabitId),
-                                searchQuery = searchQuery
-                            )
-                        }
-                    }
+        val waterfallScrollState = rememberScrollState()
+        val waterfallModifier = if (nestedScrollConnection != null) modifier.nestedScroll(nestedScrollConnection) else modifier
 
-                    // Right column
-                    Column(
-                        modifier = Modifier.weight(1f),
-                        verticalArrangement = Arrangement.spacedBy(8.dp)
-                    ) {
-                        column2Habits.forEach { habit ->
-                            HabitCard(
-                                habit = habit,
-                                onClick = { onHabitClick(habit) },
-                                onCheckIn = { onCheckIn(habit) },
-                                onUndoCompletion = { onUndoCompletion(habit) },
-                                onEditHabit = { onHabitClick(habit) },
-                                onDeleteHabit = { onDeleteHabit(habit) },
-                                onNavigateToMultiSelect = { onNavigateToMultiSelect() },
-                                isNewlyAdded = (habit.id == newlyAddedHabitId),
-                                searchQuery = searchQuery
-                            )
-                        }
+        ScrollableWaterfallWithScrollbar(
+            modifier = waterfallModifier,
+            scrollState = waterfallScrollState
+        ) {
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(horizontal = horizontalPadding),
+                horizontalArrangement = Arrangement.spacedBy(16.dp)
+            ) {
+                Column(
+                    modifier = Modifier.weight(1f),
+                    verticalArrangement = Arrangement.spacedBy(8.dp)
+                ) {
+                    column1Habits.forEach { habit ->
+                        HabitCard(
+                            habit = habit,
+                            onClick = { onHabitClick(habit) },
+                            onCheckIn = { onCheckIn(habit) },
+                            onUndoCompletion = { onUndoCompletion(habit) },
+                            onEditHabit = { onHabitClick(habit) },
+                            onDeleteHabit = { onDeleteHabit(habit) },
+                            onNavigateToMultiSelect = { onNavigateToMultiSelect() },
+                            isNewlyAdded = (habit.id == newlyAddedHabitId),
+                            searchQuery = searchQuery,
+                            modifier = Modifier.fillMaxWidth()
+                        )
+                    }
+                }
+
+                Column(
+                    modifier = Modifier.weight(1f),
+                    verticalArrangement = Arrangement.spacedBy(8.dp)
+                ) {
+                    column2Habits.forEach { habit ->
+                        HabitCard(
+                            habit = habit,
+                            onClick = { onHabitClick(habit) },
+                            onCheckIn = { onCheckIn(habit) },
+                            onUndoCompletion = { onUndoCompletion(habit) },
+                            onEditHabit = { onHabitClick(habit) },
+                            onDeleteHabit = { onDeleteHabit(habit) },
+                            onNavigateToMultiSelect = { onNavigateToMultiSelect() },
+                            isNewlyAdded = (habit.id == newlyAddedHabitId),
+                            searchQuery = searchQuery,
+                            modifier = Modifier.fillMaxWidth()
+                        )
                     }
                 }
             }
-            // Add bottom spacer to prevent FAB from covering last item
-            item {
-                Spacer(modifier = Modifier.height(100.dp))
-            }
+
+            Spacer(modifier = Modifier.height(100.dp))
         }
     } else {
         // Single column layout for phones and portrait mode
         val listModifier = if (nestedScrollConnection != null) modifier.nestedScroll(nestedScrollConnection) else modifier
-        LazyColumn(
-            modifier = listModifier.fillMaxSize(),
-            state = listState,
+        ScrollableLazyColumnWithScrollbar(
+            modifier = listModifier,
+            listState = listState,
             contentPadding = PaddingValues(horizontal = horizontalPadding, vertical = 16.dp),
             verticalArrangement = Arrangement.spacedBy(8.dp)
         ) {
@@ -1389,6 +1388,148 @@ fun HabitListContent(
             // Add bottom spacer to prevent FAB from covering last item
             item {
                 Spacer(modifier = Modifier.height(100.dp))
+            }
+        }
+    }
+}
+
+@Composable
+fun ScrollableLazyColumnWithScrollbar(
+    modifier: Modifier = Modifier,
+    listState: LazyListState,
+    contentPadding: PaddingValues = PaddingValues(0.dp),
+    verticalArrangement: Arrangement.Vertical = Arrangement.Top,
+    content: LazyListScope.() -> Unit
+) {
+    val isScrollbarVisible = remember { mutableStateOf(true) }
+    val scrollbarAlpha by animateFloatAsState(
+        targetValue = if (isScrollbarVisible.value) 1f else 0f,
+        animationSpec = tween(durationMillis = 300)
+    )
+
+    LaunchedEffect(listState) {
+        snapshotFlow {
+            listState.isScrollInProgress
+        }.collect { scrolling ->
+            isScrollbarVisible.value = true
+            if (!scrolling) {
+                delay(1200)
+                if (!listState.isScrollInProgress) {
+                    isScrollbarVisible.value = false
+                }
+            }
+        }
+    }
+
+    Box(modifier = modifier.fillMaxSize()) {
+        LazyColumn(
+            modifier = Modifier.fillMaxSize(),
+            state = listState,
+            contentPadding = contentPadding,
+            verticalArrangement = verticalArrangement,
+        ) {
+            content()
+        }
+
+        Box(
+            modifier = Modifier
+                .fillMaxHeight()
+                .width(10.dp)
+                .align(Alignment.CenterEnd)
+                .padding(end = 2.dp)
+                .alpha(scrollbarAlpha)
+        ) {
+            val layoutInfo = listState.layoutInfo
+            val totalCount = layoutInfo.totalItemsCount
+            val visibleCount = layoutInfo.visibleItemsInfo.size
+            if (totalCount > 0 && visibleCount > 0) {
+                val firstVisible = layoutInfo.visibleItemsInfo.firstOrNull()
+                val scrollFraction = if (totalCount > visibleCount && firstVisible != null) {
+                    firstVisible.index.toFloat() / (totalCount - visibleCount).coerceAtLeast(1)
+                } else 0f
+                val indicatorHeightFraction = (visibleCount.toFloat() / totalCount.toFloat()).coerceIn(0.05f, 1f)
+
+                BoxWithConstraints(modifier = Modifier.fillMaxSize()) {
+                    val maxH = maxHeight
+                    val indicatorHeight = maxH * indicatorHeightFraction
+                    val offsetY = (maxH - indicatorHeight) * scrollFraction
+
+                    Box(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .height(indicatorHeight)
+                            .offset(y = offsetY)
+                            .background(
+                                color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.7f),
+                                shape = RoundedCornerShape(4.dp)
+                            )
+                    )
+                }
+            }
+        }
+    }
+}
+
+@Composable
+fun ScrollableWaterfallWithScrollbar(
+    modifier: Modifier = Modifier,
+    scrollState: ScrollState,
+    content: @Composable ColumnScope.() -> Unit
+) {
+    val isScrollbarVisible = remember { mutableStateOf(true) }
+    val scrollbarAlpha by animateFloatAsState(
+        targetValue = if (isScrollbarVisible.value) 1f else 0f,
+        animationSpec = tween(durationMillis = 300)
+    )
+
+    LaunchedEffect(scrollState.isScrollInProgress) {
+        isScrollbarVisible.value = true
+        if (!scrollState.isScrollInProgress) {
+            delay(1200)
+            if (!scrollState.isScrollInProgress) {
+                isScrollbarVisible.value = false
+            }
+        }
+    }
+
+    Box(modifier = modifier.fillMaxSize()) {
+        Column(
+            modifier = Modifier
+                .fillMaxSize()
+                .verticalScroll(scrollState)
+        ) {
+            content()
+        }
+
+        Box(
+            modifier = Modifier
+                .fillMaxHeight()
+                .width(10.dp)
+                .align(Alignment.CenterEnd)
+                .padding(end = 2.dp)
+                .alpha(scrollbarAlpha)
+        ) {
+            BoxWithConstraints(modifier = Modifier.fillMaxSize()) {
+                val maxH = maxHeight
+                val maxHPx = with(LocalDensity.current) { maxH.toPx() }
+                val totalScroll = scrollState.maxValue.toFloat().coerceAtLeast(1f)
+                val visibleFraction = (maxHPx / (maxHPx + totalScroll)).coerceIn(0.05f, 1f)
+                val indicatorHeightPx = maxHPx * visibleFraction
+                val scrollFraction = (scrollState.value.toFloat() / totalScroll).coerceIn(0f, 1f)
+                val offsetYPx = (maxHPx - indicatorHeightPx) * scrollFraction
+                val indicatorHeight = with(LocalDensity.current) { indicatorHeightPx.toDp() }
+                val offsetY = with(LocalDensity.current) { offsetYPx.toDp() }
+
+                Box(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .height(indicatorHeight)
+                        .offset(y = offsetY)
+                        .background(
+                            color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.7f),
+                            shape = RoundedCornerShape(4.dp)
+                        )
+                )
             }
         }
     }
