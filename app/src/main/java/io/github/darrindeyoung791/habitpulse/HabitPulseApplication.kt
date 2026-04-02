@@ -5,6 +5,7 @@ import androidx.room.Room
 import com.google.android.material.color.DynamicColors
 import io.github.darrindeyoung791.habitpulse.data.database.HabitDatabase
 import io.github.darrindeyoung791.habitpulse.data.repository.HabitRepository
+import io.github.darrindeyoung791.habitpulse.utils.OnboardingPreferences
 import io.github.darrindeyoung791.habitpulse.viewmodel.ContactsViewModel
 import io.github.darrindeyoung791.habitpulse.viewmodel.HabitViewModel
 import io.github.darrindeyoung791.habitpulse.viewmodel.RecordsViewModel
@@ -35,9 +36,14 @@ class HabitPulseApplication : Application() {
         HabitRepository(database.habitDao(), database.habitCompletionDao())
     }
 
+    // 引导偏好设置（延迟初始化）
+    val onboardingPreferences: OnboardingPreferences by lazy {
+        OnboardingPreferences(applicationContext)
+    }
+
     // HabitViewModel 单例（延迟初始化）
     val habitViewModel: HabitViewModel by lazy {
-        HabitViewModel(repository)
+        HabitViewModel(repository, onboardingPreferences)
     }
 
     // RecordsViewModel 单例（延迟初始化）

@@ -25,6 +25,7 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.*
 import androidx.compose.ui.hapticfeedback.HapticFeedbackType
+import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalHapticFeedback
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.input.ImeAction
@@ -137,7 +138,7 @@ fun HabitCreationScreen(
     navController: androidx.navigation.NavHostController? = null,
     application: HabitPulseApplication? = null
 ) {
-    val context = androidx.compose.ui.platform.LocalContext.current
+    val context = LocalContext.current
     val hapticFeedback = LocalHapticFeedback.current
 
     // 获取 ViewModel - use preview mode if application is null
@@ -151,7 +152,8 @@ fun HabitCreationScreen(
             val fakeHabitDao = FakeHabitDaoForCreation()
             val fakeCompletionDao = FakeHabitCompletionDaoForCreation()
             val fakeRepository = io.github.darrindeyoung791.habitpulse.data.repository.HabitRepository(fakeHabitDao, fakeCompletionDao)
-            HabitViewModel(fakeRepository)
+            val fakeOnboardingPreferences = io.github.darrindeyoung791.habitpulse.utils.OnboardingPreferences(context.applicationContext)
+            HabitViewModel(fakeRepository, fakeOnboardingPreferences)
         }
     }
 

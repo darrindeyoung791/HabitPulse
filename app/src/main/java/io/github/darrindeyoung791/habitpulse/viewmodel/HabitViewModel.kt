@@ -7,6 +7,7 @@ import io.github.darrindeyoung791.habitpulse.HabitPulseApplication
 import io.github.darrindeyoung791.habitpulse.data.model.Habit
 import io.github.darrindeyoung791.habitpulse.data.model.HabitCompletion
 import io.github.darrindeyoung791.habitpulse.data.repository.HabitRepository
+import io.github.darrindeyoung791.habitpulse.utils.OnboardingPreferences
 import kotlinx.coroutines.FlowPreview
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -28,7 +29,8 @@ import java.util.UUID
  * 作为 UI 层和数据层之间的桥梁
  */
 class HabitViewModel(
-    private val repository: HabitRepository
+    private val repository: HabitRepository,
+    private val onboardingPreferences: OnboardingPreferences
 ) : ViewModel() {
 
     // ============= UI State Flows =============
@@ -391,6 +393,42 @@ class HabitViewModel(
     val habitsBySortOrderFlow: Flow<List<Habit>> = repository.habitsBySortOrderFlow
         .onEach { _isLoading.value = false }
 
+    // ============= Onboarding =============
+
+    /**
+     * 用户是否已完成初次使用引导（同意协议）
+     * 从 SharedPreferences 读取初始值
+     */
+    private val _hasCompletedOnboarding = MutableStateFlow(onboardingPreferences.hasCompletedOnboarding)
+    val hasCompletedOnboarding: StateFlow<Boolean> = _hasCompletedOnboarding.asStateFlow()
+
+    /**
+     * 用户是否处于受限模式（不同意协议但仍使用应用）
+     * 从 SharedPreferences 读取初始值
+     */
+    private val _isLimitedMode = MutableStateFlow(onboardingPreferences.isLimitedMode)
+    val isLimitedMode: StateFlow<Boolean> = _isLimitedMode.asStateFlow()
+
+    /**
+     * 标记用户已完成引导（同意协议）
+     */
+    fun completeOnboarding() {
+        _hasCompletedOnboarding.value = true
+        _isLimitedMode.value = false
+        onboardingPreferences.hasCompletedOnboarding = true
+        onboardingPreferences.isLimitedMode = false
+    }
+
+    /**
+     * 标记用户进入受限模式（不同意协议）
+     */
+    fun enterLimitedMode() {
+        _hasCompletedOnboarding.value = true
+        _isLimitedMode.value = true
+        onboardingPreferences.hasCompletedOnboarding = true
+        onboardingPreferences.isLimitedMode = true
+    }
+
     /**
      * ViewModel Provider Factory
      */
@@ -398,7 +436,7 @@ class HabitViewModel(
         @Suppress("UNCHECKED_CAST")
         override fun <T : ViewModel> create(modelClass: Class<T>): T {
             if (modelClass.isAssignableFrom(HabitViewModel::class.java)) {
-                return HabitViewModel(application.repository) as T
+                return HabitViewModel(application.repository, application.onboardingPreferences) as T
             }
             throw IllegalArgumentException("Unknown ViewModel class")
         }

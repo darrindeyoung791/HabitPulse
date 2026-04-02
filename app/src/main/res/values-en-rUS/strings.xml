@@ -214,4 +214,14 @@
     <string name="accessibility_drag_handle">Drag handle</string>
     <string name="accessibility_drag_to_reorder">Drag to reorder</string>
     <string name="habit_context_menu_multi_select">Multi-Select &amp; Sort</string>
+
+    <!-- Welcome Screen -->
+    <string name="welcome_description">A clean and lightweight habit tracker designed to beat the three-minute enthusiasm.</string>
+    <string name="welcome_permissions_title">For timely notifications, HabitPulse may use the following permissions:</string>
+    <string name="welcome_permission_notification_title">Send persistent notifications</string>
+    <string name="welcome_permission_background_title">Run continuously in the background</string>
+    <string name="welcome_agree_button">I Agree, Continue</string>
+    <string name="welcome_disagree_button">Disagree, Enter Limited Mode</string>
+    <string name="welcome_limited_mode">Limited Mode</string>
+    <string name="welcome_limited_mode_info">You have chosen Limited Mode. Some features will be unavailable.</string>
 </resources>

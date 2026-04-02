@@ -101,6 +101,7 @@ fun HomeScreen(
     application: HabitPulseApplication? = null,
     onHomeDataLoaded: () -> Unit = {}
 ) {
+    val context = LocalContext.current
     // 防重复点击处理器
     val clickHandler = rememberDebounceClickHandler()
     val scope = rememberCoroutineScope()
@@ -117,7 +118,8 @@ fun HomeScreen(
             val fakeHabitDao = FakeHabitDao()
             val fakeCompletionDao = FakeHabitCompletionDao()
             val fakeRepository = io.github.darrindeyoung791.habitpulse.data.repository.HabitRepository(fakeHabitDao, fakeCompletionDao)
-            HabitViewModel(fakeRepository)
+            val fakeOnboardingPreferences = io.github.darrindeyoung791.habitpulse.utils.OnboardingPreferences(context.applicationContext)
+            HabitViewModel(fakeRepository, fakeOnboardingPreferences)
         }
     }
 

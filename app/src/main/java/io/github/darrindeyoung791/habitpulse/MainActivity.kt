@@ -26,7 +26,7 @@ class MainActivity : ComponentActivity() {
         // Install splash screen
         val splashScreen = installSplashScreen()
         super.onCreate(savedInstanceState)
-        
+
         // Enable edge-to-edge display - system bar colors handled by HabitPulseTheme
         enableEdgeToEdge()
 
@@ -34,18 +34,15 @@ class MainActivity : ComponentActivity() {
             HabitPulseTheme {
                 val navController = rememberNavController()
                 val userPreferences = remember { UserPreferences.getInstance(applicationContext) }
-                
+
                 // 收集开屏广告设置状态
                 val showSplashAd by userPreferences.showSplashAdFlow.collectAsStateWithLifecycle(initialValue = false)
-                
-                // 控制 splash screen 保持显示的状态
-                var keepSplashScreen by remember { mutableStateOf(true) }
-                
+
                 // 主页数据是否加载完成
                 var homeDataLoaded by remember { mutableStateOf(false) }
-                
+
                 // 设置 splash screen 保持条件
-                splashScreen.setKeepOnScreenCondition { 
+                splashScreen.setKeepOnScreenCondition {
                     // 开启广告时：不延长 splash screen
                     // 关闭广告时：延长到主页数据加载完成
                     if (!showSplashAd) {
@@ -54,24 +51,22 @@ class MainActivity : ComponentActivity() {
                         false
                     }
                 }
-                
+
                 // 根据设置决定是否显示广告页面
                 var showAdScreen by remember { mutableStateOf(false) }
                 var adFinished by remember { mutableStateOf(false) }
-                
+
                 LaunchedEffect(Unit) {
                     // 等待读取设置
                     userPreferences.showSplashAdFlow.first().also { shouldShowAd ->
                         if (shouldShowAd) {
                             // 开启广告：splash screen 不延长，显示广告页面
-                            keepSplashScreen = false
                             showAdScreen = true
                         }
-                        // 关闭广告：keepSplashScreen 保持 true，等待 homeDataLoaded
                     }
                 }
-                
-                // 如果广告结束，进入主页
+
+                // 如果广告结束，进入主内容
                 val showMainContent = adFinished || (!showSplashAd || !showAdScreen)
 
                 Crossfade(
@@ -80,6 +75,7 @@ class MainActivity : ComponentActivity() {
                     label = "screenCrossfade"
                 ) { showMain ->
                     if (showMain) {
+                        // 显示主导航
                         HabitPulseNavGraph(
                             navController = navController,
                             onHomeDataLoaded = { homeDataLoaded = true }
