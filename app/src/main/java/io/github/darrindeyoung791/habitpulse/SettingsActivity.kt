@@ -13,7 +13,7 @@ import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
-import androidx.compose.material.icons.automirrored.filled.Article
+import androidx.compose.material.icons.automirrored.outlined.Article
 import androidx.compose.material.icons.outlined.FavoriteBorder
 import androidx.compose.material.icons.outlined.Info
 import androidx.compose.material.icons.outlined.Person
@@ -378,7 +378,7 @@ fun SettingsScreen() {
                     supportingText = stringResource(id = R.string.settings_open_source_licenses_description),
                     leadingIcon = {
                         Icon(
-                            imageVector = Icons.AutoMirrored.Filled.Article,
+                            imageVector = Icons.AutoMirrored.Outlined.Article,
                             contentDescription = null
                         )
                     },

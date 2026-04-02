@@ -383,8 +383,7 @@ fun HomeScreen(
                                     searchQuery = searchQuery,
                                     onSearchQueryChange = { query -> viewModel.setSearchQuery(query) },
                                     onClearSearch = {
-                                        viewModel.clearSearch()
-                                        isSearchActive = false
+                                        viewModel.setSearchQuery("")
                                     },
                                     onBackClick = {
                                         isSearchActive = false
@@ -2529,8 +2528,8 @@ internal fun SearchBarFixed(
                     textStyle = MaterialTheme.typography.bodyLarge.copy(lineHeight = 24.sp)
                 )
 
-                // Clear button
-                if (isSearchActive) {
+                // Clear button - only show when there is text to clear
+                if (searchQuery.isNotEmpty()) {
                     IconButton(
                         onClick = onClearSearch,
                         modifier = Modifier.size(40.dp)

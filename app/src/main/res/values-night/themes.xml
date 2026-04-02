@@ -4,6 +4,9 @@
     <style name="Theme.HabitPulse" parent="Theme.Material3.DayNight.NoActionBar">
         <!-- Fallback colorPrimary for pre-Monet devices; dynamic colors will override on Android 12+ -->
         <item name="colorPrimary">@color/purple_200</item>
+        <!-- Transparent status and navigation bar to prevent purple flash on startup -->
+        <item name="android:statusBarColor">@android:color/transparent</item>
+        <item name="android:navigationBarColor">@android:color/transparent</item>
     </style>
 
     <!-- Splash theme used as application's launch theme so the system shows a proper background -->
