@@ -28,13 +28,13 @@
 ## ✨ 功能特性
 
 ### 🎯 核心功能
-- **习惯追踪**：创建、管理和追踪日常习惯，记录每一次打卡
-- **打卡记录**：完整的打卡历史记录，支持查看任意日期的完成情况
-- **多选与排序**：长按习惯卡片进入多选模式，支持拖拽排序和批量删除
-- **批量删除确认框一致性**：批量删除对话框样式已对齐 Settings 页面对话框（标题大小一致、无警告图标）
-- **搜索体验优化**：搜索内容无结果时退出搜索不会出现短暂“暂无习惯”闪烁，直接回到完整列表
-- **联系人监督**：添加监督人邮箱或电话，习惯完成情况可通知指定联系人（计划中）
-- **智能提醒**：基于时间的提醒功能，帮助用户坚持习惯（计划中）
+- [x] **习惯追踪**：创建、管理和追踪日常习惯，记录每一次打卡
+- [x] **打卡记录**：完整的打卡历史记录，支持查看任意日期的完成情况
+- [x] **多选与排序**：长按习惯卡片进入多选模式，支持拖拽排序和批量删除
+- [ ] **联系人监督**：添加监督人邮箱或电话，习惯完成情况可通知指定联系人（计划中）
+- [ ] **智能提醒**：基于时间的提醒功能，帮助用户坚持习惯（计划中）
+- [ ] **AI 辅助规划**：接入大语言模型 API，用 AI 辅助用户创建习惯（计划中）
+- [ ] **记录可视化**：使用 WebView 和网页制作可视化组件，如一周打卡时间分布等（计划中）
 
 ### 🎨 UI/UX 特性
 - **Material Design 3**：采用最新的 MD3 设计规范，界面简洁美观
@@ -43,7 +43,6 @@
 - **分屏支持**：支持多窗口和画中画模式
 - **无障碍优化**：完整的 TalkBack 支持，关怀每一位用户
 - **预测性返回手势**：Android 13+ 预测性返回手势支持
-- **回退与取消体验**：HabitCreation 和 MultiSelectSort 的取消/手势返回不会自动滚动到顶部，保存/删除则自动回滚到顶部并展开 AppBar
 
 ### 🔧 技术特性
 - **Jetpack Compose**：声明式 UI 框架，现代化开发体验
@@ -108,9 +107,11 @@ cd HabitPulse
 }
 ```
 
-> ⚠️ **重要**：请根据您的实际 JDK 安装路径修改上述配置。Windows 系统默认路径通常为 `C:\\Program Files\\Java\\jdk-17`，macOS 通常为 `/Library/Java/JavaVirtualMachines/jdk-17.jdk/Contents/Home`。
-
-配置完成后，按 `Ctrl+Shift+P` 并选择 **"Java: Clean Java Language Server Workspace"**，或重新加载 VSCode 窗口以使配置生效。
+> [!IMPORTANT]
+>
+> 请根据您的实际 JDK 安装路径修改上述配置。Windows 系统默认路径通常为 `C:\\Program Files\\Java\\jdk-17`，macOS 通常为 `/Library/Java/JavaVirtualMachines/jdk-17.jdk/Contents/Home`。
+>
+> 配置完成后，按 `Ctrl+Shift+P` 并选择 **"Java: Clean Java Language Server Workspace"**，或重新加载 VSCode 窗口以使配置生效。
 
 ### 安装应用
 ```bash
@@ -187,6 +188,8 @@ HabitPulse/
 | lastCompletedDate | INTEGER | 最后完成时间戳 |
 | createdDate | INTEGER | 创建时间戳 |
 | modifiedDate | INTEGER | 修改时间戳 |
+| sortOrder | INTEGER | 排序顺序，数值越小越靠前，用于自定义排序 |
+| timeZone | TEXT | 时区 ID，用于处理跨时区场景 |
 
 #### habit_completions（打卡记录表）
 记录每次习惯打卡的详细信息。

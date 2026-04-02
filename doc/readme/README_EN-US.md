@@ -1,10 +1,10 @@
-![HabitPulse Banner](doc/images/readme/hero.png)
+![HabitPulse Banner](../../doc/images/readme/hero.png)
 
 # HabitPulse
 
 <div align="center">
 
-[![MIT License](https://img.shields.io/badge/License-MIT-yellow.svg)](https://choosealicense.com/licenses/mit/)
+[![MIT License](https://img.shields.io/badge/License-MIT-yellow.svg)](https://choosealicense.com/licenses/MIT/)
 [![Platform](https://img.shields.io/badge/Platform-Android-green.svg)](https://developer.android.com/)
 [![Kotlin](https://img.shields.io/badge/Kotlin-2.3.20-purple.svg)](https://kotlinlang.org/)
 [![Compose BOM](https://img.shields.io/badge/Compose%20BOM-2026.03.00-brightgreen.svg)](https://developer.android.com/jetpack/compose/bom)
@@ -17,48 +17,48 @@
 
 ## 📱 Introduction
 
-**HabitPulse** is an Android habit tracking application built with Material Design 3 design language, dedicated to helping users build and maintain good daily habits. Through concise and intuitive interface design and intelligent reminder mechanisms, habit building becomes easier and more effective.
+**HabitPulse** is an Android habit tracking application built with Material Design 3, dedicated to helping users build and maintain good daily habits. Through a concise and intuitive interface design and intelligent reminder mechanisms, habit formation becomes easier and more effective.
 
 > 💡 HabitPulse is developed with AI assistance. If you use Qwen Code or Claude Code for further development, please read [`QWEN.md`](QWEN.md) for important information.
 
-> 🌏 [Chinese Version](README.md) | English Version
+> 🌏 [Chinese Version](../../README.md) | English Version
 
 ---
 
 ## ✨ Features
 
 ### 🎯 Core Features
-- **Habit Tracking**: Create, manage, and track daily habits, recording every check-in
-- **Completion Records**: Complete check-in history with support for viewing completion status on any date
-- **Multi-Select & Sort**: Long-press habit cards to enter multi-select mode, with drag-and-drop sorting and batch delete
-- **Batch Delete Dialog Consistency**: Batch delete confirmation dialog style aligned with Settings dialog (consistent title size, no warning icon)
-- **Search Experience Optimization**: No brief "No habits" flash when exiting search, full list restored when clearing search
-- **Contact Supervision**: Add supervisor emails or phone numbers to notify designated contacts of habit completion (planned)
-- **Smart Reminders**: Time-based reminder feature to help users stick to habits (planned)
+- [x] **Habit Tracking**: Create, manage, and track daily habits, recording every check-in
+- [x] **Check-in Records**: Complete check-in history, supporting viewing completion status for any date
+- [x] **Multi-Select & Sort**: Long-press habit cards to enter multi-select mode, supporting drag-and-drop sorting and batch deletion
+- [ ] **Supervisor Contacts**: Add supervisor emails or phone numbers to notify designated contacts of habit completion status (Planned)
+- [ ] **Smart Reminders**: Time-based reminder feature to help users stick to habits (Planned)
+- [ ] **AI-Assisted Planning**: Integrate LLM APIs to use AI for assisting users in creating habits (Planned)
+- [ ] **Records Visualization**: Use WebView and web components to create visualizations, such as weekly check-in time distributions (Planned)
 
 ### 🎨 UI/UX Features
-- **Material Design 3**: Following the latest MD3 design specifications with clean and beautiful interface
-- **Dynamic Color**: Dynamic theming support for Android 12+ (Material You)
-- **Responsive Layout**: Perfect adaptation for phones and tablets with landscape/portrait orientation support
-- **Split-screen Support**: Multi-window and picture-in-picture mode support
-- **Accessibility Optimization**: Complete TalkBack support for every user
+- **Material Design 3**: Follows the latest MD3 design specifications with a clean and beautiful interface
+- **Dynamic Color**: Supports dynamic theming (Material You) on Android 12+
+- **Responsive Layout**: Perfectly adapts to phones and tablets, supporting landscape and portrait orientation switching
+- **Split-Screen Support**: Supports multi-window and picture-in-picture modes
+- **Accessibility Optimization**: Full TalkBack support, caring for every user
 - **Predictive Back Gesture**: Android 13+ predictive back gesture support
 
 ### 🔧 Technical Features
-- **Jetpack Compose**: Declarative UI framework for modern development experience
-- **Room Database**: Local data persistence with offline availability
-- **ViewModel + Flow**: Reactive architecture with data-driven UI
+- **Jetpack Compose**: Declarative UI framework for a modern development experience
+- **Room Database**: Local data persistence, available offline
+- **ViewModel + Flow**: Reactive architecture, data-driven UI
 - **Navigation Component**: Navigation Compose for smooth page transition animations
 
 ---
 
-## 🖼️ Screenshots
+## 🖼️ Interface Preview
 
 <div align="center">
 
-| <div align="center">**Phone UI**</div> | <div align="center">**Tablet UI**</div> |
+| <div align="center">**Phone Interface**</div> | <div align="center">**Tablet Interface**</div> |
 |---|---|
-| ![Phone UI](doc/images/showcases/Screenshot_Pixel_6a_Habits_ZH-CN.png) | ![Tablet UI](doc/images/showcases/Screenshot_Pixel_Tablet_Habits_ZH-CN.png) |
+| ![Phone Interface](../../doc/images/showcases/Screenshot_Pixel_6a_Habits_ZH-CN.png) | ![Tablet Interface](../../doc/images/showcases/Screenshot_Pixel_Tablet_Habits_ZH-CN.png) |
 
 </div>
 
@@ -73,32 +73,32 @@
   - Minimum SDK: 26 (Android 8.0)
   - Target SDK: 36 (Android 16)
 
-### Clone Repository
+### Clone the Project
 ```bash
 git clone https://github.com/darrindeyoung791/HabitPulse.git
 cd HabitPulse
 ```
 
-### Build Project
+### Build the Project
 
 Open the project with the latest version of Android Studio and follow the prompts.
 
 Or use other IDEs or editors.
 
 ```bash
-# Build with Gradle Wrapper
+# Build using Gradle Wrapper
 ./gradlew assembleDebug
 
-# Or open with Android Studio and run directly
+# Or open the project in Android Studio and run directly
 ```
 
 > [!IMPORTANT]
-> - You may need to manually modify the JDK path in [`gradle.properties`](gradle.properties).
-> - This project is configured with mirrors from Tencent Cloud and Aliyun. If you're a developer outside China, you'll need to modify these settings.
+> - You may need to manually modify the JDK path in [`gradle.properties`](gradle.properties) in the project.
+> - This project is configured to use mirrors from Tencent Cloud and Aliyun. If you are a developer outside mainland China, you will need to modify these settings.
 
 #### VSCode Users
 
-If you're developing with VSCode, you need to configure JDK 17 path in [`.vscode/settings.json`](.vscode/settings.json):
+If you use VSCode for development, you need to configure the JDK 17 path in [`.vscode/settings.json`](.vscode/settings.json):
 
 ```json
 {
@@ -107,11 +107,13 @@ If you're developing with VSCode, you need to configure JDK 17 path in [`.vscode
 }
 ```
 
-> ⚠️ **Important**: Please modify the above configuration according to your actual JDK installation path. The default path on Windows is typically `C:\\Program Files\\Java\\jdk-17`, and on macOS it's usually `/Library/Java/JavaVirtualMachines/jdk-17.jdk/Contents/Home`.
+> [!IMPORTANT]
+>
+> Please modify the above configuration according to your actual JDK installation path. The default path on Windows is usually `C:\\Program Files\\Java\\jdk-17`, and on macOS it is usually `/Library/Java/JavaVirtualMachines/jdk-17.jdk/Contents/Home`.
+>
+> After configuration is complete, press `Ctrl+Shift+P` and select **"Java: Clean Java Language Server Workspace"**, or reload the VSCode window to make the configuration take effect.
 
-After configuration is complete, press `Ctrl+Shift+P` and select **"Java: Clean Java Language Server Workspace"**, or reload the VSCode window to apply the configuration.
-
-### Install Application
+### Install the Application
 ```bash
 # Install to connected device via ADB
 ./gradlew installDebug
@@ -153,10 +155,10 @@ HabitPulse/
 │   │   │   ├── viewmodel/                   # ViewModel layer
 │   │   │   └── ui/                          # UI layer
 │   │   │       ├── screens/                 # Screen composables
-│   │   │       └── theme/                   # Theme and styling
+│   │   │       └── theme/                   # Theme styling
 │   │   └── res/                             # Resource files
 │   └── build.gradle.kts                     # Module build configuration
-├── gradle/                                  # Gradle wrapper
+├── gradle/                                  # Gradle Wrapper
 ├── QWEN.md                                  # Project context documentation
 └── README.md                                # Project documentation
 ```
@@ -168,7 +170,7 @@ HabitPulse/
 ### Core Tables
 
 #### habits Table
-Stores all habits created by users.
+Stores all habit information created by users.
 
 | Field | Type | Description |
 |------|------|------|
@@ -186,6 +188,8 @@ Stores all habits created by users.
 | lastCompletedDate | INTEGER | Last completion timestamp |
 | createdDate | INTEGER | Creation timestamp |
 | modifiedDate | INTEGER | Modification timestamp |
+| sortOrder | INTEGER | Sort order, lower values appear first, used for custom sorting |
+| timeZone | TEXT | Timezone ID, used for cross-timezone scenarios |
 
 #### habit_completions Table
 Records detailed information for each habit check-in.
@@ -204,28 +208,28 @@ Records detailed information for each habit check-in.
 
 ## 🤝 Contributing
 
-We welcome contributions of all kinds!
+We welcome all forms of contributions!
 
 ### How to Contribute
-1. **Fork** this repository
+1. **Fork** this project
 2. Create your feature branch (`git checkout -b feature/AmazingFeature`)
 3. Commit your changes (`git commit -m 'Add some AmazingFeature'`)
 4. Push to the branch (`git push origin feature/AmazingFeature`)
 5. Open a **Pull Request**
 
 ### Development Environment Setup
-1. Clone the repository and open it with Android Studio
+1. After cloning the project, open it with Android Studio
 2. Sync the Gradle project
-3. Run `./gradlew assembleDebug` to ensure build success
-4. Run and debug on an emulator or physical device
+3. Run `./gradlew assembleDebug` to ensure the build is successful
+4. Run debugging on an emulator or real device
 
 ### Code Style
-- Follow [Kotlin Coding Conventions](https://kotlinlang.org/docs/coding-conventions.html)
-- Write documentation comments using KDoc
-- Keep code clean and follow DRY principles
+- Follow the [Kotlin Style Guide](https://kotlinlang.org/docs/coding-conventions.html)
+- Use KDoc for documentation comments
+- Keep code clean and follow the DRY principle
 
 ### Reporting Issues
-Found a bug? Please report it through [Issues](https://github.com/darrindeyoung791/HabitPulse/issues).
+Found a bug? Please report it via [Issues](https://github.com/darrindeyoung791/HabitPulse/issues).
 
 ---
 
