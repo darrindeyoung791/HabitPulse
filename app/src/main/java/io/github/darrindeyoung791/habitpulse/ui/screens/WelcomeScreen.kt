@@ -48,12 +48,13 @@ fun WelcomeScreen(
     modifier: Modifier = Modifier
 ) {
     val configuration = LocalConfiguration.current
-    val isLandscape = configuration.orientation == Configuration.ORIENTATION_LANDSCAPE
-
-    // 平板横屏分屏条件：宽度 >= 1200dp 且 高度 < 840dp（高度不足以舒适地显示单列）
-    val shouldUseSplitLayout = isLandscape &&
-        configuration.screenWidthDp >= 1200 &&
-        configuration.screenHeightDp < 840
+    val screenWidthDp = configuration.screenWidthDp
+    val screenHeightDp = configuration.screenHeightDp
+    
+    // 横屏时使用两列布局（手机和平板都适用）
+    // 竖屏时使用单列布局
+    // 使用宽高比判断，比 orientation 更可靠
+    val shouldUseSplitLayout = screenWidthDp > screenHeightDp
 
     // Animation delays for staggered entrance
     val logoDelay = 0

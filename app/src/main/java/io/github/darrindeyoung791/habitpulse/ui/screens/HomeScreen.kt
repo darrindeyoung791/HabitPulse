@@ -299,7 +299,6 @@ fun HomeScreen(
 
     LaunchedEffect(scrollToTop) {
         if (scrollToTop > 0) {
-            Log.d("HomeScreen", "scrollToTop LaunchedEffect triggered: scrollToTop=$scrollToTop isWaterfallMode=$isWaterfallMode")
             // Expand AppBar first then scroll to top (ensure AppBar doesn't push content down after scroll)
             habitsScrollBehavior.state.heightOffset = 0f
             scope.launch {
@@ -307,9 +306,7 @@ fun HomeScreen(
                 if (isWaterfallMode) {
                     // Waterfall mode: only scroll waterfallScrollState with animation
                     try {
-                        Log.d("HomeScreen", "Waterfall mode: animating waterfallScrollState to 0")
                         waterfallScrollState.animateScrollTo(0)
-                        Log.d("HomeScreen", "After waterfall animateScrollTo, currentY=${waterfallScrollState.value}")
                     } catch (e: Exception) {
                         Log.d("HomeScreen", "waterfall animateScrollTo failed: ${e.message}")
                         // Fallback to instant scroll if animation fails
@@ -322,9 +319,7 @@ fun HomeScreen(
                 } else {
                     // Single column mode: only scroll habitsScrollState
                     try {
-                        Log.d("HomeScreen", "Single column mode: animating habitsScrollState to 0")
                         habitsScrollState.animateScrollToItem(0)
-                        Log.d("HomeScreen", "After animateScrollToItem, firstVisible=${habitsScrollState.firstVisibleItemIndex}")
                     } catch (e: Exception) {
                         Log.d("HomeScreen", "habits animateScrollToItem failed: ${e.message}")
                     }
