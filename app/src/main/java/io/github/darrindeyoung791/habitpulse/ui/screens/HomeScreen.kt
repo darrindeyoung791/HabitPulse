@@ -36,6 +36,9 @@ import androidx.compose.material.icons.outlined.*
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.runtime.saveable.rememberSaveable
+import androidx.compose.foundation.relocation.BringIntoViewRequester
+import androidx.compose.foundation.relocation.bringIntoViewRequester
+import android.util.Log
 import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalDensity
@@ -233,7 +236,7 @@ fun HomeScreen(
     val isPermanentDrawer = isTabletDevice && isLandscape
     val useRail = !isTabletDevice && isLandscape
     val useBottomBar = !isPermanentDrawer && !useRail
-    
+
     // Fallback: forceTabletLandscape for edge cases
     val effectiveIsPermanentDrawer = if (forceTabletLandscape && isLandscape && !isTabletDevice) {
         true
@@ -245,6 +248,10 @@ fun HomeScreen(
     } else {
         useRail
     }
+
+    // Detect waterfall mode (tablet landscape dual-column layout)
+    // This is critical for scroll-to-top functionality
+    val isWaterfallMode = isLandscape && screenWidthDp >= 1200
 
     var currentSection by rememberSaveable { mutableStateOf(HomeSection.Habits) }
     var isDrawerExpanded by rememberSaveable { mutableStateOf(true) }
@@ -262,6 +269,12 @@ fun HomeScreen(
     val habitsScrollState = rememberSaveable(saver = androidx.compose.foundation.lazy.LazyListState.Saver) {
         androidx.compose.foundation.lazy.LazyListState()
     }
+    // 使用 remember 而非 rememberSaveable 来避免 waterfall 滚动状态在重组时出现问题
+    // Fix: rememberSaveable may not work reliably with ScrollState.Saver in waterfall layout
+    val waterfallScrollState = remember {
+        ScrollState(0)
+    }
+    val bringIntoViewRequester = remember { BringIntoViewRequester() }
     val recordsScrollState = rememberSaveable(saver = androidx.compose.foundation.lazy.LazyListState.Saver) {
         androidx.compose.foundation.lazy.LazyListState()
     }
@@ -286,10 +299,38 @@ fun HomeScreen(
 
     LaunchedEffect(scrollToTop) {
         if (scrollToTop > 0) {
-            // Scroll to top and expand app bar
-            habitsScrollState.animateScrollToItem(0)
+            Log.d("HomeScreen", "scrollToTop LaunchedEffect triggered: scrollToTop=$scrollToTop isWaterfallMode=$isWaterfallMode")
+            // Expand AppBar first then scroll to top (ensure AppBar doesn't push content down after scroll)
             habitsScrollBehavior.state.heightOffset = 0f
-            viewModel.consumeScrollToTop()
+            scope.launch {
+                // CRITICAL: Only scroll the appropriate scroll state based on layout mode
+                if (isWaterfallMode) {
+                    // Waterfall mode: only scroll waterfallScrollState with animation
+                    try {
+                        Log.d("HomeScreen", "Waterfall mode: animating waterfallScrollState to 0")
+                        waterfallScrollState.animateScrollTo(0)
+                        Log.d("HomeScreen", "After waterfall animateScrollTo, currentY=${waterfallScrollState.value}")
+                    } catch (e: Exception) {
+                        Log.d("HomeScreen", "waterfall animateScrollTo failed: ${e.message}")
+                        // Fallback to instant scroll if animation fails
+                        try {
+                            waterfallScrollState.scrollTo(0)
+                        } catch (e2: Exception) {
+                            Log.d("HomeScreen", "waterfall scrollTo fallback failed: ${e2.message}")
+                        }
+                    }
+                } else {
+                    // Single column mode: only scroll habitsScrollState
+                    try {
+                        Log.d("HomeScreen", "Single column mode: animating habitsScrollState to 0")
+                        habitsScrollState.animateScrollToItem(0)
+                        Log.d("HomeScreen", "After animateScrollToItem, firstVisible=${habitsScrollState.firstVisibleItemIndex}")
+                    } catch (e: Exception) {
+                        Log.d("HomeScreen", "habits animateScrollToItem failed: ${e.message}")
+                    }
+                }
+                viewModel.consumeScrollToTop()
+            }
         }
     }
 
@@ -313,28 +354,65 @@ fun HomeScreen(
     )
 
     val navigateToSection: (HomeSection) -> Unit = { targetSection ->
+        Log.d("HomeScreen", "navigateToSection called target=$targetSection current=$currentSection isWaterfallMode=$isWaterfallMode")
         if (currentSection == targetSection) {
             // 如果点击的是当前页面，滚动到顶部并展开 AppBar
             when (targetSection) {
                 HomeSection.Habits -> {
                     scope.launch {
-                        habitsScrollState.animateScrollToItem(0)
-                        // 同时展开 AppBar
+                        Log.d("HomeScreen", "navigateToSection: expand AppBar then scroll Habits to top")
+                        // Expand AppBar first to avoid it pushing content down after scroll
                         habitsScrollBehavior.state.heightOffset = 0f
+                        
+                        // CRITICAL: Only scroll the appropriate scroll state based on layout mode
+                        // In waterfall mode, only use waterfallScrollState to avoid blocking on animateScrollToItem
+                        if (isWaterfallMode) {
+                            // Waterfall mode: only scroll waterfallScrollState with animation
+                            try {
+                                Log.d("HomeScreen", "Waterfall mode: animating waterfallScrollState to 0")
+                                waterfallScrollState.animateScrollTo(0)
+                                Log.d("HomeScreen", "After waterfall animateScrollTo, currentY=${waterfallScrollState.value}")
+                            } catch (e: Exception) {
+                                Log.d("HomeScreen", "waterfall animateScrollTo failed: ${e.message}")
+                                // Fallback to instant scroll if animation fails
+                                try {
+                                    waterfallScrollState.scrollTo(0)
+                                } catch (e2: Exception) {
+                                    Log.d("HomeScreen", "waterfall scrollTo fallback failed: ${e2.message}")
+                                }
+                            }
+                        } else {
+                            // Single column mode: only scroll habitsScrollState
+                            try {
+                                Log.d("HomeScreen", "Single column mode: animating habitsScrollState to 0")
+                                habitsScrollState.animateScrollToItem(0)
+                                Log.d("HomeScreen", "After animateScrollToItem, firstVisible=${habitsScrollState.firstVisibleItemIndex}")
+                            } catch (e: Exception) {
+                                Log.d("HomeScreen", "habits animateScrollToItem failed: ${e.message}")
+                            }
+                        }
                     }
                 }
                 HomeSection.Records -> {
                     scope.launch {
-                        recordsScrollState.animateScrollToItem(0)
-                        // 同时展开 AppBar
+                        Log.d("HomeScreen", "navigateToSection: expand AppBar then scroll Records to top (animate)")
                         recordsScrollBehavior.state.heightOffset = 0f
+                        try {
+                            recordsScrollState.animateScrollToItem(0)
+                        } catch (e: Exception) {
+                            Log.d("HomeScreen", "records animateScrollToItem failed: ${e.message}")
+                        }
                     }
                 }
                 HomeSection.Contacts -> {
                     scope.launch {
-                        contactsScrollState.animateScrollToItem(0)
-                        // 同时展开 AppBar
+                        Log.d("HomeScreen", "navigateToSection: expand AppBar then scroll Contacts to top (animate)")
                         contactsScrollBehavior.state.heightOffset = 0f
+                        try {
+                            contactsScrollState.animateScrollToItem(0)
+                        } catch (e: Exception) {
+                            Log.d("HomeScreen", "contacts animateScrollToItem failed: ${e.message}")
+                        }
                     }
                 }
             }
@@ -446,6 +524,8 @@ fun HomeScreen(
                                         nestedScrollConnection = habitsScrollBehavior.nestedScrollConnection,
                                         newlyAddedHabitId = newlyAddedHabitId,
                                         listState = habitsScrollState,
+                                        waterfallScrollState = waterfallScrollState,
+                                        bringIntoViewRequester = bringIntoViewRequester,
                                         forceTabletLandscape = forceTabletLandscape == true,
                                         searchQuery = searchQuery
                                     )
@@ -745,7 +825,7 @@ fun HomeScreen(
                                 modifier = Modifier.size(40.dp)
                             ) {
                                 Icon(
-                                    imageVector = if (isDrawerExpanded) Icons.Filled.ChevronLeft else Icons.Filled.Menu,
+                                    imageVector = if (isDrawerExpanded) Icons.AutoMirrored.Filled.MenuOpen else Icons.Filled.Menu,
                                     contentDescription = if (isDrawerExpanded) stringResource(id = R.string.main_collapse_drawer) else stringResource(id = R.string.main_expand_drawer)
                                 )
                             }
@@ -1281,6 +1361,8 @@ fun HabitListContent(
     nestedScrollConnection: androidx.compose.ui.input.nestedscroll.NestedScrollConnection? = null,
     newlyAddedHabitId: UUID? = null,
     listState: androidx.compose.foundation.lazy.LazyListState = remember { androidx.compose.foundation.lazy.LazyListState() },
+    waterfallScrollState: ScrollState,  // 移除默认值，强制调用者必须传入
+    bringIntoViewRequester: BringIntoViewRequester? = null,
     forceTabletLandscape: Boolean = false,
     searchQuery: String = ""
 ) {
@@ -1304,13 +1386,22 @@ fun HabitListContent(
         val column1Habits = habits.filterIndexed { index, _ -> index % 2 == 0 }
         val column2Habits = habits.filterIndexed { index, _ -> index % 2 == 1 }
 
-        val waterfallScrollState = rememberScrollState()
         val waterfallModifier = if (nestedScrollConnection != null) modifier.nestedScroll(nestedScrollConnection) else modifier
 
         ScrollableWaterfallWithScrollbar(
             modifier = waterfallModifier,
             scrollState = waterfallScrollState
         ) {
+            // Top anchor for bringIntoView requests (used to ensure the waterfall scroll container
+            // scrolls to the top when requested from outside)
+            if (bringIntoViewRequester != null) {
+                Box(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .height(1.dp)
+                        .bringIntoViewRequester(bringIntoViewRequester)
+                ) {}
+            }
             Row(
                 modifier = Modifier
                     .fillMaxWidth()

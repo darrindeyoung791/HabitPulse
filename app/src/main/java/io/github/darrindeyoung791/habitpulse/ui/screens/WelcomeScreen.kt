@@ -32,7 +32,7 @@ import io.github.darrindeyoung791.habitpulse.R
 import io.github.darrindeyoung791.habitpulse.ui.theme.HabitPulseTheme
 
 /**
- * 初次使用欢迎界面 - iOS 风格权限提醒
+ * 初次使用欢迎界面 - 类 iOS 风格权限提醒
  *
  * @param onAgree 用户同意协议时的回调
  * @param onDisagree 用户不同意协议时的回调（进入受限模式）

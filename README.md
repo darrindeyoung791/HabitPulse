@@ -19,7 +19,9 @@
 
 **HabitPulse** 是一款采用 Material Design 3 设计风格的 Android 习惯追踪应用，致力于帮助用户建立和维持良好的日常习惯。通过简洁直观的界面设计和智能化的提醒机制，让习惯养成变得更加轻松有效。
 
-> 💡 HabitPulse 使用 AI 辅助开发。如果您使用 Qwen Code 或 Claude Code 进行二次开发，请阅读 [`QWEN.md`](QWEN.md) 以获取重要信息。
+> [!NOTE]
+>
+> HabitPulse 使用 AI 辅助开发。如果您使用 Qwen Code 或 Claude Code 进行二次开发，请阅读 [`QWEN.md`](QWEN.md) 以获取重要信息。
 
 > 🌏 [English Version](doc/readme/README_EN-US.md) | 中文版本
 

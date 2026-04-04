@@ -19,7 +19,9 @@
 
 **HabitPulse** is an Android habit tracking application built with Material Design 3, dedicated to helping users build and maintain good daily habits. Through a concise and intuitive interface design and intelligent reminder mechanisms, habit formation becomes easier and more effective.
 
-> 💡 HabitPulse is developed with AI assistance. If you use Qwen Code or Claude Code for further development, please read [`QWEN.md`](QWEN.md) for important information.
+> [!NOTE]
+>
+> HabitPulse is developed with AI assistance. If you use Qwen Code or Claude Code for further development, please read [`QWEN.md`](QWEN.md) for important information.
 
 > 🌏 [Chinese Version](../../README.md) | English Version
 
