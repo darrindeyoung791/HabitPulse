@@ -64,6 +64,12 @@ class HabitRepository(
         habitCompletionDao.getCompletionsByHabitIdFlow(habitId)
 
     /**
+     * 获取所有打卡记录 Flow（按时间倒序）
+     */
+    val allCompletionsFlow: Flow<List<HabitCompletion>> =
+        habitCompletionDao.getAllCompletionsFlow()
+
+    /**
      * 获取指定习惯的所有打卡记录（一次性）
      */
     suspend fun getCompletionsByHabitId(habitId: UUID): List<HabitCompletion> =

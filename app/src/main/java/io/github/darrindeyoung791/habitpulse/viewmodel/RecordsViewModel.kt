@@ -73,6 +73,12 @@ class RecordsViewModel(
     private var lastFilterKey: String = "null_null"
 
     /**
+     * 刷新触发器 - 用于强制触发 Flow 重新计算
+     * 每次递增确保值变化，从而触发 combine 重新执行
+     */
+    private val _refreshTrigger = MutableStateFlow(0)
+
+    /**
      * 当前选中的日期（用于过滤），null 表示不过滤日期
      */
     private val _selectedDate = MutableStateFlow<LocalDate?>(null)
@@ -142,12 +148,23 @@ class RecordsViewModel(
     /**
      * 合并后的打卡记录 Flow（按日期分组）
      * 根据选中的习惯 ID 和日期过滤记录
+     * 
+     * 使用 allCompletionsFlow 确保打卡记录变化时自动更新
+     * 使用 refreshTrigger 确保手动刷新时强制更新
      */
     val groupedRecordsFlow: Flow<List<DateGroup>> = combine(
         habitsFlow,
+        repository.allCompletionsFlow,
         _selectedHabitId,
-        _selectedDate
-    ) { habits, selectedId, selectedDate ->
+        _selectedDate,
+        _refreshTrigger
+    ) { values ->
+        val habits = values[0] as List<Habit>
+        val allCompletions = values[1] as List<HabitCompletion>
+        val selectedId = values[2] as UUID?
+        val selectedDate = values[3] as LocalDate?
+        // refreshTrigger = values[4] as Int (不需要使用，只是触发器)
+        
         // 首次加载时设置 loading 状态
         if (!hasLoadedData) {
             _isLoading.value = true
@@ -155,25 +172,18 @@ class RecordsViewModel(
 
         // 构建当前过滤条件的 key
         val currentFilterKey = "${selectedId ?: "null"}_${selectedDate ?: "null"}"
-        
+
         // 如果过滤条件变化，清除 lastNonEmptyData
         if (currentFilterKey != lastFilterKey) {
             _lastNonEmptyData.value = emptyList()
             lastFilterKey = currentFilterKey
         }
 
-        // 获取所有打卡记录
-        val allCompletions = habits.flatMap { habit ->
-            repository.getCompletionsByHabitId(habit.id)
-        }
-        // 按日期倒序排序
-        val sortedCompletions = allCompletions.sortedByDescending { it.completedDate }
-
         // 根据选中的习惯 ID 过滤
         val filteredByHabit = if (selectedId == null) {
-            sortedCompletions
+            allCompletions
         } else {
-            sortedCompletions.filter { it.habitId == selectedId }
+            allCompletions.filter { it.habitId == selectedId }
         }
 
         // 根据选中的日期过滤
@@ -189,7 +199,8 @@ class RecordsViewModel(
             val habit = habits.find { it.id == completion.habitId }
             if (habit != null) {
                 // 计算这是该习惯的第几次打卡（按时间排序）
-                val habitCompletions = repository.getCompletionsByHabitId(habit.id)
+                val habitCompletions = allCompletions
+                    .filter { it.habitId == habit.id }
                     .sortedBy { it.completedDate }
                 val sequence = habitCompletions.indexOf(completion) + 1
                 CompletionRecord(completion, habit, sequence)
@@ -217,6 +228,15 @@ class RecordsViewModel(
     fun resetLoadingState() {
         _isLoading.value = true
         // 注意：不重置 hasLoadedDataOnce，避免切换页面时反复显示加载指示器
+    }
+
+    /**
+     * 强制刷新记录数据
+     * 在删除/新增习惯后调用，确保记录界面更新
+     */
+    fun refreshRecords() {
+        // 递增触发器值，确保 Flow 重新计算
+        _refreshTrigger.value += 1
     }
 
     /**

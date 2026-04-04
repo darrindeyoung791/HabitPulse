@@ -349,13 +349,11 @@ fun HomeScreen(
     )
 
     val navigateToSection: (HomeSection) -> Unit = { targetSection ->
-        Log.d("HomeScreen", "navigateToSection called target=$targetSection current=$currentSection isWaterfallMode=$isWaterfallMode")
         if (currentSection == targetSection) {
             // 如果点击的是当前页面，滚动到顶部并展开 AppBar
             when (targetSection) {
                 HomeSection.Habits -> {
                     scope.launch {
-                        Log.d("HomeScreen", "navigateToSection: expand AppBar then scroll Habits to top")
                         // Expand AppBar first to avoid it pushing content down after scroll
                         habitsScrollBehavior.state.heightOffset = 0f
                         
@@ -364,9 +362,7 @@ fun HomeScreen(
                         if (isWaterfallMode) {
                             // Waterfall mode: only scroll waterfallScrollState with animation
                             try {
-                                Log.d("HomeScreen", "Waterfall mode: animating waterfallScrollState to 0")
                                 waterfallScrollState.animateScrollTo(0)
-                                Log.d("HomeScreen", "After waterfall animateScrollTo, currentY=${waterfallScrollState.value}")
                             } catch (e: Exception) {
                                 Log.d("HomeScreen", "waterfall animateScrollTo failed: ${e.message}")
                                 // Fallback to instant scroll if animation fails
@@ -379,9 +375,7 @@ fun HomeScreen(
                         } else {
                             // Single column mode: only scroll habitsScrollState
                             try {
-                                Log.d("HomeScreen", "Single column mode: animating habitsScrollState to 0")
                                 habitsScrollState.animateScrollToItem(0)
-                                Log.d("HomeScreen", "After animateScrollToItem, firstVisible=${habitsScrollState.firstVisibleItemIndex}")
                             } catch (e: Exception) {
                                 Log.d("HomeScreen", "habits animateScrollToItem failed: ${e.message}")
                             }
@@ -390,7 +384,6 @@ fun HomeScreen(
                 }
                 HomeSection.Records -> {
                     scope.launch {
-                        Log.d("HomeScreen", "navigateToSection: expand AppBar then scroll Records to top (animate)")
                         recordsScrollBehavior.state.heightOffset = 0f
                         try {
                             recordsScrollState.animateScrollToItem(0)
@@ -401,7 +394,6 @@ fun HomeScreen(
                 }
                 HomeSection.Contacts -> {
                     scope.launch {
-                        Log.d("HomeScreen", "navigateToSection: expand AppBar then scroll Contacts to top (animate)")
                         contactsScrollBehavior.state.heightOffset = 0f
                         try {
                             contactsScrollState.animateScrollToItem(0)
@@ -514,7 +506,11 @@ fun HomeScreen(
                                         onHabitClick = { onEditHabit(it) },
                                         onCheckIn = { viewModel.incrementCompletionCount(it) },
                                         onUndoCompletion = { viewModel.undoHabitCompletion(it) },
-                                        onDeleteHabit = { viewModel.deleteHabit(it) },
+                                        onDeleteHabit = {
+                                            viewModel.deleteHabit(it)
+                                            // 删除习惯后刷新记录界面
+                                            application?.recordsViewModel?.refreshRecords()
+                                        },
                                         onNavigateToMultiSelect = onNavigateToMultiSelect,
                                         nestedScrollConnection = habitsScrollBehavior.nestedScrollConnection,
                                         newlyAddedHabitId = newlyAddedHabitId,
@@ -2470,6 +2466,10 @@ private class FakeHabitCompletionDao : io.github.darrindeyoung791.habitpulse.dat
 
     override fun getCompletionsByHabitIdFlow(habitId: java.util.UUID): kotlinx.coroutines.flow.Flow<List<io.github.darrindeyoung791.habitpulse.data.model.HabitCompletion>> {
         return kotlinx.coroutines.flow.flowOf(completions.filter { it.habitId == habitId })
+    }
+
+    override fun getAllCompletionsFlow(): kotlinx.coroutines.flow.Flow<List<io.github.darrindeyoung791.habitpulse.data.model.HabitCompletion>> {
+        return kotlinx.coroutines.flow.flowOf(completions.toList())
     }
 
     override suspend fun getCompletionsByHabitId(habitId: java.util.UUID): List<io.github.darrindeyoung791.habitpulse.data.model.HabitCompletion> {

@@ -181,7 +181,16 @@ fun RecordsScreenContent(
     val selectedDate by viewModel.selectedDate.collectAsStateWithLifecycle()
 
     // 使用最后一次的非空数据，避免切换页面时闪现空状态
-    val displayRecords = if (groupedRecords.isNotEmpty()) groupedRecords else lastNonEmptyData
+    // 但只在加载中时使用缓存，加载完成后显示真实数据（包括空状态）
+    val displayRecords = if (groupedRecords.isNotEmpty()) {
+        groupedRecords
+    } else if (isLoading) {
+        // 加载中：使用缓存避免闪现空状态
+        lastNonEmptyData
+    } else {
+        // 加载完成：显示真实数据（可能是空列表）
+        groupedRecords
+    }
 
     // Get selected habit name for display
     val selectedHabitName = habitOptions.find { option ->
@@ -826,6 +835,9 @@ private class FakeHabitCompletionDaoForRecords : io.github.darrindeyoung791.habi
 
     override fun getCompletionsByHabitIdFlow(habitId: UUID): kotlinx.coroutines.flow.Flow<List<HabitCompletion>> =
         kotlinx.coroutines.flow.flowOf(completions.filter { it.habitId == habitId })
+
+    override fun getAllCompletionsFlow(): kotlinx.coroutines.flow.Flow<List<HabitCompletion>> =
+        kotlinx.coroutines.flow.flowOf(completions.toList())
 
     override suspend fun getCompletionsByHabitId(habitId: UUID): List<HabitCompletion> =
         completions.filter { it.habitId == habitId }

@@ -2,6 +2,7 @@ package io.github.darrindeyoung791.habitpulse
 
 import android.app.Application
 import androidx.room.Room
+import androidx.room.RoomDatabase
 import com.google.android.material.color.DynamicColors
 import io.github.darrindeyoung791.habitpulse.data.database.HabitDatabase
 import io.github.darrindeyoung791.habitpulse.data.repository.HabitRepository
@@ -27,6 +28,13 @@ class HabitPulseApplication : Application() {
             HabitDatabase::class.java,
             HabitDatabase.DATABASE_NAME
         )
+        .addCallback(object : RoomDatabase.Callback() {
+            override fun onOpen(db: androidx.sqlite.db.SupportSQLiteDatabase) {
+                super.onOpen(db)
+                // Enable foreign key constraints for cascade delete
+                db.execSQL("PRAGMA foreign_keys=ON")
+            }
+        })
         .addMigrations(HabitDatabase.MIGRATION_2_3)  // Migration from v2 to v3
         .build()
     }

@@ -272,6 +272,8 @@ fun MultiSelectSortScreen(
                         scope.launch {
                             clickHandler.processClick {
                                 viewModel.deleteSelectedHabits()
+                                // 批量删除习惯后刷新记录界面
+                                application?.recordsViewModel?.refreshRecords()
                                 showDeleteDialog = false
                                 // Scroll to top only when deleting
                                 viewModel.requestScrollToTop()

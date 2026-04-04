@@ -19,6 +19,12 @@ interface HabitCompletionDao {
     fun getCompletionsByHabitIdFlow(habitId: UUID): Flow<List<HabitCompletion>>
 
     /**
+     * 获取所有打卡记录（按完成时间倒序）
+     */
+    @Query("SELECT * FROM habit_completions ORDER BY completedDate DESC")
+    fun getAllCompletionsFlow(): Flow<List<HabitCompletion>>
+
+    /**
      * 获取指定习惯的所有打卡记录（同步版本）
      */
     @Query("SELECT * FROM habit_completions WHERE habitId = :habitId ORDER BY completedDate DESC")

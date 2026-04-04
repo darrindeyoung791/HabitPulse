@@ -1394,6 +1394,10 @@ private class FakeHabitCompletionDaoForCreation : io.github.darrindeyoung791.hab
         return kotlinx.coroutines.flow.flowOf(completions.filter { it.habitId == habitId })
     }
 
+    override fun getAllCompletionsFlow(): kotlinx.coroutines.flow.Flow<List<io.github.darrindeyoung791.habitpulse.data.model.HabitCompletion>> {
+        return kotlinx.coroutines.flow.flowOf(completions.toList())
+    }
+
     override suspend fun getCompletionsByHabitId(habitId: java.util.UUID): List<io.github.darrindeyoung791.habitpulse.data.model.HabitCompletion> {
         return completions.filter { it.habitId == habitId }
     }

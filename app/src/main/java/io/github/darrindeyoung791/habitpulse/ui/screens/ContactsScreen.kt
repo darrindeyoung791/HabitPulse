@@ -135,7 +135,16 @@ fun ContactsScreenContent(
     val selectedContact by viewModel.selectedContact.collectAsStateWithLifecycle()
 
     // 使用最后一次的非空数据，避免切换页面时闪现空状态
-    val displayContacts = if (contacts.isNotEmpty()) contacts else lastNonEmptyData
+    // 但只在加载中时使用缓存，加载完成后显示真实数据（包括空状态）
+    val displayContacts = if (contacts.isNotEmpty()) {
+        contacts
+    } else if (isLoading) {
+        // 加载中：使用缓存避免闪现空状态
+        lastNonEmptyData
+    } else {
+        // 加载完成：显示真实数据（可能是空列表）
+        contacts
+    }
     
     // 使用过滤后的联系人列表（如果搜索激活）
     // 当搜索词为空时，直接使用 displayContacts，避免等待 Flow 收集导致闪现空列表
@@ -920,6 +929,9 @@ private class FakeHabitDaoForContacts : io.github.darrindeyoung791.habitpulse.da
 @Suppress("unused")
 private class FakeHabitCompletionDaoForContacts : io.github.darrindeyoung791.habitpulse.data.database.dao.HabitCompletionDao {
     override fun getCompletionsByHabitIdFlow(habitId: UUID): kotlinx.coroutines.flow.Flow<List<io.github.darrindeyoung791.habitpulse.data.model.HabitCompletion>> =
+        kotlinx.coroutines.flow.flowOf(emptyList())
+
+    override fun getAllCompletionsFlow(): kotlinx.coroutines.flow.Flow<List<io.github.darrindeyoung791.habitpulse.data.model.HabitCompletion>> =
         kotlinx.coroutines.flow.flowOf(emptyList())
 
     override suspend fun getCompletionsByHabitId(habitId: UUID): List<io.github.darrindeyoung791.habitpulse.data.model.HabitCompletion> = emptyList()
