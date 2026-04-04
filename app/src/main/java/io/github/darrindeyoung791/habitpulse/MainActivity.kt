@@ -1,11 +1,17 @@
 package io.github.darrindeyoung791.habitpulse
 
+import android.animation.Animator
+import android.animation.AnimatorListenerAdapter
+import android.animation.ObjectAnimator
 import android.os.Bundle
+import android.view.animation.AccelerateDecelerateInterpolator
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
-import androidx.compose.animation.Crossfade
+import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.core.tween
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
 import androidx.compose.runtime.*
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.tooling.preview.Preview
@@ -27,6 +33,24 @@ class MainActivity : ComponentActivity() {
         val splashScreen = installSplashScreen()
         super.onCreate(savedInstanceState)
 
+        // Set custom fade-out animation for splash screen exit
+        splashScreen.setOnExitAnimationListener { splashScreenViewProvider ->
+            val fadeOutAnimator = ObjectAnimator.ofFloat(
+                splashScreenViewProvider.view,
+                "alpha",
+                1f,
+                0f
+            )
+            fadeOutAnimator.duration = 200
+            fadeOutAnimator.interpolator = AccelerateDecelerateInterpolator()
+            fadeOutAnimator.addListener(object : AnimatorListenerAdapter() {
+                override fun onAnimationEnd(animation: Animator) {
+                    splashScreenViewProvider.remove()
+                }
+            })
+            fadeOutAnimator.start()
+        }
+
         // Enable edge-to-edge display - system bar colors handled by HabitPulseTheme
         enableEdgeToEdge()
 
@@ -34,6 +58,7 @@ class MainActivity : ComponentActivity() {
             HabitPulseTheme {
                 val navController = rememberNavController()
                 val userPreferences = remember { UserPreferences.getInstance(applicationContext) }
+                val activity = this  // Capture activity reference before composable scope
 
                 // 收集开屏广告设置状态
                 val showSplashAd by userPreferences.showSplashAdFlow.collectAsStateWithLifecycle(initialValue = false)
@@ -69,29 +94,40 @@ class MainActivity : ComponentActivity() {
                 // 如果广告结束，进入主内容
                 val showMainContent = adFinished || (!showSplashAd || !showAdScreen)
 
-                Crossfade(
-                    targetState = showMainContent,
-                    animationSpec = tween(durationMillis = 200),
-                    label = "screenCrossfade"
-                ) { showMain ->
-                    if (showMain) {
-                        // 显示主导航
+                // 初始淡入淡出动画状态 - 用于splash结束后的平滑过渡
+                var contentFadeInStarted by remember { mutableStateOf(false) }
+
+                LaunchedEffect(showMainContent) {
+                    if (showMainContent && !contentFadeInStarted) {
+                        contentFadeInStarted = true
+                    }
+                }
+
+                if (showMainContent) {
+                    // 显示主导航（带淡入动画）
+                    AnimatedVisibility(
+                        visible = contentFadeInStarted,
+                        enter = fadeIn(animationSpec = tween(durationMillis = 200)),
+                        label = "mainContentFadeIn"
+                    ) {
                         HabitPulseNavGraph(
                             navController = navController,
                             onHomeDataLoaded = { homeDataLoaded = true }
                         )
 
                         // 处理系统返回键，确保在主页时按返回键可以退出应用
-                        HandleSystemBackPress(navController = navController, activity = this)
-                    } else if (showSplashAd && showAdScreen) {
-                        // 显示广告页面
-                        AdScreen(
-                            onAdFinished = {
-                                adFinished = true
-                                showAdScreen = false
-                            }
-                        )
+                        HandleSystemBackPress(navController = navController, activity = activity)
                     }
+                }
+
+                // 显示广告页面（不参与淡入淡出动画）
+                if (showSplashAd && showAdScreen && !adFinished) {
+                    AdScreen(
+                        onAdFinished = {
+                            adFinished = true
+                            showAdScreen = false
+                        }
+                    )
                 }
             }
         }
