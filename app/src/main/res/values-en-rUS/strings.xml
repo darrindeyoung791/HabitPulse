@@ -216,7 +216,7 @@
     <string name="habit_context_menu_multi_select">Multi-Select &amp; Sort</string>
 
     <!-- Welcome Screen -->
-    <string name="welcome_description">A clean and lightweight habit tracker designed to beat the three-minute enthusiasm.</string>
+    <string name="welcome_description">A clean and lightweight habit tracker designed to outlast the three-minute enthusiasm.</string>
     <string name="welcome_permissions_title">For timely notifications, HabitPulse may use the following permissions:</string>
     <string name="welcome_permission_notification_title">Send persistent notifications</string>
     <string name="welcome_permission_background_title">Run continuously in the background</string>
@@ -228,7 +228,7 @@
     <!-- Notification Settings -->
     <string name="settings_notifications">Notifications</string>
     <string name="settings_persistent_notification">Keep running in background</string>
-    <string name="settings_persistent_notification_description">Show a persistent notification to prevent the app from being killed by the system</string>
+    <string name="settings_persistent_notification_description">Show a persistent notification to keep yourself informed</string>
     <string name="settings_persistent_notification_authorize">Authorize</string>
     <string name="settings_persistent_notification_permission_denied">Notification permission not granted. Cannot enable this feature.</string>
     <string name="settings_persistent_notification_limited_mode_title">Exit Limited Mode?</string>

@@ -230,7 +230,7 @@
     <!-- Notification Settings -->
     <string name="settings_notifications">通知</string>
     <string name="settings_persistent_notification">保持后台运行</string>
-    <string name="settings_persistent_notification_description">显示持久通知以防止应用被系统杀死</string>
+    <string name="settings_persistent_notification_description">显示持久通知，保持应用及时提醒</string>
     <string name="settings_persistent_notification_authorize">去授权</string>
     <string name="settings_persistent_notification_permission_denied">未获得通知权限，无法开启此功能</string>
     <string name="settings_persistent_notification_limited_mode_title">退出受限模式？</string>
