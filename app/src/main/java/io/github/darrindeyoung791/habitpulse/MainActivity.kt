@@ -25,9 +25,11 @@ import androidx.navigation.NavHostController
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import io.github.darrindeyoung791.habitpulse.data.preferences.UserPreferences
 import io.github.darrindeyoung791.habitpulse.navigation.HabitPulseNavGraph
+import io.github.darrindeyoung791.habitpulse.service.ForegroundNotificationService
 import io.github.darrindeyoung791.habitpulse.ui.screens.AdScreen
 import io.github.darrindeyoung791.habitpulse.ui.screens.HomeScreen
 import io.github.darrindeyoung791.habitpulse.ui.theme.HabitPulseTheme
+import io.github.darrindeyoung791.habitpulse.utils.NotificationHelper
 import kotlinx.coroutines.flow.first
 
 class MainActivity : ComponentActivity() {
@@ -73,6 +75,8 @@ class MainActivity : ComponentActivity() {
 
                 // 收集开屏广告设置状态
                 val showSplashAd by userPreferences.showSplashAdFlow.collectAsStateWithLifecycle(initialValue = false)
+                // 收集持久通知设置状态
+                val persistentNotification by userPreferences.persistentNotificationFlow.collectAsStateWithLifecycle(initialValue = false)
 
                 // 主页数据是否加载完成
                 var homeDataLoaded by remember { mutableStateOf(false) }
@@ -99,6 +103,17 @@ class MainActivity : ComponentActivity() {
                             // 开启广告：splash screen 不延长，显示广告页面
                             showAdScreen = true
                         }
+                    }
+                }
+
+                // Manage foreground service based on user preference
+                val context = LocalContext.current
+                LaunchedEffect(persistentNotification) {
+                    if (persistentNotification && NotificationHelper.hasNotificationPermission(context)) {
+                        NotificationHelper.createNotificationChannel(context)
+                        ForegroundNotificationService.toggleService(context, true)
+                    } else {
+                        ForegroundNotificationService.toggleService(context, false)
                     }
                 }
 

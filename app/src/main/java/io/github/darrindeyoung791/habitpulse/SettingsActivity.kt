@@ -4,11 +4,14 @@ import android.content.ActivityNotFoundException
 import android.content.Intent
 import android.content.res.Configuration
 import android.net.Uri
+import android.os.Build
 import android.os.Bundle
 import android.provider.Settings
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
+import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.enableEdgeToEdge
+import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.material.icons.Icons
@@ -16,6 +19,7 @@ import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.automirrored.outlined.Article
 import androidx.compose.material.icons.outlined.FavoriteBorder
 import androidx.compose.material.icons.outlined.Info
+import androidx.compose.material.icons.outlined.Notifications
 import androidx.compose.material.icons.outlined.Person
 import androidx.compose.material.icons.outlined.Tablet
 import androidx.compose.material3.*
@@ -33,8 +37,11 @@ import io.github.darrindeyoung791.habitpulse.data.model.RepeatCycle
 import io.github.darrindeyoung791.habitpulse.data.model.SupervisionMethod
 import io.github.darrindeyoung791.habitpulse.data.preferences.UserPreferences
 import io.github.darrindeyoung791.habitpulse.data.repository.HabitRepository
+import io.github.darrindeyoung791.habitpulse.service.ForegroundNotificationService
 import io.github.darrindeyoung791.habitpulse.ui.theme.HabitPulseTheme
 import io.github.darrindeyoung791.habitpulse.utils.AccessibilityUtils
+import io.github.darrindeyoung791.habitpulse.utils.NotificationHelper
+import io.github.darrindeyoung791.habitpulse.utils.NotificationPermissionHelper
 import kotlinx.coroutines.launch
 import org.json.JSONArray
 import java.util.UUID
@@ -56,6 +63,7 @@ class SettingsActivity : ComponentActivity() {
 @Composable
 fun SettingsScreen() {
     val context = LocalContext.current
+    val activity = context as? ComponentActivity
     val scope = rememberCoroutineScope()
     val userPreferences = remember { UserPreferences.getInstance(context) }
 
@@ -63,6 +71,8 @@ fun SettingsScreen() {
     val showSplashAd by userPreferences.showSplashAdFlow.collectAsStateWithLifecycle(initialValue = false)
     // 收集强制平板横屏模式设置状态
     val forceTabletLandscape by userPreferences.forceTabletLandscapeFlow.collectAsStateWithLifecycle(initialValue = false)
+    // 收集持久通知设置状态
+    val persistentNotification by userPreferences.persistentNotificationFlow.collectAsStateWithLifecycle(initialValue = false)
 
     // Use smallestScreenWidthDp to detect device type (independent of orientation)
     // Tablet: smallestScreenWidthDp >= 600dp
@@ -77,11 +87,22 @@ fun SettingsScreen() {
 
     // Check if TalkBack is enabled - poll every second to react to status changes
     var isTalkBackEnabled by remember { mutableStateOf(AccessibilityUtils.isTalkBackEnabled(context)) }
-    
+
     LaunchedEffect(Unit) {
         while (true) {
             kotlinx.coroutines.delay(1000)
             isTalkBackEnabled = AccessibilityUtils.isTalkBackEnabled(context)
+        }
+    }
+
+    // Track notification permission status
+    var hasNotificationPermission by remember { mutableStateOf(NotificationHelper.hasNotificationPermission(context)) }
+
+    // Refresh permission check when screen is composed
+    LaunchedEffect(Unit) {
+        while (true) {
+            kotlinx.coroutines.delay(1000)
+            hasNotificationPermission = NotificationHelper.hasNotificationPermission(context)
         }
     }
 
@@ -96,19 +117,47 @@ fun SettingsScreen() {
             "1.0.0"
         }
     }
-    
+
     // Debug: track version tap count for sample data
     var versionTapCount by remember { mutableStateOf(0) }
     var versionTapStartTime by remember { mutableStateOf(0L) }
     var showSampleDataDialog by remember { mutableStateOf(false) }
     var showSuccessMessage by remember { mutableStateOf(false) }
-    
+
     // Dialog for force tablet landscape mode warning
     var showForceTabletLandscapeDialog by remember { mutableStateOf(false) }
     var pendingForceTabletLandscapeValue by remember { mutableStateOf(false) }
 
+    // Dialog for persistent notification when in limited mode
+    var showPersistentNotificationLimitedDialog by remember { mutableStateOf(false) }
+    var pendingPersistentNotificationValue by remember { mutableStateOf(false) }
+
     val TAP_TIME_WINDOW = 10_000L // 10 seconds
     val TAP_COUNT_THRESHOLD = 5
+
+    // Permission request launcher for notifications
+    val requestNotificationPermissionLauncher = rememberLauncherForActivityResult(
+        contract = ActivityResultContracts.RequestPermission()
+    ) { isGranted ->
+        if (isGranted) {
+            // Permission granted, update preference and start service
+            scope.launch {
+                userPreferences.setPersistentNotification(true)
+                NotificationHelper.createNotificationChannel(context)
+                ForegroundNotificationService.toggleService(context, true)
+            }
+        } else {
+            // Permission denied, revert switch to off
+            scope.launch {
+                userPreferences.setPersistentNotification(false)
+                android.widget.Toast.makeText(
+                    context,
+                    context.getString(R.string.settings_persistent_notification_permission_denied),
+                    android.widget.Toast.LENGTH_SHORT
+                ).show()
+            }
+        }
+    }
     
     // Dialog for adding sample data
     if (showSampleDataDialog) {
@@ -197,6 +246,53 @@ fun SettingsScreen() {
         )
     }
 
+    // Dialog for persistent notification when in limited mode
+    if (showPersistentNotificationLimitedDialog) {
+        AlertDialog(
+            onDismissRequest = { showPersistentNotificationLimitedDialog = false },
+            title = {
+                Text(text = stringResource(id = R.string.settings_persistent_notification_limited_mode_title))
+            },
+            text = {
+                Text(text = stringResource(id = R.string.settings_persistent_notification_limited_mode_message))
+            },
+            confirmButton = {
+                TextButton(
+                    onClick = {
+                        showPersistentNotificationLimitedDialog = false
+                        // Request permission after user confirms
+                        if (!hasNotificationPermission) {
+                            requestNotificationPermissionLauncher.launch(android.Manifest.permission.POST_NOTIFICATIONS)
+                        } else {
+                            scope.launch {
+                                userPreferences.setPersistentNotification(pendingPersistentNotificationValue)
+                                if (pendingPersistentNotificationValue) {
+                                    NotificationHelper.createNotificationChannel(context)
+                                    ForegroundNotificationService.toggleService(context, true)
+                                } else {
+                                    ForegroundNotificationService.toggleService(context, false)
+                                }
+                            }
+                        }
+                    }
+                ) {
+                    Text(text = stringResource(id = R.string.dialog_confirm))
+                }
+            },
+            dismissButton = {
+                TextButton(onClick = { 
+                    showPersistentNotificationLimitedDialog = false
+                    // Revert switch state
+                    scope.launch {
+                        userPreferences.setPersistentNotification(!pendingPersistentNotificationValue)
+                    }
+                }) {
+                    Text(text = stringResource(id = R.string.dialog_cancel))
+                }
+            }
+        )
+    }
+
     Scaffold(
         modifier = Modifier.fillMaxSize(),
         topBar = {
@@ -276,6 +372,135 @@ fun SettingsScreen() {
                         )
                     }
                 )
+            }
+
+            // 通知部分
+            item {
+                // Section header
+                Text(
+                    text = stringResource(id = R.string.settings_notifications),
+                    style = MaterialTheme.typography.labelMedium,
+                    color = MaterialTheme.colorScheme.primary,
+                    modifier = Modifier.padding(horizontal = 16.dp, vertical = 16.dp)
+                )
+
+                if (!hasNotificationPermission) {
+                    // No permission: show button to authorize
+                    Surface(
+                        modifier = Modifier.fillMaxWidth(),
+                        onClick = {
+                            // Check if permission is permanently denied
+                            val shouldShowRationale = activity?.let { 
+                                NotificationHelper.shouldShowPermissionRationale(it) 
+                            } ?: true
+                            
+                            if (shouldShowRationale) {
+                                // Permission was denied before, but not permanently - request again
+                                requestNotificationPermissionLauncher.launch(android.Manifest.permission.POST_NOTIFICATIONS)
+                            } else {
+                                // Permission permanently denied or not requested - open settings
+                                NotificationPermissionHelper.openAppSettings(context)
+                            }
+                        },
+                        color = MaterialTheme.colorScheme.surface
+                    ) {
+                        Row(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(horizontal = 16.dp, vertical = 12.dp),
+                            horizontalArrangement = Arrangement.SpaceBetween,
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            Row(
+                                modifier = Modifier
+                                    .weight(1f)
+                                    .padding(end = 16.dp),
+                                horizontalArrangement = Arrangement.spacedBy(16.dp),
+                                verticalAlignment = Alignment.CenterVertically
+                            ) {
+                                Icon(
+                                    imageVector = Icons.Outlined.Notifications,
+                                    contentDescription = null
+                                )
+                                Column(
+                                    modifier = Modifier.weight(1f)
+                                ) {
+                                    Text(
+                                        text = stringResource(id = R.string.settings_persistent_notification),
+                                        style = MaterialTheme.typography.bodyLarge,
+                                        color = MaterialTheme.colorScheme.onSurface
+                                    )
+                                    Spacer(modifier = Modifier.height(2.dp))
+                                    Text(
+                                        text = stringResource(id = R.string.settings_persistent_notification_description),
+                                        style = MaterialTheme.typography.bodyMedium,
+                                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                                    )
+                                }
+                            }
+                            TextButton(
+                                onClick = {
+                                    // Check if permission is permanently denied
+                                    val shouldShowRationale = activity?.let { 
+                                        NotificationHelper.shouldShowPermissionRationale(it) 
+                                    } ?: true
+                                    
+                                    if (shouldShowRationale) {
+                                        // Permission was denied before, but not permanently - request again
+                                        requestNotificationPermissionLauncher.launch(android.Manifest.permission.POST_NOTIFICATIONS)
+                                    } else {
+                                        // Permission permanently denied or not requested - open settings
+                                        NotificationPermissionHelper.openAppSettings(context)
+                                    }
+                                }
+                            ) {
+                                Text(
+                                    text = stringResource(id = R.string.settings_persistent_notification_authorize)
+                                )
+                            }
+                        }
+                    }
+                } else {
+                    // Has permission: show switch
+                    SettingsSwitchItem(
+                        headline = stringResource(id = R.string.settings_persistent_notification),
+                        supportingText = stringResource(id = R.string.settings_persistent_notification_description),
+                        checked = persistentNotification,
+                        onCheckedChange = { isChecked ->
+                            if (!isChecked) {
+                                // User wants to disable
+                                scope.launch {
+                                    userPreferences.setPersistentNotification(false)
+                                    ForegroundNotificationService.toggleService(context, false)
+                                }
+                            } else {
+                                // User wants to enable
+                                // Check if in limited mode first
+                                val application = context.applicationContext as HabitPulseApplication
+                                val isLimitedMode = application.habitViewModel.isLimitedMode.value
+
+                                if (isLimitedMode) {
+                                    // Show dialog warning about exiting limited mode
+                                    pendingPersistentNotificationValue = true
+                                    showPersistentNotificationLimitedDialog = true
+                                } else {
+                                    // Has permission, just enable it
+                                    scope.launch {
+                                        userPreferences.setPersistentNotification(true)
+                                        NotificationHelper.createNotificationChannel(context)
+                                        ForegroundNotificationService.toggleService(context, true)
+                                    }
+                                }
+                            }
+                        },
+                        leadingIcon = {
+                            Icon(
+                                imageVector = Icons.Outlined.Notifications,
+                                contentDescription = null
+                            )
+                        }
+                    )
+                }
             }
 
             // 视觉部分

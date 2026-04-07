@@ -224,4 +224,19 @@
     <string name="welcome_disagree_button">Disagree, Enter Limited Mode</string>
     <string name="welcome_limited_mode">Limited Mode</string>
     <string name="welcome_limited_mode_info">You have chosen Limited Mode. Some features will be unavailable.</string>
+
+    <!-- Notification Settings -->
+    <string name="settings_notifications">Notifications</string>
+    <string name="settings_persistent_notification">Keep running in background</string>
+    <string name="settings_persistent_notification_description">Show a persistent notification to prevent the app from being killed by the system</string>
+    <string name="settings_persistent_notification_authorize">Authorize</string>
+    <string name="settings_persistent_notification_permission_denied">Notification permission not granted. Cannot enable this feature.</string>
+    <string name="settings_persistent_notification_limited_mode_title">Exit Limited Mode?</string>
+    <string name="settings_persistent_notification_limited_mode_message">Enabling this will exit Limited Mode. A persistent notification will help keep the app running in the background. Continue?</string>
+
+    <!-- Notification Channel -->
+    <string name="notification_channel_name">Background Running Notification</string>
+    <string name="notification_channel_description">Persistent notification to keep HabitPulse running in the background</string>
+    <string name="notification_title">HabitPulse is running</string>
+    <string name="notification_content">Keeping your habit reminders and background sync active</string>
 </resources>

@@ -32,6 +32,11 @@ object PreferencesKeys {
      * 是否强制使用平板横屏模式
      */
     val FORCE_TABLET_LANDSCAPE = booleanPreferencesKey("force_tablet_landscape")
+
+    /**
+     * 是否开启持久通知以保持后台运行
+     */
+    val PERSISTENT_NOTIFICATION = booleanPreferencesKey("persistent_notification")
 }
 
 /**
@@ -118,6 +123,25 @@ class UserPreferences(private val context: Context) {
     suspend fun setForceTabletLandscape(force: Boolean) {
         context.dataStore.edit { preferences ->
             preferences[PreferencesKeys.FORCE_TABLET_LANDSCAPE] = force
+        }
+    }
+
+    /**
+     * 是否开启持久通知的 Flow
+     * 默认值为 false（不开启）
+     */
+    val persistentNotificationFlow: Flow<Boolean> = context.dataStore.data.map { preferences ->
+        preferences[PreferencesKeys.PERSISTENT_NOTIFICATION] ?: false
+    }
+
+    /**
+     * 设置是否开启持久通知
+     *
+     * @param enabled true 为开启，false 为不开启
+     */
+    suspend fun setPersistentNotification(enabled: Boolean) {
+        context.dataStore.edit { preferences ->
+            preferences[PreferencesKeys.PERSISTENT_NOTIFICATION] = enabled
         }
     }
 }

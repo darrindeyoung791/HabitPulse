@@ -226,4 +226,19 @@
     <string name="welcome_disagree_button">不同意，进入受限模式</string>
     <string name="welcome_limited_mode">受限模式</string>
     <string name="welcome_limited_mode_info">您已选择受限模式，部分功能将不可用</string>
+
+    <!-- Notification Settings -->
+    <string name="settings_notifications">通知</string>
+    <string name="settings_persistent_notification">保持后台运行</string>
+    <string name="settings_persistent_notification_description">显示持久通知以防止应用被系统杀死</string>
+    <string name="settings_persistent_notification_authorize">去授权</string>
+    <string name="settings_persistent_notification_permission_denied">未获得通知权限，无法开启此功能</string>
+    <string name="settings_persistent_notification_limited_mode_title">退出受限模式？</string>
+    <string name="settings_persistent_notification_limited_mode_message">开启此功能将退出受限模式。持久通知将帮助应用在后台保持运行。确定要继续吗？</string>
+
+    <!-- Notification Channel -->
+    <string name="notification_channel_name">后台运行通知</string>
+    <string name="notification_channel_description">用于保持 HabitPulse 在后台运行的持久通知</string>
+    <string name="notification_title">HabitPulse 正在运行</string>
+    <string name="notification_content">保持习惯提醒和后台同步</string>
 </resources>

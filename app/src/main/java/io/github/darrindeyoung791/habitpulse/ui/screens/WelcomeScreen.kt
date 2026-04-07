@@ -296,7 +296,7 @@ fun WelcomeScreen(
                                 contentAlignment = Alignment.Center
                             ) {
                                 Icon(
-                                    imageVector = Icons.Outlined.Devices,
+                                    imageVector = Icons.Outlined.SettingsBackupRestore,
                                     contentDescription = null,
                                     modifier = Modifier.size(24.dp),
                                     tint = MaterialTheme.colorScheme.primary
@@ -582,7 +582,7 @@ fun WelcomeScreen(
                                 contentAlignment = Alignment.Center
                             ) {
                                 Icon(
-                                    imageVector = Icons.Outlined.Devices,
+                                    imageVector = Icons.Outlined.SettingsBackupRestore,
                                     contentDescription = null,
                                     modifier = Modifier.size(28.dp),
                                     tint = MaterialTheme.colorScheme.primary
