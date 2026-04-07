@@ -1,0 +1,13 @@
+{
+  "uniqueId": "sh.calvin.reorderable:reorderable",
+  "name": "Reorderable",
+  "description": "A library that allows you to reorder items in LazyColumn, LazyRow, LazyVerticalGrid, LazyHorizontalGrid, and more in Jetpack Compose.",
+  "website": "https://github.com/Calvin-LL/Reorderable",
+  "developers": [
+    {
+      "name": "Calvin-LL",
+      "organisationUrl": "https://github.com/Calvin-LL"
+    }
+  ],
+  "licenses": ["Apache-2.0"]
+}

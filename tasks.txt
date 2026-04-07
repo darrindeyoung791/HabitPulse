@@ -1,0 +1,3 @@
+Configuration on demand is an incubating feature.
+Calculating task graph as configuration cache cannot be reused because file 'app\build.gradle.kts' has changed.
+Configuration cache entry stored.

@@ -2,7 +2,13 @@ plugins {
     alias(libs.plugins.android.application)
     alias(libs.plugins.kotlin.compose)
     id("com.google.devtools.ksp") version "2.3.6"
-    id("com.mikepenz.aboutlibraries.plugin") version "13.2.1"
+    id("com.mikepenz.aboutlibraries.plugin.android") version "13.2.1"
+}
+
+aboutLibraries {
+    collect {
+        configPath = file("config")
+    }
 }
 
 android {
@@ -17,8 +23,8 @@ android {
         applicationId = "io.github.darrindeyoung791.habitpulse"
         minSdk = 26
         targetSdk = 36
-        versionCode = 109
-        versionName = "0.5.10-alpha"
+        versionCode = 111
+        versionName = "0.5.12-alpha"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
         resourceConfigurations.addAll(listOf("zh-rCN", "en-rUS"))

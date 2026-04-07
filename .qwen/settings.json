@@ -2,7 +2,10 @@
   "permissions": {
     "allow": [
       "Bash(.\\gradlew *)",
-      "WebSearch"
+      "WebSearch",
+      "WebFetch(github.com)",
+      "WebFetch(scripts.sil.org)",
+      "WebFetch(raw.githubusercontent.com)"
     ]
   },
   "$version": 3
