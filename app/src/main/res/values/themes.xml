@@ -6,6 +6,9 @@
         <item name="colorPrimary">@color/purple_500</item>
         <!-- Transparent status and navigation bar to prevent purple flash on startup -->
         <item name="android:statusBarColor">@android:color/transparent</item>
+        <!-- Prefer dark icons on light theme by default -->
+        <item name="android:windowLightStatusBar">true</item>
+        <item name="android:windowLightNavigationBar">true</item>
         <item name="android:navigationBarColor">@android:color/transparent</item>
     </style>
 
@@ -13,6 +16,8 @@
     <style name="Theme.HabitPulse.Splash" parent="Theme.SplashScreen">
         <!-- Use explicit color for compatibility with all Android versions -->
         <item name="windowSplashScreenBackground">@color/white</item>
+        <!-- Keep status bar transparent during splash -->
+        <item name="android:statusBarColor">@android:color/transparent</item>
         <!-- Keep the app theme after the splash finishes -->
         <item name="postSplashScreenTheme">@style/Theme.HabitPulse</item>
     </style>

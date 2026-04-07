@@ -1513,29 +1513,46 @@ fun ScrollableLazyColumnWithScrollbar(
         ) {
             content()
         }
-
         Box(
             modifier = Modifier
                 .fillMaxHeight()
-                .width(10.dp)
+                .width(4.dp)
                 .align(Alignment.CenterEnd)
                 .padding(end = 2.dp)
                 .alpha(scrollbarAlpha)
         ) {
             val layoutInfo = listState.layoutInfo
             val totalCount = layoutInfo.totalItemsCount
-            val visibleCount = layoutInfo.visibleItemsInfo.size
+            val visibleItems = layoutInfo.visibleItemsInfo
+            val visibleCount = visibleItems.size
+
             if (totalCount > 0 && visibleCount > 0) {
-                val firstVisible = layoutInfo.visibleItemsInfo.firstOrNull()
-                val scrollFraction = if (totalCount > visibleCount && firstVisible != null) {
-                    firstVisible.index.toFloat() / (totalCount - visibleCount).coerceAtLeast(1)
-                } else 0f
-                val indicatorHeightFraction = (visibleCount.toFloat() / totalCount.toFloat()).coerceIn(0.05f, 1f)
+                val density = LocalDensity.current
+
+                // Estimate content height in pixels using visible item sizes + average for unseen
+                val viewportHeightPx = layoutInfo.viewportSize.height.toFloat()
+                val sumVisibleHeights = visibleItems.sumOf { it.size }.toFloat()
+                val averageItemHeightPx = (sumVisibleHeights / visibleCount).coerceAtLeast(1f)
+                val remainingItems = (totalCount - visibleCount).coerceAtLeast(0)
+                val estimatedTotalContentHeightPx = (sumVisibleHeights + remainingItems * averageItemHeightPx).coerceAtLeast(viewportHeightPx)
+
+                // Current scroll position in pixels (estimate)
+                val currentScrollPx = listState.firstVisibleItemIndex * averageItemHeightPx + listState.firstVisibleItemScrollOffset.toFloat()
+                val totalScrollablePx = (estimatedTotalContentHeightPx - viewportHeightPx).coerceAtLeast(1f)
+                val scrollFraction = (currentScrollPx / totalScrollablePx).coerceIn(0f, 1f)
+
+                // Indicator size as fraction of viewport / total content
+                val indicatorHeightFraction = (viewportHeightPx / estimatedTotalContentHeightPx).coerceIn(0.03f, 1f)
+                val indicatorHeightPx = viewportHeightPx * indicatorHeightFraction
+                val offsetYPx = (viewportHeightPx - indicatorHeightPx) * scrollFraction
+
+                // Animate pixels for smooth transitions during scrolling
+                val animIndicatorHeightPx by animateFloatAsState(targetValue = indicatorHeightPx, animationSpec = tween(durationMillis = 80))
+                val animOffsetYPx by animateFloatAsState(targetValue = offsetYPx, animationSpec = tween(durationMillis = 80))
 
                 BoxWithConstraints(modifier = Modifier.fillMaxSize()) {
-                    val maxH = maxHeight
-                    val indicatorHeight = maxH * indicatorHeightFraction
-                    val offsetY = (maxH - indicatorHeight) * scrollFraction
+                    val indicatorHeight = with(density) { animIndicatorHeightPx.toDp() }
+                    val offsetY = with(density) { animOffsetYPx.toDp() }
 
                     Box(
                         modifier = Modifier
@@ -1543,8 +1560,8 @@ fun ScrollableLazyColumnWithScrollbar(
                             .height(indicatorHeight)
                             .offset(y = offsetY)
                             .background(
-                                color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.7f),
-                                shape = RoundedCornerShape(4.dp)
+                                color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f),
+                                shape = RoundedCornerShape(2.dp)
                             )
                     )
                 }
@@ -1587,21 +1604,29 @@ fun ScrollableWaterfallWithScrollbar(
         Box(
             modifier = Modifier
                 .fillMaxHeight()
-                .width(10.dp)
+                .width(4.dp)
                 .align(Alignment.CenterEnd)
                 .padding(end = 2.dp)
                 .alpha(scrollbarAlpha)
         ) {
             BoxWithConstraints(modifier = Modifier.fillMaxSize()) {
+                val density = LocalDensity.current
                 val maxH = maxHeight
-                val maxHPx = with(LocalDensity.current) { maxH.toPx() }
+                val maxHPx = with(density) { maxH.toPx() }
                 val totalScroll = scrollState.maxValue.toFloat().coerceAtLeast(1f)
-                val visibleFraction = (maxHPx / (maxHPx + totalScroll)).coerceIn(0.05f, 1f)
-                val indicatorHeightPx = maxHPx * visibleFraction
+                val totalContentHeightPx = (maxHPx + totalScroll).coerceAtLeast(maxHPx)
+
+                val viewportHeightPx = maxHPx
+                val indicatorHeightFraction = (viewportHeightPx / totalContentHeightPx).coerceIn(0.03f, 1f)
+                val indicatorHeightPx = viewportHeightPx * indicatorHeightFraction
                 val scrollFraction = (scrollState.value.toFloat() / totalScroll).coerceIn(0f, 1f)
-                val offsetYPx = (maxHPx - indicatorHeightPx) * scrollFraction
-                val indicatorHeight = with(LocalDensity.current) { indicatorHeightPx.toDp() }
-                val offsetY = with(LocalDensity.current) { offsetYPx.toDp() }
+                val offsetYPx = (viewportHeightPx - indicatorHeightPx) * scrollFraction
+
+                val animIndicatorHeightPx by animateFloatAsState(targetValue = indicatorHeightPx, animationSpec = tween(durationMillis = 80))
+                val animOffsetYPx by animateFloatAsState(targetValue = offsetYPx, animationSpec = tween(durationMillis = 80))
+
+                val indicatorHeight = with(density) { animIndicatorHeightPx.toDp() }
+                val offsetY = with(density) { animOffsetYPx.toDp() }
 
                 Box(
                     modifier = Modifier
@@ -1609,8 +1634,8 @@ fun ScrollableWaterfallWithScrollbar(
                         .height(indicatorHeight)
                         .offset(y = offsetY)
                         .background(
-                            color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.7f),
-                            shape = RoundedCornerShape(4.dp)
+                            color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f),
+                            shape = RoundedCornerShape(2.dp)
                         )
                 )
             }

@@ -5,10 +5,13 @@ import android.animation.AnimatorListenerAdapter
 import android.animation.ObjectAnimator
 import android.os.Bundle
 import android.view.animation.AccelerateDecelerateInterpolator
+import android.content.res.Configuration
+import androidx.core.view.WindowCompat
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
 import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.animation.core.tween
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
@@ -54,6 +57,14 @@ class MainActivity : ComponentActivity() {
         // Enable edge-to-edge display - system bar colors handled by HabitPulseTheme
         enableEdgeToEdge()
 
+        // Ensure status bar/navigation bar icon appearance is set early
+        // This prevents a transient incorrect icon color after splash -> main content
+        val isNight = (resources.configuration.uiMode and Configuration.UI_MODE_NIGHT_MASK) == Configuration.UI_MODE_NIGHT_YES
+        WindowCompat.getInsetsController(window, window.decorView)?.apply {
+            isAppearanceLightStatusBars = !isNight
+            isAppearanceLightNavigationBars = !isNight
+        }
+
         setContent {
             HabitPulseTheme {
                 val navController = rememberNavController()
@@ -93,6 +104,17 @@ class MainActivity : ComponentActivity() {
 
                 // 如果广告结束，进入主内容
                 val showMainContent = adFinished || (!showSplashAd || !showAdScreen)
+
+                // 再次在主内容可见时确保系统栏图标外观被正确设置（覆盖启动/过渡期影响）
+                val isSystemDark = isSystemInDarkTheme()
+                LaunchedEffect(showMainContent, isSystemDark) {
+                    if (showMainContent) {
+                        WindowCompat.getInsetsController(activity.window, activity.window.decorView).apply {
+                            isAppearanceLightStatusBars = !isSystemDark
+                            isAppearanceLightNavigationBars = !isSystemDark
+                        }
+                    }
+                }
 
                 // 初始淡入淡出动画状态 - 用于splash结束后的平滑过渡
                 var contentFadeInStarted by remember { mutableStateOf(false) }
