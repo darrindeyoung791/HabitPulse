@@ -100,7 +100,7 @@ fun HomeScreen(
     onCreateHabit: () -> Unit,
     onNavigateToSettings: () -> Unit,
     onEditHabit: (Habit) -> Unit,
-    onNavigateToMultiSelect: () -> Unit = {},
+    onNavigateToMultiSelect: (habitId: UUID) -> Unit = {},
     application: HabitPulseApplication? = null,
     onHomeDataLoaded: () -> Unit = {}
 ) {
@@ -1348,7 +1348,7 @@ fun HabitListContent(
     onCheckIn: (Habit) -> Unit,
     onUndoCompletion: (Habit) -> Unit,
     onDeleteHabit: (Habit) -> Unit,
-    onNavigateToMultiSelect: () -> Unit,
+    onNavigateToMultiSelect: (habitId: UUID) -> Unit,
     nestedScrollConnection: androidx.compose.ui.input.nestedscroll.NestedScrollConnection? = null,
     newlyAddedHabitId: UUID? = null,
     listState: androidx.compose.foundation.lazy.LazyListState = remember { androidx.compose.foundation.lazy.LazyListState() },
@@ -1411,7 +1411,7 @@ fun HabitListContent(
                             onUndoCompletion = { onUndoCompletion(habit) },
                             onEditHabit = { onHabitClick(habit) },
                             onDeleteHabit = { onDeleteHabit(habit) },
-                            onNavigateToMultiSelect = { onNavigateToMultiSelect() },
+                            onNavigateToMultiSelect = { habitId -> onNavigateToMultiSelect(habitId) },
                             isNewlyAdded = (habit.id == newlyAddedHabitId),
                             searchQuery = searchQuery,
                             modifier = Modifier.fillMaxWidth()
@@ -1431,7 +1431,7 @@ fun HabitListContent(
                             onUndoCompletion = { onUndoCompletion(habit) },
                             onEditHabit = { onHabitClick(habit) },
                             onDeleteHabit = { onDeleteHabit(habit) },
-                            onNavigateToMultiSelect = { onNavigateToMultiSelect() },
+                            onNavigateToMultiSelect = { habitId -> onNavigateToMultiSelect(habitId) },
                             isNewlyAdded = (habit.id == newlyAddedHabitId),
                             searchQuery = searchQuery,
                             modifier = Modifier.fillMaxWidth()
@@ -1463,7 +1463,7 @@ fun HabitListContent(
                     onUndoCompletion = { onUndoCompletion(habit) },
                     onEditHabit = { onHabitClick(habit) },
                     onDeleteHabit = { onDeleteHabit(habit) },
-                    onNavigateToMultiSelect = { onNavigateToMultiSelect() },
+                    onNavigateToMultiSelect = { habitId -> onNavigateToMultiSelect(habitId) },
                     isNewlyAdded = (habit.id == newlyAddedHabitId),
                     searchQuery = searchQuery
                 )
@@ -1652,7 +1652,7 @@ fun HabitCard(
     onUndoCompletion: () -> Unit,
     onEditHabit: () -> Unit,
     onDeleteHabit: () -> Unit,
-    onNavigateToMultiSelect: () -> Unit = {},
+    onNavigateToMultiSelect: (habitId: java.util.UUID) -> Unit = {},
     modifier: Modifier = Modifier,
     isNewlyAdded: Boolean = false,
     searchQuery: String = ""
@@ -1889,7 +1889,7 @@ fun HabitCard(
                         )
                     },
                     onClick = {
-                        onNavigateToMultiSelect()
+                        onNavigateToMultiSelect(habit.id)
                         showMenu = false
                     }
                 )

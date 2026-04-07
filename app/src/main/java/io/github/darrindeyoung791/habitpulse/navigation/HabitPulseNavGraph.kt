@@ -120,7 +120,9 @@ fun HabitPulseNavGraph(
                             }
                         }
                     },
-                    onNavigateToMultiSelect = {
+                    onNavigateToMultiSelect = { habitId ->
+                        val viewModel = (context.applicationContext as HabitPulseApplication).habitViewModel
+                        viewModel.enterMultiSelectMode(habitId)
                         navController.navigate(Route.MultiSelectSort.route) {
                             launchSingleTop = true
                             popUpTo(Route.Home.route) {

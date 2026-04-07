@@ -15,6 +15,7 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.hapticfeedback.HapticFeedbackType
+import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.platform.LocalHapticFeedback
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.contentDescription
@@ -32,6 +33,7 @@ import io.github.darrindeyoung791.habitpulse.ui.theme.HabitPulseTheme
 import io.github.darrindeyoung791.habitpulse.ui.utils.rememberDebounceClickHandler
 import io.github.darrindeyoung791.habitpulse.ui.utils.rememberNavigationGuard
 import io.github.darrindeyoung791.habitpulse.viewmodel.HabitViewModel
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
 import sh.calvin.reorderable.ReorderableItem
 import sh.calvin.reorderable.rememberReorderableLazyListState
@@ -64,6 +66,13 @@ fun MultiSelectSortScreen(
     // Track drag reordering - initialize with allHabits and update on drag
     val draggedOrder = remember { mutableStateOf<List<Habit>>(emptyList()) }
 
+    // Create lazy list state
+    val lazyListState = rememberLazyListState()
+    // Track whether we've already scrolled to the initial habit
+    var hasScrolledToInitialHabit by remember { mutableStateOf(false) }
+    // Get density for scroll offset calculation
+    val density = LocalDensity.current
+
     // Initialize draggedOrder when allHabits is loaded or changed
     LaunchedEffect(allHabits) {
         if (allHabits != draggedOrder.value) {
@@ -71,8 +80,32 @@ fun MultiSelectSortScreen(
         }
     }
 
-    // Create lazy list state
-    val lazyListState = rememberLazyListState()
+    // Scroll to the initially selected habit (from long-press)
+    // Only trigger once when the screen is first displayed
+    LaunchedEffect(Unit) {
+        // Wait for the list to be populated
+        if (draggedOrder.value.isEmpty()) {
+            // Wait for the next frame where draggedOrder will be populated
+            snapshotFlow { draggedOrder.value }
+                .first { it.isNotEmpty() }
+        }
+        
+        if (hasScrolledToInitialHabit) return@LaunchedEffect
+        
+        val selectedIds = selectedHabitIds
+        // Only scroll if exactly one habit is selected (the long-pressed one)
+        if (selectedIds.size == 1 && draggedOrder.value.isNotEmpty()) {
+            val targetHabitId = selectedIds.first()
+            val index = draggedOrder.value.indexOfFirst { it.id == targetHabitId }
+            if (index != -1) {
+                // Scroll to the item with offset to position it in upper half
+                // -100dp offset to place it in upper portion of screen
+                val scrollOffset = with(density) { (-100.dp).toPx().toInt() }
+                lazyListState.scrollToItem(index, scrollOffset)
+                hasScrolledToInitialHabit = true
+            }
+        }
+    }
 
     // Create reorderable state - update list on every move to trigger recomposition
     val reorderableState = rememberReorderableLazyListState(lazyListState = lazyListState) { from, to ->
@@ -211,8 +244,8 @@ fun MultiSelectSortScreen(
                     contentPadding = PaddingValues(horizontal = 16.dp, vertical = 8.dp),
                     verticalArrangement = Arrangement.spacedBy(8.dp)
                 ) {
-                    // Select All item
-                    item {
+                    // Select All item - sticky header that stays at top while scrolling
+                    stickyHeader {
                         SelectAllItem(
                             isSelected = selectedHabitIds.size == draggedOrder.value.size && draggedOrder.value.isNotEmpty(),
                             isIndeterminate = selectedHabitIds.isNotEmpty() && selectedHabitIds.size < draggedOrder.value.size,
