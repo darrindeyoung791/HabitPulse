@@ -5,6 +5,7 @@ import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.AnimatedContent
 import androidx.compose.animation.core.animateDpAsState
 import androidx.compose.animation.core.animateFloatAsState
+import androidx.compose.animation.core.FastOutSlowInEasing
 import androidx.compose.animation.core.spring
 import androidx.compose.animation.core.tween
 import androidx.compose.animation.fadeIn
@@ -77,6 +78,8 @@ import androidx.compose.ui.input.key.key
 import androidx.compose.ui.input.key.onKeyEvent
 import androidx.compose.ui.input.key.type
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import androidx.compose.animation.AnimatedContentScope
+import androidx.compose.animation.SharedTransitionScope
 import io.github.darrindeyoung791.habitpulse.HabitPulseApplication
 import io.github.darrindeyoung791.habitpulse.R
 import io.github.darrindeyoung791.habitpulse.data.model.Habit
@@ -102,12 +105,17 @@ fun HomeScreen(
     onEditHabit: (Habit) -> Unit,
     onNavigateToMultiSelect: (habitId: UUID) -> Unit = {},
     application: HabitPulseApplication? = null,
-    onHomeDataLoaded: () -> Unit = {}
+    onHomeDataLoaded: () -> Unit = {},
+    sharedTransitionScope: SharedTransitionScope? = null,
+    animatedContentScope: AnimatedContentScope? = null
 ) {
     val context = LocalContext.current
     // 防重复点击处理器
     val clickHandler = rememberDebounceClickHandler()
     val scope = rememberCoroutineScope()
+
+    // Track which habit is transitioning to MultiSelect (for shared element)
+    var multiSelectTargetHabitId by remember { mutableStateOf<java.util.UUID?>(null) }
 
     // Focus requester for TalkBack initial focus
     val titleFocusRequester = remember { androidx.compose.ui.focus.FocusRequester() }
@@ -133,7 +141,13 @@ fun HomeScreen(
     // 收集加载状态
     val isLoading by viewModel.isLoading.collectAsStateWithLifecycle(initialValue = true)
 
-    // 记录是否已加载过一次习惯数据，用于避免场景切换时闪烁“暂无习惯”空页面
+    // Wrapped onNavigateToMultiSelect that tracks the target habit for shared element
+    val onNavigateToMultiSelectWithTracking: (java.util.UUID) -> Unit = { habitId ->
+        multiSelectTargetHabitId = habitId
+        onNavigateToMultiSelect(habitId)
+    }
+
+    // 记录是否已加载过一次习惯数据，用于避免场景切换时闪烁"暂无习惯"空页面
     var hasLoadedHabits by rememberSaveable { mutableStateOf(false) }
 
     LaunchedEffect(isLoading) {
@@ -510,14 +524,17 @@ fun HomeScreen(
                                             // 删除习惯后刷新记录界面
                                             application?.recordsViewModel?.refreshRecords()
                                         },
-                                        onNavigateToMultiSelect = onNavigateToMultiSelect,
+                                        onNavigateToMultiSelect = onNavigateToMultiSelectWithTracking,
                                         nestedScrollConnection = habitsScrollBehavior.nestedScrollConnection,
                                         newlyAddedHabitId = newlyAddedHabitId,
                                         listState = habitsScrollState,
                                         waterfallScrollState = waterfallScrollState,
                                         bringIntoViewRequester = bringIntoViewRequester,
                                         forceTabletLandscape = forceTabletLandscape == true,
-                                        searchQuery = searchQuery
+                                        searchQuery = searchQuery,
+                                        sharedTransitionScope = sharedTransitionScope,
+                                        animatedContentScope = animatedContentScope,
+                                        multiSelectTargetHabitId = multiSelectTargetHabitId
                                     )
                                 }
                             }
@@ -1354,7 +1371,10 @@ fun HabitListContent(
     waterfallScrollState: ScrollState,  // 移除默认值，强制调用者必须传入
     bringIntoViewRequester: BringIntoViewRequester? = null,
     forceTabletLandscape: Boolean = false,
-    searchQuery: String = ""
+    searchQuery: String = "",
+    sharedTransitionScope: SharedTransitionScope? = null,
+    animatedContentScope: AnimatedContentScope? = null,
+    multiSelectTargetHabitId: UUID? = null
 ) {
     val configuration = LocalConfiguration.current
     var screenWidthDp = configuration.screenWidthDp
@@ -1413,7 +1433,10 @@ fun HabitListContent(
                             onNavigateToMultiSelect = { habitId -> onNavigateToMultiSelect(habitId) },
                             isNewlyAdded = (habit.id == newlyAddedHabitId),
                             searchQuery = searchQuery,
-                            modifier = Modifier.fillMaxWidth()
+                            modifier = Modifier.fillMaxWidth(),
+                            sharedTransitionScope = sharedTransitionScope,
+                            animatedContentScope = animatedContentScope,
+                            isMultiSelectTarget = (habit.id == multiSelectTargetHabitId)
                         )
                     }
                 }
@@ -1433,7 +1456,10 @@ fun HabitListContent(
                             onNavigateToMultiSelect = { habitId -> onNavigateToMultiSelect(habitId) },
                             isNewlyAdded = (habit.id == newlyAddedHabitId),
                             searchQuery = searchQuery,
-                            modifier = Modifier.fillMaxWidth()
+                            modifier = Modifier.fillMaxWidth(),
+                            sharedTransitionScope = sharedTransitionScope,
+                            animatedContentScope = animatedContentScope,
+                            isMultiSelectTarget = (habit.id == multiSelectTargetHabitId)
                         )
                     }
                 }
@@ -1464,7 +1490,10 @@ fun HabitListContent(
                     onDeleteHabit = { onDeleteHabit(habit) },
                     onNavigateToMultiSelect = { habitId -> onNavigateToMultiSelect(habitId) },
                     isNewlyAdded = (habit.id == newlyAddedHabitId),
-                    searchQuery = searchQuery
+                    searchQuery = searchQuery,
+                    sharedTransitionScope = sharedTransitionScope,
+                    animatedContentScope = animatedContentScope,
+                    isMultiSelectTarget = (habit.id == multiSelectTargetHabitId)
                 )
             }
             // Add bottom spacer to prevent FAB from covering last item
@@ -1654,7 +1683,10 @@ fun HabitCard(
     onNavigateToMultiSelect: (habitId: java.util.UUID) -> Unit = {},
     modifier: Modifier = Modifier,
     isNewlyAdded: Boolean = false,
-    searchQuery: String = ""
+    searchQuery: String = "",
+    sharedTransitionScope: SharedTransitionScope? = null,
+    animatedContentScope: AnimatedContentScope? = null,
+    isMultiSelectTarget: Boolean = false
 ) {
     var showMenu by remember { mutableStateOf(false) }
     var showReminderDialog by remember { mutableStateOf(false) }
@@ -1712,6 +1744,21 @@ fun HabitCard(
                             hapticFeedback.performHapticFeedback(HapticFeedbackType.LongPress)
                             showMenu = true
                         }
+                    )
+                    .then(
+                        if (isMultiSelectTarget && sharedTransitionScope != null && animatedContentScope != null) {
+                            with(sharedTransitionScope) {
+                                Modifier.sharedElement(
+                                    sharedContentState = rememberSharedContentState(key = "card-${habit.id}"),
+                                    animatedVisibilityScope = animatedContentScope,
+                                    boundsTransform = { _, _ ->
+                                        tween(durationMillis = 350, easing = FastOutSlowInEasing)
+                                    }
+                                )
+                            }
+                        } else {
+                            Modifier
+                        }
                     ),
                 colors = CardDefaults.outlinedCardColors(
                     containerColor = MaterialTheme.colorScheme.surfaceContainerLowest
@@ -1736,7 +1783,22 @@ fun HabitCard(
                             fontWeight = FontWeight.Bold,
                             color = MaterialTheme.colorScheme.onSurface,
                             maxLines = 2,
-                            overflow = TextOverflow.Ellipsis
+                            overflow = TextOverflow.Ellipsis,
+                            modifier = Modifier.then(
+                                if (isMultiSelectTarget && sharedTransitionScope != null && animatedContentScope != null) {
+                                    with(sharedTransitionScope) {
+                                        Modifier.sharedElement(
+                                            sharedContentState = rememberSharedContentState(key = "title-${habit.id}"),
+                                            animatedVisibilityScope = animatedContentScope,
+                                            boundsTransform = { _, _ ->
+                                                tween(durationMillis = 350, easing = FastOutSlowInEasing)
+                                            }
+                                        )
+                                    }
+                                } else {
+                                    Modifier
+                                }
+                            )
                         )
 
                         // 已完成次数

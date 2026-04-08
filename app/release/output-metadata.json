@@ -11,8 +11,8 @@
       "type": "SINGLE",
       "filters": [],
       "attributes": [],
-      "versionCode": 114,
-      "versionName": "0.5.15-alpha",
+      "versionCode": 115,
+      "versionName": "0.5.16-alpha",
       "outputFile": "app-release.apk"
     }
   ],

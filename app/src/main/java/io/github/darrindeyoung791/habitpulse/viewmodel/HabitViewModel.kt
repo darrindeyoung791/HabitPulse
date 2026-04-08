@@ -335,6 +335,13 @@ class HabitViewModel(
     }
 
     /**
+     * 清空所有选中项，但保持多选模式
+     */
+    fun clearAllSelections() {
+        _selectedHabitIds.value = emptySet()
+    }
+
+    /**
      * 切换习惯的选中状态
      */
     fun toggleHabitSelection(habitId: UUID) {

@@ -55,6 +55,7 @@ fun getDeviceCornerRadius(): Dp {
     }
 }
 
+@OptIn(ExperimentalSharedTransitionApi::class)
 @Composable
 fun HabitPulseNavGraph(
     navController: NavHostController,
@@ -63,22 +64,23 @@ fun HabitPulseNavGraph(
     val cornerRadius = getDeviceCornerRadius()
     val context = LocalContext.current
 
-    NavHost(
-        navController = navController,
-        startDestination = Route.Home.route,
-        enterTransition = {
-            slideInHorizontally(initialOffsetX = { 0 })
-        },
-        exitTransition = {
-            slideOutHorizontally(targetOffsetX = { 0 })
-        },
-        popEnterTransition = {
-            slideInHorizontally(initialOffsetX = { 0 })
-        },
-        popExitTransition = {
-            slideOutHorizontally(targetOffsetX = { 0 })
-        }
-    ) {
+    SharedTransitionLayout {
+        NavHost(
+            navController = navController,
+            startDestination = Route.Home.route,
+            enterTransition = {
+                slideInHorizontally(initialOffsetX = { 0 })
+            },
+            exitTransition = {
+                slideOutHorizontally(targetOffsetX = { 0 })
+            },
+            popEnterTransition = {
+                slideInHorizontally(initialOffsetX = { 0 })
+            },
+            popExitTransition = {
+                slideOutHorizontally(targetOffsetX = { 0 })
+            }
+        ) {
         composable(
             route = Route.Home.route,
             exitTransition = {
@@ -93,7 +95,9 @@ fun HabitPulseNavGraph(
                     animationSpec = tween(durationMillis = 300)
                 ) + fadeIn(animationSpec = tween(durationMillis = 300))
             }
-        ) {
+        ) { backStackEntry ->
+            val animatedContentScope = this
+            val sharedTransitionScope = this@SharedTransitionLayout
             Box(
                 modifier = Modifier
                     .fillMaxSize()
@@ -131,7 +135,9 @@ fun HabitPulseNavGraph(
                         }
                     },
                     application = context.applicationContext as HabitPulseApplication,
-                    onHomeDataLoaded = onHomeDataLoaded
+                    onHomeDataLoaded = onHomeDataLoaded,
+                    sharedTransitionScope = sharedTransitionScope,
+                    animatedContentScope = animatedContentScope
                 )
             }
         }
@@ -223,8 +229,10 @@ fun HabitPulseNavGraph(
                     animationSpec = tween(durationMillis = 200)
                 ) + fadeOut(animationSpec = tween(durationMillis = 200))
             }
-        ) {
+        ) { backStackEntry ->
             val viewModel = (context.applicationContext as HabitPulseApplication).habitViewModel
+            val animatedContentScope = this
+            val sharedTransitionScope = this@SharedTransitionLayout
             Box(
                 modifier = Modifier
                     .fillMaxSize()
@@ -237,9 +245,12 @@ fun HabitPulseNavGraph(
                     },
                     viewModel = viewModel,
                     application = context.applicationContext as HabitPulseApplication,
-                    navController = navController
+                    navController = navController,
+                    sharedTransitionScope = sharedTransitionScope,
+                    animatedContentScope = animatedContentScope
                 )
             }
         }
+    }
     }
 }

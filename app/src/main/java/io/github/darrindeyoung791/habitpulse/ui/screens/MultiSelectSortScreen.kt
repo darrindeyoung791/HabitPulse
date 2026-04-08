@@ -1,10 +1,14 @@
 package io.github.darrindeyoung791.habitpulse.ui.screens
 
+import androidx.compose.animation.ExperimentalSharedTransitionApi
+import androidx.compose.animation.SharedTransitionScope
 import androidx.compose.animation.core.Animatable
 import androidx.compose.animation.core.Spring
 import androidx.compose.animation.core.animateDpAsState
 import androidx.compose.animation.core.animateFloat
+import androidx.compose.animation.core.FastOutSlowInEasing
 import androidx.compose.animation.core.spring
+import androidx.compose.animation.core.tween
 import androidx.compose.animation.core.updateTransition
 import androidx.compose.foundation.combinedClickable
 import androidx.compose.foundation.interaction.MutableInteractionSource
@@ -21,6 +25,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.hapticfeedback.HapticFeedbackType
+import androidx.compose.animation.AnimatedContentScope
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.platform.LocalHapticFeedback
 import androidx.compose.ui.res.stringResource
@@ -60,7 +65,9 @@ fun MultiSelectSortScreen(
     onNavigateBack: () -> Unit,
     viewModel: HabitViewModel,
     application: HabitPulseApplication? = null,
-    navController: androidx.navigation.NavHostController? = null
+    navController: androidx.navigation.NavHostController? = null,
+    sharedTransitionScope: SharedTransitionScope? = null,
+    animatedContentScope: AnimatedContentScope? = null
 ) {
     val hapticFeedback = LocalHapticFeedback.current
     val scope = rememberCoroutineScope()
@@ -144,6 +151,11 @@ fun MultiSelectSortScreen(
                 val item = newList.removeAt(fromIndex)
                 newList.add(toIndex, item)
                 draggedOrder.value = newList
+
+                // Clear all selections when user reorders - indicates intent to save positions, not delete
+                if (selectedHabitIds.isNotEmpty()) {
+                    viewModel.clearAllSelections()
+                }
             }
         }
 
@@ -316,7 +328,10 @@ fun MultiSelectSortScreen(
                                 reorderableItemScope = this,
                                 selectedIndex = initiallySelectedIndex,
                                 currentIndex = currentIndex,
-                                initialAnimationComplete = initialAnimationComplete
+                                initialAnimationComplete = initialAnimationComplete,
+                                sharedTransitionScope = sharedTransitionScope,
+                                animatedContentScope = animatedContentScope,
+                                isSharedElementTarget = selectedHabitIds.size == 1 && selectedHabitIds.contains(habit.id)
                             )
                         }
                     }
@@ -455,7 +470,10 @@ private fun MultiSelectHabitItem(
     reorderableItemScope: sh.calvin.reorderable.ReorderableCollectionItemScope,
     selectedIndex: Int,
     currentIndex: Int,
-    initialAnimationComplete: Boolean
+    initialAnimationComplete: Boolean,
+    sharedTransitionScope: SharedTransitionScope? = null,
+    animatedContentScope: AnimatedContentScope? = null,
+    isSharedElementTarget: Boolean = false
 ) {
     val hapticFeedback = LocalHapticFeedback.current
     val dragHandleContentDescription = stringResource(id = R.string.accessibility_drag_to_reorder)
@@ -516,7 +534,22 @@ private fun MultiSelectHabitItem(
                 this.translationY = translationY
                 this.scaleX = scale
                 this.scaleY = scale
-            },
+            }
+            .then(
+                if (isSharedElementTarget && sharedTransitionScope != null && animatedContentScope != null) {
+                    with(sharedTransitionScope) {
+                        Modifier.sharedElement(
+                            sharedContentState = rememberSharedContentState(key = "card-${habit.id}"),
+                            animatedVisibilityScope = animatedContentScope,
+                            boundsTransform = { _, _ ->
+                                tween(durationMillis = 350, easing = FastOutSlowInEasing)
+                            }
+                        )
+                    }
+                } else {
+                    Modifier
+                }
+            ),
         colors = CardDefaults.cardColors(
             containerColor = if (isSelected) {
                 MaterialTheme.colorScheme.secondaryContainer.copy(alpha = 0.5f)
@@ -553,7 +586,23 @@ private fun MultiSelectHabitItem(
                 text = habit.title,
                 style = MaterialTheme.typography.bodyLarge,
                 color = MaterialTheme.colorScheme.onSurface,
-                modifier = Modifier.weight(1f),
+                modifier = Modifier
+                    .weight(1f)
+                    .then(
+                        if (isSharedElementTarget && sharedTransitionScope != null && animatedContentScope != null) {
+                            with(sharedTransitionScope) {
+                                Modifier.sharedElement(
+                                    sharedContentState = rememberSharedContentState(key = "title-${habit.id}"),
+                                    animatedVisibilityScope = animatedContentScope,
+                                    boundsTransform = { _, _ ->
+                                        tween(durationMillis = 350, easing = FastOutSlowInEasing)
+                                    }
+                                )
+                            }
+                        } else {
+                            Modifier
+                        }
+                    ),
                 maxLines = 2,
                 overflow = TextOverflow.Ellipsis
             )
