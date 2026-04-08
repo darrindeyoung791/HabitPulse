@@ -222,8 +222,8 @@ fun RecordsScreenContent(
     val configuration = LocalConfiguration.current
     val screenWidthDp = configuration.screenWidthDp
     val isLandscape = configuration.orientation == Configuration.ORIENTATION_LANDSCAPE
-    // Use two-column layout for tablets in landscape (≥1200dp), same as HomeScreen
-    val useTwoColumnLayout = isLandscape && screenWidthDp >= 1200
+    // Use two-column layout for tablets in landscape (≥840dp), same as HomeScreen
+    val useTwoColumnLayout = isLandscape && screenWidthDp >= 840
 
     Column(
         modifier = nestedScrollModifier.fillMaxSize()

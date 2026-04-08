@@ -251,7 +251,7 @@ fun HomeScreen(
 
     // Detect waterfall mode (tablet landscape dual-column layout)
     // This is critical for scroll-to-top functionality
-    val isWaterfallMode = isLandscape && screenWidthDp >= 1200
+    val isWaterfallMode = isLandscape && screenWidthDp >= 840
 
     var currentSection by rememberSaveable { mutableStateOf(HomeSection.Habits) }
     var isDrawerExpanded by rememberSaveable { mutableStateOf(true) }
@@ -1361,13 +1361,13 @@ fun HabitListContent(
     var screenWidthDp = configuration.screenWidthDp
     val isLandscape = configuration.orientation == Configuration.ORIENTATION_LANDSCAPE
 
-    // 如果启用了强制平板横屏模式，将屏幕宽度视为 ≥1200dp
-    if (forceTabletLandscape && isLandscape && screenWidthDp < 1200) {
-        screenWidthDp = 1200
+    // 如果启用了强制平板横屏模式，将屏幕宽度视为 ≥840dp
+    if (forceTabletLandscape && isLandscape && screenWidthDp < 840) {
+        screenWidthDp = 840
     }
 
-    // Use staggered grid only for tablets in landscape (≥1200dp)
-    val useStaggeredGrid = isLandscape && screenWidthDp >= 1200
+    // Use staggered grid only for tablets in landscape (≥840dp)
+    val useStaggeredGrid = isLandscape && screenWidthDp >= 840
 
     // Use consistent 16.dp horizontal padding to align with LargeTopAppBar title
     val horizontalPadding = 16.dp
