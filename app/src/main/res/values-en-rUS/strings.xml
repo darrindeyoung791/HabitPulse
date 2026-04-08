@@ -229,7 +229,7 @@
     <string name="settings_notifications">Notifications</string>
     <string name="settings_persistent_notification">Keep running in background</string>
     <string name="settings_persistent_notification_description">Show a persistent notification to keep yourself informed</string>
-    <string name="settings_persistent_notification_authorize">Authorize</string>
+    <string name="settings_persistent_notification_authorize">Give permission</string>
     <string name="settings_persistent_notification_permission_denied">Notification permission not granted. Cannot enable this feature.</string>
     <string name="settings_persistent_notification_limited_mode_title">Exit Limited Mode?</string>
     <string name="settings_persistent_notification_limited_mode_message">Enabling this will exit Limited Mode. A persistent notification will help keep the app running in the background. Continue?</string>

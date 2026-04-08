@@ -269,10 +269,9 @@ fun HomeScreen(
     val habitsScrollState = rememberSaveable(saver = androidx.compose.foundation.lazy.LazyListState.Saver) {
         androidx.compose.foundation.lazy.LazyListState()
     }
-    // 使用 remember 而非 rememberSaveable 来避免 waterfall 滚动状态在重组时出现问题
-    // Fix: rememberSaveable may not work reliably with ScrollState.Saver in waterfall layout
-    val waterfallScrollState = remember {
-        ScrollState(0)
+    // Use rememberSaveable with proper Saver to preserve scroll position when returning from other screens
+    val waterfallScrollState = rememberSaveable(saver = androidx.compose.foundation.ScrollState.Saver) {
+        androidx.compose.foundation.ScrollState(0)
     }
     val bringIntoViewRequester = remember { BringIntoViewRequester() }
     val recordsScrollState = rememberSaveable(saver = androidx.compose.foundation.lazy.LazyListState.Saver) {

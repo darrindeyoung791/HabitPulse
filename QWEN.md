@@ -4,7 +4,7 @@
 
 **HabitPulse** is an Android habit tracking application built with Kotlin and Jetpack Compose. The app helps users build and maintain daily habits through smart reminders and social supervision features.
 
-This project is rapidly developing. AI agents should update this page when big changes occur or this file becomes too long.
+This project is rapidly developing. AI agents should update this page when big changes occur.
 
 ### Key Features
 - **Habit Tracking**: Create, manage, and track daily habits
@@ -241,7 +241,7 @@ Records every habit completion with timestamp.
 
 ## Current Status
 
-The project is in **early development stage** (v0.4.25-alpha):
+The project is in **early development stage** (v0.5.14-alpha):
 
 ### Completed
 - ✅ Project structure set up

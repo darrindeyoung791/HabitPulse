@@ -1,6 +1,11 @@
 package io.github.darrindeyoung791.habitpulse.ui.screens
 
+import androidx.compose.animation.core.Animatable
+import androidx.compose.animation.core.Spring
 import androidx.compose.animation.core.animateDpAsState
+import androidx.compose.animation.core.animateFloat
+import androidx.compose.animation.core.spring
+import androidx.compose.animation.core.updateTransition
 import androidx.compose.foundation.combinedClickable
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.*
@@ -14,6 +19,7 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.hapticfeedback.HapticFeedbackType
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.platform.LocalHapticFeedback
@@ -66,6 +72,17 @@ fun MultiSelectSortScreen(
     // Track drag reordering - initialize with allHabits and update on drag
     val draggedOrder = remember { mutableStateOf<List<Habit>>(emptyList()) }
 
+    // Track whether the initial staggered animation phase has completed
+    // Once true, newly composed items (from scrolling) should skip animation
+    var initialAnimationComplete by remember { mutableStateOf(false) }
+    
+    // Estimate max delay needed for initial staggered animation
+    // We'll use this to know when all initial animations are done
+    val estimatedMaxAnimationTime = remember(allHabits) {
+        val maxDistance = allHabits.size
+        (maxDistance * 30L + 500L) // max delay + spring animation duration
+    }
+
     // Create lazy list state
     val lazyListState = rememberLazyListState()
     // Track whether we've already scrolled to the initial habit
@@ -80,6 +97,13 @@ fun MultiSelectSortScreen(
         }
     }
 
+    // Mark initial animation as complete after estimated time
+    // This ensures newly composed items (from scrolling) skip the animation
+    LaunchedEffect(Unit) {
+        kotlinx.coroutines.delay(estimatedMaxAnimationTime)
+        initialAnimationComplete = true
+    }
+
     // Scroll to the initially selected habit (from long-press)
     // Only trigger once when the screen is first displayed
     LaunchedEffect(Unit) {
@@ -89,9 +113,9 @@ fun MultiSelectSortScreen(
             snapshotFlow { draggedOrder.value }
                 .first { it.isNotEmpty() }
         }
-        
+
         if (hasScrolledToInitialHabit) return@LaunchedEffect
-        
+
         val selectedIds = selectedHabitIds
         // Only scroll if exactly one habit is selected (the long-pressed one)
         if (selectedIds.size == 1 && draggedOrder.value.isNotEmpty()) {
@@ -135,7 +159,22 @@ fun MultiSelectSortScreen(
     // Navigation guard to prevent navigating back beyond home screen
     val navigationGuard = navController?.let { rememberNavigationGuard(it) }
 
+    // Track the index of the initially selected habit (from long-press)
+    var initiallySelectedHabitId by remember { mutableStateOf<UUID?>(null) }
+    
+    LaunchedEffect(selectedHabitIds) {
+        // Capture the initially selected habit ID when first entering multi-select
+        if (initiallySelectedHabitId == null && selectedHabitIds.size == 1) {
+            initiallySelectedHabitId = selectedHabitIds.first()
+        }
+    }
+
     val displayHabits = if (draggedOrder.value.isNotEmpty()) draggedOrder.value else allHabits
+    
+    // Find the index of the initially selected habit for staggered animation
+    val initiallySelectedIndex = initiallySelectedHabitId?.let { selectedId ->
+        displayHabits.indexOfFirst { it.id == selectedId }
+    } ?: -1
 
     Scaffold(
         topBar = {
@@ -249,6 +288,8 @@ fun MultiSelectSortScreen(
                         SelectAllItem(
                             isSelected = selectedHabitIds.size == draggedOrder.value.size && draggedOrder.value.isNotEmpty(),
                             isIndeterminate = selectedHabitIds.isNotEmpty() && selectedHabitIds.size < draggedOrder.value.size,
+                            selectedCount = selectedHabitIds.size,
+                            totalCount = draggedOrder.value.size,
                             onClick = { viewModel.toggleSelectAll(draggedOrder.value.map { it.id }) }
                         )
                     }
@@ -258,6 +299,8 @@ fun MultiSelectSortScreen(
                         items = displayHabits,
                         key = { it.id }
                     ) { habit ->
+                        val currentIndex = displayHabits.indexOf(habit)
+                        
                         ReorderableItem(
                             state = reorderableState,
                             key = habit.id
@@ -270,7 +313,10 @@ fun MultiSelectSortScreen(
                                 onToggleSelection = { viewModel.toggleHabitSelection(habit.id) },
                                 isDragging = isDragging,
                                 elevation = elevation,
-                                reorderableItemScope = this
+                                reorderableItemScope = this,
+                                selectedIndex = initiallySelectedIndex,
+                                currentIndex = currentIndex,
+                                initialAnimationComplete = initialAnimationComplete
                             )
                         }
                     }
@@ -344,6 +390,8 @@ fun MultiSelectSortScreen(
 private fun SelectAllItem(
     isSelected: Boolean,
     isIndeterminate: Boolean,
+    selectedCount: Int,
+    totalCount: Int,
     onClick: () -> Unit
 ) {
     Card(
@@ -375,12 +423,21 @@ private fun SelectAllItem(
                 }
             )
             Spacer(modifier = Modifier.width(12.dp))
-            Text(
-                text = stringResource(id = R.string.multi_select_sort_select_all),
-                style = MaterialTheme.typography.bodyLarge,
-                fontWeight = FontWeight.Medium,
-                color = MaterialTheme.colorScheme.onSurfaceVariant
-            )
+            Row(
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Text(
+                    text = stringResource(id = R.string.multi_select_sort_select_all),
+                    style = MaterialTheme.typography.bodyLarge,
+                    fontWeight = FontWeight.Medium,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                )
+                Text(
+                    text = " ($selectedCount/$totalCount)",
+                    style = MaterialTheme.typography.bodyLarge,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                )
+            }
         }
     }
 }
@@ -395,14 +452,71 @@ private fun MultiSelectHabitItem(
     onToggleSelection: () -> Unit,
     isDragging: Boolean,
     elevation: Dp,
-    reorderableItemScope: sh.calvin.reorderable.ReorderableCollectionItemScope
+    reorderableItemScope: sh.calvin.reorderable.ReorderableCollectionItemScope,
+    selectedIndex: Int,
+    currentIndex: Int,
+    initialAnimationComplete: Boolean
 ) {
     val hapticFeedback = LocalHapticFeedback.current
     val dragHandleContentDescription = stringResource(id = R.string.accessibility_drag_to_reorder)
+    
+    // Calculate animation delay based on distance from selected item
+    val distance = if (selectedIndex >= 0) kotlin.math.abs(currentIndex - selectedIndex) else 0
+    val animationDelayMs = distance * 30L
+    
+    // If initial animation phase is complete, skip animation entirely
+    // This prevents newly composed items (from scrolling) from animating
+    val shouldAnimate = !initialAnimationComplete
+    
+    // Staggered enter animation state
+    var animationTriggered by remember { mutableStateOf(!shouldAnimate || selectedIndex == -1) }
+    
+    LaunchedEffect(Unit) {
+        if (shouldAnimate && !animationTriggered) {
+            kotlinx.coroutines.delay(animationDelayMs)
+            animationTriggered = true
+        }
+    }
+    
+    // Use transition to animate alpha, scale, and translation
+    val transition = updateTransition(targetState = animationTriggered, label = "staggeredEnter")
+    
+    val alpha by transition.animateFloat(
+        transitionSpec = { 
+            spring(dampingRatio = 0.85f, stiffness = Spring.StiffnessMediumLow) 
+        },
+        label = "alpha"
+    ) { triggered ->
+        if (triggered) 1f else 0f
+    }
+    
+    val scale by transition.animateFloat(
+        transitionSpec = { 
+            spring(dampingRatio = 0.85f, stiffness = Spring.StiffnessMediumLow) 
+        },
+        label = "scale"
+    ) { triggered ->
+        if (triggered) 1f else 0.93f
+    }
+    
+    val translationY by transition.animateFloat(
+        transitionSpec = { 
+            spring(dampingRatio = 0.85f, stiffness = Spring.StiffnessMediumLow) 
+        },
+        label = "translationY"
+    ) { triggered ->
+        if (triggered) 0f else 25f // ~25px slide from below (subtle)
+    }
 
     Card(
         modifier = Modifier
-            .fillMaxWidth(),
+            .fillMaxWidth()
+            .graphicsLayer {
+                this.alpha = alpha
+                this.translationY = translationY
+                this.scaleX = scale
+                this.scaleY = scale
+            },
         colors = CardDefaults.cardColors(
             containerColor = if (isSelected) {
                 MaterialTheme.colorScheme.secondaryContainer.copy(alpha = 0.5f)
