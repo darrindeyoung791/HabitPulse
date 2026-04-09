@@ -1,11 +1,16 @@
 package io.github.darrindeyoung791.habitpulse.ui.screens
 
+import androidx.compose.animation.core.Animatable
+import androidx.compose.animation.core.Spring
 import androidx.compose.animation.core.animateDpAsState
+import androidx.compose.animation.core.animateFloat
 import androidx.compose.animation.expandVertically
 import androidx.compose.animation.shrinkVertically
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
+import androidx.compose.animation.core.spring
+import androidx.compose.animation.core.updateTransition
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.interaction.collectIsPressedAsState
@@ -24,6 +29,7 @@ import androidx.compose.material.icons.outlined.*
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.*
+import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.hapticfeedback.HapticFeedbackType
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalHapticFeedback
@@ -164,6 +170,21 @@ fun HabitCreationScreen(
     // 避免旧的保存成功状态在进入创建/编辑页面后被误触发导致立即跳转和回到顶部
     LaunchedEffect(Unit) {
         viewModel.resetSaveSuccess()
+    }
+
+    // Track whether the initial staggered animation phase has completed
+    // Once true, newly composed items (from scrolling or visibility changes) should skip animation
+    var initialAnimationComplete by remember { mutableStateOf(false) }
+
+    // Estimate max delay needed for initial staggered animation
+    // We have ~6 major components, each with 30ms delay + ~500ms animation duration
+    val estimatedMaxAnimationTime = 6 * 30L + 500L
+
+    // Mark initial animation as complete after estimated time
+    // This ensures newly composed items (from scrolling) skip the animation
+    LaunchedEffect(Unit) {
+        kotlinx.coroutines.delay(estimatedMaxAnimationTime)
+        initialAnimationComplete = true
     }
 
     // UI 状态变量
@@ -491,11 +512,15 @@ fun HabitCreationScreen(
                 .verticalScroll(rememberScrollState()),
             verticalArrangement = Arrangement.spacedBy(16.dp)
         ) {
-            // Repeat cycle selection - Button group with custom shapes
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.spacedBy((-1).dp)
+            // 1. Repeat cycle selection - Button group with custom shapes
+            AnimatedCreationItem(
+                index = 0,
+                initialAnimationComplete = initialAnimationComplete
             ) {
+                Row(
+                    modifier = Modifier.fillMaxWidth(),
+                    horizontalArrangement = Arrangement.spacedBy((-1).dp)
+                ) {
                 RepeatCycle.values().forEachIndexed { index, cycle ->
                     val isSelected = repeatCycle == cycle
                     val interactionSource = remember { MutableInteractionSource() }
@@ -550,13 +575,18 @@ fun HabitCreationScreen(
                     }
                 }
             }
+            } // Close AnimatedCreationItem for repeat cycle
 
-            // Repeat days selection (for weekly cycle)
-            AnimatedVisibility(
-                visible = repeatCycle == RepeatCycle.WEEKLY,
-                enter = expandVertically() + fadeIn(),
-                exit = shrinkVertically() + fadeOut()
+            // 2. Repeat days selection (for weekly cycle)
+            AnimatedCreationItem(
+                index = 1,
+                initialAnimationComplete = initialAnimationComplete
             ) {
+                AnimatedVisibility(
+                    visible = repeatCycle == RepeatCycle.WEEKLY,
+                    enter = expandVertically() + fadeIn(),
+                    exit = shrinkVertically() + fadeOut()
+                ) {
                 Card(
                     modifier = Modifier.fillMaxWidth(),
                     colors = CardDefaults.cardColors(
@@ -616,46 +646,56 @@ fun HabitCreationScreen(
                     }
                 }
             }
+            } // Close AnimatedCreationItem for repeat days
 
-            // Habit name input field
-            OutlinedTextField(
-                value = habitName,
-                onValueChange = { newValue ->
-                    if (newValue.length > 100) {
-                        showMaxLengthToast = true
-                    }
-                    habitName = newValue.take(100)
-                    // 用户输入时清除错误状态
-                    showHabitNameError = false
-                },
-                label = {
-                    Text(text = stringResource(id = R.string.create_habit_habit_name_label))
-                },
-                placeholder = {
-                    Text(text = stringResource(id = R.string.create_habit_habit_name_placeholder))
-                },
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .focusRequester(habitNameFocusRequester),
-                singleLine = true,
-                keyboardOptions = KeyboardOptions(
-                    capitalization = KeyboardCapitalization.Sentences,
-                    imeAction = ImeAction.Done
-                ),
-                keyboardActions = KeyboardActions(
-                    onDone = {
-                        // Close keyboard when done is pressed
-                    }
-                ),
-                isError = showHabitNameError,
-                supportingText = if (showHabitNameError) {
-                    { Text(text = context.getString(R.string.create_habit_habit_name_label)) }
-                } else null,
-            )
+            // 3. Habit name input field
+            AnimatedCreationItem(
+                index = 2,
+                initialAnimationComplete = initialAnimationComplete
+            ) {
+                OutlinedTextField(
+                    value = habitName,
+                    onValueChange = { newValue ->
+                        if (newValue.length > 100) {
+                            showMaxLengthToast = true
+                        }
+                        habitName = newValue.take(100)
+                        // 用户输入时清除错误状态
+                        showHabitNameError = false
+                    },
+                    label = {
+                        Text(text = stringResource(id = R.string.create_habit_habit_name_label))
+                    },
+                    placeholder = {
+                        Text(text = stringResource(id = R.string.create_habit_habit_name_placeholder))
+                    },
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .focusRequester(habitNameFocusRequester),
+                    singleLine = true,
+                    keyboardOptions = KeyboardOptions(
+                        capitalization = KeyboardCapitalization.Sentences,
+                        imeAction = ImeAction.Done
+                    ),
+                    keyboardActions = KeyboardActions(
+                        onDone = {
+                            // Close keyboard when done is pressed
+                        }
+                    ),
+                    isError = showHabitNameError,
+                    supportingText = if (showHabitNameError) {
+                        { Text(text = context.getString(R.string.create_habit_habit_name_label)) }
+                    } else null,
+                )
+            } // Close AnimatedCreationItem for habit name
 
-            // Reminder time section
-            Card(
-                modifier = Modifier.fillMaxWidth(),
+            // 4. Reminder time section
+            AnimatedCreationItem(
+                index = 3,
+                initialAnimationComplete = initialAnimationComplete
+            ) {
+                Card(
+                    modifier = Modifier.fillMaxWidth(),
                 colors = CardDefaults.cardColors(
                     containerColor = if (showReminderTimeError) {
                         MaterialTheme.colorScheme.errorContainer.copy(alpha = 0.3f)
@@ -807,6 +847,7 @@ fun HabitCreationScreen(
                     }
                 }
             }
+            } // Close AnimatedCreationItem for reminder time
 
             // TimePicker Dialog
             if (showTimePicker) {
@@ -828,20 +869,24 @@ fun HabitCreationScreen(
                 )
             }
 
-            // Supervision method section
-            Card(
-                modifier = Modifier.fillMaxWidth(),
-                colors = CardDefaults.cardColors(
-                    containerColor = if (supervisionMethod == SupervisionMethod.EMAIL && showSupervisorEmailError) {
-                        MaterialTheme.colorScheme.errorContainer.copy(alpha = 0.3f)
-                    } else if (supervisionMethod == SupervisionMethod.SMS && showSupervisorPhoneError) {
-                        MaterialTheme.colorScheme.errorContainer.copy(alpha = 0.3f)
-                    } else {
-                        androidx.compose.ui.graphics.Color.Transparent
-                    }
-                ),
-                shape = RoundedCornerShape(0.dp)
+            // 5. Supervision method section
+            AnimatedCreationItem(
+                index = 4,
+                initialAnimationComplete = initialAnimationComplete
             ) {
+                Card(
+                    modifier = Modifier.fillMaxWidth(),
+                    colors = CardDefaults.cardColors(
+                        containerColor = if (supervisionMethod == SupervisionMethod.EMAIL && showSupervisorEmailError) {
+                            MaterialTheme.colorScheme.errorContainer.copy(alpha = 0.3f)
+                        } else if (supervisionMethod == SupervisionMethod.SMS && showSupervisorPhoneError) {
+                            MaterialTheme.colorScheme.errorContainer.copy(alpha = 0.3f)
+                        } else {
+                            androidx.compose.ui.graphics.Color.Transparent
+                        }
+                    ),
+                    shape = RoundedCornerShape(0.dp)
+                ) {
                 Column(
                     modifier = Modifier.fillMaxWidth()
                 ) {
@@ -1189,15 +1234,20 @@ fun HabitCreationScreen(
                     }
                 }
             }
+            } // Close AnimatedCreationItem for supervision method
 
-            // Notes section
-            Card(
-                modifier = Modifier.fillMaxWidth(),
-                colors = CardDefaults.cardColors(
-                    containerColor = androidx.compose.ui.graphics.Color.Transparent
-                ),
-                shape = RoundedCornerShape(0.dp)
+            // 6. Notes section
+            AnimatedCreationItem(
+                index = 5,
+                initialAnimationComplete = initialAnimationComplete
             ) {
+                Card(
+                    modifier = Modifier.fillMaxWidth(),
+                    colors = CardDefaults.cardColors(
+                        containerColor = androidx.compose.ui.graphics.Color.Transparent
+                    ),
+                    shape = RoundedCornerShape(0.dp)
+                ) {
                 Column(
                     modifier = Modifier.fillMaxWidth()
                 ) {
@@ -1228,7 +1278,8 @@ fun HabitCreationScreen(
                         minLines = 5,
                     )
                 }
-            }
+                } // Close Card
+            } // Close AnimatedCreationItem for notes
 
             // TODO: Add more habit creation fields here
             // - Habit repeat days (for weekly cycle)
@@ -1255,6 +1306,90 @@ fun HabitCreationScreenDarkPreview() {
             onNavigateBack = {},
             application = null  // Use preview mode with fake data
         )
+    }
+}
+
+/**
+ * Reusable wrapper composable for staggered entry animations in HabitCreationScreen.
+ * 
+ * Wraps child content with the same animation pattern as MultiSelectSortScreen:
+ * - Distance-based delay: index * 30ms
+ * - Alpha: 0→1
+ * - Scale: 0.93→1
+ * - TranslationY: 25px→0
+ * - Spring spec: dampingRatio=0.85f, stiffness=Spring.StiffnessMediumLow
+ * 
+ * When initialAnimationComplete is true, skips animation entirely to prevent
+ * newly composed items (from scrolling) from animating.
+ * 
+ * @param index Position in the list for stagger delay calculation
+ * @param initialAnimationComplete Whether initial animation phase has completed
+ * @param content Child composable to animate
+ */
+@Composable
+private fun AnimatedCreationItem(
+    index: Int,
+    initialAnimationComplete: Boolean,
+    content: @Composable () -> Unit
+) {
+    // Calculate animation delay based on index
+    val animationDelayMs = index * 30L
+
+    // If initial animation phase is complete, skip animation entirely
+    // This prevents newly composed items (from scrolling) from animating
+    val shouldAnimate = !initialAnimationComplete
+
+    // Staggered enter animation state
+    var animationTriggered by remember { mutableStateOf(!shouldAnimate) }
+
+    LaunchedEffect(Unit) {
+        if (shouldAnimate && !animationTriggered) {
+            kotlinx.coroutines.delay(animationDelayMs)
+            animationTriggered = true
+        }
+    }
+
+    // Use transition to animate alpha, scale, and translation
+    val transition = updateTransition(targetState = animationTriggered, label = "staggeredEnter")
+
+    val alpha by transition.animateFloat(
+        transitionSpec = {
+            spring(dampingRatio = 0.85f, stiffness = Spring.StiffnessMediumLow)
+        },
+        label = "alpha"
+    ) { triggered ->
+        if (triggered) 1f else 0f
+    }
+
+    val scale by transition.animateFloat(
+        transitionSpec = {
+            spring(dampingRatio = 0.85f, stiffness = Spring.StiffnessMediumLow)
+        },
+        label = "scale"
+    ) { triggered ->
+        if (triggered) 1f else 0.93f
+    }
+
+    val translationY by transition.animateFloat(
+        transitionSpec = {
+            spring(dampingRatio = 0.85f, stiffness = Spring.StiffnessMediumLow)
+        },
+        label = "translationY"
+    ) { triggered ->
+        if (triggered) 0f else 25f // ~25px slide from below (subtle)
+    }
+
+    Box(
+        modifier = Modifier
+            .fillMaxWidth()
+            .graphicsLayer {
+                this.alpha = alpha
+                this.translationY = translationY
+                this.scaleX = scale
+                this.scaleY = scale
+            }
+    ) {
+        content()
     }
 }
 
