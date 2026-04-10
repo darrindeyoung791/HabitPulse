@@ -58,9 +58,10 @@
 
 <div align="center">
 
-| <div align="center">**Phone Interface**</div> | <div align="center">**Tablet Interface**</div> |
-|---|---|
-| ![Phone Interface](../../doc/images/showcases/Screenshot_Pixel_6a_Habits_ZH-CN.png) | ![Tablet Interface](../../doc/images/showcases/Screenshot_Pixel_Tablet_Habits_ZH-CN.png) |
+| <div align="center">**Phone Interface**</div>                | <div align="center">**Tablet Interface**</div>               |
+| ------------------------------------------------------------ | ------------------------------------------------------------ |
+| ![Phone Interface](../../doc/images/showcases/Screenshot_Pixel_6a_Habits_EN-US.png) | ![Tablet Interface](../../doc/images/showcases/Screenshot_Pixel_Tablet_Habits_EN-US.png) |
+| ![Phone Interface](../../doc/images/showcases/Screenshot_Pixel_6a_Habits_Dark_EN-US.png) | ![Tablet Interface](../../doc/images/showcases/Screenshot_Pixel_Tablet_Habits_Dark_EN-US.png) |
 
 </div>
 
