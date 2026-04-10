@@ -47,6 +47,7 @@ import androidx.compose.ui.platform.LocalLayoutDirection
 import androidx.compose.ui.*
 import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.hapticfeedback.HapticFeedbackType
 import androidx.compose.ui.input.nestedscroll.nestedScroll
@@ -675,6 +676,10 @@ fun HomeScreen(
             // Other modes: use LargeTopAppBar with exitUntilCollapsed behavior
             LargeTopAppBar(
                 windowInsets = WindowInsets.safeDrawing.only(WindowInsetsSides.Top),
+                colors = TopAppBarDefaults.topAppBarColors(
+                    containerColor = Color.Transparent,
+                    scrolledContainerColor = Color.Transparent
+                ),
                 title = {
                     Column {
                         // Main title - animate font size based on scroll state
@@ -1519,6 +1524,10 @@ fun ScrollableLazyColumnWithScrollbar(
         animationSpec = tween(durationMillis = 300)
     )
 
+    // Track scroll position for edge gradient visibility
+    val isAtTop = remember { mutableStateOf(true) }
+    val isAtBottom = remember { mutableStateOf(false) }
+
     LaunchedEffect(listState) {
         snapshotFlow {
             listState.isScrollInProgress
@@ -1533,6 +1542,39 @@ fun ScrollableLazyColumnWithScrollbar(
         }
     }
 
+    // Update edge detection on every scroll
+    LaunchedEffect(listState.firstVisibleItemIndex, listState.firstVisibleItemScrollOffset) {
+        val layoutInfo = listState.layoutInfo
+        val totalCount = layoutInfo.totalItemsCount
+        val visibleItems = layoutInfo.visibleItemsInfo
+
+        // Check if at top
+        isAtTop.value = listState.firstVisibleItemIndex == 0 && listState.firstVisibleItemScrollOffset == 0
+
+        // Check if at bottom
+        if (totalCount > 0 && visibleItems.isNotEmpty()) {
+            val lastVisibleItem = visibleItems.last()
+            val isLastItemVisible = lastVisibleItem.index == totalCount - 1
+            val viewportHeight = layoutInfo.viewportSize.height
+            val itemEnd = lastVisibleItem.offset + lastVisibleItem.size
+            isAtBottom.value = isLastItemVisible && itemEnd <= viewportHeight
+        } else {
+            isAtBottom.value = true
+        }
+    }
+
+    // Animate gradient visibility
+    val topGradientAlpha by animateFloatAsState(
+        targetValue = if (isAtTop.value) 0f else 1f,
+        animationSpec = tween(durationMillis = 200),
+        label = "topGradientAlpha"
+    )
+    val bottomGradientAlpha by animateFloatAsState(
+        targetValue = if (isAtBottom.value) 0f else 1f,
+        animationSpec = tween(durationMillis = 200),
+        label = "bottomGradientAlpha"
+    )
+
     Box(modifier = modifier.fillMaxSize()) {
         LazyColumn(
             modifier = Modifier.fillMaxSize(),
@@ -1542,6 +1584,41 @@ fun ScrollableLazyColumnWithScrollbar(
         ) {
             content()
         }
+
+        // Top edge gradient - fades content below TopAppBar/headers
+        Box(
+            modifier = Modifier
+                .fillMaxWidth()
+                .height(16.dp)
+                .align(Alignment.TopCenter)
+                .alpha(topGradientAlpha)
+                .background(
+                    Brush.verticalGradient(
+                        colors = listOf(
+                            MaterialTheme.colorScheme.background,
+                            Color.Transparent
+                        )
+                    )
+                )
+        )
+
+        // Bottom edge gradient - fades content above BottomNavigationBar
+        Box(
+            modifier = Modifier
+                .fillMaxWidth()
+                .height(16.dp)
+                .align(Alignment.BottomCenter)
+                .alpha(bottomGradientAlpha)
+                .background(
+                    Brush.verticalGradient(
+                        colors = listOf(
+                            Color.Transparent,
+                            MaterialTheme.colorScheme.background
+                        )
+                    )
+                )
+        )
+
         Box(
             modifier = Modifier
                 .fillMaxHeight()
@@ -1611,6 +1688,10 @@ fun ScrollableWaterfallWithScrollbar(
         animationSpec = tween(durationMillis = 300)
     )
 
+    // Track scroll position for edge gradient visibility
+    val isAtTop = remember { mutableStateOf(true) }
+    val isAtBottom = remember { mutableStateOf(false) }
+
     LaunchedEffect(scrollState.isScrollInProgress) {
         isScrollbarVisible.value = true
         if (!scrollState.isScrollInProgress) {
@@ -1621,6 +1702,24 @@ fun ScrollableWaterfallWithScrollbar(
         }
     }
 
+    // Update edge detection on every scroll
+    LaunchedEffect(scrollState.value) {
+        isAtTop.value = scrollState.value == 0
+        isAtBottom.value = scrollState.value == scrollState.maxValue
+    }
+
+    // Animate gradient visibility
+    val topGradientAlpha by animateFloatAsState(
+        targetValue = if (isAtTop.value) 0f else 1f,
+        animationSpec = tween(durationMillis = 200),
+        label = "waterfallTopGradientAlpha"
+    )
+    val bottomGradientAlpha by animateFloatAsState(
+        targetValue = if (isAtBottom.value) 0f else 1f,
+        animationSpec = tween(durationMillis = 200),
+        label = "waterfallBottomGradientAlpha"
+    )
+
     Box(modifier = modifier.fillMaxSize()) {
         Column(
             modifier = Modifier
@@ -1629,6 +1728,40 @@ fun ScrollableWaterfallWithScrollbar(
         ) {
             content()
         }
+
+        // Top edge gradient
+        Box(
+            modifier = Modifier
+                .fillMaxWidth()
+                .height(16.dp)
+                .align(Alignment.TopCenter)
+                .alpha(topGradientAlpha)
+                .background(
+                    Brush.verticalGradient(
+                        colors = listOf(
+                            MaterialTheme.colorScheme.background,
+                            Color.Transparent
+                        )
+                    )
+                )
+        )
+
+        // Bottom edge gradient
+        Box(
+            modifier = Modifier
+                .fillMaxWidth()
+                .height(16.dp)
+                .align(Alignment.BottomCenter)
+                .alpha(bottomGradientAlpha)
+                .background(
+                    Brush.verticalGradient(
+                        colors = listOf(
+                            Color.Transparent,
+                            MaterialTheme.colorScheme.background
+                        )
+                    )
+                )
+        )
 
         Box(
             modifier = Modifier
