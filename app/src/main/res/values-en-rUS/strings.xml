@@ -217,7 +217,7 @@
 
     <!-- Welcome Screen -->
     <string name="welcome_description">A clean and lightweight habit tracker designed to outlast the three-minute enthusiasm.</string>
-    <string name="welcome_permissions_title">For timely notifications, HabitPulse may use the following permissions:</string>
+    <string name="welcome_permissions_title">For timely notifications, %1$s may use the following permissions:</string>
     <string name="welcome_permission_notification_title">Send persistent notifications</string>
     <string name="welcome_permission_background_title">Run continuously in the background</string>
     <string name="welcome_agree_button">I Agree, Continue</string>
@@ -234,9 +234,15 @@
     <string name="settings_persistent_notification_limited_mode_title">Exit Limited Mode?</string>
     <string name="settings_persistent_notification_limited_mode_message">Enabling this will exit Limited Mode. A persistent notification will help keep the app running in the background. Continue?</string>
 
+    <!-- Notification Permission Dialog (shown on startup) -->
+    <string name="notification_permission_dialog_title">Notification Permission Disabled</string>
+    <string name="notification_permission_dialog_message">You have enabled Keep Running in Background, but notification permission is not granted. The persistent notification will not be shown, and the app may not be able to remind you on time.</string>
+    <string name="notification_permission_dialog_go_to_settings">Go to Settings</string>
+    <string name="notification_permission_dialog_disable">Turn Off Background Running</string>
+
     <!-- Notification Channel -->
     <string name="notification_channel_name">Background Running Notification</string>
-    <string name="notification_channel_description">Persistent notification to keep HabitPulse running in the background</string>
-    <string name="notification_title">HabitPulse is running</string>
+    <string name="notification_channel_description">Persistent notification to keep %1$s running in the background</string>
+    <string name="notification_title">%1$s is running</string>
     <string name="notification_content">Keeping your habit reminders and background sync active</string>
 </resources>

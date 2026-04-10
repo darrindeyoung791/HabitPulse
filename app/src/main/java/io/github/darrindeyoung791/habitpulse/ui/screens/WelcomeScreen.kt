@@ -221,7 +221,7 @@ fun WelcomeScreen(
                         )
                     ) {
                         Text(
-                            text = stringResource(R.string.welcome_permissions_title),
+                            text = stringResource(R.string.welcome_permissions_title, stringResource(R.string.app_name)),
                             style = secondaryTextStyle,
                             color = MaterialTheme.colorScheme.onSurfaceVariant
                         )
@@ -506,7 +506,7 @@ fun WelcomeScreen(
                         )
                     ) {
                         Text(
-                            text = stringResource(R.string.welcome_permissions_title),
+                            text = stringResource(R.string.welcome_permissions_title, stringResource(R.string.app_name)),
                             style = secondaryTextStyle,
                             color = MaterialTheme.colorScheme.onSurfaceVariant,
                             textAlign = TextAlign.Center

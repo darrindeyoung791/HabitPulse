@@ -17,6 +17,7 @@ import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
 import androidx.compose.runtime.*
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.navigation.compose.rememberNavController
 import androidx.core.splashscreen.SplashScreen.Companion.installSplashScreen
@@ -30,7 +31,9 @@ import io.github.darrindeyoung791.habitpulse.ui.screens.AdScreen
 import io.github.darrindeyoung791.habitpulse.ui.screens.HomeScreen
 import io.github.darrindeyoung791.habitpulse.ui.theme.HabitPulseTheme
 import io.github.darrindeyoung791.habitpulse.utils.NotificationHelper
+import io.github.darrindeyoung791.habitpulse.utils.NotificationPermissionHelper
 import kotlinx.coroutines.flow.first
+import kotlinx.coroutines.launch
 
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -119,6 +122,36 @@ class MainActivity : ComponentActivity() {
 
                 // 如果广告结束，进入主内容
                 val showMainContent = adFinished || (!showSplashAd || !showAdScreen)
+                
+                // 检查是否需要显示通知权限对话框
+                // 条件：持久通知设置已开启 AND 通知权限未授予 AND 广告已结束（或没有广告）
+                var showNotificationPermissionDialog by remember { mutableStateOf(false) }
+                val coroutineScope = rememberCoroutineScope()
+                
+                LaunchedEffect(showMainContent, persistentNotification) {
+                    if (showMainContent && persistentNotification && !NotificationHelper.hasNotificationPermission(context)) {
+                        // 延迟显示对话框，确保主内容已渲染
+                        showNotificationPermissionDialog = true
+                    }
+                }
+                
+                // 显示通知权限对话框
+                if (showNotificationPermissionDialog) {
+                    NotificationPermissionDialog(
+                        onDismiss = { showNotificationPermissionDialog = false },
+                        onGoToSettings = {
+                            NotificationPermissionHelper.openAppSettings(context)
+                            showNotificationPermissionDialog = false
+                        },
+                        onDisableFeature = {
+                            // 关闭持久通知设置
+                            coroutineScope.launch {
+                                userPreferences.setPersistentNotification(false)
+                            }
+                            showNotificationPermissionDialog = false
+                        }
+                    )
+                }
 
                 // 再次在主内容可见时确保系统栏图标外观被正确设置（覆盖启动/过渡期影响）
                 val isSystemDark = isSystemInDarkTheme()
@@ -213,6 +246,55 @@ fun HandleSystemBackPress(
     LaunchedEffect(isAtHome) {
         callback.isEnabled = !isAtHome
     }
+}
+
+/**
+ * 通知权限对话框
+ * 
+ * 当用户开启了保持后台运行功能，但未授予通知权限时显示。
+ * 提供两个选项：去授权 或 关闭后台运行功能。
+ * 
+ * @param onDismiss 对话框关闭回调
+ * @param onGoToSettings 前往应用设置回调
+ * @param onDisableFeature 关闭后台运行功能回调
+ */
+@Composable
+private fun NotificationPermissionDialog(
+    onDismiss: () -> Unit,
+    onGoToSettings: () -> Unit,
+    onDisableFeature: () -> Unit
+) {
+    androidx.compose.material3.AlertDialog(
+        onDismissRequest = onDismiss,
+        title = {
+            androidx.compose.material3.Text(
+                text = stringResource(id = R.string.notification_permission_dialog_title)
+            )
+        },
+        text = {
+            androidx.compose.material3.Text(
+                text = stringResource(id = R.string.notification_permission_dialog_message)
+            )
+        },
+        confirmButton = {
+            androidx.compose.material3.TextButton(
+                onClick = onGoToSettings
+            ) {
+                androidx.compose.material3.Text(
+                    text = stringResource(id = R.string.notification_permission_dialog_go_to_settings)
+                )
+            }
+        },
+        dismissButton = {
+            androidx.compose.material3.TextButton(
+                onClick = onDisableFeature
+            ) {
+                androidx.compose.material3.Text(
+                    text = stringResource(id = R.string.notification_permission_dialog_disable)
+                )
+            }
+        }
+    )
 }
 
 @Preview(showBackground = true)

@@ -24,8 +24,9 @@ object NotificationHelper {
      */
     fun createNotificationChannel(context: Context) {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) {
+            val appName = context.getString(R.string.app_name)
             val name = context.getString(R.string.notification_channel_name)
-            val descriptionText = context.getString(R.string.notification_channel_description)
+            val descriptionText = context.getString(R.string.notification_channel_description, appName)
             val importance = NotificationManager.IMPORTANCE_LOW
             val channel = NotificationChannel(CHANNEL_ID, name, importance).apply {
                 description = descriptionText
@@ -69,7 +70,8 @@ object NotificationHelper {
      * 创建持久通知
      */
     fun createPersistentNotification(context: Context): android.app.Notification {
-        val title = context.getString(R.string.notification_title)
+        val appName = context.getString(R.string.app_name)
+        val title = context.getString(R.string.notification_title, appName)
         val content = context.getString(R.string.notification_content)
 
         val builder = NotificationCompat.Builder(context, CHANNEL_ID)

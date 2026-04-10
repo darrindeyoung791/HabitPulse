@@ -219,7 +219,7 @@
 
     <!-- Welcome Screen -->
     <string name="welcome_description">小巧清爽的习惯跟踪软件，专为攻克三分钟热度打造。</string>
-    <string name="welcome_permissions_title">为了及时通知，HabitPulse 可能使用下列权限：</string>
+    <string name="welcome_permissions_title">为了及时通知，%1$s 可能使用下列权限：</string>
     <string name="welcome_permission_notification_title">发送持久通知</string>
     <string name="welcome_permission_background_title">在后台持续运行</string>
     <string name="welcome_agree_button">我同意，继续</string>
@@ -236,9 +236,15 @@
     <string name="settings_persistent_notification_limited_mode_title">退出受限模式？</string>
     <string name="settings_persistent_notification_limited_mode_message">开启此功能将退出受限模式。持久通知将帮助应用在后台保持运行。确定要继续吗？</string>
 
+    <!-- Notification Permission Dialog (shown on startup) -->
+    <string name="notification_permission_dialog_title">通知权限已关闭</string>
+    <string name="notification_permission_dialog_message">您已开启保持后台运行功能，但通知权限未授予。持久通知将无法显示，应用可能无法及时提醒。</string>
+    <string name="notification_permission_dialog_go_to_settings">去授权</string>
+    <string name="notification_permission_dialog_disable">关闭后台运行</string>
+
     <!-- Notification Channel -->
     <string name="notification_channel_name">后台运行通知</string>
-    <string name="notification_channel_description">用于保持 HabitPulse 在后台运行的持久通知</string>
-    <string name="notification_title">HabitPulse 正在运行</string>
+    <string name="notification_channel_description">用于保持 %1$s 在后台运行的持久通知</string>
+    <string name="notification_title">%1$s 正在运行</string>
     <string name="notification_content">保持习惯提醒和后台同步</string>
 </resources>

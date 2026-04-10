@@ -628,17 +628,235 @@ private fun MultiSelectHabitItem(
     }
 }
 
-@Preview(showBackground = true)
+@Preview(showBackground = true, widthDp = 360, heightDp = 640)
+@Preview(showBackground = true, device = "spec:width=1280dp,height=800dp,dpi=240")
 @Composable
 private fun MultiSelectSortScreenPreview() {
     HabitPulseTheme {
         Surface {
-            // Preview placeholder
+            // Sample habits for preview
+            val sampleHabits = listOf(
+                Habit(
+                    id = UUID.randomUUID(),
+                    title = "Morning Meditation",
+                    completedToday = false,
+                    sortOrder = 0
+                ),
+                Habit(
+                    id = UUID.randomUUID(),
+                    title = "Exercise",
+                    completedToday = true,
+                    sortOrder = 1
+                ),
+                Habit(
+                    id = UUID.randomUUID(),
+                    title = "Read for 30 minutes",
+                    completedToday = false,
+                    sortOrder = 2
+                ),
+                Habit(
+                    id = UUID.randomUUID(),
+                    title = "Drink 8 glasses of water",
+                    completedToday = true,
+                    sortOrder = 3
+                ),
+                Habit(
+                    id = UUID.randomUUID(),
+                    title = "Practice gratitude journal",
+                    completedToday = false,
+                    sortOrder = 4
+                ),
+                Habit(
+                    id = UUID.randomUUID(),
+                    title = "No social media before noon",
+                    completedToday = true,
+                    sortOrder = 5
+                ),
+                Habit(
+                    id = UUID.randomUUID(),
+                    title = "Sleep by 10 PM",
+                    completedToday = false,
+                    sortOrder = 6
+                )
+            )
+
+            // Use a preview-specific selected habit to demonstrate staggered animation
+            val selectedHabitIndex = 2 // Third habit selected to show stagger effect
+            val selectedHabitId = sampleHabits.getOrNull(selectedHabitIndex)?.id
+            val selectedIds = if (selectedHabitId != null) setOf(selectedHabitId) else emptySet()
+
+            // Preview the habit items with animations
             Box(
                 modifier = Modifier.fillMaxSize(),
                 contentAlignment = Alignment.Center
             ) {
-                Text("Multi-Select & Sort Preview")
+                LazyColumn(
+                    modifier = Modifier.fillMaxSize(),
+                    contentPadding = PaddingValues(horizontal = 16.dp, vertical = 8.dp),
+                    verticalArrangement = Arrangement.spacedBy(8.dp)
+                ) {
+                    // Select All item
+                    item {
+                        SelectAllItem(
+                            isSelected = false,
+                            isIndeterminate = true,
+                            selectedCount = 1,
+                            totalCount = sampleHabits.size,
+                            onClick = {}
+                        )
+                    }
+
+                    // Habit items with staggered animation
+                    items(
+                        items = sampleHabits,
+                        key = { it.id }
+                    ) { habit ->
+                        val currentIndex = sampleHabits.indexOf(habit)
+
+                        // Preview habit item without reorderable functionality
+                        PreviewMultiSelectHabitItem(
+                            habit = habit,
+                            isSelected = selectedIds.contains(habit.id),
+                            onToggleSelection = {},
+                            isDragging = false,
+                            elevation = 0.dp,
+                            selectedIndex = selectedHabitIndex,
+                            currentIndex = currentIndex,
+                            initialAnimationComplete = false
+                        )
+                    }
+                }
+            }
+        }
+    }
+}
+
+/**
+ * Preview-only habit item that doesn't require reorderable scope
+ */
+@Composable
+private fun PreviewMultiSelectHabitItem(
+    habit: Habit,
+    isSelected: Boolean,
+    onToggleSelection: () -> Unit,
+    isDragging: Boolean,
+    elevation: Dp,
+    selectedIndex: Int,
+    currentIndex: Int,
+    initialAnimationComplete: Boolean
+) {
+    val hapticFeedback = LocalHapticFeedback.current
+
+    // Calculate animation delay based on distance from selected item
+    val distance = if (selectedIndex >= 0) kotlin.math.abs(currentIndex - selectedIndex) else 0
+    val animationDelayMs = distance * 30L
+
+    // If initial animation phase is complete, skip animation entirely
+    // This prevents newly composed items (from scrolling) from animating
+    val shouldAnimate = !initialAnimationComplete
+
+    // Staggered enter animation state
+    var animationTriggered by remember { mutableStateOf(!shouldAnimate || selectedIndex == -1) }
+
+    LaunchedEffect(Unit) {
+        if (shouldAnimate && !animationTriggered) {
+            kotlinx.coroutines.delay(animationDelayMs)
+            animationTriggered = true
+        }
+    }
+
+    // Use transition to animate alpha, scale, and translation
+    val transition = updateTransition(targetState = animationTriggered, label = "staggeredEnter")
+
+    val alpha by transition.animateFloat(
+        transitionSpec = {
+            spring(dampingRatio = 0.85f, stiffness = Spring.StiffnessMediumLow)
+        },
+        label = "alpha"
+    ) { triggered ->
+        if (triggered) 1f else 0f
+    }
+
+    val scale by transition.animateFloat(
+        transitionSpec = {
+            spring(dampingRatio = 0.85f, stiffness = Spring.StiffnessMediumLow)
+        },
+        label = "scale"
+    ) { triggered ->
+        if (triggered) 1f else 0.93f
+    }
+
+    val translationY by transition.animateFloat(
+        transitionSpec = {
+            spring(dampingRatio = 0.85f, stiffness = Spring.StiffnessMediumLow)
+        },
+        label = "translationY"
+    ) { triggered ->
+        if (triggered) 0f else 25f // ~25px slide from below (subtle)
+    }
+
+    Card(
+        modifier = Modifier
+            .fillMaxWidth()
+            .graphicsLayer {
+                this.alpha = alpha
+                this.translationY = translationY
+                this.scaleX = scale
+                this.scaleY = scale
+            },
+        colors = CardDefaults.cardColors(
+            containerColor = if (isSelected) {
+                MaterialTheme.colorScheme.secondaryContainer.copy(alpha = 0.5f)
+            } else {
+                MaterialTheme.colorScheme.surface
+            }
+        ),
+        elevation = CardDefaults.cardElevation(defaultElevation = elevation)
+    ) {
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(horizontal = 8.dp, vertical = 12.dp)
+                .combinedClickable(
+                    onClick = {
+                        onToggleSelection()
+                        hapticFeedback.performHapticFeedback(HapticFeedbackType.TextHandleMove)
+                    },
+                    indication = null,
+                    interactionSource = remember { MutableInteractionSource() }
+                ),
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            // Checkbox
+            Checkbox(
+                checked = isSelected,
+                onCheckedChange = { onToggleSelection() }
+            )
+
+            Spacer(modifier = Modifier.width(8.dp))
+
+            // Habit title
+            Text(
+                text = habit.title,
+                style = MaterialTheme.typography.bodyLarge,
+                color = MaterialTheme.colorScheme.onSurface,
+                modifier = Modifier
+                    .weight(1f),
+                maxLines = 2,
+                overflow = TextOverflow.Ellipsis
+            )
+
+            Spacer(modifier = Modifier.width(8.dp))
+
+            // Drag handle (non-functional in preview)
+            IconButton(
+                onClick = { }
+            ) {
+                Icon(
+                    imageVector = Icons.Outlined.DragHandle,
+                    contentDescription = "Drag to reorder",
+                    tint = MaterialTheme.colorScheme.onSurfaceVariant
+                )
             }
         }
     }
