@@ -275,6 +275,7 @@ fun HomeScreen(
     LaunchedEffect(currentSection) {
         if (currentSection == HomeSection.Records) {
             application?.recordsViewModel?.selectHabit(null)
+            application?.recordsViewModel?.clearDate()
         }
     }
 
@@ -1731,7 +1732,7 @@ fun HabitCard(
         Box(
             modifier = Modifier.fillMaxWidth()
         ) {
-            OutlinedCard(
+            Card(
                 modifier = Modifier
                     .fillMaxWidth()
                     .heightIn(min = 120.dp)
@@ -1760,8 +1761,8 @@ fun HabitCard(
                             Modifier
                         }
                     ),
-                colors = CardDefaults.outlinedCardColors(
-                    containerColor = MaterialTheme.colorScheme.surfaceContainerLowest
+                colors = CardDefaults.cardColors(
+                    containerColor = MaterialTheme.colorScheme.surfaceContainer
                 )
             ) {
                 Row(

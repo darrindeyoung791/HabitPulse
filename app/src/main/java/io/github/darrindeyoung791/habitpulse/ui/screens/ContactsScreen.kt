@@ -44,6 +44,7 @@ import androidx.compose.material.icons.outlined.Person
 import androidx.compose.material.icons.outlined.Phone
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.ButtonDefaults
+import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.DropdownMenu
@@ -53,7 +54,6 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.ModalBottomSheet
-import androidx.compose.material3.OutlinedCard
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextField
@@ -548,7 +548,7 @@ fun ContactCard(
     var showDropdown by remember { mutableStateOf(false) }
     val hapticFeedback = LocalHapticFeedback.current
 
-    OutlinedCard(
+    Card(
         modifier = modifier
             .fillMaxWidth()
             .combinedClickable(
@@ -558,8 +558,8 @@ fun ContactCard(
                     showDropdown = true
                 }
             ),
-        colors = CardDefaults.outlinedCardColors(
-            containerColor = MaterialTheme.colorScheme.surfaceContainerLowest
+        colors = CardDefaults.cardColors(
+            containerColor = MaterialTheme.colorScheme.surfaceContainer
         )
     ) {
         Row(
@@ -715,7 +715,7 @@ fun ContactBottomSheetContent(
                     val hapticFeedback = LocalHapticFeedback.current
                     var showDropdown by remember { mutableStateOf(false) }
 
-                    OutlinedCard(
+                    Card(
                         modifier = Modifier
                             .fillMaxWidth()
                             .combinedClickable(
@@ -725,8 +725,8 @@ fun ContactBottomSheetContent(
                                     showDropdown = true
                                 }
                             ),
-                        colors = CardDefaults.outlinedCardColors(
-                            containerColor = MaterialTheme.colorScheme.surfaceContainerLowest
+                        colors = CardDefaults.cardColors(
+                            containerColor = MaterialTheme.colorScheme.surfaceContainer
                         )
                     ) {
                         Row(

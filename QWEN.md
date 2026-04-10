@@ -7,20 +7,27 @@
 This project is rapidly developing. AI agents should update this page when big changes occur.
 
 ### Key Features
-- **Habit Tracking**: Create, manage, and track daily habits
-- **Smart Reminders**: Time-based notifications to help users stick to habits (planned)
-- **Social Supervision**: Habit completion notifications to designated contacts (planned)
-- **Background Service**: Long-running background service for reliable reminders (planned)
-- **Material Design 3**: Clean, modern UI following MD3 guidelines
+- **Habit Tracking**: Create, manage, and track daily habits with custom repeat cycles
+- **Completion History**: Track every check-in with timestamps, local dates, and timezone support
+- **Records & Analytics**: View completion history with date filtering and habit-specific filtering
+- **Social Supervision**: Link supervisor contacts (email/phone) to habits for accountability
+- **Multi-Select & Reorder**: Drag-and-drop reordering with batch delete functionality
+- **Smart Search**: Search habits with instant filtering
+- **Foreground Service**: Keep-alive service with boot auto-restart for reliability
+- **Material Design 3**: Clean, modern UI following MD3 guidelines with dynamic colors
+- **Responsive Layout**: Adaptive navigation (Bottom Bar, Rail, Drawer) based on screen size
 - **Split-screen Support**: Multi-window support enabled
 - **Predictive Back Gesture**: Android 13+ predictive back gesture support
 - **Localization**: Chinese (Simplified) and English (US) support
+- **Accessibility**: TalkBack support for all navigation elements
 
 ### Tech Stack
 - **Language**: Kotlin
 - **UI Framework**: Jetpack Compose with Material Design 3
-- **Navigation**: Navigation Compose with custom animations
-- **Database**: Room 2.8.4 (implemented)
+- **Navigation**: Navigation Compose with custom animations and shared transitions
+- **Database**: Room 2.8.4 (v3 schema)
+- **Preferences**: DataStore for user settings, SharedPreferences for onboarding state
+- **Foreground Service**: Android foreground service for keep-alive
 - **Scheduling**: AlarmManager (planned)
 - **Build System**: Gradle (Kotlin DSL)
 - **Minimum SDK**: 26 (Android 8.0)
@@ -36,7 +43,10 @@ HabitPulse/
 │   │   │   ├── java/io/github/darrindeyoung791/habitpulse/
 │   │   │   │   ├── MainActivity.kt              # Main entry point with NavHost
 │   │   │   │   ├── SettingsActivity.kt          # Settings screen
-│   │   │   │   ├── HabitPulseApplication.kt     # Application class with DB init
+│   │   │   │   ├── LauncherActivity.kt          # Launcher that routes to Welcome or MainActivity
+│   │   │   │   ├── WelcomeActivity.kt           # Onboarding/welcome flow
+│   │   │   │   ├── OpenSourceLicensesActivity.kt # Open source licenses display
+│   │   │   │   ├── HabitPulseApplication.kt     # Application class with singleton init
 │   │   │   │   ├── navigation/
 │   │   │   │   │   ├── HabitPulseNavGraph.kt    # Navigation graph with animations
 │   │   │   │   │   └── Route.kt                 # Route definitions
@@ -45,29 +55,51 @@ HabitPulse/
 │   │   │   │   │   │   ├── Habit.kt             # Habit entity with Room annotations
 │   │   │   │   │   │   └── HabitCompletion.kt   # Habit completion record entity
 │   │   │   │   │   ├── database/
-│   │   │   │   │   │   ├── HabitDatabase.kt     # Room database class (v2)
+│   │   │   │   │   │   ├── HabitDatabase.kt     # Room database class (v3)
 │   │   │   │   │   │   ├── dao/
 │   │   │   │   │   │   │   ├── HabitDao.kt      # Data Access Object for habits
 │   │   │   │   │   │   │   └── HabitCompletionDao.kt  # DAO for completion records
 │   │   │   │   │   │   └── converter/
 │   │   │   │   │   │       ├── ListConverters.kt    # List<Int>, List<String> converters
 │   │   │   │   │   │       └── EnumConverters.kt    # Enum type converters
-│   │   │   │   │   └── repository/
-│   │   │   │   │       └── HabitRepository.kt   # Repository pattern for data access
+│   │   │   │   │   ├── repository/
+│   │   │   │   │   │   └── HabitRepository.kt   # Repository pattern for data access
+│   │   │   │   │   └── preferences/
+│   │   │   │   │       └── UserPreferences.kt   # DataStore-based user settings
 │   │   │   │   ├── viewmodel/
 │   │   │   │   │   ├── HabitViewModel.kt        # ViewModel for UI state management
-│   │   │   │   │   └── RecordsViewModel.kt      # ViewModel for records screen
-│   │   │   │   └── ui/
-│   │   │   │       ├── screens/
-│   │   │   │       │   ├── HomeScreen.kt        # Home screen with habit list
-│   │   │   │       │   └── HabitCreationScreen.kt # Create/Edit habit screen
-│   │   │   │       └── theme/
-│   │   │   │           ├── Color.kt             # Color definitions
-│   │   │   │           ├── Theme.kt             # Material theme setup
-│   │   │   │           └── Type.kt              # Typography definitions
+│   │   │   │   │   ├── RecordsViewModel.kt      # ViewModel for records screen
+│   │   │   │   │   └── ContactsViewModel.kt     # ViewModel for contacts screen
+│   │   │   │   ├── ui/
+│   │   │   │   │   ├── screens/
+│   │   │   │   │   │   ├── HomeScreen.kt        # Home screen with 3 tabs (Habits, Contacts, Records)
+│   │   │   │   │   │   ├── HabitCreationScreen.kt # Create/Edit habit screen
+│   │   │   │   │   │   ├── MultiSelectSortScreen.kt # Drag-and-drop reorder screen
+│   │   │   │   │   │   ├── RecordsScreen.kt     # Completion records screen
+│   │   │   │   │   │   ├── ContactsScreen.kt    # Supervisor contacts list
+│   │   │   │   │   │   ├── WelcomeScreen.kt     # Onboarding/consent screen
+│   │   │   │   │   │   └── AdScreen.kt          # Splash ad screen
+│   │   │   │   │   ├── theme/
+│   │   │   │   │   │   ├── Color.kt             # Color definitions
+│   │   │   │   │   │   ├── Theme.kt             # Material theme setup
+│   │   │   │   │   │   └── Type.kt              # Typography definitions
+│   │   │   │   │   └── utils/
+│   │   │   │   │       ├── DebounceClickHandler.kt    # Debounced click prevention
+│   │   │   │   │       └── NavigationGuard.kt   # Navigation safety wrapper
+│   │   │   │   ├── service/
+│   │   │   │   │   └── ForegroundNotificationService.kt  # Foreground service for keep-alive
+│   │   │   │   ├── receiver/
+│   │   │   │   │   └── BootReceiver.kt          # Restart service on boot completed
+│   │   │   │   └── utils/
+│   │   │   │       ├── NotificationHelper.kt          # Notification creation & management
+│   │   │   │       ├── NotificationPermissionHelper.kt # Permission request helper
+│   │   │   │       ├── AccessibilityUtils.kt          # TalkBack detection
+│   │   │   │       └── OnboardingPreferences.kt       # SharedPreferences for onboarding state
 │   │   │   ├── res/                             # Android resources
 │   │   │   │   ├── values/strings.xml           # Chinese strings
-│   │   │   │   └── values-en-rUS/strings.xml    # English strings
+│   │   │   │   ├── values-en-rUS/strings.xml    # English strings
+│   │   │   │   ├── values-zh-rCN/               # Chinese (Simplified)
+│   │   │   │   └── values-night/                # Dark theme overrides
 │   │   │   └── AndroidManifest.xml
 │   │   ├── test/                                # Unit tests
 │   │   └── androidTest/                         # Instrumented tests
@@ -80,6 +112,7 @@ HabitPulse/
 ├── settings.gradle.kts                          # Project settings
 ├── gradle.properties                            # Gradle properties
 ├── QWEN.md                                      # Project context (this file)
+├── structure.md                                 # Project structure diagrams
 └── README.md                                    # Project documentation
 ```
 
@@ -186,6 +219,8 @@ Records every habit completion with timestamp.
 - `androidx.core:core-splashscreen` (1.0.1) - Splash screen compatibility
 - `com.google.android.material:material` (1.10.0) - Material components for dynamic colors
 - `sh.calvin.reorderable:reorderable` (3.0.0) - Drag-and-drop reordering library
+- `androidx.datastore:datastore-preferences` (1.1.1) - Modern preferences storage
+- `com.mikepenz:aboutlibraries` (13.2.1) - Open source license display
 
 ### Testing
 - `junit` (4.13.2) - Unit testing framework
@@ -241,27 +276,39 @@ Records every habit completion with timestamp.
 
 ## Current Status
 
-The project is in **early development stage** (v0.5.14-alpha):
+The project is in **early development stage** (v0.5.19-alpha):
 
 ### Completed
 - ✅ Project structure set up
-- ✅ Basic Compose theme configured
-- ✅ Navigation Compose integrated
-- ✅ Home screen with habit list from database
-- ✅ Habit creation screen with navigation
-- ✅ Habit edit screen with data loading
-- ✅ Settings screen (separate Activity)
+- ✅ Basic Compose theme configured with Monet dynamic colors
+- ✅ Navigation Compose integrated with custom animations and shared transitions
+- ✅ LauncherActivity for routing between Welcome and MainActivity
+- ✅ WelcomeActivity with onboarding/consent flow and permission requests
+- ✅ AdScreen with countdown skip for splash ads
+- ✅ Home screen with 3 tabs: Habits, Contacts, Records
+- ✅ Habit creation/edit screen with form validation
+- ✅ Settings screen (separate Activity) with app info, visual options, about
+- ✅ OpenSourceLicensesActivity using AboutLibraries library
 - ✅ Custom screen transition animations
 - ✅ Device corner radius support (Android 12+)
 - ✅ Predictive back gesture support
 - ✅ Split-screen support
-- ✅ Localization (Chinese & English)
-- ✅ Room database integration (v2.8.4)
+- ✅ Localization (Chinese & English) with values-zh-rCN, values-en-rUS, values-night
+- ✅ Room database integration (v2.8.4, v3 schema)
 - ✅ Habit entity with UUID primary key
 - ✅ HabitDao with CRUD operations and Flow support
-- ✅ HabitRepository for data abstraction
-- ✅ HabitViewModel for UI state management
-- ✅ Habit completion toggle functionality
+- ✅ HabitCompletionDao for completion record tracking
+- ✅ HabitRepository for data abstraction (single source of truth)
+- ✅ HabitViewModel, RecordsViewModel, ContactsViewModel for UI state management
+- ✅ Habit completion toggle functionality with haptic feedback (50ms)
+- ✅ Habit completion history tracking - every check-in recorded with timestamp
+- ✅ HabitCompletion entity - records completion date, local date, and timezone
+- ✅ Database v3 - Added sortOrder and timeZone columns to habits table
+- ✅ Records screen with completion records grouped by date
+- ✅ Habit filtering - dropdown to filter by specific habit or show all
+- ✅ Date picker filter for records with orientation-aware dialog
+- ✅ Contacts screen - aggregated supervisor contacts with per-habit associations
+- ✅ Bottom sheet for managing contact-habit associations
 - ✅ Responsive navigation system (NavigationRail, NavigationBar, PermanentNavigationDrawer)
 - ✅ Collapsed NavigationBar with circular selection indicator for tablet landscape
 - ✅ Animated drawer width for permanent navigation drawer
@@ -272,28 +319,24 @@ The project is in **early development stage** (v0.5.14-alpha):
 - ✅ Delayed enter animation for newly added habits (after navigation completes)
 - ✅ Smooth reposition animation for other cards (animateContentSize)
 - ✅ Debug feature: tap version 5 times in 10s to add 20 sample habits
-- ✅ Haptic feedback (50ms vibration) on habit check-in
 - ✅ Habit repeat days selection (weekly cycle)
 - ✅ Reminder time management
-- ✅ **Habit completion history tracking** - Every check-in is recorded with timestamp
-- ✅ **HabitCompletion entity** - Records completion date, local date, and timezone
-- ✅ **HabitCompletionDao** - Full CRUD operations for completion records
-- ✅ **Database v2** - Added habit_completions table with foreign key to habits
-- ✅ **Records screen** - Display all completion records sorted by time (newest first)
-- ✅ **Habit filtering** - Dropdown menu to filter records by specific habit or show all
-- ✅ **i18n support** - Chinese and English strings for records screen
-- ✅ **Multi-Select & Sort** - Long-press habit card to enter multi-select mode, drag-and-drop to reorder, batch delete
-- ✅ **Multi-Select & Sort UX Optimization** - Batch delete confirmation dialog aligned with Settings dialog style (consistent title size, no warning icon); auto-scroll to home page top after saving or deleting; cancel/back gesture return keeps current scroll position.
-- ✅ **Search Experience Optimization** - No brief "No habits" state when exiting search, full list restored when clearing search
-- ✅ **Reorderable integration** - Using sh.calvin.reorderable:reorderable:3.0.0 library
-- ✅ **sortOrder field** - Added to Habit entity for custom sort order
-- ✅ **Database v3** - Added sortOrder and timeZone columns to habits table with migration
-- ✅ **Predictive Back Gesture for MultiSelectSort** - Navigation system handles back gesture automatically (like HabitCreationScreen), no BackHandler needed
-- ✅ **Delete Confirmation Dialog** - Long-press habit card to delete shows confirmation dialog (consistent with MultiSelectSort delete dialog style)
-- ✅ **Supervisor Display in Reminder Dialog** - Show supervisor emails and phones in reminder detail dialog when habit has supervisors
-- ✅ **Debounce & Navigation Guard for MultiSelectSort** - Added debounce click handler and navigation guard to prevent rapid consecutive clicks and navigation errors; only scroll to top on save/delete, not on cancel/back
-- ✅ **Debounce & Navigation Guard for HabitCreationScreen** - Modified to scroll to top only on save, not on cancel
-- ✅ **ScrollToTop Fix** - Changed scrollToTop from Boolean to Int counter to ensure LaunchedEffect triggers on every save/delete; also expands AppBar when scrolling to top
+- ✅ Multi-Select & Sort - Long-press to enter multi-select mode, drag-and-drop to reorder, batch delete
+- ✅ Multi-Select & Sort UX Optimization - Consistent dialog style, auto-scroll to top on save/delete
+- ✅ Search Experience Optimization - No brief "No habits" state when exiting search
+- ✅ Reorderable integration - Using sh.calvin.reorderable:reorderable:3.0.0
+- ✅ Predictive Back Gesture for MultiSelectSort - Navigation system handles back automatically
+- ✅ Delete Confirmation Dialog - Consistent with MultiSelectSort delete dialog style
+- ✅ Supervisor Display in Reminder Dialog - Shows emails and phones when available
+- ✅ Debounce & Navigation Guard - Prevents rapid clicks and navigation errors
+- ✅ ScrollToTop Fix - Changed to Int counter for reliable LaunchedEffect triggering
+- ✅ ForegroundNotificationService for keep-alive with boot auto-restart
+- ✅ BootReceiver for BOOT_COMPLETED and LOCKED_BOOT_COMPLETED
+- ✅ NotificationHelper and NotificationPermissionHelper for notification management
+- ✅ UserPreferences (DataStore) for showSplashAd, forceTabletLandscape, persistentNotification
+- ✅ OnboardingPreferences (SharedPreferences) for hasCompletedOnboarding, isLimitedMode
+- ✅ DebounceClickHandler (300ms) and NavigationGuard (500ms) utilities
+- ✅ AccessibilityUtils for TalkBack detection
 
 ### In Progress
 - 🔄 Count section (track unplanned events, such as game scores)
@@ -301,42 +344,46 @@ The project is in **early development stage** (v0.5.14-alpha):
 
 ### Planned
 - ⏳ Reminder system with AlarmManager
-- ⏳ Habit completion tracking with daily reset
-- ⏳ Social supervision features
-- ⏳ Email/SMS integration
-- ⏳ Calendar view
+- ⏳ Social supervision features (email/SMS notifications)
+- ⏳ Calendar view (full implementation)
+- ⏳ AI habit suggestions
 - ⏳ Data backup/export
 
 ## Package Information
 
 - **Namespace**: `io.github.darrindeyoung791.habitpulse`
 - **Application ID**: `io.github.darrindeyoung791.habitpulse`
-- **Version Code**: 99 (incremented for multi-select & sort feature)
-- **Version Name**: 0.4.25-alpha
+- **Version Code**: 118 (incremented for multi-select & sort feature)
+- **Version Name**: 0.5.19-alpha
 
 ## Screen Flow
 
 ```
-┌─────────────────┐     ┌──────────────────────┐     ┌─────────────────┐
-│                 │     │                      │     │                 │
-│   HomeScreen    │────▶│ HabitCreationScreen  │     │ SettingsActivity│
-│                 │◀────│                      │     │                 │
-│  - Habit list   │     │  - Create/Edit form  │     │  - App info     │
-│  - Empty state  │     │  - Habit name input  │     │  - Version      │
-│  - FAB (create) │     │  - More settings...  │     │  - GitHub link  │
-│                 │     │                      │     │                 │
-└─────────────────┘     └──────────────────────┘     └─────────────────┘
-         │
-         ▼
-┌──────────────────────┐
-│                      │
-│MultiSelectSortScreen │
-│                      │
-│  - Multi-select      │
-│  - Drag to reorder   │
-│  - Batch delete      │
-│                      │
-└──────────────────────┘
+┌──────────────┐      ┌──────────────┐      ┌─────────────────┐
+│              │      │              │      │                 │
+│LauncherActivity│───▶│WelcomeActivity│      │SettingsActivity │
+│              │      │              │      │                 │
+│  Route logic │      │  Consent     │      │  - App info     │
+└──────┬───────┘      └──────┬───────┘      │  - Visual opts  │
+       │                     │              │  - About        │
+       │                     ▼              │  - GitHub link  │
+       │              ┌──────────────┐      │                 │
+       │              │              │      └────────┬────────┘
+       └─────────────▶│MainActivity  │               │
+                      │  (NavHost)   │◀──────────────┘
+                      │              │
+                      └──────┬───────┘
+                             │
+            ┌────────────────┼────────────────┐
+            ▼                ▼                ▼
+      ┌──────────┐    ┌──────────┐    ┌──────────────┐
+      │ HomeScreen│    │HabitCreate│    │MultiSelect   │
+      │  (3 tabs) │◀──▶│  Screen   │    │Sort Screen   │
+      │          │    │          │    │              │
+      │ - Habits │    │ - Create │    │ - Reorder    │
+      │ - Contacts│   │ - Edit   │    │ - Batch del  │
+      │ - Records│    └──────────┘    └──────────────┘
+      └──────────┘
 ```
 
 ### Responsive Navigation System

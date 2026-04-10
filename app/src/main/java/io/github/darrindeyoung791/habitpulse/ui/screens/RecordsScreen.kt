@@ -41,9 +41,9 @@ import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.outlined.Assessment
 import androidx.compose.material.icons.outlined.CalendarMonth
 import androidx.compose.material.icons.outlined.CalendarToday
+import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.CircularProgressIndicator
-import androidx.compose.material3.OutlinedCard
 import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.ExperimentalMaterial3Api
@@ -621,7 +621,7 @@ fun CompletionRecordCard(
         formattedTime
     )
 
-    OutlinedCard(
+    Card(
         modifier = modifier
             .clickable(
                 interactionSource = interactionSource,
@@ -632,8 +632,8 @@ fun CompletionRecordCard(
                 this.contentDescription = contentDescription
                 onClick { true }
             },
-        colors = CardDefaults.outlinedCardColors(
-            containerColor = MaterialTheme.colorScheme.surfaceContainerLowest
+        colors = CardDefaults.cardColors(
+            containerColor = MaterialTheme.colorScheme.surfaceContainer
         )
     ) {
         Row(
