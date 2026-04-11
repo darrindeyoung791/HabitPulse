@@ -160,6 +160,10 @@ fun HomeScreen(
     val newlyAddedHabitId by viewModel.newlyAddedHabitId.collectAsStateWithLifecycle(initialValue = null)
     // 收集搜索关键词
     val searchQuery by viewModel.searchQuery.collectAsStateWithLifecycle(initialValue = "")
+    
+    // 收集奖励弹窗状态
+    val rewardSheetHabit by viewModel.rewardSheetHabit.collectAsStateWithLifecycle(initialValue = null)
+    val showRewardSheet by viewModel.showRewardSheet.collectAsStateWithLifecycle(initialValue = false)
 
     // 收集联系人列表状态（用于 Contacts section 的副标题）
     val allContacts by (application?.contactsViewModel?.allContactsFlow ?: kotlinx.coroutines.flow.flowOf(emptyList())).collectAsStateWithLifecycle(initialValue = emptyList())
@@ -519,7 +523,11 @@ fun HomeScreen(
                                         modifier = Modifier.fillMaxSize(),
                                         habits = filteredHabits,
                                         onHabitClick = { onEditHabit(it) },
-                                        onCheckIn = { viewModel.incrementCompletionCount(it) },
+                                        onCheckIn = { habit ->
+                                            // 打卡并显示奖励弹窗
+                                            viewModel.incrementCompletionCount(habit)
+                                            viewModel.showRewardSheet(habit)
+                                        },
                                         onUndoCompletion = { viewModel.undoHabitCompletion(it) },
                                         onDeleteHabit = {
                                             viewModel.deleteHabit(it)
@@ -1169,6 +1177,25 @@ fun HomeScreen(
                 onDateSelected = { recordsVM.selectDate(it) }
             )
         }
+    }
+    
+    // 奖励底部弹窗
+    if (showRewardSheet && rewardSheetHabit != null) {
+        // 使用传入的习惯对象，完成次数 + 1（因为刚刚打卡）
+        val currentHabit = rewardSheetHabit!!
+        val displayCompletionCount = currentHabit.completionCount + 1
+        
+        RewardBottomSheet(
+            habit = currentHabit,
+            completionCount = displayCompletionCount,
+            onDismiss = { viewModel.dismissRewardSheet() },
+            onComplete = { viewModel.dismissRewardSheet() },
+            onNotifySupervisor = {
+                // TODO: 实现通知监督人功能
+                viewModel.dismissRewardSheet()
+            },
+            onSkipNotification = { viewModel.dismissRewardSheet() }
+        )
     }
 }
 

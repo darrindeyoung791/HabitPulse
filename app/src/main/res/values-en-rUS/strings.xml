@@ -245,4 +245,15 @@
     <string name="notification_channel_description">Persistent notification to keep %1$s running in the background</string>
     <string name="notification_title">%1$s is running</string>
     <string name="notification_content">Keeping your habit reminders and background sync active</string>
+
+    <!-- Reward Bottom Sheet -->
+    <string name="reward_title">This is your %1$d time completing %2$s</string>
+    <string name="reward_subtitle">Keep it up</string>
+    <string name="reward_notify_supervisor">Notify supervisors of %s</string>
+    <string name="reward_skip_notification">Skip notification this time</string>
+    <string name="reward_complete">Complete</string>
+    <string name="accessibility_reward_sheet">Complete habit check-in</string>
+    <string name="accessibility_notify_supervisors">Notify supervisors</string>
+    <string name="accessibility_skip_notification">Skip notification</string>
+    <string name="reward_dismiss_toast">Remember to manually notify your supervisors</string>
 </resources>

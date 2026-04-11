@@ -337,6 +337,7 @@ The project is in **early development stage** (v0.5.19-alpha):
 - ✅ OnboardingPreferences (SharedPreferences) for hasCompletedOnboarding, isLimitedMode
 - ✅ DebounceClickHandler (300ms) and NavigationGuard (500ms) utilities
 - ✅ AccessibilityUtils for TalkBack detection
+- ✅ Reward Bottom Sheet - Celebration modal after habit check-in with animated 12-sided polygon shape and MD3 easing animations
 
 ### In Progress
 - 🔄 Count section (track unplanned events, such as game scores)

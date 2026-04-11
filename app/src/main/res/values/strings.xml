@@ -247,4 +247,15 @@
     <string name="notification_channel_description">用于保持 %1$s 在后台运行的持久通知</string>
     <string name="notification_title">%1$s 正在运行</string>
     <string name="notification_content">保持习惯提醒和后台同步</string>
+
+    <!-- Reward Bottom Sheet -->
+    <string name="reward_title">这是你第 %1$d 次完成 %2$s</string>
+    <string name="reward_subtitle">继续坚持</string>
+    <string name="reward_notify_supervisor">通知 %s 的监督人</string>
+    <string name="reward_skip_notification">本次不通知</string>
+    <string name="reward_complete">完成</string>
+    <string name="accessibility_reward_sheet">完成习惯打卡</string>
+    <string name="accessibility_notify_supervisors">通知监督人</string>
+    <string name="accessibility_skip_notification">跳过通知</string>
+    <string name="reward_dismiss_toast">记得手动提醒监督人哦</string>
 </resources>

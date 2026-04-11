@@ -416,6 +416,37 @@ class HabitViewModel(
     private val _isLimitedMode = MutableStateFlow(onboardingPreferences.isLimitedMode)
     val isLimitedMode: StateFlow<Boolean> = _isLimitedMode.asStateFlow()
 
+    // ============= Reward Bottom Sheet =============
+
+    /**
+     * 当前显示奖励弹窗的习惯
+     */
+    private val _rewardSheetHabit = MutableStateFlow<Habit?>(null)
+    val rewardSheetHabit: StateFlow<Habit?> = _rewardSheetHabit.asStateFlow()
+
+    /**
+     * 是否显示奖励底部弹窗
+     */
+    private val _showRewardSheet = MutableStateFlow(false)
+    val showRewardSheet: StateFlow<Boolean> = _showRewardSheet.asStateFlow()
+
+    /**
+     * 显示奖励底部弹窗
+     * @param habit 刚刚完成打卡的习惯
+     */
+    fun showRewardSheet(habit: Habit) {
+        _rewardSheetHabit.value = habit
+        _showRewardSheet.value = true
+    }
+
+    /**
+     * 关闭奖励底部弹窗
+     */
+    fun dismissRewardSheet() {
+        _showRewardSheet.value = false
+        _rewardSheetHabit.value = null
+    }
+
     /**
      * 标记用户已完成引导（同意协议）
      */

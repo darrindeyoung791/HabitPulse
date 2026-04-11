@@ -236,9 +236,26 @@
     <string name="settings_persistent_notification_limited_mode_title">退出受限模式？</string>
     <string name="settings_persistent_notification_limited_mode_message">开启此功能将退出受限模式。持久通知将帮助应用在后台保持运行。确定要继续吗？</string>
 
+    <!-- Notification Permission Dialog (shown on startup) -->
+    <string name="notification_permission_dialog_title">通知权限已关闭</string>
+    <string name="notification_permission_dialog_message">您已开启保持后台运行功能，但通知权限未授予。持久通知将无法显示，应用可能无法及时提醒。</string>
+    <string name="notification_permission_dialog_go_to_settings">去授权</string>
+    <string name="notification_permission_dialog_disable">关闭后台运行</string>
+
     <!-- Notification Channel -->
     <string name="notification_channel_name">后台运行通知</string>
     <string name="notification_channel_description">用于保持 %1$s 在后台运行的持久通知</string>
     <string name="notification_title">%1$s 正在运行</string>
     <string name="notification_content">保持习惯提醒和后台同步</string>
+
+    <!-- Reward Bottom Sheet -->
+    <string name="reward_title">这是你第 %1$d 次完成 %2$s</string>
+    <string name="reward_subtitle">继续坚持</string>
+    <string name="reward_notify_supervisor">通知 %s 的监督人</string>
+    <string name="reward_skip_notification">本次不通知</string>
+    <string name="reward_complete">完成</string>
+    <string name="accessibility_reward_sheet">完成习惯打卡</string>
+    <string name="accessibility_notify_supervisors">通知监督人</string>
+    <string name="accessibility_skip_notification">跳过通知</string>
+    <string name="reward_dismiss_toast">记得手动提醒监督人哦</string>
 </resources>
