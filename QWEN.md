@@ -588,3 +588,6 @@ private fun DatePickerDialogContent(...) {
 **Device Detection** (consistent across app):
 - Phone Landscape: `screenWidthDp < 1200 && isLandscape` (use `useRail` variable from HomeScreen)
 - Tablet/Portrait: All other cases
+
+## Qwen Added Memories
+- VitePress docs (docs/) should be user-facing product feature introductions. Old doc/ folder contains technical/dev documentation. Two audiences: users (VitePress) and developers (doc/).
