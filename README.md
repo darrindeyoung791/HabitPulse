@@ -1,4 +1,4 @@
-![HabitPulse Banner](doc/images/readme/hero.png)
+![HabitPulse Banner](devdoc/images/readme/hero.png)
 
 # HabitPulse
 
@@ -23,7 +23,7 @@
 >
 > HabitPulse 使用 AI 辅助开发。如果您使用 Qwen Code 或 Claude Code 进行二次开发，请让 AI 阅读 [`QWEN.md`](QWEN.md) 以获取重要信息。您可能需要编辑 [`.qwen\settings.json`](.qwen\settings.json) 中的设置。
 
-> 🌏 [English Version](doc/readme/README_EN-US.md) | 中文版本
+> 🌏 [English Version](devdoc/readme/README_EN-US.md) | 中文版本
 
 ---
 
@@ -59,8 +59,8 @@
 
 | <div align="center">**手机界面**</div> | <div align="center">**平板界面**</div> |
 |---|---|
-| ![手机界面](doc/images/showcases/Screenshot_Pixel_6a_Habits_ZH-CN.png) | ![平板界面](doc/images/showcases/Screenshot_Pixel_Tablet_Habits_ZH-CN.png) |
-| ![手机界面](doc/images/showcases/Screenshot_Pixel_6a_Habits_Dark_ZH-CN.png) | ![平板界面](doc/images/showcases/Screenshot_Pixel_Tablet_Habits_Dark_ZH-CN.png) |
+| ![手机界面](devdoc/doc/images/showcases/Screenshot_Pixel_6a_Habits_ZH-CN.png) | ![平板界面](devdoc/images/showcases/Screenshot_Pixel_Tablet_Habits_ZH-CN.png) |
+| ![手机界面](devdoc/images/showcases/Screenshot_Pixel_6a_Habits_Dark_ZH-CN.png) | ![平板界面](devdoc/images/showcases/Screenshot_Pixel_Tablet_Habits_Dark_ZH-CN.png) |
 
 </div>
 
