@@ -24,7 +24,7 @@ export default defineConfig({
     },
 
     lastUpdated: {
-      text: '最后编辑',
+      text: '最后更新于：',
       formatOptions: {
         year: 'numeric',
         month: 'long',
@@ -39,6 +39,7 @@ export default defineConfig({
       { text: '主页', link: '/' },
       { text: '关于 HabitPulse', link: '/what-is-habitpulse' },
       { text: '下载', link: '/download' },
+      { text: '团队', link: '/team' },
     ],
 
     sidebar: [
@@ -50,10 +51,9 @@ export default defineConfig({
         ]
       },
       {
-        text: '示例',
+        text: '关于',
         items: [
-          { text: 'Markdown 示例', link: '/markdown-examples' },
-          { text: 'API 示例', link: '/api-examples' }
+          { text: '开发团队', link: '/team' }
         ]
       }
     ],
