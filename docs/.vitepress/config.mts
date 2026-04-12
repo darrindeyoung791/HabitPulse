@@ -24,7 +24,7 @@ export default defineConfig({
     },
 
     lastUpdated: {
-      text: '最后更新于：',
+      text: '最后更新于',
       formatOptions: {
         year: 'numeric',
         month: 'long',
@@ -37,8 +37,8 @@ export default defineConfig({
 
     nav: [
       { text: '主页', link: '/' },
-      { text: '关于 HabitPulse', link: '/what-is-habitpulse' },
       { text: '下载', link: '/download' },
+      { text: '教程', link: '/tutorial/first-time' },
       { text: '团队', link: '/team' },
     ],
 
@@ -48,6 +48,13 @@ export default defineConfig({
         items: [
           { text: 'HabitPulse 是什么', link: '/what-is-habitpulse' },
           { text: '获取 HabitPulse', link: '/download' }
+        ]
+      },
+      {
+        text: '教程',
+        items: [
+          { text: '初次上手', link: '/tutorial/first-time'},
+          { text: '新建与编辑习惯', link: '/tutorial/add-and-edit-habit'},
         ]
       },
       {
