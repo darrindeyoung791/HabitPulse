@@ -3,16 +3,21 @@ import { defineConfig } from 'vitepress'
 // https://vitepress.dev/reference/site-config
 export default defineConfig({
   srcDir: "docs",
-  
+  base: '/HabitPulse/',
+
   head: [
-    ['link', { rel: 'icon', href: '/images/HabitPulse_round_icon.svg' }]
+    ['link', { rel: 'icon', href: '/HabitPulse/images/HabitPulse_round_icon.svg' }]
   ],
 
   title: "HabitPulse Docs",
   description: "A VitePress Site for HabitPulse Users",
   themeConfig: {
     // https://vitepress.dev/reference/default-theme-config
-    logo: '/images/HabitPulse_round_icon.svg',
+    logo: {
+      light: '/images/HabitPulse_round_icon.svg',
+      dark: '/images/HabitPulse_round_icon.svg',
+      link: '/'
+    },
 
     search: {
       provider: 'local'

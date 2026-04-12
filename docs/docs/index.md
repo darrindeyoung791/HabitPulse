@@ -7,7 +7,7 @@ hero:
   text: "一个 Material Design 3 风格习惯保持软件"
   tagline: 小巧清爽，专为攻克三分钟热度打造
   image:
-    src: /images/icon/HabitPulse_round_icon.svg
+    src: /images/HabitPulse_round_icon.svg
     alt: HabitPulse Hero Image
   actions:
     - theme: brand
