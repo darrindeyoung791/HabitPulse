@@ -4,6 +4,7 @@ import { defineConfig } from 'vitepress'
 export default defineConfig({
   srcDir: "docs",
   base: '/HabitPulse/',
+  cleanUrls: true,
 
   head: [
     ['link', { rel: 'icon', href: '/HabitPulse/images/HabitPulse_round_icon.svg' }]

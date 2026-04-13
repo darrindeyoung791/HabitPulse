@@ -13,7 +13,7 @@ const humanMembers = [
   {
     avatar: 'https://github.com/darrindeyoung791.png',
     name: 'darrindeyoung791',
-    title: '项目发起者、总设计、总规划、总测试、文档',
+    title: '项目发起者、总设计、总规划、测试、文档',
     links: [
       { icon: 'github', link: 'https://github.com/darrindeyoung791' },
     ]
@@ -29,7 +29,7 @@ const humanMembers = [
   {
     avatar: 'https://github.com/Frozentime3.png',
     name: 'Frozentime3',
-    title: '总之做了一些工作',
+    title: '资源调度与供应、资料查询',
     links: [
       { icon: 'github', link: 'https://github.com/Frozentime3' },
     ]
