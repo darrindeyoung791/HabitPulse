@@ -11,7 +11,7 @@ hero:
     alt: HabitPulse Hero Image
   actions:
     - theme: brand
-      text: 快速了解 HabitPulse
+      text: 快速了解
       link: /what-is-habitpulse
     - theme: alt
       text: 获取 HabitPulse

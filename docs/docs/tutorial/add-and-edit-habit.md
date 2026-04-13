@@ -1,7 +1,7 @@
-# 新建和编辑习惯
+# 新建与编辑习惯
 
 > [!IMPORTANT] 重要提示
-> 本站教程仅针对最新版本的 HabitPulse，如果你设备上的 HabitPulse 与教程里不一样，请更新 HabitPulse。
+> 本站教程仅适用于最新版本的 HabitPulse，如果你设备上的 HabitPulse 与教程里不一样，请更新 HabitPulse。
 
 ## 1. 新建习惯
 

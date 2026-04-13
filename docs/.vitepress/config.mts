@@ -55,6 +55,8 @@ export default defineConfig({
         items: [
           { text: '初次上手', link: '/tutorial/first-time'},
           { text: '新建与编辑习惯', link: '/tutorial/add-and-edit-habit'},
+          { text: '删除与排序习惯', link: '/tutorial/delete-and-sort-habit'},
+          { text: '打卡习惯', link: '/tutorial/checkin'},
         ]
       },
       {
