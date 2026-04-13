@@ -58,6 +58,9 @@ export default defineConfig({
           { text: '新建与编辑习惯', link: '/tutorial/add-and-edit-habit'},
           { text: '删除与排序习惯', link: '/tutorial/delete-and-sort-habit'},
           { text: '打卡习惯', link: '/tutorial/checkin'},
+          { text: '联系人', link: '/tutorial/contacts'},
+          { text: '记录', link: '/tutorial/records'},
+          { text: '搜索与筛选', link: '/tutorial/search-and-filter'},
         ]
       },
       {

@@ -11,24 +11,30 @@ hero:
     alt: HabitPulse Hero Image
   actions:
     - theme: brand
-      text: 快速了解
+      text: 快速了解 ->
       link: /what-is-habitpulse
     - theme: alt
       text: 获取 HabitPulse
       link: /download
     - theme: alt
+      text: 查看教程
+      link: /tutorial/first-time
+    - theme: alt
       text: GitHub
       link: https://github.com/darrindeyoung791/HabitPulse
 
 features:
+  - icon: 🪶
+    title: 极致小巧
+    details: 安装包仅 3 MB 左右，比一首歌更小。与臃肿繁杂说再见。
   - icon: 🎯
-    title: 习惯追踪与打卡
+    title: 习惯管理
     details: 创建自定义周期习惯，记录每次打卡时间。完整的打卡历史让你清晰看到坚持的轨迹。
   - icon: 👥
-    title: 社交监督机制
+    title: 社交监督
     details: 为习惯添加监督人（邮箱或电话），让身边的人帮助你克服三分钟热度。
   - icon: 🎨
-    title: Material You 设计
+    title: 精美设计
     details: 遵循 Material Design 3 规范，支持动态主题配色。手机平板自适应，横竖屏完美布局。
 ---
 
