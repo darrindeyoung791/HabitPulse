@@ -2,8 +2,6 @@
 
 HabitPulse 非常易于上手。即使是初次使用，也能飞快适应。
 
-点击顶部导航栏上的搜索，可以快速找到帮助信息。
-
 > [!IMPORTANT] 重要提示
 > 本站教程仅适用于最新版本的 HabitPulse，如果你设备上的 HabitPulse 与教程里不一样，请更新 HabitPulse。
 

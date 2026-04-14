@@ -18,7 +18,7 @@ hero:
       link: /download
     - theme: alt
       text: 查看教程
-      link: /tutorial/first-time
+      link: /tutorial/help-and-feedback
     - theme: alt
       text: GitHub
       link: https://github.com/darrindeyoung791/HabitPulse
