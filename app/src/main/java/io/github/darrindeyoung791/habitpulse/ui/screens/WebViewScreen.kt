@@ -1,0 +1,258 @@
+package io.github.darrindeyoung791.habitpulse.ui.screens
+
+import android.content.Intent
+import android.graphics.Bitmap
+import android.net.Uri
+import android.webkit.WebView
+import android.webkit.WebViewClient
+import android.webkit.WebChromeClient
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.padding
+import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.ArrowBack
+import androidx.compose.material.icons.filled.Close
+import androidx.compose.material3.CircularProgressIndicator
+import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.Icon
+import androidx.compose.material3.IconButton
+import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Scaffold
+import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
+import androidx.compose.material3.TopAppBar
+import androidx.compose.runtime.Composable
+import androidx.compose.runtime.DisposableEffect
+import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
+import androidx.compose.ui.Alignment
+import androidx.compose.ui.Modifier
+import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.text.style.TextOverflow
+import androidx.compose.ui.unit.dp
+import androidx.compose.ui.viewinterop.AndroidView
+import io.github.darrindeyoung791.habitpulse.R
+import io.github.darrindeyoung791.habitpulse.navigation.RouteConfig
+import io.github.darrindeyoung791.habitpulse.ui.components.webview.WebViewMenuButton
+import io.github.darrindeyoung791.habitpulse.ui.components.webview.WebviewAwareSwipeRefreshLayout
+
+sealed class WebViewState {
+    object Loading : WebViewState()
+    object Success : WebViewState()
+    object Error : WebViewState()
+}
+
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+fun WebViewScreen(
+    initialUrl: String = RouteConfig.HELP_URL,
+    onClose: () -> Unit,
+    onWebViewGoBack: (() -> Unit)? = null,
+    externalWebView: WebView? = null
+) {
+    val context = LocalContext.current
+    var webViewState by remember { mutableStateOf<WebViewState>(WebViewState.Loading) }
+    var canGoBack by remember { mutableStateOf(false) }
+    var isRefreshing by remember { mutableStateOf(false) }
+    var pageTitle by remember { mutableStateOf<String?>(null) }
+    var currentUrl by remember { mutableStateOf<String?>(null) }
+
+    val createdHere = externalWebView == null
+    val webView = remember { externalWebView ?: WebView(context) }
+
+    LaunchedEffect(webView) {
+        // Settings are already configured in Activity, but ensure they're set if WebView is created here
+        if (createdHere) {
+            webView.settings.javaScriptEnabled = true
+            webView.settings.domStorageEnabled = true
+            webView.settings.loadWithOverviewMode = true
+            webView.settings.useWideViewPort = true
+            webView.settings.setSupportZoom(false)
+        }
+
+        webView.webViewClient = object : WebViewClient() {
+            override fun onPageStarted(view: WebView?, url: String?, favicon: Bitmap?) {
+                super.onPageStarted(view, url, favicon)
+                webViewState = WebViewState.Loading
+                currentUrl = url
+            }
+
+            override fun onPageFinished(view: WebView?, url: String?) {
+                super.onPageFinished(view, url)
+                webViewState = WebViewState.Success
+                isRefreshing = false
+                currentUrl = url
+                // Update canGoBack state
+                canGoBack = view?.canGoBack() == true
+            }
+
+            override fun doUpdateVisitedHistory(view: WebView?, url: String?, isReload: Boolean) {
+                super.doUpdateVisitedHistory(view, url, isReload)
+                // This is called for all navigation events including SPA navigation
+                // Update canGoBack here for reliable state tracking
+                canGoBack = view?.canGoBack() == true
+                if (!isReload && url != null) {
+                    currentUrl = url
+                }
+            }
+        }
+
+        webView.webChromeClient = object : WebChromeClient() {
+            override fun onReceivedTitle(view: WebView?, title: String?) {
+                super.onReceivedTitle(view, title)
+                pageTitle = title
+            }
+        }
+    }
+
+    val swipeRefreshLayout = remember {
+        WebviewAwareSwipeRefreshLayout(context).apply {
+            setWebView(webView)
+            setOnRefreshListener {
+                isRefreshing = true
+                webView.reload()
+            }
+        }
+    }
+
+    DisposableEffect(webView) {
+        webView.setOnScrollChangeListener { _, _, scrollY, _, _ ->
+            swipeRefreshLayout.isEnabled = scrollY == 0
+        }
+
+        onDispose {
+            swipeRefreshLayout.setWebView(null)
+            if (createdHere) {
+                webView.stopLoading()
+                webView.removeAllViews()
+                webView.destroy()
+            }
+        }
+    }
+
+    LaunchedEffect(initialUrl) {
+        webView.loadUrl(initialUrl)
+    }
+
+    Scaffold(
+        modifier = Modifier.fillMaxSize(),
+        topBar = {
+            TopAppBar(
+                title = {
+                    Text(
+                        text = pageTitle ?: currentUrl ?: "",
+                        style = MaterialTheme.typography.titleLarge,
+                        maxLines = 1,
+                        overflow = TextOverflow.Ellipsis
+                    )
+                },
+                navigationIcon = {
+                    Row(
+                        verticalAlignment = Alignment.CenterVertically,
+                        horizontalArrangement = Arrangement.spacedBy(4.dp)
+                    ) {
+                        // Back button: only show when there's web history to navigate
+                        if (canGoBack) {
+                            IconButton(onClick = {
+                                onWebViewGoBack?.invoke()
+                            }) {
+                                Icon(
+                                    imageVector = Icons.AutoMirrored.Filled.ArrowBack,
+                                    contentDescription = stringResource(R.string.webview_back)
+                                )
+                            }
+                        }
+
+                        // Close button: always visible to exit the WebView screen
+                        IconButton(onClick = onClose) {
+                            Icon(
+                                imageVector = Icons.Filled.Close,
+                                contentDescription = stringResource(R.string.webview_close)
+                            )
+                        }
+                    }
+                },
+                actions = {
+                    WebViewMenuButton(
+                        onRefresh = {
+                            isRefreshing = true
+                            webView.reload()
+                        },
+                        onOpenInBrowser = {
+                            val url = webView.url ?: currentUrl ?: initialUrl
+                            val intent = Intent(Intent.ACTION_VIEW, Uri.parse(url))
+                            context.startActivity(intent)
+                        },
+                        onShare = {
+                            val url = webView.url ?: currentUrl ?: initialUrl
+                            val shareIntent = Intent(Intent.ACTION_SEND).apply {
+                                type = "text/plain"
+                                putExtra(Intent.EXTRA_TEXT, url)
+                            }
+                            context.startActivity(Intent.createChooser(shareIntent, null))
+                        }
+                    )
+                }
+            )
+        },
+        content = { innerPadding ->
+            Box(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .padding(innerPadding)
+            ) {
+                AndroidView(
+                    factory = {
+                        swipeRefreshLayout.addView(
+                            webView,
+                            android.widget.FrameLayout.LayoutParams(
+                                android.widget.FrameLayout.LayoutParams.MATCH_PARENT,
+                                android.widget.FrameLayout.LayoutParams.MATCH_PARENT
+                            )
+                        )
+                        swipeRefreshLayout
+                    },
+                    modifier = Modifier.fillMaxSize()
+                )
+
+                if (webViewState == WebViewState.Loading) {
+                    CircularProgressIndicator(
+                        modifier = Modifier.align(Alignment.Center),
+                        color = MaterialTheme.colorScheme.primary
+                    )
+                }
+
+                if (webViewState == WebViewState.Error) {
+                    Column(
+                        modifier = Modifier.fillMaxSize(),
+                        horizontalAlignment = Alignment.CenterHorizontally,
+                        verticalArrangement = Arrangement.Center
+                    ) {
+                        Text(
+                            text = stringResource(id = R.string.webview_loading_failed),
+                            style = MaterialTheme.typography.bodyLarge,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant
+                        )
+                        Spacer(modifier = Modifier.padding(8.dp))
+                        TextButton(
+                            onClick = {
+                                isRefreshing = true
+                                webView.reload()
+                            }
+                        ) {
+                            Text(stringResource(id = R.string.webview_retry))
+                        }
+                    }
+                }
+            }
+        }
+    )
+}

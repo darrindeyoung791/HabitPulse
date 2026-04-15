@@ -23,6 +23,7 @@ import io.github.darrindeyoung791.habitpulse.ui.screens.EditMode
 import io.github.darrindeyoung791.habitpulse.ui.screens.HabitCreationScreen
 import io.github.darrindeyoung791.habitpulse.ui.screens.HomeScreen
 import io.github.darrindeyoung791.habitpulse.ui.screens.MultiSelectSortScreen
+import io.github.darrindeyoung791.habitpulse.ui.screens.WebViewScreen
 import java.util.UUID
 
 /**
@@ -248,6 +249,44 @@ fun HabitPulseNavGraph(
                     navController = navController,
                     sharedTransitionScope = sharedTransitionScope,
                     animatedContentScope = animatedContentScope
+                )
+            }
+        }
+        composable(
+            route = Route.Help.route,
+            arguments = listOf(
+                navArgument("url") {
+                    type = NavType.StringType
+                    defaultValue = RouteConfig.HELP_URL
+                }
+            ),
+            enterTransition = {
+                slideInVertically(
+                    initialOffsetY = { fullHeight -> fullHeight },
+                    animationSpec = spring(
+                        dampingRatio = 0.75f,
+                        stiffness = Spring.StiffnessLow
+                    )
+                ) + fadeIn(animationSpec = tween(durationMillis = 400))
+            },
+            exitTransition = {
+                slideOutVertically(
+                    targetOffsetY = { fullHeight -> fullHeight },
+                    animationSpec = tween(durationMillis = 200)
+                ) + fadeOut(animationSpec = tween(durationMillis = 200))
+            }
+        ) { backStackEntry ->
+            val url = backStackEntry.arguments?.getString("url") ?: RouteConfig.HELP_URL
+            Box(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .clip(RoundedCornerShape(cornerRadius))
+            ) {
+                WebViewScreen(
+                    initialUrl = url,
+                    onClose = {
+                        navController.popBackStack()
+                    }
                 )
             }
         }

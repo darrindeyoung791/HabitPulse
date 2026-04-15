@@ -23,8 +23,8 @@ android {
         applicationId = "io.github.darrindeyoung791.habitpulse"
         minSdk = 26
         targetSdk = 36
-        versionCode = 122
-        versionName = "0.5.23-alpha"
+        versionCode = 123
+        versionName = "0.6.0-alpha"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
         resourceConfigurations.addAll(listOf("zh-rCN", "en-rUS"))
@@ -108,4 +108,7 @@ dependencies {
 
     // Reorderable for drag-and-drop sorting
     implementation("sh.calvin.reorderable:reorderable:3.0.0")
+
+    // SwipeRefreshLayout for pull-to-refresh
+    implementation("androidx.swiperefreshlayout:swiperefreshlayout:1.1.0")
 }

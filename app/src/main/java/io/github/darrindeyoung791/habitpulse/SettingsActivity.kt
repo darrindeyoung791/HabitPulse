@@ -18,6 +18,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.automirrored.outlined.Article
 import androidx.compose.material.icons.outlined.FavoriteBorder
+import androidx.compose.material.icons.outlined.HelpOutline
 import androidx.compose.material.icons.outlined.Info
 import androidx.compose.material.icons.outlined.Notifications
 import androidx.compose.material.icons.outlined.Person
@@ -38,6 +39,7 @@ import io.github.darrindeyoung791.habitpulse.data.model.SupervisionMethod
 import io.github.darrindeyoung791.habitpulse.data.preferences.UserPreferences
 import io.github.darrindeyoung791.habitpulse.data.repository.HabitRepository
 import io.github.darrindeyoung791.habitpulse.service.ForegroundNotificationService
+import io.github.darrindeyoung791.habitpulse.ui.screens.WebViewScreen
 import io.github.darrindeyoung791.habitpulse.ui.theme.HabitPulseTheme
 import io.github.darrindeyoung791.habitpulse.utils.AccessibilityUtils
 import io.github.darrindeyoung791.habitpulse.utils.NotificationHelper
@@ -66,6 +68,8 @@ fun SettingsScreen() {
     val activity = context as? ComponentActivity
     val scope = rememberCoroutineScope()
     val userPreferences = remember { UserPreferences.getInstance(context) }
+
+    // WebView is now opened in a separate Activity (WebViewActivity)
 
     // 收集开屏广告设置状态
     val showSplashAd by userPreferences.showSplashAdFlow.collectAsStateWithLifecycle(initialValue = false)
@@ -310,6 +314,17 @@ fun SettingsScreen() {
                         Icon(
                             imageVector = Icons.AutoMirrored.Filled.ArrowBack,
                             contentDescription = stringResource(id = R.string.settings_back)
+                        )
+                    }
+                },
+                actions = {
+                    IconButton(onClick = {
+                        val intent = Intent(context, WebViewActivity::class.java)
+                        context.startActivity(intent)
+                    }) {
+                        Icon(
+                            imageVector = Icons.Outlined.HelpOutline,
+                            contentDescription = stringResource(R.string.webview_help)
                         )
                     }
                 }

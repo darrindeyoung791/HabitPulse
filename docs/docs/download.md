@@ -1,6 +1,7 @@
 # 获取 HabitPulse
 
-目前，只有 Android 设备可以使用 HabitPulse，并且暂无跨平台开发计划。
+> [!IMPORTANT] 重要提示
+> 目前，只有 Android 设备可以使用 HabitPulse，并且暂无跨平台开发计划。
 
 ## 下载安装包
 

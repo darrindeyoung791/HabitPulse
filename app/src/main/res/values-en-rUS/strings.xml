@@ -256,4 +256,16 @@
     <string name="accessibility_notify_supervisors">Notify supervisors</string>
     <string name="accessibility_skip_notification">Skip notification</string>
     <string name="reward_dismiss_toast">Remember to manually notify your supervisors</string>
+
+    <!-- WebView Screen -->
+    <string name="webview_title">Help &amp; Feedback</string>
+    <string name="webview_close">Close</string>
+    <string name="webview_back">Back</string>
+    <string name="webview_menu">Menu</string>
+    <string name="webview_menu_refresh">Refresh</string>
+    <string name="webview_menu_open_in_browser">Open in Browser</string>
+    <string name="webview_menu_share">Share</string>
+    <string name="webview_loading_failed">Loading failed</string>
+    <string name="webview_retry">Retry</string>
+    <string name="webview_help">Help &amp; Feedback</string>
 </resources>

@@ -21,7 +21,7 @@
 
 > [!NOTE]
 >
-> HabitPulse is developed with AI assistance. If you use Qwen Code or Claude Code for further development, please read [`QWEN.md`](QWEN.md) for important information. You may need to edit the settings in [`.qwen\settings.json`](.qwen\settings.json).
+> HabitPulse is developed with AI assistance. If you use Qwen Code or Claude Code for further development, please read [`QWEN.md`](QWEN.md) or [`AGENTS.md`](AGENTS.md) for important information. You may need to edit the settings in [`.qwen\settings.json`](.qwen\settings.json).
 
 > 🌏 [Chinese Version](../../README.md) | English Version
 
