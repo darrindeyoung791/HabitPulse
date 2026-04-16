@@ -59,7 +59,7 @@
 
 | <div align="center">**手机界面**</div> | <div align="center">**平板界面**</div> |
 |---|---|
-| ![手机界面](devdoc/doc/images/showcases/Screenshot_Pixel_6a_Habits_ZH-CN.png) | ![平板界面](devdoc/images/showcases/Screenshot_Pixel_Tablet_Habits_ZH-CN.png) |
+| ![手机界面](devdoc/images/showcases/Screenshot_Pixel_6a_Habits_ZH-CN.png) | ![平板界面](devdoc/images/showcases/Screenshot_Pixel_Tablet_Habits_ZH-CN.png) |
 | ![手机界面](devdoc/images/showcases/Screenshot_Pixel_6a_Habits_Dark_ZH-CN.png) | ![平板界面](devdoc/images/showcases/Screenshot_Pixel_Tablet_Habits_Dark_ZH-CN.png) |
 
 </div>

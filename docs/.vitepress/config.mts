@@ -99,6 +99,8 @@ export default defineConfig({
       copyright: 'Copyright © 2026-present darrindeyoung791'
     },
 
+    returnToTopLabel: '回到顶部',
+
     docFooter: {
       prev: '上一篇',
       next: '下一篇'
