@@ -38,6 +38,7 @@ import io.github.darrindeyoung791.habitpulse.data.model.RepeatCycle
 import io.github.darrindeyoung791.habitpulse.data.model.SupervisionMethod
 import io.github.darrindeyoung791.habitpulse.data.preferences.UserPreferences
 import io.github.darrindeyoung791.habitpulse.data.repository.HabitRepository
+import io.github.darrindeyoung791.habitpulse.navigation.RouteConfig
 import io.github.darrindeyoung791.habitpulse.service.ForegroundNotificationService
 import io.github.darrindeyoung791.habitpulse.ui.screens.WebViewScreen
 import io.github.darrindeyoung791.habitpulse.ui.theme.HabitPulseTheme
@@ -657,7 +658,9 @@ fun SettingsScreen() {
 
                     TextButton(
                         onClick = {
-                            val intent = Intent(Intent.ACTION_VIEW, Uri.parse("https://github.com/darrindeyoung791/HabitPulse"))
+                            val intent = Intent(context, WebViewActivity::class.java).apply {
+                                putExtra(WebViewActivity.EXTRA_INITIAL_URL, RouteConfig.GITHUB_URL)
+                            }
                             context.startActivity(intent)
                         },
                         contentPadding = PaddingValues(start = 0.dp, end = 16.dp),

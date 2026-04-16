@@ -3,6 +3,8 @@ package io.github.darrindeyoung791.habitpulse.ui.screens
 import android.content.Intent
 import android.graphics.Bitmap
 import android.net.Uri
+import android.net.http.SslError
+import android.webkit.SslErrorHandler
 import android.webkit.WebView
 import android.webkit.WebViewClient
 import android.webkit.WebChromeClient
@@ -16,6 +18,7 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.Close
+import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
@@ -50,6 +53,24 @@ sealed class WebViewState {
     object Error : WebViewState()
 }
 
+sealed class SslWarningState {
+    object None : SslWarningState()
+    data class Show(
+        val url: String,
+        val primaryError: String
+    ) : SslWarningState()
+}
+
+private fun isExternalLink(url: String): Boolean {
+    val allowedDomains = listOf(
+        RouteConfig.HELP_URL.removePrefix("https://"),
+        RouteConfig.GITHUB_URL.removePrefix("https://")
+    )
+    return allowedDomains.none { domain ->
+        url.contains(domain, ignoreCase = true)
+    }
+}
+
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun WebViewScreen(
@@ -59,11 +80,15 @@ fun WebViewScreen(
     externalWebView: WebView? = null
 ) {
     val context = LocalContext.current
+    val appName = stringResource(R.string.app_name)
     var webViewState by remember { mutableStateOf<WebViewState>(WebViewState.Loading) }
     var canGoBack by remember { mutableStateOf(false) }
     var isRefreshing by remember { mutableStateOf(false) }
     var pageTitle by remember { mutableStateOf<String?>(null) }
     var currentUrl by remember { mutableStateOf<String?>(null) }
+    var sslWarningState by remember { mutableStateOf<SslWarningState>(SslWarningState.None) }
+    var showExternalLinkWarning by remember { mutableStateOf(false) }
+    var hasShownExternalLinkWarning by remember { mutableStateOf(false) }
 
     val createdHere = externalWebView == null
     val webView = remember { externalWebView ?: WebView(context) }
@@ -92,6 +117,10 @@ fun WebViewScreen(
                 currentUrl = url
                 // Update canGoBack state
                 canGoBack = view?.canGoBack() == true
+                // Check if leaving HabitPulse domain
+                if (!hasShownExternalLinkWarning && url != null && isExternalLink(url)) {
+                    showExternalLinkWarning = true
+                }
             }
 
             override fun doUpdateVisitedHistory(view: WebView?, url: String?, isReload: Boolean) {
@@ -102,6 +131,25 @@ fun WebViewScreen(
                 if (!isReload && url != null) {
                     currentUrl = url
                 }
+            }
+
+            override fun onReceivedSslError(view: WebView?, handler: SslErrorHandler?, error: SslError?) {
+                super.onReceivedSslError(view, handler, error)
+                handler?.cancel()
+                val sslError = error ?: return
+                val errorUrl = sslError.url
+                val primaryError = when (sslError.primaryError) {
+                    SslError.SSL_DATE_INVALID -> "SSL_DATE_INVALID"
+                    SslError.SSL_EXPIRED -> "SSL_EXPIRED"
+                    SslError.SSL_IDMISMATCH -> "SSL_IDMISMATCH"
+                    SslError.SSL_NOTYETVALID -> "SSL_NOTYETVALID"
+                    SslError.SSL_UNTRUSTED -> "SSL_UNTRUSTED"
+                    else -> "UNKNOWN"
+                }
+                sslWarningState = SslWarningState.Show(
+                    url = errorUrl,
+                    primaryError = primaryError
+                )
             }
         }
 
@@ -255,4 +303,71 @@ fun WebViewScreen(
             }
         }
     )
+
+    if (showExternalLinkWarning) {
+        AlertDialog(
+            onDismissRequest = {
+                showExternalLinkWarning = false
+                hasShownExternalLinkWarning = true
+            },
+            title = {
+                Text(text = stringResource(R.string.webview_external_link_title, appName))
+            },
+            text = {
+                Text(text = stringResource(R.string.webview_external_link_message, appName))
+            },
+            confirmButton = {
+                TextButton(
+                    onClick = {
+                        showExternalLinkWarning = false
+                        hasShownExternalLinkWarning = true
+                    }
+                ) {
+                    Text(stringResource(R.string.webview_external_link_confirm))
+                }
+            }
+        )
+    }
+
+    if (sslWarningState is SslWarningState.Show) {
+        AlertDialog(
+            onDismissRequest = {
+                sslWarningState = SslWarningState.None
+                onClose()
+            },
+            title = {
+                Text(text = stringResource(R.string.webview_ssl_warning_title))
+            },
+            text = {
+                Text(
+                    text = stringResource(
+                        R.string.webview_ssl_warning_message,
+                        pageTitle ?: "",
+                        (sslWarningState as SslWarningState.Show).primaryError
+                    )
+                )
+            },
+            confirmButton = {
+                TextButton(
+                    onClick = {
+                        val state = sslWarningState as SslWarningState.Show
+                        sslWarningState = SslWarningState.None
+                        webView.loadUrl(state.url)
+                    }
+                ) {
+                    Text(stringResource(R.string.webview_ssl_warning_continue))
+                }
+            },
+            dismissButton = {
+                TextButton(
+                    onClick = {
+                        sslWarningState = SslWarningState.None
+                        onClose()
+                    }
+                ) {
+                    Text(stringResource(R.string.webview_ssl_warning_cancel))
+                }
+            }
+        )
+    }
 }

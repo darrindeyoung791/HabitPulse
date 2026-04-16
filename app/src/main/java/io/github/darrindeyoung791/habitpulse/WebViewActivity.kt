@@ -14,6 +14,10 @@ import io.github.darrindeyoung791.habitpulse.ui.screens.WebViewScreen
 import io.github.darrindeyoung791.habitpulse.ui.theme.HabitPulseTheme
 
 class WebViewActivity : ComponentActivity() {
+    companion object {
+        const val EXTRA_INITIAL_URL = "extra_initial_url"
+    }
+
     private lateinit var webView: WebView
 
     // Back callback for pre-Android 13 devices
@@ -57,10 +61,12 @@ class WebViewActivity : ComponentActivity() {
             onBackPressedCallback = callback
         }
 
+        val initialUrl = intent.getStringExtra(EXTRA_INITIAL_URL) ?: RouteConfig.HELP_URL
+
         setContent {
             HabitPulseTheme {
                 WebViewScreen(
-                    initialUrl = RouteConfig.HELP_URL,
+                    initialUrl = initialUrl,
                     onClose = { finishAfterTransition() },
                     externalWebView = webView,
                     onWebViewGoBack = {

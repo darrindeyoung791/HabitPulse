@@ -268,4 +268,11 @@
     <string name="webview_loading_failed">Loading failed</string>
     <string name="webview_retry">Retry</string>
     <string name="webview_help">Help &amp; Feedback</string>
+    <string name="webview_ssl_warning_title">Insecure Connection</string>
+    <string name="webview_ssl_warning_message">The page uses an insecure connection (%2$s), your information may be intercepted. Continue anyway?</string>
+    <string name="webview_ssl_warning_continue">Continue</string>
+    <string name="webview_ssl_warning_cancel">Cancel</string>
+    <string name="webview_external_link_title">Leaving %1$s website</string>
+    <string name="webview_external_link_message">You are about to leave the %1$s website. Please be careful when accessing third-party websites.</string>
+    <string name="webview_external_link_confirm">I understand</string>
 </resources>

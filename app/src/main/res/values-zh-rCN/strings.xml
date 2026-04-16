@@ -113,7 +113,7 @@
     <string name="habit_card_repeat_days_friday">五</string>
     <string name="habit_card_repeat_days_saturday">六</string>
     <string name="habit_card_repeat_days_separator">、</string>
-    
+
     <!-- Debug / Developer options -->
     <string name="debug_add_sample_data_dialog_title">添加样例数据</string>
     <string name="debug_add_sample_data_dialog_message">是否添加 40 条样例习惯数据？\n\n此功能用于新机调试，将添加包含不同提醒方式、监督方式和备注的习惯数据。部分监督人会在多个习惯中出现，用于测试界面滚动性能。</string>
@@ -157,7 +157,7 @@
     <string name="records_date_picker_dismiss">取消</string>
     <string name="records_date_filter_tooltip">选择日期</string>
     <string name="records_date_filter_selected">已选日期</string>
-    
+
     <!-- Relative dates -->
     <string name="records_date_today">今天</string>
     <string name="records_date_yesterday">昨天</string>
@@ -258,4 +258,23 @@
     <string name="accessibility_notify_supervisors">通知监督人</string>
     <string name="accessibility_skip_notification">跳过通知</string>
     <string name="reward_dismiss_toast">记得手动提醒监督人哦</string>
+
+    <!-- WebView Screen -->
+    <string name="webview_title">帮助与反馈</string>
+    <string name="webview_close">关闭</string>
+    <string name="webview_back">返回</string>
+    <string name="webview_menu">菜单</string>
+    <string name="webview_menu_refresh">刷新</string>
+    <string name="webview_menu_open_in_browser">在浏览器中打开</string>
+    <string name="webview_menu_share">分享</string>
+    <string name="webview_loading_failed">加载失败</string>
+    <string name="webview_retry">重试</string>
+    <string name="webview_help">帮助与反馈</string>
+    <string name="webview_ssl_warning_title">不安全连接</string>
+    <string name="webview_ssl_warning_message">访问的页面 %1$s 使用了不安全的连接（%2$s），你的信息可能被窃取。确定要继续访问吗？</string>
+    <string name="webview_ssl_warning_continue">继续访问</string>
+    <string name="webview_ssl_warning_cancel">取消</string>
+    <string name="webview_external_link_title">访问 %1$s 外的网页</string>
+    <string name="webview_external_link_message">你正在访问第三方网站，请注意保护个人信息。</string>
+    <string name="webview_external_link_confirm">我知道了</string>
 </resources>

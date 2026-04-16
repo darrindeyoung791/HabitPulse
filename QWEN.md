@@ -338,6 +338,10 @@ The project is in **early development stage** (v0.5.19-alpha):
 - ✅ DebounceClickHandler (300ms) and NavigationGuard (500ms) utilities
 - ✅ AccessibilityUtils for TalkBack detection
 - ✅ Reward Bottom Sheet - Celebration modal after habit check-in with animated 12-sided polygon shape and MD3 easing animations
+- ✅ WebView Security - SSL certificate warning dialog for insecure connections
+- ✅ WebView External Link Warning - Dialog warning when leaving app domain (shown once per session)
+- ✅ WebView in Settings - GitHub link opens in WebView instead of external browser
+- ✅ URL Variables - Domain allowlist uses RouteConfig variables for easy renaming
 
 ### In Progress
 - 🔄 Count section (track unplanned events, such as game scores)
