@@ -1,6 +1,6 @@
-# HabitPulse 帮助和反馈
+# HabitPulse 帮助与反馈
 
-遇到问题不用慌。查询这份指南，大部分问题都会解决。
+遇到问题不用慌。查阅这份指南，大部分问题都会解决。
 
 轻点顶部导航栏上的搜索，可以快速找到帮助信息。
 
@@ -10,6 +10,7 @@
 
 - [如何为习惯设置提醒时间](/tutorial/add-and-edit-habit#提醒时间)
 - [如何从全部习惯里删除联系人](/tutorial/contacts#删除联系人) 
+- [如何重新排序习惯](/tutorial/delete-and-sort-habit#重新排序习惯)
 
 > [!WARNING] TODO
 > 需要将来补充问题
