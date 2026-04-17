@@ -8,6 +8,7 @@
     <string name="settings_about_section">About</string>
     <string name="settings_privacy_notice">%1$s takes your privacy seriously. Your data is stored on your device, and %1$s does not transmit your personal information over the internet.</string>
     <string name="settings_app_version_label">Version</string>
+    <string name="settings_developer_name">The HabitPulse Dev Team</string>
     <string name="settings_app_info_button">App info…</string>
     <string name="settings_github_button">GitHub repo…</string>
     <string name="settings_support_habitpulse">Support %1$s</string>

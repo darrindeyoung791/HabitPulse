@@ -62,13 +62,13 @@ sealed class SslWarningState {
 }
 
 private fun isExternalLink(url: String): Boolean {
-    val allowedDomains = listOf(
-        RouteConfig.HELP_URL.removePrefix("https://"),
-        RouteConfig.GITHUB_URL.removePrefix("https://")
-    )
-    return allowedDomains.none { domain ->
-        url.contains(domain, ignoreCase = true)
-    }
+    val helpBase = "darrindeyoung791.github.io/HabitPulse"
+    val githubBase = "github.com/darrindeyoung791/HabitPulse"
+
+    val urlWithoutScheme = url.removePrefix("https://").removePrefix("http://")
+
+    return !urlWithoutScheme.startsWith(helpBase, ignoreCase = true) &&
+            !urlWithoutScheme.startsWith(githubBase, ignoreCase = true)
 }
 
 @OptIn(ExperimentalMaterial3Api::class)
