@@ -611,6 +611,12 @@ fun SettingsScreen() {
                             imageVector = Icons.Outlined.Person,
                             contentDescription = null
                         )
+                    },
+                    onClick = {
+                        val intent = Intent(context, WebViewActivity::class.java).apply {
+                            putExtra(WebViewActivity.EXTRA_INITIAL_URL, "https://darrindeyoung791.github.io/HabitPulse/team")
+                        }
+                        context.startActivity(intent)
                     }
                 )
 
