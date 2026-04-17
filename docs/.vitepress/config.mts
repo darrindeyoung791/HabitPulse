@@ -63,23 +63,23 @@ export default defineConfig({
 
     sidebar: [
       {
-        text: '入门指南',
+        text: '快速开始',
         items: [
-          { text: 'HabitPulse 是什么', link: '/what-is-habitpulse' },
+          { text: '概述', link: '/overview' },
           { text: '获取 HabitPulse', link: '/download' }
         ]
       },
       {
         text: '教程',
         items: [
-          { text: '帮助与反馈', link: '/tutorial/help-and-feedback'},
-          { text: '初次上手', link: '/tutorial/first-time'},
-          { text: '新建与编辑习惯', link: '/tutorial/add-and-edit-habit'},
-          { text: '删除与排序习惯', link: '/tutorial/delete-and-sort-habit'},
-          { text: '打卡习惯', link: '/tutorial/checkin'},
-          { text: '联系人', link: '/tutorial/contacts'},
-          { text: '记录', link: '/tutorial/records'},
-          { text: '搜索与筛选', link: '/tutorial/search-and-filter'},
+          { text: '帮助与反馈', link: '/tutorial/help-and-feedback' },
+          { text: '初次上手', link: '/tutorial/first-time' },
+          { text: '新建与编辑习惯', link: '/tutorial/add-and-edit-habit' },
+          { text: '删除与排序习惯', link: '/tutorial/delete-and-sort-habit' },
+          { text: '打卡习惯', link: '/tutorial/checkin' },
+          { text: '联系人', link: '/tutorial/contacts' },
+          { text: '记录', link: '/tutorial/records' },
+          { text: '搜索与筛选', link: '/tutorial/search-and-filter' },
         ]
       },
       {
@@ -113,9 +113,9 @@ export default defineConfig({
     sidebarMenuLabel: '菜单',
 
     darkModeSwitchLabel: '主题',
-    
+
     lightModeSwitchTitle: '切换到浅色模式',
-    
+
     darkModeSwitchTitle: '切换到深色模式',
   }
 })

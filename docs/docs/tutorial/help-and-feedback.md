@@ -20,3 +20,10 @@
 你可以前往 HabitPulse 项目的 [Issues](https://github.com/darrindeyoung791/HabitPulse/issues) 提出你发现的 Bug。
 
 提交前，请检查是否有相同内容的 issue 已经被别人提交。
+
+## 下一步操作
+
+<ul>
+  <li><a href="first-time">开始阅读帮助指南</a></li>
+  <li><a href="javascript:setTimeout(()=>document.querySelector('.DocSearch-Button, .VPNavBarSearchButton')?.click(), 50)">打开搜索</a></li>
+</ul>

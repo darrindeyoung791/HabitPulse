@@ -12,7 +12,7 @@ hero:
   actions:
     - theme: brand
       text: 快速了解 ->
-      link: /what-is-habitpulse
+      link: /overview
     - theme: alt
       text: 获取 HabitPulse
       link: /download

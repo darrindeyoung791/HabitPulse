@@ -4,7 +4,13 @@ import { h } from 'vue'
 
 import Layout from './Layout.vue'
 
+import FeatureCard from '../components/FeatureCard.vue'
+
+
 export default {
   extends: DefaultTheme,
-  Layout: () => h(Layout)
+  Layout: () => h(Layout),
+  enhanceApp({ app }) {
+    app.component('FeatureCard', FeatureCard)
+  }
 } satisfies Theme

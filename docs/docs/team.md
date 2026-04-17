@@ -93,7 +93,7 @@ const AIAgents = [
   <VPTeamMembers size="medium" :members="humanMembers" />
   <VPTeamPageSection>
     <template #title>
-      AI Agents
+      AI 工具
     </template>
     <template #lead>
       不那么冷的冷知识，HabitPulse 的诞生其实更离不开这些 AI 工具：
