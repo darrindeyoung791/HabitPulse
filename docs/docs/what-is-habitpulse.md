@@ -30,7 +30,7 @@ HabitPulse 是一款专为 Android 设备设计的习惯追踪应用，致力于
 
 | 手机界面 | 平板界面 |
 |---|---|
-| ![手机界面](/images/showcases/Screenshot_Pixel_6a_Habits_ZH-CN.png) | ![平板界面](/images/showcases/Screenshot_Pixel_Tablet_Habits_ZH-CN.png) |
+| ![手机界面](/images/showcases/Screenshot_Pixel_6a_Habits_ZH-CN.webp) | ![平板界面](/images/showcases/Screenshot_Pixel_Tablet_Habits_ZH-CN.webp) |
 
 ## 技术架构
 

@@ -16,7 +16,7 @@ HabitPulse 非常易于上手。即使是初次使用，也能飞快适应。
 处于习惯页面时，轻点屏幕底部或侧边的「习惯」导航按钮可以回到顶部。
 
 <p align="center">
-    <img src="/images/showcases/Screenshot_Pixel_6a_Habits_ZH-CN.png" alt="手机习惯界面" width="50%" />
+    <img src="/images/showcases/Screenshot_Pixel_6a_Habits_ZH-CN.webp" alt="手机习惯界面" width="50%" />
 </p>
 
 
@@ -29,7 +29,7 @@ HabitPulse 非常易于上手。即使是初次使用，也能飞快适应。
 通过长按任一现有习惯，再轻点弹出菜单里的「编辑」，可以进入布局一致的习惯编辑页面。
 
 <p align="center">
-    <img src="/images/showcases/Screenshot_Pixel_6a_Habit_Creation_ZH-CN.png" alt="手机习惯创建界面" width="50%" />
+    <img src="/images/showcases/Screenshot_Pixel_6a_Habit_Creation_ZH-CN.webp" alt="手机习惯创建界面" width="50%" />
 </p>
 
 ### 习惯多选与排序页面
@@ -39,7 +39,7 @@ HabitPulse 非常易于上手。即使是初次使用，也能飞快适应。
 通过长按任一现有习惯，再轻点弹出菜单里的「多选与排序」，可以进入习惯多选与排序页面。
 
 <p align="center">
-    <img src="/images/showcases/Screenshot_Pixel_6a_Multi_Select_Sort_ZH-CN.png" alt="手机习惯多选与排序界面" width="50%" />
+    <img src="/images/showcases/Screenshot_Pixel_6a_Multi_Select_Sort_ZH-CN.webp" alt="手机习惯多选与排序界面" width="50%" />
 </p>
 
 ## 联系人页面
@@ -51,7 +51,7 @@ HabitPulse 非常易于上手。即使是初次使用，也能飞快适应。
 处于联系人页面时，轻点屏幕底部或侧边的「联系人」导航按钮可以回到顶部。
 
 <p align="center">
-    <img src="/images/showcases/Screenshot_Pixel_6a_Contacts_ZH-CN.png" alt="手机联系人界面" width="50%" />
+    <img src="/images/showcases/Screenshot_Pixel_6a_Contacts_ZH-CN.webp" alt="手机联系人界面" width="50%" />
 </p>
 
 ## 记录页面
@@ -63,7 +63,7 @@ HabitPulse 非常易于上手。即使是初次使用，也能飞快适应。
 处于记录页面时，轻点屏幕底部或侧边的「记录」导航按钮可以回到顶部。
 
 <p align="center">
-    <img src="/images/showcases/Screenshot_Pixel_6a_Records_ZH-CN.png" alt="手机记录界面" width="50%" />
+    <img src="/images/showcases/Screenshot_Pixel_6a_Records_ZH-CN.webp" alt="手机记录界面" width="50%" />
 </p>
 
 ## 设置页面
@@ -73,5 +73,5 @@ HabitPulse 非常易于上手。即使是初次使用，也能飞快适应。
 处于习惯页面、联系人页面、记录页面时，轻点屏幕右上角的齿轮图标，可以进入设置页面。
 
 <p align="center">
-    <img src="/images/showcases/Screenshot_Pixel_6a_Settings_ZH-CN.png" alt="手机设置界面" width="50%" />
+    <img src="/images/showcases/Screenshot_Pixel_6a_Settings_ZH-CN.webp" alt="手机设置界面" width="50%" />
 </p>

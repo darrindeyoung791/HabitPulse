@@ -1,4 +1,4 @@
-![HabitPulse Banner](../../devdoc/images/readme/hero.png)
+![HabitPulse Banner](../../devdoc/images/readme/hero.webp)
 
 # HabitPulse
 
@@ -60,8 +60,8 @@
 
 | <div align="center">**Phone Interface**</div>                | <div align="center">**Tablet Interface**</div>               |
 | ------------------------------------------------------------ | ------------------------------------------------------------ |
-| ![Phone Interface](../../devdoc/images/showcases/Screenshot_Pixel_6a_Habits_EN-US.png) | ![Tablet Interface](../../devdoc/images/showcases/Screenshot_Pixel_Tablet_Habits_EN-US.png) |
-| ![Phone Interface](../../devdoc/images/showcases/Screenshot_Pixel_6a_Habits_Dark_EN-US.png) | ![Tablet Interface](../../devdoc/images/showcases/Screenshot_Pixel_Tablet_Habits_Dark_EN-US.png) |
+| ![Phone Interface](../../devdoc/images/showcases/Screenshot_Pixel_6a_Habits_EN-US.webp) | ![Tablet Interface](../../devdoc/images/showcases/Screenshot_Pixel_Tablet_Habits_EN-US.webp) |
+| ![Phone Interface](../../devdoc/images/showcases/Screenshot_Pixel_6a_Habits_Dark_EN-US.webp) | ![Tablet Interface](../../devdoc/images/showcases/Screenshot_Pixel_Tablet_Habits_Dark_EN-US.webp) |
 
 </div>
 
