@@ -8,37 +8,53 @@ import android.webkit.SslErrorHandler
 import android.webkit.WebView
 import android.webkit.WebViewClient
 import android.webkit.WebChromeClient
+import android.webkit.WebResourceError
+import android.webkit.WebResourceRequest
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.verticalScroll
+import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.Close
+import androidx.compose.material.icons.filled.CloudOff
 import androidx.compose.material3.AlertDialog
+import androidx.compose.material3.Button
+import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.ModalBottomSheet
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.material3.TopAppBar
+import androidx.compose.material3.rememberModalBottomSheetState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.viewinterop.AndroidView
@@ -46,6 +62,7 @@ import io.github.darrindeyoung791.habitpulse.R
 import io.github.darrindeyoung791.habitpulse.navigation.RouteConfig
 import io.github.darrindeyoung791.habitpulse.ui.components.webview.WebViewMenuButton
 import io.github.darrindeyoung791.habitpulse.ui.components.webview.WebviewAwareSwipeRefreshLayout
+import kotlinx.coroutines.launch
 
 sealed class WebViewState {
     object Loading : WebViewState()
@@ -59,6 +76,14 @@ sealed class SslWarningState {
         val url: String,
         val primaryError: String
     ) : SslWarningState()
+}
+
+sealed class NetworkErrorState {
+    object None : NetworkErrorState()
+    data class Show(
+        val errorCode: String,
+        val errorDescription: String
+    ) : NetworkErrorState()
 }
 
 private fun isExternalLink(url: String): Boolean {
@@ -89,6 +114,8 @@ fun WebViewScreen(
     var sslWarningState by remember { mutableStateOf<SslWarningState>(SslWarningState.None) }
     var showExternalLinkWarning by remember { mutableStateOf(false) }
     var hasShownExternalLinkWarning by remember { mutableStateOf(false) }
+    var pendingExternalUrl by remember { mutableStateOf<String?>(null) }
+    var networkErrorState by remember { mutableStateOf<NetworkErrorState>(NetworkErrorState.None) }
 
     val createdHere = externalWebView == null
     val webView = remember { externalWebView ?: WebView(context) }
@@ -104,6 +131,21 @@ fun WebViewScreen(
         }
 
         webView.webViewClient = object : WebViewClient() {
+            override fun shouldOverrideUrlLoading(
+                view: WebView?,
+                request: WebResourceRequest?
+            ): Boolean {
+                val url = request?.url?.toString() ?: return false
+                val isMainFrame = request.isForMainFrame
+
+                if (isMainFrame && !hasShownExternalLinkWarning && isExternalLink(url)) {
+                    pendingExternalUrl = url
+                    showExternalLinkWarning = true
+                    return true
+                }
+                return false
+            }
+
             override fun onPageStarted(view: WebView?, url: String?, favicon: Bitmap?) {
                 super.onPageStarted(view, url, favicon)
                 webViewState = WebViewState.Loading
@@ -115,12 +157,7 @@ fun WebViewScreen(
                 webViewState = WebViewState.Success
                 isRefreshing = false
                 currentUrl = url
-                // Update canGoBack state
                 canGoBack = view?.canGoBack() == true
-                // Check if leaving HabitPulse domain
-                if (!hasShownExternalLinkWarning && url != null && isExternalLink(url)) {
-                    showExternalLinkWarning = true
-                }
             }
 
             override fun doUpdateVisitedHistory(view: WebView?, url: String?, isReload: Boolean) {
@@ -150,6 +187,35 @@ fun WebViewScreen(
                     url = errorUrl,
                     primaryError = primaryError
                 )
+            }
+
+            override fun onReceivedError(
+                view: WebView?,
+                request: WebResourceRequest?,
+                error: WebResourceError?
+            ) {
+                super.onReceivedError(view, request, error)
+                val errorCode = error?.errorCode ?: return
+                val description = error?.description?.toString() ?: ""
+
+                val isMainFrame = request?.isForMainFrame == true
+                if (isMainFrame) {
+                    val networkErrorCodes = setOf(
+                        -2,
+                        -6,
+                        -8,
+                        -10,
+                        -16
+                    )
+
+                    if (errorCode in networkErrorCodes) {
+                        webViewState = WebViewState.Error
+                        networkErrorState = NetworkErrorState.Show(
+                            errorCode = errorCode.toString(),
+                            errorDescription = description
+                        )
+                    }
+                }
             }
         }
 
@@ -309,6 +375,7 @@ fun WebViewScreen(
             onDismissRequest = {
                 showExternalLinkWarning = false
                 hasShownExternalLinkWarning = true
+                pendingExternalUrl = null
             },
             title = {
                 Text(text = stringResource(R.string.webview_external_link_title, appName))
@@ -319,8 +386,13 @@ fun WebViewScreen(
             confirmButton = {
                 TextButton(
                     onClick = {
+                        val url = pendingExternalUrl
                         showExternalLinkWarning = false
                         hasShownExternalLinkWarning = true
+                        pendingExternalUrl = null
+                        if (url != null) {
+                            webView.loadUrl(url)
+                        }
                     }
                 ) {
                     Text(stringResource(R.string.webview_external_link_confirm))
@@ -369,5 +441,107 @@ fun WebViewScreen(
                 }
             }
         )
+    }
+
+    if (networkErrorState is NetworkErrorState.Show) {
+        val sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
+        val scope = rememberCoroutineScope()
+
+        ModalBottomSheet(
+            onDismissRequest = {
+                networkErrorState = NetworkErrorState.None
+                onClose()
+            },
+            sheetState = sheetState
+        ) {
+            Column(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .verticalScroll(rememberScrollState())
+                    .padding(horizontal = 24.dp)
+                    .padding(bottom = 32.dp),
+                horizontalAlignment = Alignment.CenterHorizontally
+            ) {
+                Icon(
+                    imageVector = Icons.Filled.CloudOff,
+                    contentDescription = null,
+                    modifier = Modifier.size(64.dp),
+                    tint = MaterialTheme.colorScheme.primary
+                )
+
+                Spacer(modifier = Modifier.height(16.dp))
+
+                Text(
+                    text = stringResource(R.string.webview_network_error_title),
+                    style = MaterialTheme.typography.headlineSmall,
+                    textAlign = TextAlign.Center
+                )
+
+                Spacer(modifier = Modifier.height(16.dp))
+
+                Text(
+                    text = stringResource(R.string.webview_network_error_description),
+                    style = MaterialTheme.typography.bodyLarge,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    textAlign = TextAlign.Center
+                )
+
+                Spacer(modifier = Modifier.height(8.dp))
+
+                Text(
+                    text = stringResource(R.string.webview_network_error_tips),
+                    style = MaterialTheme.typography.bodyLarge,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    textAlign = TextAlign.Center
+                )
+
+                Spacer(modifier = Modifier.height(32.dp))
+
+                Column(
+                    horizontalAlignment = Alignment.CenterHorizontally,
+                    verticalArrangement = Arrangement.spacedBy(8.dp)
+                ) {
+                    Button(
+                        onClick = {
+                            scope.launch {
+                                sheetState.hide()
+                                networkErrorState = NetworkErrorState.None
+                                isRefreshing = true
+                                webView.reload()
+                            }
+                        },
+                        modifier = Modifier.fillMaxWidth(0.85f),
+                        colors = ButtonDefaults.buttonColors(
+                            containerColor = MaterialTheme.colorScheme.primaryContainer,
+                            contentColor = MaterialTheme.colorScheme.onPrimaryContainer
+                        ),
+                        shape = MaterialTheme.shapes.medium,
+                        contentPadding = PaddingValues(horizontal = 16.dp, vertical = 12.dp)
+                    ) {
+                        Text(
+                            text = stringResource(R.string.webview_network_error_refresh),
+                            style = MaterialTheme.typography.titleMedium,
+                            fontWeight = FontWeight.SemiBold
+                        )
+                    }
+
+                    TextButton(
+                        onClick = {
+                            scope.launch {
+                                sheetState.hide()
+                                networkErrorState = NetworkErrorState.None
+                                onClose()
+                            }
+                        }
+                    ) {
+                        Text(
+                            text = stringResource(R.string.webview_network_error_close),
+                            style = MaterialTheme.typography.bodyMedium,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant
+                        )
+                    }
+                }
+            }
+        }
     }
 }

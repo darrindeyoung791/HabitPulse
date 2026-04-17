@@ -276,4 +276,10 @@
     <string name="webview_external_link_title">Leaving %1$s website</string>
     <string name="webview_external_link_message">You are about to leave the %1$s website. Please be careful when accessing third-party websites.</string>
     <string name="webview_external_link_confirm">I understand</string>
+    <string name="webview_network_error_title">Network Connection Error</string>
+    <string name="webview_network_error_description">Unable to load the page. Please check your network connection and try again.</string>
+    <string name="webview_network_error_tips">Try switching between Wi-Fi and mobile data, or check your network settings.</string>
+    <string name="webview_network_error_refresh">Refresh</string>
+    <string name="webview_network_error_open_browser">Open in Browser</string>
+    <string name="webview_network_error_close">Close</string>
 </resources>
