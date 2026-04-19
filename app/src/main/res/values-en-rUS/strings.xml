@@ -282,4 +282,5 @@
     <string name="webview_network_error_refresh">Refresh</string>
     <string name="webview_network_error_open_browser">Open in Browser</string>
     <string name="webview_network_error_close">Close</string>
+    <string name="webview_network_error_back">Go Back</string>
 </resources>

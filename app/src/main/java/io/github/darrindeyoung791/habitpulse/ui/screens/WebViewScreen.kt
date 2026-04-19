@@ -450,7 +450,7 @@ fun WebViewScreen(
         ModalBottomSheet(
             onDismissRequest = {
                 networkErrorState = NetworkErrorState.None
-                onClose()
+                onWebViewGoBack?.invoke()
             },
             sheetState = sheetState
         ) {
@@ -530,12 +530,12 @@ fun WebViewScreen(
                             scope.launch {
                                 sheetState.hide()
                                 networkErrorState = NetworkErrorState.None
-                                onClose()
+                                onWebViewGoBack?.invoke()
                             }
                         }
                     ) {
                         Text(
-                            text = stringResource(R.string.webview_network_error_close),
+                            text = stringResource(R.string.webview_network_error_back),
                             style = MaterialTheme.typography.bodyMedium,
                             color = MaterialTheme.colorScheme.onSurfaceVariant
                         )
