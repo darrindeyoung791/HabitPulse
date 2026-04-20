@@ -83,6 +83,12 @@ export default defineConfig({
         ]
       },
       {
+        text: '高级设置',
+        items: [
+          { text: '后台保活', link: '/advanced/stayin-alive' }
+        ]
+      },
+      {
         text: '关于',
         items: [
           { text: '开发团队', link: '/team' }
@@ -110,7 +116,7 @@ export default defineConfig({
       label: '本文目录'
     },
 
-    sidebarMenuLabel: '菜单',
+    sidebarMenuLabel: '文档目录',
 
     darkModeSwitchLabel: '主题',
 
