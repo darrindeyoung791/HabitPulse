@@ -17,14 +17,12 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.MoreVert
 import androidx.compose.material.icons.filled.OpenInBrowser
 import androidx.compose.material.icons.filled.Refresh
-import androidx.compose.material.icons.filled.Share
 import io.github.darrindeyoung791.habitpulse.R
 
 @Composable
 fun WebViewMenuButton(
     onRefresh: () -> Unit,
     onOpenInBrowser: () -> Unit,
-    onShare: () -> Unit,
     modifier: Modifier = Modifier
 ) {
     var expanded by remember { mutableStateOf(false) }
@@ -66,19 +64,6 @@ fun WebViewMenuButton(
                 leadingIcon = {
                     Icon(
                         imageVector = Icons.Filled.OpenInBrowser,
-                        contentDescription = null
-                    )
-                }
-            )
-            DropdownMenuItem(
-                text = { Text(stringResource(R.string.webview_menu_share)) },
-                onClick = {
-                    expanded = false
-                    onShare()
-                },
-                leadingIcon = {
-                    Icon(
-                        imageVector = Icons.Filled.Share,
                         contentDescription = null
                     )
                 }

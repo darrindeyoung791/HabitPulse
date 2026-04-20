@@ -27,6 +27,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.CloudOff
+import androidx.compose.material.icons.filled.Share
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
@@ -295,6 +296,21 @@ fun WebViewScreen(
                     }
                 },
                 actions = {
+                    IconButton(
+                        onClick = {
+                            val url = webView.url ?: currentUrl ?: initialUrl
+                            val shareIntent = Intent(Intent.ACTION_SEND).apply {
+                                type = "text/plain"
+                                putExtra(Intent.EXTRA_TEXT, url)
+                            }
+                            context.startActivity(Intent.createChooser(shareIntent, null))
+                        }
+                    ) {
+                        Icon(
+                            imageVector = Icons.Filled.Share,
+                            contentDescription = stringResource(R.string.webview_menu_share)
+                        )
+                    }
                     WebViewMenuButton(
                         onRefresh = {
                             isRefreshing = true
@@ -304,14 +320,6 @@ fun WebViewScreen(
                             val url = webView.url ?: currentUrl ?: initialUrl
                             val intent = Intent(Intent.ACTION_VIEW, Uri.parse(url))
                             context.startActivity(intent)
-                        },
-                        onShare = {
-                            val url = webView.url ?: currentUrl ?: initialUrl
-                            val shareIntent = Intent(Intent.ACTION_SEND).apply {
-                                type = "text/plain"
-                                putExtra(Intent.EXTRA_TEXT, url)
-                            }
-                            context.startActivity(Intent.createChooser(shareIntent, null))
                         }
                     )
                 }
