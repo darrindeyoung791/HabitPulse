@@ -1,3 +1,7 @@
+# Allow styles (Why ignored before?)
+!.vitepress/theme/style/
+!.vitepress/theme/style/*
+
 # Allow docs/public images (including icon directory)
 !docs/docs/public/
 
