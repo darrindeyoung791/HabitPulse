@@ -91,6 +91,7 @@ export default defineConfig({
       {
         text: '关于',
         items: [
+          { text: '关于我们的一切', link: '/about' },
           { text: '开发团队', link: '/team' }
         ]
       }
