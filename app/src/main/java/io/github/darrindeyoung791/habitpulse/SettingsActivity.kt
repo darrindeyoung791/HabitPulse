@@ -1,12 +1,16 @@
 package io.github.darrindeyoung791.habitpulse
 
 import android.content.ActivityNotFoundException
+import android.content.Context
 import android.content.Intent
 import android.content.res.Configuration
 import android.net.Uri
 import android.os.Build
 import android.os.Bundle
 import android.provider.Settings
+import android.webkit.CookieManager
+import android.webkit.WebView
+import android.widget.Toast
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.compose.rememberLauncherForActivityResult
@@ -17,11 +21,14 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.automirrored.outlined.Article
+import androidx.compose.material.icons.outlined.Delete
+import androidx.compose.material.icons.outlined.DeleteForever
 import androidx.compose.material.icons.outlined.FavoriteBorder
 import androidx.compose.material.icons.outlined.HelpOutline
 import androidx.compose.material.icons.outlined.Info
 import androidx.compose.material.icons.outlined.Notifications
 import androidx.compose.material.icons.outlined.Person
+import androidx.compose.material.icons.outlined.Storage
 import androidx.compose.material.icons.outlined.Tablet
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
@@ -47,6 +54,7 @@ import io.github.darrindeyoung791.habitpulse.utils.NotificationHelper
 import io.github.darrindeyoung791.habitpulse.utils.NotificationPermissionHelper
 import kotlinx.coroutines.launch
 import org.json.JSONArray
+import java.io.File
 import java.util.UUID
 
 class SettingsActivity : ComponentActivity() {
@@ -136,6 +144,10 @@ fun SettingsScreen() {
     // Dialog for persistent notification when in limited mode
     var showPersistentNotificationLimitedDialog by remember { mutableStateOf(false) }
     var pendingPersistentNotificationValue by remember { mutableStateOf(false) }
+
+    // Dialog for clear WebView cache
+    var showClearCacheDialog by remember { mutableStateOf(false) }
+    var showClearCookiesDialog by remember { mutableStateOf(false) }
 
     val TAP_TIME_WINDOW = 10_000L // 10 seconds
     val TAP_COUNT_THRESHOLD = 5
@@ -293,6 +305,62 @@ fun SettingsScreen() {
                     }
                 }) {
                     Text(text = stringResource(id = R.string.dialog_cancel))
+                }
+            }
+        )
+    }
+
+    // Dialog for clear WebView cache
+    if (showClearCacheDialog) {
+        AlertDialog(
+            onDismissRequest = { showClearCacheDialog = false },
+            title = {
+                Text(text = stringResource(id = R.string.settings_clear_webview_cache_dialog_title))
+            },
+            text = {
+                Text(text = stringResource(id = R.string.settings_clear_webview_cache_dialog_message))
+            },
+            confirmButton = {
+                TextButton(
+                    onClick = {
+                        showClearCacheDialog = false
+                        clearWebViewCache(context)
+                    }
+                ) {
+                    Text(text = stringResource(id = R.string.settings_clear_cache))
+                }
+            },
+            dismissButton = {
+                TextButton(onClick = { showClearCacheDialog = false }) {
+                    Text(text = stringResource(id = R.string.settings_cancel))
+                }
+            }
+        )
+    }
+
+    // Dialog for deep clean (clear cookies and login)
+    if (showClearCookiesDialog) {
+        AlertDialog(
+            onDismissRequest = { showClearCookiesDialog = false },
+            title = {
+                Text(text = stringResource(id = R.string.settings_clear_webview_cookies_dialog_title))
+            },
+            text = {
+                Text(text = stringResource(id = R.string.settings_clear_webview_cookies_dialog_message))
+            },
+            confirmButton = {
+                TextButton(
+                    onClick = {
+                        showClearCookiesDialog = false
+                        clearWebViewAll(context)
+                    }
+                ) {
+                    Text(text = stringResource(id = R.string.settings_clear_cache))
+                }
+            },
+            dismissButton = {
+                TextButton(onClick = { showClearCookiesDialog = false }) {
+                    Text(text = stringResource(id = R.string.settings_cancel))
                 }
             }
         )
@@ -519,6 +587,51 @@ fun SettingsScreen() {
                 }
             }
 
+            // 存储部分
+            item {
+                // Section header
+                Text(
+                    text = stringResource(id = R.string.settings_storage),
+                    style = MaterialTheme.typography.labelMedium,
+                    color = MaterialTheme.colorScheme.primary,
+                    modifier = Modifier.padding(horizontal = 16.dp, vertical = 16.dp)
+                )
+
+                // 说明文字
+                Text(
+                    text = stringResource(id = R.string.settings_storage_notice),
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp)
+                )
+
+                // Clear WebView cache
+                SettingsListItem(
+                    headline = stringResource(id = R.string.settings_clear_webview_cache),
+                    supportingText = stringResource(id = R.string.settings_clear_webview_cache_description),
+                    leadingIcon = {
+                        Icon(
+                            imageVector = Icons.Outlined.Delete,
+                            contentDescription = null
+                        )
+                    },
+                    onClick = { showClearCacheDialog = true }
+                )
+
+                // Deep clean (clear cookies and login)
+                SettingsListItem(
+                    headline = stringResource(id = R.string.settings_clear_webview_cookies),
+                    supportingText = stringResource(id = R.string.settings_clear_webview_cookies_description),
+                    leadingIcon = {
+                        Icon(
+                            imageVector = Icons.Outlined.DeleteForever,
+                            contentDescription = null
+                        )
+                    },
+                    onClick = { showClearCookiesDialog = true }
+                )
+            }
+
             // 视觉部分
             if (showForceTabletLandscapeSwitch) {
                 item {
@@ -681,6 +794,53 @@ fun SettingsScreen() {
             }
         }
     }
+}
+
+private fun clearWebViewCache(context: Context) {
+    try {
+        val cacheDir = context.cacheDir
+        deleteDir(cacheDir)
+
+        val externalCacheDir = context.externalCacheDir
+        externalCacheDir?.let { deleteDir(it) }
+
+        android.widget.Toast.makeText(
+            context,
+            context.getString(R.string.settings_clear_webview_cache_success),
+            android.widget.Toast.LENGTH_SHORT
+        ).show()
+    } catch (e: Exception) {
+        // Silent fail
+    }
+}
+
+private fun clearWebViewAll(context: Context) {
+    try {
+        val cacheDir = context.cacheDir
+        deleteDir(cacheDir)
+
+        val externalCacheDir = context.externalCacheDir
+        externalCacheDir?.let { deleteDir(it) }
+
+        android.webkit.CookieManager.getInstance().removeAllCookies(null)
+
+        android.widget.Toast.makeText(
+            context,
+            context.getString(R.string.settings_clear_webview_cookies_success),
+            android.widget.Toast.LENGTH_SHORT
+        ).show()
+    } catch (e: Exception) {
+        // Silent fail
+    }
+}
+
+private fun deleteDir(dir: File): Boolean {
+    if (dir.isDirectory) {
+        dir.listFiles()?.forEach { child ->
+            deleteDir(child)
+        }
+    }
+    return dir.delete()
 }
 
 @Composable
