@@ -599,6 +599,10 @@ fun HomeScreen(
                 windowInsets = WindowInsets.safeDrawing.only(
                     if (isRailCutoutRight) WindowInsetsSides.Top + WindowInsetsSides.End else WindowInsetsSides.Top
                 ),
+                colors = TopAppBarDefaults.topAppBarColors(
+                    containerColor = Color.Transparent,
+                    scrolledContainerColor = Color.Transparent
+                ),
                 title = {
                     Text(
                         text = currentTitle,

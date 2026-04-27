@@ -248,7 +248,7 @@
     <string name="settings_clear_webview_cookies_dialog_title">深度清理？</string>
     <string name="settings_clear_webview_cookies_dialog_message">这将清除所有缓存和登录信息，你在 WebView 中保存的账号将退出登录状态。确定要继续吗？</string>
     <string name="settings_clear_webview_cookies_success">已深度清理，登录状态已清除</string>
-    <string name="settings_storage_notice">此处清除 WebView 里的缓存，不影响你的习惯打卡数据。</string>
+    <string name="settings_storage_notice">此处清除应用内浏览器里的缓存，不影响你的习惯打卡数据。</string>
     <string name="settings_clear_cache">清理</string>
     <string name="settings_cancel">取消</string>
 
