@@ -20,6 +20,11 @@ export default defineConfig({
       link: '/'
     },
 
+    editLink: {
+      pattern: 'https://github.com/darrindeyoung791/HabitPulse/edit/master/docs/docs/:path',
+      text: '在 GitHub 上编辑此页面'
+    },
+
     search: {
       provider: 'local',
       options: {
@@ -66,7 +71,7 @@ export default defineConfig({
         text: '快速开始',
         items: [
           { text: '概述', link: '/overview' },
-          { text: '获取 HabitPulse', link: '/download' }
+          { text: '获取 HabitPulse', link: '/download' },
         ]
       },
       {
@@ -85,14 +90,16 @@ export default defineConfig({
       {
         text: '高级设置',
         items: [
-          { text: '后台保活', link: '/advanced/stayin-alive' }
+          { text: '后台保活', link: '/advanced/stayin-alive' },
+          { text: '空间清理', link: '/advanced/storage-cleanup' },
+          { text: '强制平板模式', link: '/advanced/force-tablet-landscape' },
         ]
       },
       {
         text: '关于',
         items: [
           { text: '关于我们的一切', link: '/about' },
-          { text: '开发团队', link: '/team' }
+          { text: '开发团队', link: '/team' },
         ]
       }
     ],

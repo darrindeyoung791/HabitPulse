@@ -238,15 +238,15 @@
 
     <!-- Storage Settings -->
     <string name="settings_storage">空间清理</string>
-    <string name="settings_clear_webview_cache">清理 WebView 缓存</string>
-    <string name="settings_clear_webview_cache_description">清除 WebView 浏览产生的缓存数据</string>
-    <string name="settings_clear_webview_cache_dialog_title">清理 WebView 缓存？</string>
-    <string name="settings_clear_webview_cache_dialog_message">这将清除 WebView 浏览产生的所有缓存数据，确定要清理吗？</string>
-    <string name="settings_clear_webview_cache_success">WebView 缓存已清理</string>
-    <string name="settings_clear_webview_cookies">深度清理（清除登录状态）</string>
+    <string name="settings_clear_webview_cache">清理缓存</string>
+    <string name="settings_clear_webview_cache_description">清除网页浏览产生的缓存数据</string>
+    <string name="settings_clear_webview_cache_dialog_title">清理缓存？</string>
+    <string name="settings_clear_webview_cache_dialog_message">这将清除网页浏览产生的所有缓存数据，清理后下次网页加载时间会稍微变长。</string>
+    <string name="settings_clear_webview_cache_success">已清理缓存</string>
+    <string name="settings_clear_webview_cookies">深度清理</string>
     <string name="settings_clear_webview_cookies_description">清除缓存和登录状态</string>
     <string name="settings_clear_webview_cookies_dialog_title">深度清理？</string>
-    <string name="settings_clear_webview_cookies_dialog_message">这将清除所有缓存和登录信息，你在 WebView 中保存的账号将退出登录状态。确定要继续吗？</string>
+    <string name="settings_clear_webview_cookies_dialog_message">这将清除所有缓存和 Cookie，清理后下次网页加载时间会稍微变长。你在应用内浏览器中保存的账号将退出登录状态。确定要继续吗？</string>
     <string name="settings_clear_webview_cookies_success">已深度清理，登录状态已清除</string>
     <string name="settings_storage_notice">此处清除应用内浏览器里的缓存，不影响你的习惯打卡数据。</string>
     <string name="settings_clear_cache">清理</string>

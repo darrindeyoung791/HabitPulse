@@ -2,6 +2,9 @@
 # https://vitepress.dev/reference/default-theme-home-page
 layout: home
 
+editLink: false
+
+
 hero:
   name: "HabitPulse"
   text: "一个 Material Design 3 风格习惯保持软件"
