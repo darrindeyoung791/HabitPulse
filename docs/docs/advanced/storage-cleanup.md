@@ -32,6 +32,6 @@ HabitPulse 在应用内浏览器使用缓存保证日常体验迅速，缓存会
 
 请**不要**频繁清除缓存。因为：
 - 缓存可以用于加速网页访问，部分访问过的页面（例如本站的页面）可以之后离线访问。
-- 缓存不会占据太多空间。HabitPulse 应用内浏览器只访问 HabitPulse Docs 和 HabitPulse GitHub 存储库的情况下，长期产生的缓存小于 100 MB。
+- 缓存不会占据太多空间。HabitPulse 应用内浏览器在只访问 HabitPulse Docs 和 HabitPulse GitHub 存储库的情况下，长期产生的缓存小于 100 MB。
 
 如果存储空间告罄，一般不是 HabitPulse 造成的，频繁清理 HabitPulse 也不会有显著帮助。
