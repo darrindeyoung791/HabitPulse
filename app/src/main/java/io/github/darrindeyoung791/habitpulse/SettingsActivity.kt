@@ -17,7 +17,12 @@ import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.enableEdgeToEdge
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.compose.foundation.layout.*
+import androidx.compose.animation.core.animateFloatAsState
+import androidx.compose.animation.core.tween
+import androidx.compose.foundation.background
 import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.LazyListState
+import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.automirrored.outlined.Article
@@ -33,6 +38,9 @@ import androidx.compose.material.icons.outlined.Tablet
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.*
+import androidx.compose.ui.draw.alpha
+import androidx.compose.ui.graphics.Brush
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
@@ -136,6 +144,40 @@ fun SettingsScreen() {
     var versionTapStartTime by remember { mutableStateOf(0L) }
     var showSampleDataDialog by remember { mutableStateOf(false) }
     var showSuccessMessage by remember { mutableStateOf(false) }
+
+    // Scroll state and edge detection for gradient overlays
+    val listState = rememberLazyListState()
+    val isAtTop = remember { mutableStateOf(true) }
+    val isAtBottom = remember { mutableStateOf(false) }
+
+    LaunchedEffect(listState.firstVisibleItemIndex, listState.firstVisibleItemScrollOffset) {
+        val layoutInfo = listState.layoutInfo
+        val totalCount = layoutInfo.totalItemsCount
+        val visibleItems = layoutInfo.visibleItemsInfo
+
+        isAtTop.value = listState.firstVisibleItemIndex == 0 && listState.firstVisibleItemScrollOffset == 0
+
+        if (totalCount > 0 && visibleItems.isNotEmpty()) {
+            val lastVisibleItem = visibleItems.last()
+            val isLastItemVisible = lastVisibleItem.index == totalCount - 1
+            val viewportHeight = layoutInfo.viewportSize.height
+            val itemEnd = lastVisibleItem.offset + lastVisibleItem.size
+            isAtBottom.value = isLastItemVisible && itemEnd <= viewportHeight
+        } else {
+            isAtBottom.value = true
+        }
+    }
+
+    val topGradientAlpha by animateFloatAsState(
+        targetValue = if (isAtTop.value) 0f else 1f,
+        animationSpec = tween(durationMillis = 200),
+        label = "settingsTopGradientAlpha"
+    )
+    val bottomGradientAlpha by animateFloatAsState(
+        targetValue = if (isAtBottom.value) 0f else 1f,
+        animationSpec = tween(durationMillis = 200),
+        label = "settingsBottomGradientAlpha"
+    )
 
     // Dialog for force tablet landscape mode warning
     var showForceTabletLandscapeDialog by remember { mutableStateOf(false) }
@@ -400,11 +442,15 @@ fun SettingsScreen() {
             )
         }
     ) { innerPadding ->
-        LazyColumn(
+        Box(
             modifier = Modifier
                 .fillMaxSize()
                 .padding(innerPadding)
         ) {
+            LazyColumn(
+                modifier = Modifier.fillMaxSize(),
+                state = listState
+            ) {
             // 支持部分
             item {
                 // Section header
@@ -793,7 +839,40 @@ fun SettingsScreen() {
                 }
             }
         }
+
+        Box(
+            modifier = Modifier
+                .fillMaxWidth()
+                .height(16.dp)
+                .align(Alignment.TopCenter)
+                .alpha(topGradientAlpha)
+                .background(
+                    Brush.verticalGradient(
+                        colors = listOf(
+                            MaterialTheme.colorScheme.background,
+                            Color.Transparent
+                        )
+                    )
+                )
+        )
+
+        Box(
+            modifier = Modifier
+                .fillMaxWidth()
+                .height(16.dp)
+                .align(Alignment.BottomCenter)
+                .alpha(bottomGradientAlpha)
+                .background(
+                    Brush.verticalGradient(
+                        colors = listOf(
+                            Color.Transparent,
+                            MaterialTheme.colorScheme.background
+                        )
+                    )
+                )
+        )
     }
+}
 }
 
 private fun clearWebViewCache(context: Context) {

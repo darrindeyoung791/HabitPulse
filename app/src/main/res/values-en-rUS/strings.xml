@@ -170,7 +170,7 @@
 
     <!-- Settings - Visual -->
     <string name="settings_visual">Visual</string>
-    <string name="settings_force_tablet_landscape">Force tablet landscape mode</string>
+    <string name="settings_force_tablet_landscape">Force tablet landscape mode?</string>
     <string name="settings_force_tablet_landscape_description">Use tablet landscape layout on small tablets in landscape orientation</string>
     <string name="settings_force_tablet_landscape_warning_title"> Force enable tablet landscape mode?</string>
     <string name="settings_force_tablet_landscape_warning_message">This feature is optimized for small-screen tablets. Enabling it on phones may cause layout issues. Proceed anyway?</string>
