@@ -9,6 +9,9 @@ object RouteConfig {
 
 sealed class Route(val route: String) {
     object Home : Route("home")
+    object Habits : Route("habits")
+    object Contacts : Route("contacts")
+    object Records : Route("records")
     object CreateHabit : Route("create_habit")
     object EditHabit : Route("edit_habit/{habitId}") {
         fun createRoute(habitId: UUID): String = "edit_habit/$habitId"

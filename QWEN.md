@@ -72,7 +72,8 @@ HabitPulse/
 │   │   │   │   │   └── ContactsViewModel.kt     # ViewModel for contacts screen
 │   │   │   │   ├── ui/
 │   │   │   │   │   ├── screens/
-│   │   │   │   │   │   ├── HomeScreen.kt        # Home screen with 3 tabs (Habits, Contacts, Records)
+│   │   │   │   │   │   ├── HomeScreen.kt        # Layout container with 3 tabs + TopAppBar/Navigation
+│   │   │   │   │   │   ├── HabitScreen.kt       # Habit tab content (list, cards, search, reward sheet)
 │   │   │   │   │   │   ├── HabitCreationScreen.kt # Create/Edit habit screen
 │   │   │   │   │   │   ├── MultiSelectSortScreen.kt # Drag-and-drop reorder screen
 │   │   │   │   │   │   ├── RecordsScreen.kt     # Completion records screen
@@ -286,6 +287,7 @@ The project is in **early development stage** (v0.5.19-alpha):
 - ✅ WelcomeActivity with onboarding/consent flow and permission requests
 - ✅ AdScreen with countdown skip for splash ads
 - ✅ Home screen with 3 tabs: Habits, Contacts, Records
+- ✅ **HomeScreen Refactoring** - Split into layout shell (HomeScreen.kt) and content screens (HabitScreen.kt, etc.) for better maintainability (~1100 lines vs original 2900+)
 - ✅ Habit creation/edit screen with form validation
 - ✅ Settings screen (separate Activity) with app info, visual options, about
 - ✅ OpenSourceLicensesActivity using AboutLibraries library
@@ -358,8 +360,8 @@ The project is in **early development stage** (v0.5.19-alpha):
 
 - **Namespace**: `io.github.darrindeyoung791.habitpulse`
 - **Application ID**: `io.github.darrindeyoung791.habitpulse`
-- **Version Code**: 118 (incremented for multi-select & sort feature)
-- **Version Name**: 0.5.19-alpha
+- **Version Code**: 119 (incremented for home screen refactoring)
+- **Version Name**: 0.5.20-alpha
 
 ## Screen Flow
 
@@ -381,14 +383,18 @@ The project is in **early development stage** (v0.5.19-alpha):
                              │
             ┌────────────────┼────────────────┐
             ▼                ▼                ▼
-      ┌──────────┐    ┌──────────┐    ┌──────────────┐
-      │ HomeScreen│    │HabitCreate│    │MultiSelect   │
-      │  (3 tabs) │◀──▶│  Screen   │    │Sort Screen   │
-      │          │    │          │    │              │
-      │ - Habits │    │ - Create │    │ - Reorder    │
-      │ - Contacts│   │ - Edit   │    │ - Batch del  │
-      │ - Records│    └──────────┘    └──────────────┘
-      └──────────┘
+       ┌──────────┐    ┌──────────┐    ┌──────────────┐
+       │ HomeScreen│    │HabitCreate│    │MultiSelect   │
+       │  (Shell)  │◀──▶│  Screen   │    │Sort Screen   │
+       │          │    │          │    │              │
+       │ - Habits │    │ - Create │    │ - Reorder    │
+       │ - Contacts│   │ - Edit   │    │ - Batch del  │
+       │ - Records│    └──────────┘    └──────────────┘
+       └──────────┘
+          │
+          ├── HabitScreenContent (Habit list, cards, search)
+          ├── ContactsScreenContent (Supervisor contacts)
+          └── RecordsScreenContent (Completion records)
 ```
 
 ### Responsive Navigation System
