@@ -7,6 +7,8 @@ import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.core.tween
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
+import androidx.compose.animation.scaleIn
+import androidx.compose.animation.scaleOut
 import androidx.compose.animation.togetherWith
 import androidx.compose.foundation.ScrollState
 import android.util.Log
@@ -309,11 +311,20 @@ fun HomeScreen(
 
     // 主页主体内容 - 不再接收 nestedScrollConn，由各组件自己处�?
     // 使用 AnimatedContent 实现 Section 切换时的淡入淡出动画
+    // Z 轴切换（细微缩放 + 淡入淡出）
     val homeBody: @Composable (Modifier) -> Unit = { modifier ->
         AnimatedContent(
             targetState = currentSection,
             transitionSpec = {
-                fadeIn(animationSpec = tween(150)) togetherWith fadeOut(animationSpec = tween(150))
+                // MD3 风格：从中间开始的细微 Z 轴切换
+                scaleIn(
+                    initialScale = 0.95f,
+                    animationSpec = tween(150)
+                ) + fadeIn(animationSpec = tween(150)) togetherWith
+                scaleOut(
+                    targetScale = 1.05f,
+                    animationSpec = tween(150)
+                ) + fadeOut(animationSpec = tween(150))
             },
             label = "sectionTransition"
         ) { targetSection ->
