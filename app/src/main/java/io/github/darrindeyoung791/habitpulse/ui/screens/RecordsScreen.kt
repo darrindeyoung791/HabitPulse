@@ -57,11 +57,13 @@ import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.material3.TopAppBarScrollBehavior
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.ui.ExperimentalComposeUiApi
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
+import kotlinx.coroutines.delay
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -180,16 +182,28 @@ fun RecordsScreenContent(
     val lastNonEmptyData by viewModel.lastNonEmptyData.collectAsStateWithLifecycle(initialValue = emptyList())
     val selectedDate by viewModel.selectedDate.collectAsStateWithLifecycle()
 
-    // 使用最后一次的非空数据，避免切换页面时闪现空状态
-    // 但只在加载中时使用缓存，加载完成后显示真实数据（包括空状态）
+    // 使用上一次非空数据作为缓存，避免切换页面时闪现空状态
+    // 加载中或缓存可用时优先显示缓存，只有确定无数据后才显示空状态
     val displayRecords = if (groupedRecords.isNotEmpty()) {
         groupedRecords
-    } else if (isLoading) {
-        // 加载中：使用缓存避免闪现空状态
+    } else if (isLoading || lastNonEmptyData.isNotEmpty()) {
         lastNonEmptyData
     } else {
-        // 加载完成：显示真实数据（可能是空列表）
         groupedRecords
+    }
+
+    // 加载用时超过 1 秒后才显示加载指示器，避免短暂加载闪现
+    var showDelayedLoading by remember { mutableStateOf(false) }
+    LaunchedEffect(isLoading) {
+        if (isLoading) {
+            showDelayedLoading = false
+            delay(1000)
+            if (isLoading) {
+                showDelayedLoading = true
+            }
+        } else {
+            showDelayedLoading = false
+        }
     }
 
     // Get selected habit name for display
@@ -238,21 +252,9 @@ fun RecordsScreenContent(
 
         // === Content Section ===
         when {
-            // 只在首次加载时显示加载指示器，切换页面时不显示
-            isLoading && !hasLoadedDataOnce -> {
-                Box(
-                    modifier = Modifier.fillMaxSize(),
-                    contentAlignment = Alignment.Center
-                ) {
-                    CircularProgressIndicator()
-                }
-            }
-            displayRecords.isEmpty() -> {
-                EmptyRecordsContent(
-                    modifier = Modifier.fillMaxSize()
-                )
-            }
-            else -> {
+            displayRecords.isNotEmpty() -> {
+                // 有数据时直接显示（可能是缓存数据或实时数据）
+
                 if (useTwoColumnLayout) {
                     // Two-column layout for tablet landscape
                     // Date headers span full width, records are split into two columns
@@ -365,6 +367,25 @@ fun RecordsScreenContent(
                         }
                     }
                 }
+            }
+            hasLoadedDataOnce && !isLoading -> {
+                // 数据已加载完成且无数据，显示空状态
+                EmptyRecordsContent(
+                    modifier = Modifier.fillMaxSize()
+                )
+            }
+            showDelayedLoading -> {
+                // 加载用时超过 1 秒，显示加载指示器
+                Box(
+                    modifier = Modifier.fillMaxSize(),
+                    contentAlignment = Alignment.Center
+                ) {
+                    CircularProgressIndicator()
+                }
+            }
+            else -> {
+                // 其他情况（首次加载未完成、缓存切换等），不显示任何内容避免闪现
+                Box(modifier = Modifier.fillMaxSize())
             }
         }
     }

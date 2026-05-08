@@ -115,7 +115,7 @@
     <string name="habit_card_repeat_days_separator">、</string>
 
     <!-- Debug / Developer options -->
-    <string name="debug_add_sample_data_dialog_title">添加样例数据</string>
+    <string name="debug_add_sample_data_dialog_title">添加样例数据？</string>
     <string name="debug_add_sample_data_dialog_message">是否添加 40 条样例习惯数据？\n\n此功能用于新机调试，将添加包含不同提醒方式、监督方式和备注的习惯数据。部分监督人会在多个习惯中出现，用于测试界面滚动性能。</string>
     <string name="debug_add_sample_data_yes">添加</string>
     <string name="debug_add_sample_data_no">取消</string>
@@ -171,7 +171,7 @@
 
     <!-- Settings - Visual -->
     <string name="settings_visual">视觉</string>
-    <string name="settings_force_tablet_landscape">强制使用平板横屏模式？</string>
+    <string name="settings_force_tablet_landscape">强制使用平板横屏模式</string>
     <string name="settings_force_tablet_landscape_description">在小平板横屏时，使用平板横屏的界面布局</string>
     <string name="settings_force_tablet_landscape_warning_title">强制开启平板横屏模式？</string>
     <string name="settings_force_tablet_landscape_warning_message">此功能专为小屏平板设计。如果在手机上开启，界面布局可能会显示异常。确定要开启吗？</string>

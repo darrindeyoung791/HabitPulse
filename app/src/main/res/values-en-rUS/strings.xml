@@ -114,7 +114,7 @@
     <string name="habit_card_repeat_days_separator">, </string>
     
     <!-- Debug / Developer options -->
-    <string name="debug_add_sample_data_dialog_title">Add Sample Data</string>
+    <string name="debug_add_sample_data_dialog_title">Add Sample Data?</string>
     <string name="debug_add_sample_data_dialog_message">Add 40 sample habit data entries?\n\nThis feature is for debugging on new devices. It will add habits with different reminder methods, supervision methods, and notes. Some supervisors appear in multiple habits for testing UI scrolling performance.</string>
     <string name="debug_add_sample_data_yes">Add</string>
     <string name="debug_add_sample_data_no">Cancel</string>
@@ -170,7 +170,7 @@
 
     <!-- Settings - Visual -->
     <string name="settings_visual">Visual</string>
-    <string name="settings_force_tablet_landscape">Force tablet landscape mode?</string>
+    <string name="settings_force_tablet_landscape">Force tablet landscape mode</string>
     <string name="settings_force_tablet_landscape_description">Use tablet landscape layout on small tablets in landscape orientation</string>
     <string name="settings_force_tablet_landscape_warning_title"> Force enable tablet landscape mode?</string>
     <string name="settings_force_tablet_landscape_warning_message">This feature is optimized for small-screen tablets. Enabling it on phones may cause layout issues. Proceed anyway?</string>
