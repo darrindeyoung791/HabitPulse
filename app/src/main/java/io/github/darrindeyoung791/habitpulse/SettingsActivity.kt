@@ -836,6 +836,22 @@ fun SettingsScreen() {
                             style = MaterialTheme.typography.bodyMedium
                         )
                     }
+
+                    TextButton(
+                        onClick = {
+                            val intent = Intent(context, WebViewActivity::class.java).apply {
+                                putExtra(WebViewActivity.EXTRA_INITIAL_URL, RouteConfig.HELP_URL)
+                            }
+                            context.startActivity(intent)
+                        },
+                        contentPadding = PaddingValues(start = 0.dp, end = 16.dp),
+                        modifier = Modifier.align(Alignment.Start)
+                    ) {
+                        Text(
+                            text = stringResource(id = R.string.settings_help_button),
+                            style = MaterialTheme.typography.bodyMedium
+                        )
+                    }
                 }
             }
         }

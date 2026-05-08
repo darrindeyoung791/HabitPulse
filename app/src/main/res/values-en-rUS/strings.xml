@@ -11,6 +11,7 @@
     <string name="settings_developer_name">The HabitPulse Dev Team</string>
     <string name="settings_app_info_button">App info…</string>
     <string name="settings_github_button">GitHub repo…</string>
+    <string name="settings_help_button">Help and feedback…</string>
     <string name="settings_support_habitpulse">Support %1$s</string>
     <string name="settings_support_habitpulse_description">Enable splash ad to support %1$s. Thank you for your support!</string>
     <string name="settings_support_habitpulse_switch">Enable Splash Ad</string>
