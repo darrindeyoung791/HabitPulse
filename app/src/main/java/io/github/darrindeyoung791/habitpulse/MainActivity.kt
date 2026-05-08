@@ -75,7 +75,6 @@ class MainActivity : ComponentActivity() {
 
                 // 根据设置决定是否显示广告页面
                 var showAdScreen by remember { mutableStateOf(false) }
-                var adFinished by remember { mutableStateOf(false) }
 
                 LaunchedEffect(Unit) {
                     // 等待读取设置
@@ -99,7 +98,7 @@ class MainActivity : ComponentActivity() {
                 }
 
                 // 如果广告结束，进入主内容
-                val showMainContent = adFinished || (!showSplashAd || !showAdScreen)
+                val showMainContent = !showSplashAd || !showAdScreen
                 
                 // 检查是否需要显示通知权限对话框
                 // 条件：持久通知设置已开启 AND 通知权限未授予 AND 广告已结束（或没有广告）
@@ -168,13 +167,15 @@ class MainActivity : ComponentActivity() {
                     }
                 }
 
-                // 显示广告页面（不参与淡入淡出动画）
-                if (showSplashAd && showAdScreen && !adFinished) {
+                // 显示广告页面（带淡入淡出过渡动画）
+                AnimatedVisibility(
+                    visible = showAdScreen,
+                    enter = fadeIn(animationSpec = tween(durationMillis = 300)),
+                    exit = fadeOut(animationSpec = tween(durationMillis = 200)),
+                    label = "adScreenTransition"
+                ) {
                     AdScreen(
-                        onAdFinished = {
-                            adFinished = true
-                            showAdScreen = false
-                        }
+                        onAdFinished = { showAdScreen = false }
                     )
                 }
             }
