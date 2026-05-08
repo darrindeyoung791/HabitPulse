@@ -1,3 +1,7 @@
+import java.text.SimpleDateFormat
+import java.util.Date
+import java.util.Locale
+
 plugins {
     alias(libs.plugins.android.application)
     alias(libs.plugins.kotlin.compose)
@@ -61,6 +65,34 @@ android {
         arg("room.incremental", "true")
         arg("room.expandProjection", "true")
     }
+}
+
+val renameReleaseApk by tasks.registering {
+    doFirst {
+        val timestamp = SimpleDateFormat("yyyyMMdd_HHmmss", Locale.US).format(Date())
+        val versionName = android.defaultConfig.versionName ?: "unknown"
+        val newName = "HabitPulse_${versionName}_${timestamp}.apk"
+
+        // 遍历所有可能的 release APK 输出目录
+        listOf(
+            layout.buildDirectory.get().asFile.resolve("outputs/apk/release"),
+            projectDir.resolve("app/release"),
+            projectDir.resolve("release")
+        ).forEach { dir ->
+            if (dir.exists()) {
+                dir.listFiles()?.filter { it.extension == "apk" && !it.name.startsWith("HabitPulse") }?.forEach { apk ->
+                    val newFile = File(dir, newName)
+                    apk.copyTo(newFile, overwrite = true)
+                    apk.delete()
+                }
+            }
+        }
+    }
+}
+
+afterEvaluate {
+    tasks.named("assembleRelease") { finalizedBy(renameReleaseApk) }
+    tasks.named("packageRelease") { finalizedBy(renameReleaseApk) }
 }
 
 dependencies {
