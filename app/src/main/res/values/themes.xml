@@ -10,12 +10,16 @@
         <item name="android:windowLightStatusBar">true</item>
         <item name="android:windowLightNavigationBar">true</item>
         <item name="android:navigationBarColor">@android:color/transparent</item>
+        <!-- Required by SplashScreen library for pre-API-31: splash_screen_view.xml uses ?attr/splashScreenIconSize -->
+        <item name="splashScreenIconSize">@dimen/splashscreen_icon_size_no_background</item>
     </style>
 
     <!-- Splash theme used as application's launch theme so the system shows a proper background -->
     <style name="Theme.HabitPulse.Splash" parent="Theme.SplashScreen">
         <!-- Use explicit color for compatibility with all Android versions -->
         <item name="windowSplashScreenBackground">@color/white</item>
+        <!-- Use app foreground icon instead of Android default fallback -->
+        <item name="windowSplashScreenAnimatedIcon">@drawable/ic_launcher_foreground</item>
         <!-- Keep status bar transparent during splash -->
         <item name="android:statusBarColor">@android:color/transparent</item>
         <!-- Keep the app theme after the splash finishes -->
