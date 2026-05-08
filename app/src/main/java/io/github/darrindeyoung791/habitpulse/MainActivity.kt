@@ -1,10 +1,6 @@
 package io.github.darrindeyoung791.habitpulse
 
-import android.animation.Animator
-import android.animation.AnimatorListenerAdapter
-import android.animation.ObjectAnimator
 import android.os.Bundle
-import android.view.animation.AccelerateDecelerateInterpolator
 import android.content.res.Configuration
 import androidx.core.view.WindowCompat
 import androidx.activity.ComponentActivity
@@ -40,24 +36,6 @@ class MainActivity : ComponentActivity() {
         // Install splash screen
         val splashScreen = installSplashScreen()
         super.onCreate(savedInstanceState)
-
-        // Set custom fade-out animation for splash screen exit
-        splashScreen.setOnExitAnimationListener { splashScreenViewProvider ->
-            val fadeOutAnimator = ObjectAnimator.ofFloat(
-                splashScreenViewProvider.view,
-                "alpha",
-                1f,
-                0f
-            )
-            fadeOutAnimator.duration = 200
-            fadeOutAnimator.interpolator = AccelerateDecelerateInterpolator()
-            fadeOutAnimator.addListener(object : AnimatorListenerAdapter() {
-                override fun onAnimationEnd(animation: Animator) {
-                    splashScreenViewProvider.remove()
-                }
-            })
-            fadeOutAnimator.start()
-        }
 
         // Enable edge-to-edge display - system bar colors handled by HabitPulseTheme
         enableEdgeToEdge()
