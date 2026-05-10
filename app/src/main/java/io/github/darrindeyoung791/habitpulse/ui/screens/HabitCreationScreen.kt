@@ -535,13 +535,13 @@ fun HabitCreationScreen(
                     val backgroundColor = if (isSelected) {
                         MaterialTheme.colorScheme.primary
                     } else {
-                        MaterialTheme.colorScheme.primaryContainer
+                        MaterialTheme.colorScheme.surfaceVariant
                     }
-                    
+
                     val contentColor = if (isSelected) {
                         MaterialTheme.colorScheme.onPrimary
                     } else {
-                        MaterialTheme.colorScheme.onPrimaryContainer
+                        MaterialTheme.colorScheme.onSurfaceVariant
                     }
                     
                     Surface(
