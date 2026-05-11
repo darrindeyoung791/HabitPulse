@@ -1,0 +1,303 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="settings_title">設定</string>
+    <string name="settings_about">關於</string>
+    <string name="settings_app_version">應用程式版本</string>
+    <string name="settings_developer">開發者</string>
+    <string name="settings_back">返回</string>
+    <string name="settings_about_section">關於</string>
+    <string name="settings_privacy_notice">%1$s 高度重視你的私隱。你的數據始終保留在你的裝置上，並且 %1$s 不會聯網傳輸你的個人資訊。</string>
+    <string name="settings_app_version_label">應用程式版本</string>
+    <string name="settings_developer_name">HabitPulse 開發組</string>
+    <string name="settings_app_info_button">前往「設定」查看 %1$s 應用程式資訊…</string>
+    <string name="settings_github_button">前往 GitHub 查看此開源項目…</string>
+    <string name="settings_help_button">幫助與反饋…</string>
+    <string name="settings_support_habitpulse">支援 %1$s</string>
+    <string name="settings_support_habitpulse_description">開啟啟動廣告，以支援 %1$s。感謝你的支援！</string>
+    <string name="settings_support_habitpulse_switch">開啟啟動廣告</string>
+    <string name="settings_support_habitpulse_switch_description">啟動應用程式時，顯示一個可跳過的啟動廣告，你可隨時關閉此項</string>
+    <string name="settings_support_habitpulse_switch_description_talkback">輔助功能服務開啟時，啟動廣告功能不可用</string>
+    <string name="ad_skip_button">跳過廣告 (%1$d 秒)</string>
+    <string name="ad_space_for_rent">廣告位招租</string>
+    <string name="main_calendar_view">日曆視圖</string>
+    <string name="main_settings">設定</string>
+    <string name="main_new_habit">新增習慣</string>
+    <string name="main_no_habits">暫無習慣</string>
+    <string name="main_create_habit">去新增一個</string>
+    <string name="main_tab_habits">習慣</string>
+    <string name="main_tab_contacts">聯絡人</string>
+    <string name="main_tab_records">記錄</string>
+    <string name="main_title_habits">習慣</string>
+    <string name="main_title_contacts">聯絡人</string>
+    <string name="main_title_records">記錄</string>
+    <string name="main_subtitle_habit_count">%d 個打卡習慣</string>
+    <string name="main_subtitle_contact_count">%1$d 個聯絡人，%2$d 個提醒習慣</string>
+    <string name="main_blank_contacts_description">這是聯絡人頁面佔位內容，未來用於管理監督人。</string>
+    <string name="main_blank_records_description">這是記錄頁面佔位內容，未來展示習慣歷史記錄。</string>
+    <string name="main_expand_drawer">展開側邊欄</string>
+    <string name="main_collapse_drawer">摺疊側邊欄</string>
+    <string name="main_create_habit_title">新增習慣</string>
+    <string name="create_habit_title">新增習慣</string>
+    <string name="edit_habit_title">編輯習慣</string>
+    <string name="create_habit_habit_name_label">習慣名稱</string>
+    <string name="create_habit_habit_name_placeholder">你也許想試試：按時喝水</string>
+    <string name="create_habit_repeat_cycle_label">重複週期</string>
+    <string name="create_habit_daily_option">每日</string>
+    <string name="create_habit_weekly_option">每週</string>
+    <string name="create_habit_repeat_days_label">重複日期</string>
+    <string name="create_habit_repeat_days_hint">選擇重複日期</string>
+    <string name="create_habit_day_sunday">週日</string>
+    <string name="create_habit_day_monday">週一</string>
+    <string name="create_habit_day_tuesday">週二</string>
+    <string name="create_habit_day_wednesday">週三</string>
+    <string name="create_habit_day_thursday">週四</string>
+    <string name="create_habit_day_friday">週五</string>
+    <string name="create_habit_day_saturday">週六</string>
+    <string name="create_habit_reminder_time_label">提醒時間</string>
+    <string name="create_habit_no_reminder_set">未設定提醒時間</string>
+    <string name="create_habit_reminder_set_count">已設定 %d 個提醒時間</string>
+    <string name="create_habit_add_reminder_button">新增提醒時間</string>
+    <string name="create_habit_supervisor_count">已設定 %d 個監督人</string>
+    <string name="create_habit_expand_button">展開</string>
+    <string name="create_habit_collapse_button">收起</string>
+    <string name="create_habit_duplicate_time">該時間已存在</string>
+    <string name="create_habit_duplicate_supervisor">該監督人已存在</string>
+    <string name="create_habit_time_picker_title">選擇提醒時間</string>
+    <string name="create_habit_time_picker_confirm">確定</string>
+    <string name="create_habit_time_picker_dismiss">取消</string>
+    <string name="create_habit_max_length_hint">最多可輸入 100 個字元</string>
+    <string name="create_habit_supervision_label">監督方式</string>
+    <string name="create_habit_supervision_hint">選擇監督方式</string>
+    <string name="create_habit_supervision_none">不監督，僅本地提醒我</string>
+    <string name="create_habit_supervision_email">電郵彙報</string>
+    <string name="create_habit_supervision_sms">短訊彙報</string>
+    <string name="create_habit_supervisor_email_label">監督人電郵</string>
+    <string name="create_habit_supervisor_email_hint">輸入電郵地址</string>
+    <string name="create_habit_supervisor_email_add">新增電郵</string>
+    <string name="create_habit_supervisor_email_invalid">請輸入有效的電郵地址</string>
+    <string name="create_habit_supervisor_phone_label">監督人電話</string>
+    <string name="create_habit_supervisor_phone_hint">輸入電話號碼</string>
+    <string name="create_habit_supervisor_phone_add">新增號碼</string>
+    <string name="create_habit_supervisor_phone_invalid">請輸入有效的電話號碼</string>
+    <string name="create_habit_notes_label">備註資訊</string>
+    <string name="create_habit_notes_hint">備註資訊，可換行</string>
+    <string name="create_habit_notes_max_length_hint">最多可輸入 2000 個字元</string>
+    <string name="create_habit_save_button">儲存</string>
+    <string name="create_habit_cancel_button">取消</string>
+    <string name="create_habit_validation_failed">請填寫所有必填項</string>
+    <string name="habit_card_menu_undo">撤銷打卡</string>
+    <string name="habit_card_menu_edit">編輯</string>
+    <string name="habit_card_menu_delete">刪除</string>
+    <string name="habit_card_delete_confirm_title">確認刪除</string>
+    <string name="habit_card_delete_confirm_message">確定要刪除習慣「%1$s」嗎？此操作無法撤銷。</string>
+    <string name="habit_card_delete_confirm">刪除</string>
+    <string name="habit_card_delete_cancel">取消</string>
+    <string name="habit_card_completed_count">完成 %d 次</string>
+    <string name="habit_card_repeat_daily">每日</string>
+    <string name="habit_card_repeat_weekly">每週一、二、三</string>
+    <string name="habit_card_repeat_days_format">每週%s</string>
+    <string name="habit_card_reminder_count">%1$s 等 %2$d 次</string>
+    <string name="habit_card_reminder_single">%s</string>
+    <string name="habit_card_notes_preview">%s…</string>
+    <string name="habit_card_checkin_button">打卡</string>
+    <string name="habit_card_reminder_dialog_title">提醒詳情</string>
+    <string name="habit_card_reminder_dialog_dismiss">關閉</string>
+    <string name="habit_card_notes_dialog_title">備註詳情</string>
+    <string name="habit_card_notes_dialog_dismiss">關閉</string>
+    <string name="habit_card_no_notes">無備註</string>
+    <string name="habit_card_repeat_days_sunday">日</string>
+    <string name="habit_card_repeat_days_monday">一</string>
+    <string name="habit_card_repeat_days_tuesday">二</string>
+    <string name="habit_card_repeat_days_wednesday">三</string>
+    <string name="habit_card_repeat_days_thursday">四</string>
+    <string name="habit_card_repeat_days_friday">五</string>
+    <string name="habit_card_repeat_days_saturday">六</string>
+    <string name="habit_card_repeat_days_separator">、</string>
+
+    <!-- Debug / Developer options -->
+    <string name="debug_add_sample_data_dialog_title">新增樣本數據？</string>
+    <string name="debug_add_sample_data_dialog_message">是否新增 40 條樣本習慣數據？\n\n此功能用於新機調試，將新增包含不同提醒方式、監督方式和備註的習慣數據。部分監督人會在多個習慣中出現，用於測試界面滾動效能。</string>
+    <string name="debug_add_sample_data_yes">新增</string>
+    <string name="debug_add_sample_data_no">取消</string>
+    <string name="debug_sample_data_added">已新增 40 條樣本數據</string>
+
+    <!-- Accessibility -->
+    <string name="accessibility_talkback_splash_ad_disabled">為了不影響視障用戶，啟動廣告功能無法開啟</string>
+    <string name="accessibility_habit_checkin">打卡 %s</string>
+    <string name="accessibility_search_habits">搜尋習慣</string>
+    <string name="accessibility_search_contacts">搜尋聯絡人</string>
+    <string name="accessibility_clear_search">清除搜尋</string>
+
+    <!-- Search -->
+    <string name="search_habits_hint">搜尋習慣…</string>
+    <string name="search_contacts_hint">搜尋聯絡人…</string>
+    <string name="search_no_results">未找到符合的習慣</string>
+    <string name="search_no_results_description">請嘗試其他關鍵詞</string>
+    <string name="contacts_no_search_results">未找到符合的聯絡人</string>
+    <string name="contacts_no_search_results_description">請嘗試其他關鍵詞</string>
+    <string name="search_results_count">找到 %d 個習慣</string>
+
+    <!-- Records Screen -->
+    <string name="records_all_habits">全部習慣</string>
+    <string name="records_select_habit">選擇習慣</string>
+    <string name="records_completion_count">打卡 %d 次</string>
+    <string name="records_subtitle_completion_days">%d 天打卡記錄</string>
+    <string name="records_date_format">yyyy 年 MM 月 dd 日</string>
+    <string name="records_date_format_short">yyyy/MM/dd</string>
+    <string name="records_time_format">HH:mm</string>
+    <string name="records_no_completions">暫無打卡記錄</string>
+    <string name="records_no_completions_description">所選習慣還沒有打卡記錄</string>
+    <string name="records_completion_sequence">第 %d 次打卡</string>
+    <string name="records_card_content_description">%1$s，第 %2$d 次打卡，%3$s %4$s 完成</string>
+    <string name="records_jump_to_date">跳轉到日期</string>
+    <string name="records_selected_date">已選擇：%s</string>
+    <string name="records_clear_date">清除日期</string>
+    <string name="records_date_picker_title">選擇日期</string>
+    <string name="records_date_picker_confirm">確定</string>
+    <string name="records_date_picker_dismiss">取消</string>
+    <string name="records_date_filter_tooltip">選擇日期</string>
+    <string name="records_date_filter_selected">已選日期</string>
+
+    <!-- Relative dates -->
+    <string name="records_date_today">今天</string>
+    <string name="records_date_yesterday">昨天</string>
+    <string name="records_date_days_ago">%d 天前</string>
+    <string name="records_date_last_week">上週</string>
+    <string name="records_date_weeks_ago">%d 週前</string>
+    <string name="records_date_last_month">上月</string>
+    <string name="records_date_months_ago">%d 個月前</string>
+    <string name="records_date_last_year">去年</string>
+    <string name="records_date_years_ago">%d 年前</string>
+
+    <!-- Settings - Visual -->
+    <string name="settings_visual">視覺</string>
+    <string name="settings_force_tablet_landscape">強制使用平板橫屏模式</string>
+    <string name="settings_force_tablet_landscape_description">在小平板橫屏時，使用平板橫屏的界面佈局</string>
+    <string name="settings_force_tablet_landscape_warning_title">強制開啟平板橫屏模式？</string>
+    <string name="settings_force_tablet_landscape_warning_message">此功能專為小屏平板設計。如果在手機上開啟，界面佈局可能會顯示異常。確定要開啟嗎？</string>
+
+    <!-- Contacts Screen -->
+    <string name="contacts_title">聯絡人</string>
+    <string name="contacts_no_contacts">暫無聯絡人</string>
+    <string name="contacts_no_contacts_description">新增習慣監督人後，聯絡人將顯示在這裡</string>
+    <string name="contacts_email_type">電郵</string>
+    <string name="contacts_phone_type">電話</string>
+    <string name="contacts_used_in_habits">用於 %d 個習慣</string>
+    <string name="contacts_bottom_sheet_title">使用該聯絡人的習慣</string>
+    <string name="contacts_bottom_sheet_no_habits">該聯絡人未用於任何習慣</string>
+    <string name="contacts_delete_from_habit">從此習慣刪除</string>
+    <string name="contacts_delete_from_all_habits">從全部習慣刪除</string>
+    <string name="contacts_delete_confirm_title">確認刪除</string>
+    <string name="contacts_delete_from_habit_confirm">確定要從此習慣刪除該聯絡人嗎？</string>
+    <string name="contacts_delete_from_all_habits_confirm">確定要從全部習慣刪除該聯絡人嗎？此操作無法撤銷。</string>
+    <string name="contacts_delete_confirm">刪除</string>
+    <string name="contacts_delete_cancel">取消</string>
+    <string name="contacts_last_supervisor_warning">這是該習慣的唯一聯絡人，刪除後將變為"不監督，僅本地提醒"</string>
+
+    <!-- Dialog buttons -->
+    <string name="dialog_confirm">確定</string>
+    <string name="dialog_cancel">取消</string>
+
+    <!-- Open Source Licenses -->
+    <string name="settings_open_source_licenses">開放源代碼許可</string>
+    <string name="settings_open_source_licenses_description">查看本項目使用的開源庫許可證</string>
+
+    <!-- Multi-Select & Sort -->
+    <string name="multi_select_sort_title">多選與排序</string>
+    <string name="multi_select_sort_cancel">取消</string>
+    <string name="multi_select_sort_delete">刪除</string>
+    <string name="multi_select_sort_save">儲存</string>
+    <string name="multi_select_sort_select_all">全選</string>
+    <string name="multi_select_sort_empty">暫無習慣</string>
+    <string name="multi_select_sort_delete_confirm_title">確認刪除</string>
+    <string name="multi_select_sort_delete_confirm_message">確定要刪除選中的 %1$s 個習慣嗎？此操作無法撤銷。</string>
+    <string name="multi_select_sort_delete_confirm">刪除</string>
+    <string name="multi_select_sort_delete_cancel">取消</string>
+    <string name="accessibility_drag_handle">拖曳把手</string>
+    <string name="accessibility_drag_to_reorder">拖曳以重新排序</string>
+    <string name="habit_context_menu_multi_select">多選與排序</string>
+
+    <!-- Welcome Screen -->
+    <string name="welcome_description">小巧清爽的習慣跟蹤軟件，專為攻克三分鐘熱度打造。</string>
+    <string name="welcome_permissions_title">為了及時通知，%1$s 可能使用下列權限：</string>
+    <string name="welcome_permission_notification_title">發送持久通知</string>
+    <string name="welcome_permission_background_title">在後台持續運行</string>
+    <string name="welcome_agree_button">我同意，繼續</string>
+    <string name="welcome_disagree_button">不同意，進入受限模式</string>
+    <string name="welcome_limited_mode">受限模式</string>
+    <string name="welcome_limited_mode_info">你已選擇受限模式，部分功能將不可用</string>
+
+    <!-- Notification Settings -->
+    <string name="settings_notifications">通知</string>
+    <string name="settings_persistent_notification">保持後台運行</string>
+    <string name="settings_persistent_notification_description">顯示持久通知，保持應用程式及時提醒</string>
+    <string name="settings_persistent_notification_authorize">去授權</string>
+    <string name="settings_persistent_notification_permission_denied">未獲得通知權限，無法開啟此功能</string>
+    <string name="settings_persistent_notification_limited_mode_title">退出受限模式？</string>
+    <string name="settings_persistent_notification_limited_mode_message">開啟此功能將退出受限模式。持久通知將幫助應用程式在後台保持運行。確定要繼續嗎？</string>
+
+    <!-- Storage Settings -->
+    <string name="settings_storage">空間清理</string>
+    <string name="settings_clear_webview_cache">清理緩存</string>
+    <string name="settings_clear_webview_cache_description">清除網頁瀏覽產生的緩存數據</string>
+    <string name="settings_clear_webview_cache_dialog_title">清理緩存？</string>
+    <string name="settings_clear_webview_cache_dialog_message">這將清除網頁瀏覽產生的所有緩存數據，清理後下次網頁加載時間會稍微變長。</string>
+    <string name="settings_clear_webview_cache_success">已清理緩存</string>
+    <string name="settings_clear_webview_cookies">深度清理</string>
+    <string name="settings_clear_webview_cookies_description">清除緩存和登入狀態</string>
+    <string name="settings_clear_webview_cookies_dialog_title">深度清理？</string>
+    <string name="settings_clear_webview_cookies_dialog_message">這將清除所有緩存和 Cookie，清理後下次網頁加載時間會稍微變長。你在應用程式內瀏覽器中儲存的賬號將退出登入狀態。確定要繼續嗎？</string>
+    <string name="settings_clear_webview_cookies_success">已深度清理，登入狀態已清除</string>
+    <string name="settings_storage_notice">此處清除應用程式內瀏覽器裏的緩存，不影響你的習慣打卡數據。</string>
+    <string name="settings_clear_cache">清理</string>
+    <string name="settings_cancel">取消</string>
+
+    <!-- Notification Permission Dialog (shown on startup) -->
+    <string name="notification_permission_dialog_title">通知權限已關閉</string>
+    <string name="notification_permission_dialog_message">你已開啟保持後台運行功能，但通知權限未授予。持久通知將無法顯示，應用程式可能無法及時提醒。</string>
+    <string name="notification_permission_dialog_go_to_settings">去授權</string>
+    <string name="notification_permission_dialog_disable">關閉後台運行</string>
+
+    <!-- Notification Channel -->
+    <string name="notification_channel_name">後台運行通知</string>
+    <string name="notification_channel_description">用於保持 %1$s 在後台運行的持久通知</string>
+    <string name="notification_title">%1$s 正在運行</string>
+    <string name="notification_content">保持習慣提醒和後台同步</string>
+
+    <!-- Reward Bottom Sheet -->
+    <string name="reward_title">這是你第 %1$d 次完成 %2$s</string>
+    <string name="reward_subtitle">繼續堅持</string>
+    <string name="reward_notify_supervisor">通知 %s 的監督人</string>
+    <string name="reward_skip_notification">本次不通知</string>
+    <string name="reward_complete">完成</string>
+    <string name="accessibility_reward_sheet">完成習慣打卡</string>
+    <string name="accessibility_notify_supervisors">通知監督人</string>
+    <string name="accessibility_skip_notification">跳過通知</string>
+    <string name="reward_dismiss_toast">記得手動提醒監督人哦</string>
+
+    <!-- WebView Screen -->
+    <string name="webview_title">幫助與反饋</string>
+    <string name="webview_close">關閉</string>
+    <string name="webview_back">返回</string>
+    <string name="webview_menu">菜單</string>
+    <string name="webview_menu_refresh">刷新</string>
+    <string name="webview_menu_open_in_browser">在瀏覽器中打開</string>
+    <string name="webview_menu_share">分享</string>
+    <string name="webview_loading_failed">加載失敗</string>
+    <string name="webview_retry">重試</string>
+    <string name="webview_help">幫助與反饋</string>
+    <string name="webview_ssl_warning_title">不安全連接</string>
+    <string name="webview_ssl_warning_message">訪問的頁面 %1$s 使用了不安全的連接（%2$s），你的資訊可能被竊取。確定要繼續訪問嗎？</string>
+    <string name="webview_ssl_warning_continue">繼續訪問</string>
+    <string name="webview_ssl_warning_cancel">取消</string>
+    <string name="webview_external_link_title">訪問 %1$s 外的網頁</string>
+    <string name="webview_external_link_message">你正在訪問第三方網站，請注意保護個人資訊。</string>
+    <string name="webview_external_link_confirm">我知道了</string>
+    <string name="webview_network_error_title">網絡連接有問題</string>
+    <string name="webview_network_error_description">無法加載網頁，請檢查你的網絡連接後重試。</string>
+    <string name="webview_network_error_tips">可以嘗試切換 Wi-Fi 和流動數據，或檢查網絡設定。</string>
+    <string name="webview_network_error_refresh">刷新頁面</string>
+    <string name="webview_network_error_open_browser">在瀏覽器中打開</string>
+    <string name="webview_network_error_close">關閉</string>
+    <string name="webview_network_error_back">返回</string>
+</resources>
