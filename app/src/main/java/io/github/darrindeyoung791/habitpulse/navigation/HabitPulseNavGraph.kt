@@ -88,13 +88,13 @@ fun HabitPulseNavGraph(
                 scaleOut(
                     targetScale = 0.9f,
                     animationSpec = tween(durationMillis = 300)
-                ) + fadeOut(animationSpec = tween(durationMillis = 300))
+                )
             },
             popEnterTransition = {
                 scaleIn(
                     initialScale = 0.9f,
                     animationSpec = tween(durationMillis = 300)
-                ) + fadeIn(animationSpec = tween(durationMillis = 300))
+                )
             }
         ) { backStackEntry ->
             val animatedContentScope = this
@@ -151,13 +151,13 @@ fun HabitPulseNavGraph(
                         dampingRatio = 0.75f,
                         stiffness = Spring.StiffnessLow
                     )
-                ) + fadeIn(animationSpec = tween(durationMillis = 400))
+                )
             },
             exitTransition = {
                 slideOutVertically(
                     targetOffsetY = { fullHeight -> fullHeight },
                     animationSpec = tween(durationMillis = 200)
-                ) + fadeOut(animationSpec = tween(durationMillis = 200))
+                )
             }
         ) {
             Box(
@@ -187,13 +187,13 @@ fun HabitPulseNavGraph(
                         dampingRatio = 0.75f,
                         stiffness = Spring.StiffnessLow
                     )
-                ) + fadeIn(animationSpec = tween(durationMillis = 400))
+                )
             },
             exitTransition = {
                 slideOutVertically(
                     targetOffsetY = { fullHeight -> fullHeight },
                     animationSpec = tween(durationMillis = 200)
-                ) + fadeOut(animationSpec = tween(durationMillis = 200))
+                )
             }
         ) { backStackEntry ->
             val habitId = UUID.fromString(backStackEntry.arguments?.getString("habitId"))
@@ -222,13 +222,13 @@ fun HabitPulseNavGraph(
                         dampingRatio = 0.75f,
                         stiffness = Spring.StiffnessLow
                     )
-                ) + fadeIn(animationSpec = tween(durationMillis = 400))
+                )
             },
             exitTransition = {
                 slideOutVertically(
                     targetOffsetY = { fullHeight -> fullHeight },
                     animationSpec = tween(durationMillis = 200)
-                ) + fadeOut(animationSpec = tween(durationMillis = 200))
+                )
             }
         ) { backStackEntry ->
             val viewModel = (context.applicationContext as HabitPulseApplication).habitViewModel
