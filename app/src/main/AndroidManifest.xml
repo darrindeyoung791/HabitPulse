@@ -42,7 +42,7 @@
             android:theme="@style/Theme.HabitPulse.Splash"
             android:enableOnBackInvokedCallback="true"
             android:resizeableActivity="true"
-            android:configChanges="orientation|screenSize|screenLayout|smallestScreenSize|uiMode" />
+            android:configChanges="orientation|screenSize|screenLayout|smallestScreenSize" />
         <activity
             android:name=".MainActivity"
             android:exported="false"
@@ -50,7 +50,7 @@
             android:theme="@style/Theme.HabitPulse"
             android:enableOnBackInvokedCallback="true"
             android:resizeableActivity="true"
-            android:configChanges="orientation|screenSize|screenLayout|smallestScreenSize|uiMode" />
+            android:configChanges="orientation|screenSize|screenLayout|smallestScreenSize" />
         <activity
             android:name=".SettingsActivity"
             android:exported="false"
@@ -58,7 +58,7 @@
             android:theme="@style/Theme.HabitPulse"
             android:enableOnBackInvokedCallback="true"
             android:resizeableActivity="true"
-            android:configChanges="orientation|screenSize|screenLayout|smallestScreenSize|uiMode" />
+            android:configChanges="orientation|screenSize|screenLayout|smallestScreenSize" />
         <activity
             android:name=".WebViewActivity"
             android:exported="false"
@@ -66,7 +66,7 @@
             android:theme="@style/Theme.HabitPulse"
             android:enableOnBackInvokedCallback="true"
             android:resizeableActivity="true"
-            android:configChanges="orientation|screenSize|screenLayout|smallestScreenSize|uiMode" />
+            android:configChanges="orientation|screenSize|screenLayout|smallestScreenSize" />
         <activity
             android:name=".OpenSourceLicensesActivity"
             android:exported="false"
@@ -74,7 +74,7 @@
             android:theme="@style/Theme.HabitPulse"
             android:enableOnBackInvokedCallback="true"
             android:resizeableActivity="true"
-            android:configChanges="orientation|screenSize|screenLayout|smallestScreenSize|uiMode" />
+            android:configChanges="orientation|screenSize|screenLayout|smallestScreenSize" />
 
         <!-- Foreground notification service for keep-alive -->
         <service
