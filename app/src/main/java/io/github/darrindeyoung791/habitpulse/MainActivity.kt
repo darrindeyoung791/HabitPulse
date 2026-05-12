@@ -11,11 +11,6 @@ import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.animation.core.tween
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
-import androidx.compose.foundation.background
-import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.ui.Modifier
-import androidx.compose.ui.graphics.Color
 import androidx.compose.runtime.*
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
@@ -162,15 +157,13 @@ class MainActivity : ComponentActivity() {
                         enter = fadeIn(animationSpec = tween(durationMillis = 200)),
                         label = "mainContentFadeIn"
                     ) {
-                        Box(modifier = Modifier.fillMaxSize().background(Color(0xFF000000))) {
-                            HabitPulseNavGraph(
-                                navController = navController,
-                                onHomeDataLoaded = { homeDataLoaded = true }
-                            )
+                        HabitPulseNavGraph(
+                            navController = navController,
+                            onHomeDataLoaded = { homeDataLoaded = true }
+                        )
 
-                            // 处理系统返回键，确保在主页时按返回键可以退出应用
-                            HandleSystemBackPress(navController = navController, activity = activity)
-                        }
+                        // 处理系统返回键，确保在主页时按返回键可以退出应用
+                        HandleSystemBackPress(navController = navController, activity = activity)
                     }
                 }
 
