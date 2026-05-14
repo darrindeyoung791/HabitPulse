@@ -4,7 +4,7 @@
 
 **HabitPulse** is an Android habit tracking application built with Kotlin and Jetpack Compose. The app helps users build and maintain daily habits through smart reminders and social supervision features.
 
-This project is rapidly developing. AI agents should update this page when big changes occur.
+> **⚠️ IMPORTANT — AI agents: When project structure, features, dependencies, or conventions change significantly, you MUST update BOTH `AGENTS.md` AND `QWEN.md` to keep them in sync.**
 
 ### Key Features
 - **Habit Tracking**: Create, manage, and track daily habits with custom repeat cycles
@@ -18,7 +18,7 @@ This project is rapidly developing. AI agents should update this page when big c
 - **Responsive Layout**: Adaptive navigation (Bottom Bar, Rail, Drawer) based on screen size
 - **Split-screen Support**: Multi-window support enabled
 - **Predictive Back Gesture**: Android 13+ predictive back gesture support
-- **Localization**: Chinese (Simplified) and English (US) support
+- **Localization**: Chinese (Simplified/Traditional) and English (US) support
 - **Accessibility**: TalkBack support for all navigation elements
 
 ### Tech Stack
@@ -100,6 +100,8 @@ HabitPulse/
 │   │   │   │   ├── values/strings.xml           # Chinese strings
 │   │   │   │   ├── values-en-rUS/strings.xml    # English strings
 │   │   │   │   ├── values-zh-rCN/               # Chinese (Simplified)
+│   │   │   │   ├── values-zh-rHK/               # Chinese (Traditional, Hong Kong)
+│   │   │   │   ├── values-zh-rTW/               # Chinese (Traditional, Taiwan)
 │   │   │   │   └── values-night/                # Dark theme overrides
 │   │   │   └── AndroidManifest.xml
 │   │   ├── test/                                # Unit tests
@@ -235,7 +237,7 @@ Records every habit completion with timestamp.
 - **Kotlin style**: Official (as per `gradle.properties`)
 - **JVM target**: Java 17
 - **Compose**: Enabled with Material Design 3
-- **i18n**: Simplified Chinese and English(US)
+- **i18n**: Simplified Chinese, Traditional Chinese, and English(US)
 
 ### Architecture Patterns
 - Single Activity architecture with Navigation Compose
@@ -255,6 +257,9 @@ Records every habit completion with timestamp.
   - Scale animation for Home screen during navigation
 - `launchSingleTop` used to prevent duplicate destinations
 
+### Commit Policy
+- AI agents must NEVER commit changes unless explicitly asked by the user
+
 ### Testing Practices
 - Unit tests in `src/test/`
 - Instrumented tests in `src/androidTest/`
@@ -269,10 +274,12 @@ Records every habit completion with timestamp.
 - **Naming convention**: Use snake_case for string resource names (e.g., `habit_creation_title`)
 - **Supported languages**:
   - Chinese (Simplified) - Default
+  - Chinese (Traditional, Hong Kong) - `res/values-zh-rHK/`
+  - Chinese (Traditional, Taiwan) - `res/values-zh-rTW/`
   - English (US)
 - **Auto-mirrored icons**: Icons with directional meaning (e.g., arrows, back/forward) should use `autoMirrored="true"` in drawable resources for RTL support
 - **Agent requirement**: When adding new UI text, always:
-  1. Add string resources to both `values/strings.xml` and `values-en-rUS/strings.xml`
+  1. Add string resources to `values/strings.xml` and all locale-specific `strings.xml` files (`values-en-rUS/strings.xml`, `values-zh-rHK/strings.xml`, `values-zh-rTW/strings.xml`)
   2. Reference via `R.string.*` in code, never inline string literals
 
 ## Current Status
@@ -295,7 +302,7 @@ The project is in **early development stage** (v0.5.19-alpha):
 - ✅ Device corner radius support (Android 12+)
 - ✅ Predictive back gesture support
 - ✅ Split-screen support
-- ✅ Localization (Chinese & English) with values-zh-rCN, values-en-rUS, values-night
+- ✅ Localization (Simplified Chinese, Traditional Chinese, English) with values-zh-rCN, values-zh-rHK, values-zh-rTW, values-en-rUS, values-night
 - ✅ Room database integration (v2.8.4, v3 schema)
 - ✅ Habit entity with UUID primary key
 - ✅ HabitDao with CRUD operations and Flow support
@@ -414,6 +421,12 @@ The app uses a responsive navigation system that adapts to screen size and orien
 - **Expanded (240dp)**: Icons + text labels
 - Smooth width animation (300ms tween)
 - Hamburger menu icon toggles between expand/collapse states
+
+## Git Branch Strategy
+
+- **`master`**: Main development branch. Contains all source code and resources.
+- **`docs`**: Documentation branch. Contains user-facing VitePress docs in `docs/` directory. Kept in sync with `master` via periodic fast-forward merges (`git checkout docs && git pull origin master`).
+- All other branches are feature/topic branches for specific work items.
 
 ## Notes
 
