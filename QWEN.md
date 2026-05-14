@@ -284,7 +284,7 @@ Records every habit completion with timestamp.
 
 ## Current Status
 
-The project is in **early development stage** (v0.5.19-alpha):
+The project is in **early development stage** (v0.7.11-alpha):
 
 ### Completed
 - ✅ Project structure set up
@@ -367,8 +367,8 @@ The project is in **early development stage** (v0.5.19-alpha):
 
 - **Namespace**: `io.github.darrindeyoung791.habitpulse`
 - **Application ID**: `io.github.darrindeyoung791.habitpulse`
-- **Version Code**: 119 (incremented for home screen refactoring)
-- **Version Name**: 0.5.20-alpha
+- **Version Code**: 144
+- **Version Name**: 0.7.11-alpha
 
 ## Screen Flow
 

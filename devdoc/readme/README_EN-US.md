@@ -21,7 +21,9 @@
 
 > [!NOTE]
 >
-> HabitPulse is developed with AI assistance. If you use Qwen Code or Claude Code for further development, please read [`QWEN.md`](QWEN.md) or [`AGENTS.md`](AGENTS.md) for important information. You may need to edit the settings in [`.qwen\settings.json`](.qwen\settings.json).
+> HabitPulse is developed with AI assistance. If you use Qwen Code or Claude Code for further development, please read [`QWEN.md`](../../QWEN.md) or [`AGENTS.md`](../../AGENTS.md) for important information. You may need to edit the settings in [`.qwen\settings.json`](../../.qwen/settings.json).
+>
+> This project uses the **OpenSpec** workflow for change management. See the [`openspec/`](../../openspec/) directory for more information.
 
 > 🌏 [Chinese Version](../../README.md) | English Version
 
@@ -32,25 +34,34 @@
 ### 🎯 Core Features
 - [x] **Habit Tracking**: Create, manage, and track daily habits, recording every check-in
 - [x] **Check-in Records**: Complete check-in history, supporting viewing completion status for any date
-- [x] **Multi-Select & Sort**: Long-press habit cards to enter multi-select mode, supporting drag-and-drop sorting and batch deletion
-- [ ] **Supervisor Contacts**: Add supervisor emails or phone numbers to notify designated contacts of habit completion status (Planned)
-- [ ] **Smart Reminders**: Time-based reminder feature to help users stick to habits (Planned)
-- [ ] **AI-Assisted Planning**: Integrate LLM APIs to use AI for assisting users in creating habits (Planned)
-- [ ] **Records Visualization**: Use WebView and web components to create visualizations, such as weekly check-in time distributions (Planned)
+- [x] **Multi-Select & Sort**: Long-press habit cards to enter multi-select mode, drag-and-drop reorder, and batch delete
+- [x] **Supervisor Contacts**: Manage supervisor emails and phone numbers, with per-habit association
+- [x] **Reward Sheet**: Celebration animation on check-in (12-sided polygon + MD3 easing)
+- [x] **Search & Filter**: Real-time habit search, filter records by habit or date
+- [x] **Smart Reminders**: Support daily/weekly repeat reminder times
+- [x] **Keep-Alive Service**: Foreground service with boot auto-restart for reliability
+- [ ] **AlarmManager Notifications**: Accurate push reminders based on AlarmManager (Planned)
+- [ ] **LAN Sync**: Sync data between multiple devices over LAN without accounts (Planned, [details](../../devdoc/lan-sync-plan.md))
+- [ ] **AI-Assisted Planning**: Integrate LLM APIs to assist users in creating habits (Planned)
+- [ ] **Records Visualization**: Use WebView and web components for visualizations like weekly check-in time distribution (Planned)
 
 ### 🎨 UI/UX Features
 - **Material Design 3**: Follows the latest MD3 design specifications with a clean and beautiful interface
 - **Dynamic Color**: Supports dynamic theming (Material You) on Android 12+
-- **Responsive Layout**: Perfectly adapts to phones and tablets, supporting landscape and portrait orientation switching
-- **Split-Screen Support**: Supports multi-window and picture-in-picture modes
-- **Accessibility Optimization**: Full TalkBack support, caring for every user
+- **Responsive Layout**: Adapts to phones and tablets in all orientations (Bottom Bar / Rail / Drawer)
+- **Accessibility**: Full TalkBack support, caring for every user
 - **Predictive Back Gesture**: Android 13+ predictive back gesture support
+- **Split-Screen Support**: Seamless multi-window adaptation
+- **Internationalization**: Simplified Chinese, Traditional Chinese (HK/TW), English (US)
+- **WebView Security**: SSL certificate warnings and external link confirmation dialogs
 
 ### 🔧 Technical Features
 - **Jetpack Compose**: Declarative UI framework for a modern development experience
 - **Room Database**: Local data persistence, available offline
 - **ViewModel + Flow**: Reactive architecture, data-driven UI
-- **Navigation Component**: Navigation Compose for smooth page transition animations
+- **Navigation Compose**: Smooth page transition animations
+- **DataStore**: Modern preference storage solution
+- **Foreground Service**: Keep-alive service with boot receiver
 
 ---
 
@@ -96,12 +107,12 @@ Or use other IDEs or editors.
 ```
 
 > [!IMPORTANT]
-> - You may need to manually modify the JDK path in [`gradle.properties`](gradle.properties) in the project.
+> - You may need to manually modify the JDK path in [`gradle.properties`](../../gradle.properties) in the project.
 > - This project is configured to use mirrors from Tencent Cloud and Aliyun. If you are a developer outside mainland China, you will need to modify these settings.
 
 #### VSCode Users
 
-If you use VSCode for development, you need to configure the JDK 17 path in [`.vscode/settings.json`](.vscode/settings.json):
+If you use VSCode for development, you need to configure the JDK 17 path in [`.vscode/settings.json`](../../.vscode/settings.json):
 
 ```json
 {
@@ -127,7 +138,7 @@ If you use VSCode for development, you need to configure the JDK 17 path in [`.v
 ## 🛠️ Tech Stack
 
 | Component | Version | Description |
-|------|------|------|
+|-----------|---------|-------------|
 | **Language** | Kotlin 2.3.20 | Modern Android development language |
 | **UI Framework** | Jetpack Compose (BOM 2026.03.00) | Declarative UI framework |
 | **Material 3** | 1.4.0 | Material Design 3 component library |
@@ -135,6 +146,8 @@ If you use VSCode for development, you need to configure the JDK 17 path in [`.v
 | **Database** | Room 2.8.4 | Local data persistence |
 | **Lifecycle** | 2.10.0 | Lifecycle-aware components |
 | **ViewModel** | 2.8.7 | UI state management |
+| **Foreground Service** | Android Foreground Service | Keep-alive with boot auto-restart |
+| **Preferences** | DataStore 1.1.1 | Modern preference storage |
 | **Build Tools** | Gradle 9.4.0 + AGP 9.1.0 | Project build system |
 | **JVM Target** | Java 17 | Compiled bytecode version |
 
@@ -147,24 +160,60 @@ HabitPulse/
 ├── app/
 │   ├── src/main/
 │   │   ├── java/io/github/darrindeyoung791/habitpulse/
-│   │   │   ├── MainActivity.kt              # Main entry point
+│   │   │   ├── MainActivity.kt              # Main entry (NavHost)
 │   │   │   ├── SettingsActivity.kt          # Settings screen
+│   │   │   ├── LauncherActivity.kt          # Launcher router (Welcome / Main)
+│   │   │   ├── WelcomeActivity.kt           # New user onboarding
+│   │   │   ├── OpenSourceLicensesActivity.kt # Open source licenses
 │   │   │   ├── HabitPulseApplication.kt     # Application class
-│   │   │   ├── navigation/                  # Navigation graph
+│   │   │   ├── navigation/                  # Navigation graph & routes
 │   │   │   ├── data/                        # Data layer
-│   │   │   │   ├── model/                   # Data models
-│   │   │   │   ├── database/                # Room database
-│   │   │   │   └── repository/              # Data repository
+│   │   │   │   ├── model/                   # Models (Habit, HabitCompletion)
+│   │   │   │   ├── database/                # Room DB + DAO + Converters
+│   │   │   │   ├── repository/              # Data repository
+│   │   │   │   └── preferences/             # DataStore preferences
 │   │   │   ├── viewmodel/                   # ViewModel layer
-│   │   │   └── ui/                          # UI layer
-│   │   │       ├── screens/                 # Screen composables
-│   │   │       └── theme/                   # Theme styling
-│   │   └── res/                             # Resource files
+│   │   │   ├── ui/                          # UI layer
+│   │   │   │   ├── screens/                 # Screens (Home, Habit, Records, etc.)
+│   │   │   │   ├── theme/                   # Theme (Color, Type, Theme)
+│   │   │   │   └── utils/                   # UI utilities (debounce, navigation guard)
+│   │   │   ├── service/                     # Foreground keep-alive service
+│   │   │   ├── receiver/                    # Boot completed receiver
+│   │   │   └── utils/                       # Utilities (notifications, accessibility, preferences)
+│   │   └── res/                             # Resources (i18n, themes, images)
 │   └── build.gradle.kts                     # Module build configuration
 ├── gradle/                                  # Gradle Wrapper
-├── QWEN.md                                  # Project context documentation
+├── docs/                                    # VitePress user documentation site
+│   ├── .vitepress/                          # VitePress config & theme
+│   ├── docs/                                # Documentation content (Markdown)
+│   └── package.json                         # Node.js project config
+├── openspec/                                # OpenSpec change management workflow
+├── QWEN.md                                  # AI project context (Qwen)
+├── AGENTS.md                                # AI project context (Claude)
 └── README.md                                # Project documentation
 ```
+
+---
+
+## 📖 User Documentation Site
+
+HabitPulse maintains a user-facing documentation site built with **VitePress** and automatically deployed to **GitHub Pages** via GitHub Actions.
+
+- **URL**: [https://darrindeyoung791.github.io/HabitPulse/](https://darrindeyoung791.github.io/HabitPulse/)
+- **Tech Stack**: VitePress ^2.0.0-alpha, default theme (customized), local search
+- **Content**: Feature overview, tutorials (first-time → create habit → check-in → sort/delete), advanced settings (keep-alive, storage cleanup, tablet mode), download & team info
+- **Audience**: **End users** of HabitPulse
+
+### Local Development
+
+```bash
+cd docs
+npm install
+npm run docs:dev    # Dev server at http://localhost:5173
+npm run docs:build  # Build to docs/.vitepress/dist/
+```
+
+> See [`docs/README.md`](../../docs/README.md) for full documentation guidelines, including the terminology glossary and writing style guide.
 
 ---
 
@@ -176,7 +225,7 @@ HabitPulse/
 Stores all habit information created by users.
 
 | Field | Type | Description |
-|------|------|------|
+|-------|------|-------------|
 | id | TEXT (PRIMARY KEY) | Habit unique identifier (UUID) |
 | title | TEXT | Habit title |
 | repeatCycle | TEXT | Repeat cycle (DAILY/WEEKLY) |
@@ -191,21 +240,21 @@ Stores all habit information created by users.
 | lastCompletedDate | INTEGER | Last completion timestamp |
 | createdDate | INTEGER | Creation timestamp |
 | modifiedDate | INTEGER | Modification timestamp |
-| sortOrder | INTEGER | Sort order, lower values appear first, used for custom sorting |
-| timeZone | TEXT | Timezone ID, used for cross-timezone scenarios |
+| sortOrder | INTEGER | Sort order, lower values appear first |
+| timeZone | TEXT | Timezone ID for cross-timezone scenarios |
 
 #### habit_completions Table
 Records detailed information for each habit check-in.
 
 | Field | Type | Description |
-|------|------|------|
+|-------|------|-------------|
 | id | TEXT (PRIMARY KEY) | Record unique identifier (UUID) |
 | habitId | TEXT (FOREIGN KEY) | Associated habit ID |
 | completedDate | INTEGER | Completion timestamp |
 | completedDateLocal | TEXT | Local date (yyyy-MM-dd) |
 | timeZone | TEXT | Timezone information |
 
-> 📚 Detailed database design documentation will be provided in future updates
+> 📚 Detailed database design documentation will be provided in future updates.
 
 ---
 
@@ -213,23 +262,20 @@ Records detailed information for each habit check-in.
 
 We welcome all forms of contributions!
 
-### How to Contribute
-1. **Fork** this project
-2. Create your feature branch (`git checkout -b feature/AmazingFeature`)
-3. Commit your changes (`git commit -m 'Add some AmazingFeature'`)
-4. Push to the branch (`git push origin feature/AmazingFeature`)
-5. Open a **Pull Request**
+For now, we recommend starting with an [issue](https://github.com/darrindeyoung791/HabitPulse/issues) to report bugs or suggest features. Issues in Chinese or English are both welcome; other languages will be translated and responded to in English.
 
-### Development Environment Setup
-1. After cloning the project, open it with Android Studio
-2. Sync the Gradle project
-3. Run `./gradlew assembleDebug` to ensure the build is successful
-4. Run debugging on an emulator or real device
+If you'd like to submit a PR, please note that since this is a side-project maintained in spare time, review and merging may take a while. Thank you for your patience.
 
-### Code Style
-- Follow the [Kotlin Style Guide](https://kotlinlang.org/docs/coding-conventions.html)
-- Use KDoc for documentation comments
-- Keep code clean and follow the DRY principle
+### OpenSpec Workflow
+This project uses **OpenSpec** for change management:
+
+1. **Propose**: Propose a change (`openspec/` directory)
+2. **Design / Specs**: Write design and specification docs
+3. **Tasks**: Break down into actionable task lists
+4. **Apply**: Implement tasks one by one
+5. **Archive**: Archive after completion
+
+Use the `openspec` CLI tool to manage changes. All change records are stored in `openspec/changes/`.
 
 ### Reporting Issues
 Found a bug? Please report it via [Issues](https://github.com/darrindeyoung791/HabitPulse/issues).
@@ -238,7 +284,7 @@ Found a bug? Please report it via [Issues](https://github.com/darrindeyoung791/H
 
 ## 📜 License
 
-This project is open source under the [MIT License](LICENSE).
+This project is open source under the [MIT License](../../LICENSE).
 
 ```
 MIT License
