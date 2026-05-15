@@ -1,7 +1,9 @@
 package io.github.darrindeyoung791.habitpulse
 
 import android.os.Bundle
+import android.content.Context
 import android.content.res.Configuration
+import android.view.inputmethod.InputMethodManager
 import androidx.core.view.WindowCompat
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
@@ -18,6 +20,7 @@ import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
 import androidx.compose.runtime.*
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.navigation.compose.rememberNavController
@@ -198,30 +201,34 @@ class MainActivity : ComponentActivity() {
  * 处理系统返回键
  * - 当在子页面时，返回上一级（带动画）
  * - 当在主页时，允许退出应用（带预测性返回动画）
+ * - 当输入法弹出时，先收起键盘再处理返回
  */
 @Composable
 fun HandleSystemBackPress(
     navController: NavHostController,
     activity: ComponentActivity
 ) {
-    // 监听当前是否在主页（没有上一级）
     val isAtHome by remember {
         derivedStateOf {
             navController.previousBackStackEntry == null
         }
     }
 
-    // 使用可变的 callback 引用，以便动态更新 enabled 状态
+    val imeVisible = WindowInsets.ime.getBottom(LocalDensity.current) > 0
+
     val callback = remember {
-        object : OnBackPressedCallback(!isAtHome) {
+        object : OnBackPressedCallback(!isAtHome || imeVisible) {
             override fun handleOnBackPressed() {
-                // 如果在子页面，返回上一级（会触发 Navigation Compose 的预测性返回动画）
-                navController.popBackStack()
+                val imm = activity.getSystemService(Context.INPUT_METHOD_SERVICE) as InputMethodManager
+                imm.hideSoftInputFromWindow(activity.window.decorView.windowToken, 0)
+
+                if (!isAtHome) {
+                    navController.popBackStack()
+                }
             }
         }
     }
 
-    // 注册回调
     DisposableEffect(navController, activity) {
         activity.onBackPressedDispatcher.addCallback(callback)
 
@@ -230,11 +237,8 @@ fun HandleSystemBackPress(
         }
     }
 
-    // 根据是否在主页动态启用/禁用回调
-    // 在主页时禁用回调，让系统处理退出（显示预测性返回动画）
-    // 在子页面时启用回调，处理导航返回
-    LaunchedEffect(isAtHome) {
-        callback.isEnabled = !isAtHome
+    LaunchedEffect(isAtHome, imeVisible) {
+        callback.isEnabled = !isAtHome || imeVisible
     }
 }
 

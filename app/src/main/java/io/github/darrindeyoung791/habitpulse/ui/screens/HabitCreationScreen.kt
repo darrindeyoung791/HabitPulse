@@ -135,7 +135,7 @@ enum class SupervisionMethod {
     SMS        // 短信汇报
 }
 
-@OptIn(ExperimentalMaterial3Api::class)
+@OptIn(ExperimentalMaterial3Api::class, ExperimentalLayoutApi::class)
 @Composable
 fun HabitCreationScreen(
     onNavigateBack: () -> Unit,
@@ -414,7 +414,9 @@ fun HabitCreationScreen(
     }
 
     Scaffold(
-        modifier = Modifier.fillMaxSize(),
+        modifier = Modifier
+            .fillMaxSize()
+            .imePadding(),
         topBar = {
             CenterAlignedTopAppBar(
                 title = {
@@ -509,7 +511,8 @@ fun HabitCreationScreen(
                 .fillMaxSize()
                 .padding(paddingValues)
                 .padding(16.dp)
-                .verticalScroll(rememberScrollState()),
+                .verticalScroll(rememberScrollState())
+                .imeNestedScroll(),
             verticalArrangement = Arrangement.spacedBy(16.dp)
         ) {
             // 1. Repeat cycle selection - Button group with custom shapes
