@@ -199,9 +199,9 @@ class MainActivity : ComponentActivity() {
 
 /**
  * 处理系统返回键
- * - 当在子页面时，返回上一级（带动画）
- * - 当在主页时，允许退出应用（带预测性返回动画）
- * - 当输入法弹出时，先收起键盘再处理返回
+ * - 在子页面时不拦截，由 Navigation Compose 处理预测性导航返回动画
+ * - 在主页时通过 moveTaskToBack 保活，避免 finish 导致进程被杀
+ * - 输入法可见时先收回键盘再处理
  */
 @Composable
 fun HandleSystemBackPress(
@@ -217,12 +217,15 @@ fun HandleSystemBackPress(
     val imeVisible = WindowInsets.ime.getBottom(LocalDensity.current) > 0
 
     val callback = remember {
-        object : OnBackPressedCallback(!isAtHome || imeVisible) {
+        object : OnBackPressedCallback(isAtHome || imeVisible) {
             override fun handleOnBackPressed() {
-                val imm = activity.getSystemService(Context.INPUT_METHOD_SERVICE) as InputMethodManager
-                imm.hideSoftInputFromWindow(activity.window.decorView.windowToken, 0)
-
-                if (!isAtHome) {
+                if (imeVisible) {
+                    val imm = activity.getSystemService(Context.INPUT_METHOD_SERVICE) as InputMethodManager
+                    imm.hideSoftInputFromWindow(activity.window.decorView.windowToken, 0)
+                }
+                if (isAtHome) {
+                    activity.moveTaskToBack(true)
+                } else {
                     navController.popBackStack()
                 }
             }
@@ -231,14 +234,11 @@ fun HandleSystemBackPress(
 
     DisposableEffect(navController, activity) {
         activity.onBackPressedDispatcher.addCallback(callback)
-
-        onDispose {
-            callback.remove()
-        }
+        onDispose { callback.remove() }
     }
 
     LaunchedEffect(isAtHome, imeVisible) {
-        callback.isEnabled = !isAtHome || imeVisible
+        callback.isEnabled = isAtHome || imeVisible
     }
 }
 
