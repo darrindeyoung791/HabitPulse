@@ -20,6 +20,7 @@ import androidx.compose.foundation.layout.*
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.core.tween
 import androidx.compose.foundation.background
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyListState
 import androidx.compose.foundation.lazy.rememberLazyListState
@@ -812,7 +813,8 @@ fun SettingsScreen() {
                                 context.startActivity(intent)
                             }
                         },
-                        contentPadding = PaddingValues(start = 0.dp, end = 16.dp),
+                        shape = RoundedCornerShape(0.dp),
+                        contentPadding = PaddingValues(0.dp),
                         modifier = Modifier.align(Alignment.Start)
                     ) {
                         Text(
@@ -828,7 +830,8 @@ fun SettingsScreen() {
                             }
                             context.startActivity(intent)
                         },
-                        contentPadding = PaddingValues(start = 0.dp, end = 16.dp),
+                        shape = RoundedCornerShape(0.dp),
+                        contentPadding = PaddingValues(0.dp),
                         modifier = Modifier.align(Alignment.Start)
                     ) {
                         Text(
@@ -844,7 +847,8 @@ fun SettingsScreen() {
                             }
                             context.startActivity(intent)
                         },
-                        contentPadding = PaddingValues(start = 0.dp, end = 16.dp),
+                        shape = RoundedCornerShape(0.dp),
+                        contentPadding = PaddingValues(0.dp),
                         modifier = Modifier.align(Alignment.Start)
                     ) {
                         Text(
