@@ -42,7 +42,7 @@ import io.github.darrindeyoung791.habitpulse.R
 import io.github.darrindeyoung791.habitpulse.data.model.Habit
 import io.github.darrindeyoung791.habitpulse.ui.theme.HabitPulseTheme
 import io.github.darrindeyoung791.habitpulse.ui.utils.rememberDebounceClickHandler
-import io.github.darrindeyoung791.habitpulse.ui.utils.rememberNavigationGuard
+import io.github.darrindeyoung791.habitpulse.ui.utils.rememberHideKeyboardAndNavigateBack
 import io.github.darrindeyoung791.habitpulse.viewmodel.HabitViewModel
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
@@ -168,8 +168,7 @@ fun MultiSelectSortScreen(
 
     // Debounce click handler to prevent rapid consecutive clicks
     val clickHandler = rememberDebounceClickHandler()
-    // Navigation guard to prevent navigating back beyond home screen
-    val navigationGuard = navController?.let { rememberNavigationGuard(it) }
+    val hideKeyboardAndNavigateBack = navController?.let { rememberHideKeyboardAndNavigateBack(it) }
 
     // Track the index of the initially selected habit (from long-press)
     var initiallySelectedHabitId by remember { mutableStateOf<UUID?>(null) }
@@ -202,14 +201,8 @@ fun MultiSelectSortScreen(
                         onClick = {
                             scope.launch {
                                 clickHandler.processClick {
-                                    // Exit multi-select mode without scrolling to top
                                     viewModel.exitMultiSelectMode()
-                                    // Use navigation guard for safe back navigation
-                                    if (navigationGuard != null) {
-                                        navigationGuard.safePopBackStack()
-                                    } else {
-                                        onNavigateBack()
-                                    }
+                                    hideKeyboardAndNavigateBack?.invoke()
                                 }
                             }
                         }
@@ -229,19 +222,12 @@ fun MultiSelectSortScreen(
                                     if (selectedHabitIds.isNotEmpty()) {
                                         showDeleteDialog = true
                                     } else {
-                                        // Save the current order to database using draggedOrder.value
                                         draggedOrder.value.forEachIndexed { index, habit ->
                                             viewModel.updateHabitSortOrder(habit.id, index)
                                         }
                                         viewModel.exitMultiSelectMode()
-                                        // Scroll to top only when saving
                                         viewModel.requestScrollToTop()
-                                        // Use navigation guard for safe back navigation
-                                        if (navigationGuard != null) {
-                                            navigationGuard.safePopBackStack()
-                                        } else {
-                                            onNavigateBack()
-                                        }
+                                        hideKeyboardAndNavigateBack?.invoke()
                                     }
                                 }
                             }
@@ -369,14 +355,8 @@ fun MultiSelectSortScreen(
                                 // 批量删除习惯后刷新记录界面
                                 application?.recordsViewModel?.refreshRecords()
                                 showDeleteDialog = false
-                                // Scroll to top only when deleting
                                 viewModel.requestScrollToTop()
-                                // Use navigation guard for safe back navigation
-                                if (navigationGuard != null) {
-                                    navigationGuard.safePopBackStack()
-                                } else {
-                                    onNavigateBack()
-                                }
+                                hideKeyboardAndNavigateBack?.invoke()
                             }
                         }
                     },

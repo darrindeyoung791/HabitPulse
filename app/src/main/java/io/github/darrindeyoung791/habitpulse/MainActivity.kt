@@ -1,9 +1,7 @@
 package io.github.darrindeyoung791.habitpulse
 
 import android.os.Bundle
-import android.content.Context
 import android.content.res.Configuration
-import android.view.inputmethod.InputMethodManager
 import androidx.core.view.WindowCompat
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
@@ -20,12 +18,10 @@ import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
 import androidx.compose.runtime.*
 import androidx.compose.ui.platform.LocalContext
-import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.navigation.compose.rememberNavController
 import androidx.core.splashscreen.SplashScreen.Companion.installSplashScreen
-import androidx.activity.OnBackPressedCallback
 import androidx.navigation.NavHostController
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import io.github.darrindeyoung791.habitpulse.data.preferences.UserPreferences
@@ -159,26 +155,23 @@ class MainActivity : ComponentActivity() {
                 }
 
                 if (showMainContent) {
-                    // 显示主导航（带淡入动画）
-                    AnimatedVisibility(
-                        visible = contentFadeInStarted,
-                        enter = fadeIn(animationSpec = tween(durationMillis = 200)),
-                        label = "mainContentFadeIn"
-                    ) {
-                        Box(
-                            modifier = Modifier
-                                .fillMaxSize()
-                                .background(MaterialTheme.colorScheme.background)
+// 显示主导航（带淡入动画）
+                        AnimatedVisibility(
+                            visible = contentFadeInStarted,
+                            enter = fadeIn(animationSpec = tween(durationMillis = 200)),
+                            label = "mainContentFadeIn"
                         ) {
-                            HabitPulseNavGraph(
-                                navController = navController,
-                                onHomeDataLoaded = { homeDataLoaded = true }
-                            )
+                            Box(
+                                modifier = Modifier
+                                    .fillMaxSize()
+                                    .background(MaterialTheme.colorScheme.background)
+                            ) {
+                                HabitPulseNavGraph(
+                                    navController = navController,
+                                    onHomeDataLoaded = { homeDataLoaded = true }
+                                )
+                            }
                         }
-
-                        // 处理系统返回键，确保在主页时按返回键可以退出应用
-                        HandleSystemBackPress(navController = navController, activity = activity)
-                    }
                 }
 
                 // 显示广告页面（带淡入淡出过渡动画）
@@ -194,51 +187,6 @@ class MainActivity : ComponentActivity() {
                 }
             }
         }
-    }
-}
-
-/**
- * 处理系统返回键
- * - 当在子页面时，返回上一级（带动画）
- * - 当在主页时，允许退出应用（带预测性返回动画）
- * - 当输入法弹出时，先收起键盘再处理返回
- */
-@Composable
-fun HandleSystemBackPress(
-    navController: NavHostController,
-    activity: ComponentActivity
-) {
-    val isAtHome by remember {
-        derivedStateOf {
-            navController.previousBackStackEntry == null
-        }
-    }
-
-    val imeVisible = WindowInsets.ime.getBottom(LocalDensity.current) > 0
-
-    val callback = remember {
-        object : OnBackPressedCallback(!isAtHome || imeVisible) {
-            override fun handleOnBackPressed() {
-                val imm = activity.getSystemService(Context.INPUT_METHOD_SERVICE) as InputMethodManager
-                imm.hideSoftInputFromWindow(activity.window.decorView.windowToken, 0)
-
-                if (!isAtHome) {
-                    navController.popBackStack()
-                }
-            }
-        }
-    }
-
-    DisposableEffect(navController, activity) {
-        activity.onBackPressedDispatcher.addCallback(callback)
-
-        onDispose {
-            callback.remove()
-        }
-    }
-
-    LaunchedEffect(isAtHome, imeVisible) {
-        callback.isEnabled = !isAtHome || imeVisible
     }
 }
 

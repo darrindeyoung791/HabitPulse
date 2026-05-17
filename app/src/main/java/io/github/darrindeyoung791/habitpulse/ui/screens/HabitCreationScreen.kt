@@ -46,7 +46,7 @@ import io.github.darrindeyoung791.habitpulse.data.model.RepeatCycle
 import io.github.darrindeyoung791.habitpulse.data.model.SupervisionMethod
 import io.github.darrindeyoung791.habitpulse.ui.theme.HabitPulseTheme
 import io.github.darrindeyoung791.habitpulse.ui.utils.rememberDebounceClickHandler
-import io.github.darrindeyoung791.habitpulse.ui.utils.rememberNavigationGuard
+import io.github.darrindeyoung791.habitpulse.ui.utils.rememberHideKeyboardAndNavigateBack
 import io.github.darrindeyoung791.habitpulse.viewmodel.HabitViewModel
 import kotlinx.coroutines.launch
 import org.json.JSONArray
@@ -256,8 +256,7 @@ fun HabitCreationScreen(
 
     // 防重复点击处理器，防止快速连续点击导致多次导航
     val clickHandler = rememberDebounceClickHandler()
-    // 导航保护器，防止返回到主页以上
-    val navigationGuard = navController?.let { rememberNavigationGuard(it) }
+    val hideKeyboardAndNavigateBack = navController?.let { rememberHideKeyboardAndNavigateBack(it) }
 
     // 显示最大长度 Toast
     if (showMaxLengthToast) {
@@ -431,12 +430,7 @@ fun HabitCreationScreen(
                         onClick = {
                             scope.launch {
                                 clickHandler.processClick {
-                                    // 优先使用导航保护器进行安全返回
-                                    if (navigationGuard != null) {
-                                        navigationGuard.safePopBackStack()
-                                    } else {
-                                        onNavigateBack()
-                                    }
+                                    hideKeyboardAndNavigateBack?.invoke()
                                 }
                             }
                         }

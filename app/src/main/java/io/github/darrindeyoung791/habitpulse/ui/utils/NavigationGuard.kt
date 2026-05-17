@@ -1,13 +1,56 @@
 package io.github.darrindeyoung791.habitpulse.ui.utils
 
+import android.content.Context
+import android.view.inputmethod.InputMethodManager
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.Stable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
+import androidx.compose.ui.platform.LocalContext
 import androidx.navigation.NavHostController
 import kotlinx.coroutines.delay
+
+/**
+ * 收起键盘并执行返回导航（带防抖保护）
+ * @param navController 导航控制器
+ */
+@Composable
+fun rememberHideKeyboardAndNavigateBack(
+    navController: NavHostController
+): () -> Unit {
+    val context = LocalContext.current
+    var lastNavigateTime = remember { 0L }
+
+    return {
+        val currentTime = System.currentTimeMillis()
+        if (currentTime - lastNavigateTime >= 500L) {
+            lastNavigateTime = currentTime
+
+            // 检查是否在子页面
+            val currentRoute = navController.currentBackStackEntry?.destination?.route
+            val isAtHome = currentRoute == "home" || currentRoute == null
+
+            if (isAtHome) {
+                // 在主页时，收起键盘即可，让系统处理返回退出应用
+                val imm = context.getSystemService(Context.INPUT_METHOD_SERVICE) as InputMethodManager
+                imm.hideSoftInputFromWindow(
+                    (context as? android.app.Activity)?.window?.decorView?.windowToken,
+                    0
+                )
+            } else {
+                // 在子页面时，执行返回导航
+                val imm = context.getSystemService(Context.INPUT_METHOD_SERVICE) as InputMethodManager
+                imm.hideSoftInputFromWindow(
+                    (context as? android.app.Activity)?.window?.decorView?.windowToken,
+                    0
+                )
+                navController.popBackStack()
+            }
+        }
+    }
+}
 
 /**
  * 导航保护器

@@ -351,6 +351,7 @@ The project is in **early development stage** (v0.7.11-alpha):
 - ✅ WebView External Link Warning - Dialog warning when leaving app domain (shown once per session)
 - ✅ WebView in Settings - GitHub link opens in WebView instead of external browser
 - ✅ URL Variables - Domain allowlist uses RouteConfig variables for easy renaming
+- ✅ Predictive Back Gesture Fix - 修复返回手势与系统预测性返回动画冲突导致的杀后台问题
 
 ### In Progress
 - 🔄 Count section (track unplanned events, such as game scores)
