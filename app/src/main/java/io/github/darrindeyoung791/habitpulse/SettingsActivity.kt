@@ -34,6 +34,7 @@ import androidx.compose.material.icons.outlined.HelpOutline
 import androidx.compose.material.icons.outlined.Info
 import androidx.compose.material.icons.outlined.Notifications
 import androidx.compose.material.icons.outlined.Person
+import androidx.compose.material.icons.outlined.Settings
 import androidx.compose.material.icons.outlined.Storage
 import androidx.compose.material.icons.outlined.Tablet
 import androidx.compose.material3.*
@@ -715,6 +716,32 @@ fun SettingsScreen() {
                         }
                     )
                 }
+            }
+
+            // AI 部分
+            item {
+                // Section header
+                Text(
+                    text = stringResource(id = R.string.settings_ai_section),
+                    style = MaterialTheme.typography.labelMedium,
+                    color = MaterialTheme.colorScheme.primary,
+                    modifier = Modifier.padding(horizontal = 16.dp, vertical = 16.dp)
+                )
+
+                SettingsListItem(
+                    headline = stringResource(id = R.string.ai_settings_title),
+                    supportingText = stringResource(id = R.string.settings_ai_section_description),
+                    leadingIcon = {
+                        Icon(
+                            imageVector = Icons.Outlined.Settings,
+                            contentDescription = null
+                        )
+                    },
+                    onClick = {
+                        val intent = Intent(context, AISettingsActivity::class.java)
+                        context.startActivity(intent)
+                    }
+                )
             }
 
             // 关于部分

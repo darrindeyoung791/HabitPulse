@@ -301,4 +301,23 @@
     <string name="webview_network_error_open_browser">在浏览器中打开</string>
     <string name="webview_network_error_close">关闭</string>
     <string name="webview_network_error_back">返回</string>
+
+    <!-- AI Settings -->
+    <string name="ai_settings_title">AI 设置</string>
+    <string name="ai_settings_api_endpoint">API 端点</string>
+    <string name="ai_settings_api_endpoint_label">API 端点</string>
+    <string name="ai_settings_api_key">API 密钥</string>
+    <string name="ai_settings_api_key_label">API 密钥</string>
+    <string name="ai_settings_model">模型</string>
+    <string name="ai_settings_model_label">选择模型</string>
+    <string name="ai_settings_test_connection">测试连接</string>
+    <string name="ai_settings_connection_success">连接成功</string>
+    <string name="ai_settings_connection_failed">连接失败</string>
+    <string name="ai_settings_notice_title">配置说明</string>
+    <string name="ai_settings_notice_content">本应用支持兼容 OpenAI 格式的 LLM API（如智谱 GLM、DeepSeek 等）。\n\nAPI 端点：请填写完整的 API 地址，以斜杠结尾。\nAPI 密钥：请从相应平台获取。\n模型名称：支持智谱 glm-4.7-flash（默认）、glm-4-flash、glm-4 等。</string>
+    <string name="clear">清除</string>
+    <string name="show_password">显示密码</string>
+    <string name="hide_password">隐藏密码</string>
+    <string name="settings_ai_section">AI</string>
+    <string name="settings_ai_section_description">配置 AI 创建习惯功能</string>
 </resources>
