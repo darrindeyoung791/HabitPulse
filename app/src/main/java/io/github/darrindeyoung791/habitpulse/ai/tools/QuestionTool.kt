@@ -58,11 +58,3 @@ class QuestionTool : Tool {
         return "q_${System.currentTimeMillis()}_${(0..999).random()}"
     }
 }
-
-data class PendingQuestionData(
-    val questionId: String,
-    val type: String,
-    val prompt: String,
-    val options: List<String> = emptyList(),
-    val allowCustomInput: Boolean = false
-)

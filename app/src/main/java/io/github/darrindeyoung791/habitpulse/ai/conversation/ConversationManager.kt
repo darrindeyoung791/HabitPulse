@@ -6,6 +6,8 @@ import io.github.darrindeyoung791.habitpulse.ai.llm.LLMClient
 import io.github.darrindeyoung791.habitpulse.ai.llm.Message
 import io.github.darrindeyoung791.habitpulse.ai.llm.ResponseParser
 import io.github.darrindeyoung791.habitpulse.ai.prompt.SystemPrompt
+import io.github.darrindeyoung791.habitpulse.ai.tools.PendingQuestionData
+import io.github.darrindeyoung791.habitpulse.ai.tools.ReplyData
 import io.github.darrindeyoung791.habitpulse.ai.tools.ToolRegistry
 import io.github.darrindeyoung791.habitpulse.ai.tools.ToolResult
 import kotlinx.coroutines.flow.MutableStateFlow

@@ -1,6 +1,5 @@
 package io.github.darrindeyoung791.habitpulse.ui.screens.ai
 
-import android.content.res.Configuration
 import androidx.compose.animation.*
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
@@ -21,8 +20,6 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.style.TextAlign
@@ -31,10 +28,11 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
 import io.github.darrindeyoung791.habitpulse.HabitPulseApplication
 import io.github.darrindeyoung791.habitpulse.R
-import io.github.darrindeyoung791.habitpulse.ai.conversation.ChatMessageType
 import io.github.darrindeyoung791.habitpulse.ai.conversation.PartialHabit
 import io.github.darrindeyoung791.habitpulse.data.preferences.UserPreferences
 import io.github.darrindeyoung791.habitpulse.viewmodel.AICreateHabitViewModel
+import io.github.darrindeyoung791.habitpulse.viewmodel.ChatMessageType
+import io.github.darrindeyoung791.habitpulse.viewmodel.PendingQuestionUI
 import kotlinx.coroutines.launch
 import androidx.navigation.NavHostController
 import kotlinx.coroutines.flow.first
@@ -50,7 +48,6 @@ fun AICreateHabitScreen(
     val viewModel: AICreateHabitViewModel = viewModel()
     val context = LocalContext.current
     val scope = rememberCoroutineScope()
-    val configuration = LocalConfiguration.current
 
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
     val messages by viewModel.messages.collectAsStateWithLifecycle()
@@ -376,18 +373,6 @@ fun AIChatInputBox(
     isLoading: Boolean,
     modifier: Modifier = Modifier
 ) {
-    val lineHeight = 24.dp
-    val currentLineCount = remember(inputText) {
-        inputText.lines().size.coerceAtLeast(1)
-    }
-    val targetLineCount = when {
-        inputText.isEmpty() -> 3
-        currentLineCount <= 7 -> currentLineCount
-        else -> 7
-    }
-    val targetHeight = (targetLineCount * lineHeight + 32.dp)
-        .coerceIn(3 * lineHeight + 32.dp, 7 * lineHeight + 32.dp)
-
     Row(
         modifier = modifier
             .fillMaxWidth()
@@ -398,9 +383,7 @@ fun AIChatInputBox(
         BasicTextField(
             value = inputText,
             onValueChange = onTextChange,
-            modifier = Modifier
-                .weight(1f)
-                .heightIn(min = 3 * lineHeight + 32.dp, max = targetHeight),
+            modifier = Modifier.weight(1f),
             textStyle = MaterialTheme.typography.bodyLarge.copy(
                 color = MaterialTheme.colorScheme.onSurface
             ),

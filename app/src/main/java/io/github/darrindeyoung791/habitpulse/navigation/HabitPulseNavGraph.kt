@@ -25,6 +25,7 @@ import io.github.darrindeyoung791.habitpulse.ui.screens.HomeScreen
 import io.github.darrindeyoung791.habitpulse.ui.screens.MultiSelectSortScreen
 import io.github.darrindeyoung791.habitpulse.ui.screens.WebViewScreen
 import io.github.darrindeyoung791.habitpulse.ui.screens.ai.AICreateHabitScreen
+import io.github.darrindeyoung791.habitpulse.AISettingsActivity
 import java.util.UUID
 
 /**

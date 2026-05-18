@@ -7,7 +7,7 @@ class HabitCountExtractor {
         Regex("""帮我?\s*创建\s*(\d+)\s*个?"""),
         Regex("""create\s*(\d+)\s*habits?"""),
         Regex("""(\d+)\s*个\s*每日"""),
-        Regex("""(\d+)\s*个\s*每周"""
+        Regex("""(\d+)\s*个\s*每周""")
     )
 
     sealed class HabitCountResult {
@@ -20,7 +20,8 @@ class HabitCountExtractor {
         for (pattern in explicitCountPatterns) {
             val match = pattern.find(text)
             if (match != null) {
-                return HabitCountResult.Explicit(match.groupValues[1].toInt())
+                val countStr: String = match.groupValues[1]
+                return HabitCountResult.Explicit(countStr.toInt())
             }
         }
 
@@ -33,7 +34,7 @@ class HabitCountExtractor {
     }
 
     private fun countSequentialHabits(text: String, language: String): Int {
-        val delimiters = if (language.startsWith("en")) {
+        val delimiters: List<String> = if (language.startsWith("en")) {
             listOf(", ", " and ", "、", "，", "。", ". ", "\n")
         } else {
             listOf("、", "，", "。", "\n", ", ")
@@ -50,14 +51,17 @@ class HabitCountExtractor {
             }
         }
 
-        val habitIndicators = if (language.startsWith("en")) {
+        val habitIndicators: List<String> = if (language.startsWith("en")) {
             listOf("habit", "daily", "weekly", "every day", "every week", "run", "read", "exercise", "workout", "drink", "walk")
         } else {
             listOf("习惯", "每天", "每周", "跑步", "读书", "运动", "喝水", "健身", "冥想", "早睡", "早起", "学习", "练字", "背单词")
         }
 
-        val indicatorCount = habitIndicators.count { indicator ->
-            remaining.contains(indicator, ignoreCase = true)
+        var indicatorCount = 0
+        for (indicator in habitIndicators) {
+            if (remaining.contains(indicator, ignoreCase = true)) {
+                indicatorCount++
+            }
         }
 
         return if (indicatorCount > 0) indicatorCount else count

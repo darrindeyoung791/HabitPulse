@@ -6,6 +6,7 @@ import androidx.lifecycle.viewModelScope
 import io.github.darrindeyoung791.habitpulse.HabitPulseApplication
 import io.github.darrindeyoung791.habitpulse.ai.conversation.*
 import io.github.darrindeyoung791.habitpulse.ai.llm.LLMClient
+import io.github.darrindeyoung791.habitpulse.ai.tools.PendingQuestionData
 import io.github.darrindeyoung791.habitpulse.ai.tools.ToolRegistry
 import io.github.darrindeyoung791.habitpulse.data.model.Habit
 import io.github.darrindeyoung791.habitpulse.data.model.RepeatCycle
@@ -76,12 +77,13 @@ class AICreateHabitViewModel(application: Application) : AndroidViewModel(applic
                     }
                     is ConversationManager.ConversationEvent.QuestionReceived -> {
                         addAIMessage("")
+                        val q = event.question
                         _pendingQuestion.value = PendingQuestionUI(
-                            questionId = event.question.questionId,
-                            type = event.question.type,
-                            prompt = event.question.prompt,
-                            options = event.question.options,
-                            allowCustomInput = event.question.allowCustomInput
+                            questionId = q.questionId,
+                            type = q.type,
+                            prompt = q.prompt,
+                            options = q.options,
+                            allowCustomInput = q.allowCustomInput
                         )
                     }
                     is ConversationManager.ConversationEvent.ReplyReceived -> {
