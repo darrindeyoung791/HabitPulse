@@ -1,0 +1,279 @@
+package io.github.darrindeyoung791.habitpulse.viewmodel
+
+import android.app.Application
+import androidx.lifecycle.AndroidViewModel
+import androidx.lifecycle.viewModelScope
+import io.github.darrindeyoung791.habitpulse.HabitPulseApplication
+import io.github.darrindeyoung791.habitpulse.ai.conversation.*
+import io.github.darrindeyoung791.habitpulse.ai.llm.LLMClient
+import io.github.darrindeyoung791.habitpulse.ai.tools.ToolRegistry
+import io.github.darrindeyoung791.habitpulse.data.model.Habit
+import io.github.darrindeyoung791.habitpulse.data.model.RepeatCycle
+import io.github.darrindeyoung791.habitpulse.data.preferences.UserPreferences
+import io.github.darrindeyoung791.habitpulse.data.repository.HabitRepository
+import kotlinx.coroutines.flow.MutableStateFlow
+import kotlinx.coroutines.flow.StateFlow
+import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.launch
+import java.util.UUID
+
+class AICreateHabitViewModel(application: Application) : AndroidViewModel(application) {
+    private val userPreferences = UserPreferences.getInstance(application)
+    private val app = application as HabitPulseApplication
+    private val repository = HabitRepository(
+        app.database.habitDao(),
+        app.database.habitCompletionDao()
+    )
+
+    private val toolRegistry = ToolRegistry()
+    private val habitCountExtractor = HabitCountExtractor()
+    private val fallbackReply = FallbackReply()
+
+    private var conversationManager: ConversationManager? = null
+
+    private val _uiState = MutableStateFlow(AICreateHabitUIState())
+    val uiState: StateFlow<AICreateHabitUIState> = _uiState.asStateFlow()
+
+    private val _messages = MutableStateFlow<List<ChatMessageUIItem>>(emptyList())
+    val messages: StateFlow<List<ChatMessageUIItem>> = _messages.asStateFlow()
+
+    private val _collectedHabits = MutableStateFlow<List<PartialHabit>>(emptyList())
+    val collectedHabits: StateFlow<List<PartialHabit>> = _collectedHabits.asStateFlow()
+
+    private val _pendingQuestion = MutableStateFlow<PendingQuestionUI?>(null)
+    val pendingQuestion: StateFlow<PendingQuestionUI?> = _pendingQuestion.asStateFlow()
+
+    init {
+        viewModelScope.launch {
+            userPreferences.llmApiEndpointFlow.collect { endpoint ->
+                val apiKey = ""
+                val modelName = ""
+                checkAndInitializeClient(endpoint, apiKey, modelName)
+            }
+        }
+    }
+
+    private fun checkAndInitializeClient(endpoint: String, apiKey: String, modelName: String) {
+        if (endpoint.isNotBlank() && apiKey.isNotBlank() && modelName.isNotBlank()) {
+            val client = LLMClient.fromPreferences(endpoint, apiKey, modelName)
+            if (conversationManager == null) {
+                conversationManager = ConversationManager(client, toolRegistry, habitCountExtractor, fallbackReply)
+                observeConversation()
+            }
+        }
+    }
+
+    private fun observeConversation() {
+        viewModelScope.launch {
+            conversationManager?.events?.collect { event ->
+                when (event) {
+                    is ConversationManager.ConversationEvent.AIMessageReceived -> {
+                        addAIMessage(event.text)
+                        _uiState.value = _uiState.value.copy(
+                            isLoading = false,
+                            showClearButton = true
+                        )
+                    }
+                    is ConversationManager.ConversationEvent.QuestionReceived -> {
+                        addAIMessage("")
+                        _pendingQuestion.value = PendingQuestionUI(
+                            questionId = event.question.questionId,
+                            type = event.question.type,
+                            prompt = event.question.prompt,
+                            options = event.question.options,
+                            allowCustomInput = event.question.allowCustomInput
+                        )
+                    }
+                    is ConversationManager.ConversationEvent.ReplyReceived -> {
+                        addAIMessage(event.text)
+                        _uiState.value = _uiState.value.copy(isLoading = false)
+                    }
+                    is ConversationManager.ConversationEvent.HabitCreated -> {
+                        _collectedHabits.value = _collectedHabits.value + event.habit
+                        _uiState.value = _uiState.value.copy(isLoading = false)
+                    }
+                    is ConversationManager.ConversationEvent.ConfirmationRequested -> {
+                        _uiState.value = _uiState.value.copy(
+                            isLoading = false,
+                            showConfirmDialog = true
+                        )
+                    }
+                    is ConversationManager.ConversationEvent.Error -> {
+                        addAIMessage("错误: ${event.message}")
+                        _uiState.value = _uiState.value.copy(
+                            isLoading = false,
+                            errorMessage = event.message
+                        )
+                    }
+                    ConversationManager.ConversationEvent.GuardBlocked -> {
+                        _uiState.value = _uiState.value.copy(
+                            isLoading = false,
+                            isStopped = true
+                        )
+                    }
+                    null -> {}
+                }
+            }
+        }
+    }
+
+    fun sendMessage(text: String) {
+        if (text.isBlank()) return
+
+        viewModelScope.launch {
+            val endpoint = ""
+            val apiKey = ""
+            val modelName = ""
+
+            userPreferences.llmApiEndpointFlow.collect { ep ->
+                if (endpoint.isBlank()) {
+                    _uiState.value = _uiState.value.copy(
+                        errorMessage = "请先在设置中配置 API"
+                    )
+                }
+            }
+
+            addUserMessage(text)
+            _uiState.value = _uiState.value.copy(isLoading = true)
+
+            if (conversationManager == null) {
+                val client = LLMClient.fromPreferences(endpoint, apiKey, modelName)
+                conversationManager = ConversationManager(client, toolRegistry, habitCountExtractor, fallbackReply)
+                observeConversation()
+            }
+
+            conversationManager?.startConversation(text)
+        }
+    }
+
+    fun submitAnswer(answer: String) {
+        val question = _pendingQuestion.value ?: return
+
+        viewModelScope.launch {
+            addUserMessage(answer)
+            _pendingQuestion.value = null
+            _uiState.value = _uiState.value.copy(isLoading = true)
+
+            conversationManager?.submitAnswer(answer, question.questionId)
+        }
+    }
+
+    fun stopGeneration() {
+        viewModelScope.launch {
+            conversationManager?.stop()
+        }
+    }
+
+    fun clearConversation() {
+        conversationManager?.reset()
+        _messages.value = emptyList()
+        _collectedHabits.value = emptyList()
+        _pendingQuestion.value = null
+        _uiState.value = _uiState.value.copy(
+            isLoading = false,
+            showClearButton = false,
+            isStopped = false
+        )
+    }
+
+    fun showExitConfirmation() {
+        _uiState.value = _uiState.value.copy(showExitConfirmation = true)
+    }
+
+    fun dismissExitConfirmation() {
+        _uiState.value = _uiState.value.copy(showExitConfirmation = false)
+    }
+
+    fun showClearConfirmation() {
+        _uiState.value = _uiState.value.copy(showClearConfirmation = true)
+    }
+
+    fun dismissClearConfirmation() {
+        _uiState.value = _uiState.value.copy(showClearConfirmation = false)
+    }
+
+    fun showSettingsConfirmation() {
+        _uiState.value = _uiState.value.copy(showSettingsConfirmation = true)
+    }
+
+    fun dismissSettingsConfirmation() {
+        _uiState.value = _uiState.value.copy(showSettingsConfirmation = false)
+    }
+
+    fun dismissConfirmDialog() {
+        _uiState.value = _uiState.value.copy(showConfirmDialog = false)
+    }
+
+    fun confirmAndSaveHabits() {
+        viewModelScope.launch {
+            val habitsToSave = _collectedHabits.value
+            for (habit in habitsToSave) {
+                val newHabit = Habit(
+                    title = habit.title,
+                    repeatCycle = if (habit.repeatCycle == "DAILY") RepeatCycle.DAILY else RepeatCycle.WEEKLY,
+                    repeatDays = habit.repeatDays.joinToString(",", "[", "]") { it.toString() },
+                    reminderTimes = habit.reminderTimes.joinToString(",", "[\"", "\"]") { it },
+                    notes = habit.notes
+                )
+                repository.insertHabit(newHabit)
+            }
+            clearConversation()
+            _uiState.value = _uiState.value.copy(
+                showConfirmDialog = false,
+                habitsSaved = true
+            )
+        }
+    }
+
+    fun updateInputText(text: String) {
+        _uiState.value = _uiState.value.copy(inputText = text)
+    }
+
+    private fun addUserMessage(text: String) {
+        _messages.value = _messages.value + ChatMessageUIItem(
+            id = UUID.randomUUID().toString(),
+            type = ChatMessageType.USER,
+            text = text
+        )
+    }
+
+    private fun addAIMessage(text: String) {
+        _messages.value = _messages.value + ChatMessageUIItem(
+            id = UUID.randomUUID().toString(),
+            type = ChatMessageType.AI,
+            text = text
+        )
+    }
+}
+
+data class AICreateHabitUIState(
+    val inputText: String = "",
+    val isLoading: Boolean = false,
+    val isStopped: Boolean = false,
+    val errorMessage: String? = null,
+    val showExitConfirmation: Boolean = false,
+    val showClearConfirmation: Boolean = false,
+    val showSettingsConfirmation: Boolean = false,
+    val showConfirmDialog: Boolean = false,
+    val showClearButton: Boolean = false,
+    val habitsSaved: Boolean = false
+)
+
+data class ChatMessageUIItem(
+    val id: String,
+    val type: ChatMessageType,
+    val text: String,
+    val thoughts: String = ""
+)
+
+enum class ChatMessageType {
+    USER, AI, QUESTION
+}
+
+data class PendingQuestionUI(
+    val questionId: String,
+    val type: String,
+    val prompt: String,
+    val options: List<String> = emptyList(),
+    val allowCustomInput: Boolean = false
+)

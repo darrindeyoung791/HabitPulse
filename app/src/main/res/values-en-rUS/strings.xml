@@ -300,4 +300,43 @@
     <string name="webview_network_error_open_browser">Open in Browser</string>
     <string name="webview_network_error_close">Close</string>
     <string name="webview_network_error_back">Go Back</string>
+
+    <!-- AI Settings -->
+    <string name="ai_settings_title">AI Settings</string>
+    <string name="ai_settings_api_endpoint">API Endpoint</string>
+    <string name="ai_settings_api_endpoint_label">API Endpoint</string>
+    <string name="ai_settings_api_key">API Key</string>
+    <string name="ai_settings_api_key_label">API Key</string>
+    <string name="ai_settings_model">Model</string>
+    <string name="ai_settings_model_label">Select Model</string>
+    <string name="ai_settings_test_connection">Test Connection</string>
+    <string name="ai_settings_connection_success">Connection successful</string>
+    <string name="ai_settings_connection_failed">Connection failed</string>
+    <string name="ai_settings_notice_title">Configuration Guide</string>
+    <string name="ai_settings_notice_content">This app supports OpenAI-compatible LLM APIs (such as Zhipu GLM, DeepSeek, etc.).\n\nAPI Endpoint: Fill in the complete API address ending with a slash.\nAPI Key: Obtain from the respective platform.\nModel: Supports Zhipu glm-4.7-flash (default), glm-4-flash, glm-4, etc.</string>
+    <string name="clear">Clear</string>
+    <string name="show_password">Show password</string>
+    <string name="hide_password">Hide password</string>
+    <string name="settings_ai_section">AI</string>
+    <string name="settings_ai_section_description">Configure AI habit creation</string>
+
+    <!-- AI Create Habit -->
+    <string name="ai_create_title">AI Create Habit</string>
+    <string name="ai_welcome_title">Create habits with AI</string>
+    <string name="ai_welcome_subtitle">Tell me the habits you want to build, I\'ll help you create them</string>
+    <string name="ai_input_placeholder">Describe the habit you want to build…</string>
+    <string name="ai_send_button">Send</string>
+    <string name="ai_stop_button">Stop</string>
+    <string name="ai_clear_conversation">Clear conversation</string>
+    <string name="ai_exit_title">Confirm exit?</string>
+    <string name="ai_exit_message">After leaving, the conversation will not be saved.</string>
+    <string name="ai_clear_title">Clear conversation?</string>
+    <string name="ai_clear_message">This will clear all messages.</string>
+    <string name="ai_confirm_title">Confirm creation</string>
+    <string name="ai_confirm_message">Create %d habits?</string>
+    <string name="ai_confirm_create">Create</string>
+    <string name="ai_text_input_placeholder">Enter your answer…</string>
+    <string name="ai_unsupported_question_type">Unsupported question type</string>
+    <string name="go_back">Back</string>
+    <string name="settings_ai_title">AI Settings</string>
 </resources>

@@ -301,4 +301,43 @@
     <string name="webview_network_error_open_browser">在瀏覽器中開啟</string>
     <string name="webview_network_error_close">關閉</string>
     <string name="webview_network_error_back">返回</string>
+
+    <!-- AI Settings -->
+    <string name="ai_settings_title">AI 設定</string>
+    <string name="ai_settings_api_endpoint">API 端點</string>
+    <string name="ai_settings_api_endpoint_label">API 端點</string>
+    <string name="ai_settings_api_key">API 金鑰</string>
+    <string name="ai_settings_api_key_label">API 金鑰</string>
+    <string name="ai_settings_model">模型</string>
+    <string name="ai_settings_model_label">選擇模型</string>
+    <string name="ai_settings_test_connection">測試連線</string>
+    <string name="ai_settings_connection_success">連線成功</string>
+    <string name="ai_settings_connection_failed">連線失敗</string>
+    <string name="ai_settings_notice_title">設定說明</string>
+    <string name="ai_settings_notice_content">本應用支援 OpenAI 相容格式的 LLM API（如智譜 GLM、DeepSeek 等）。\n\nAPI 端點：請填寫完整的 API 位址，以斜線結尾。\nAPI 金鑰：請從相應平台取得。\n模型名稱：支援智譜 glm-4.7-flash（預設）、glm-4-flash、glm-4 等。</string>
+    <string name="clear">清除</string>
+    <string name="show_password">顯示密碼</string>
+    <string name="hide_password">隱藏密碼</string>
+    <string name="settings_ai_section">AI</string>
+    <string name="settings_ai_section_description">設定 AI 建立習慣功能</string>
+
+    <!-- AI Create Habit -->
+    <string name="ai_create_title">AI 建立習慣</string>
+    <string name="ai_welcome_title">用 AI 建立習慣</string>
+    <string name="ai_welcome_subtitle">告訴我你想養成的習慣，我來幫你建立</string>
+    <string name="ai_input_placeholder">描述你想養成的習慣…</string>
+    <string name="ai_send_button">傳送</string>
+    <string name="ai_stop_button">停止</string>
+    <string name="ai_clear_conversation">清除對話</string>
+    <string name="ai_exit_title">確認離開？</string>
+    <string name="ai_exit_message">離開後對話將不保留。</string>
+    <string name="ai_clear_title">清除對話？</string>
+    <string name="ai_clear_message">這將清除所有訊息。</string>
+    <string name="ai_confirm_title">確認建立</string>
+    <string name="ai_confirm_message">建立 %d 個習慣？</string>
+    <string name="ai_confirm_create">建立</string>
+    <string name="ai_text_input_placeholder">輸入你的答案…</string>
+    <string name="ai_unsupported_question_type">不支援的問題類型</string>
+    <string name="go_back">返回</string>
+    <string name="settings_ai_title">AI 設定</string>
 </resources>
