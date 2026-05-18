@@ -136,6 +136,14 @@ fun HabitPulseNavGraph(
                             }
                         }
                     },
+                    onAICreateHabit = {
+                        navController.navigate(Route.AICreateHabit.route) {
+                            launchSingleTop = true
+                            popUpTo(Route.Home.route) {
+                                inclusive = false
+                            }
+                        }
+                    },
                     application = context.applicationContext as HabitPulseApplication,
                     onHomeDataLoaded = onHomeDataLoaded,
                     sharedTransitionScope = sharedTransitionScope,

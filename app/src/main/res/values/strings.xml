@@ -320,4 +320,9 @@
     <string name="hide_password">隐藏密码</string>
     <string name="settings_ai_section">AI</string>
     <string name="settings_ai_section_description">配置 AI 创建习惯功能</string>
+    <string name="create_habit_selection_title">新建习惯</string>
+    <string name="create_habit_selection_manual">手动填写</string>
+    <string name="create_habit_selection_manual_desc">自己填写所有字段</string>
+    <string name="create_habit_selection_ai">AI 智能创建</string>
+    <string name="create_habit_selection_ai_desc">描述习惯，AI 帮你逐步完善</string>
 </resources>

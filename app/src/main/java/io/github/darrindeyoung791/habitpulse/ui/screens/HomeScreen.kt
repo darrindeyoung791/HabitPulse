@@ -76,6 +76,7 @@ fun HomeScreen(
     onNavigateToSettings: () -> Unit,
     onEditHabit: (Habit) -> Unit,
     onNavigateToMultiSelect: (habitId: UUID) -> Unit = {},
+    onAICreateHabit: () -> Unit = {},
     application: HabitPulseApplication? = null,
     onHomeDataLoaded: () -> Unit = {},
     sharedTransitionScope: SharedTransitionScope? = null,
@@ -88,6 +89,9 @@ fun HomeScreen(
 
     // Track which habit is transitioning to MultiSelect (for shared element)
     var multiSelectTargetHabitId by remember { mutableStateOf<java.util.UUID?>(null) }
+
+    // FAB selection dialog state
+    var showCreateHabitDialog by remember { mutableStateOf(false) }
 
     // Focus requester for TalkBack initial focus
     val titleFocusRequester = remember { androidx.compose.ui.focus.FocusRequester() }
@@ -719,11 +723,7 @@ fun HomeScreen(
                     if (showFab) {
                         ExtendedFloatingActionButton(
                             onClick = {
-                                scope.launch {
-                                    clickHandler.processClick {
-                                        onCreateHabit()
-                                    }
-                                }
+                                showCreateHabitDialog = true
                             },
                             icon = {
                                 Icon(imageVector = Icons.Filled.Add, contentDescription = null)
@@ -894,11 +894,7 @@ fun HomeScreen(
                 if (showFab) {
                     ExtendedFloatingActionButton(
                         onClick = {
-                            scope.launch {
-                                clickHandler.processClick {
-                                    onCreateHabit()
-                                }
-                            }
+                            showCreateHabitDialog = true
                         },
                         icon = {
                             Icon(imageVector = Icons.Filled.Add, contentDescription = null)
@@ -964,6 +960,29 @@ fun HomeScreen(
                 onDateSelected = { recordsVM.selectDate(it) }
             )
         }
+    }
+
+    // FAB - Create Habit Selection Dialog
+    if (showCreateHabitDialog) {
+        CreateHabitSelectionDialog(
+            onDismiss = { showCreateHabitDialog = false },
+            onManualCreate = {
+                showCreateHabitDialog = false
+                scope.launch {
+                    clickHandler.processClick {
+                        onCreateHabit()
+                    }
+                }
+            },
+            onAICreate = {
+                showCreateHabitDialog = false
+                scope.launch {
+                    clickHandler.processClick {
+                        onAICreateHabit()
+                    }
+                }
+            }
+        )
     }
 }
 
@@ -1118,6 +1137,79 @@ fun CollapsedNavigationBar(
     }
 }
 
+@Composable
+fun CreateHabitSelectionDialog(
+    onDismiss: () -> Unit,
+    onManualCreate: () -> Unit,
+    onAICreate: () -> Unit
+) {
+    AlertDialog(
+        onDismissRequest = onDismiss,
+        title = { Text(stringResource(id = R.string.create_habit_selection_title)) },
+        text = {
+            Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .clickable(onClick = onManualCreate)
+                        .padding(12.dp),
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Icon(
+                        imageVector = Icons.Filled.Edit,
+                        contentDescription = null,
+                        tint = MaterialTheme.colorScheme.primary
+                    )
+                    Spacer(modifier = Modifier.width(16.dp))
+                    Column {
+                        Text(
+                            text = stringResource(id = R.string.create_habit_selection_manual),
+                            style = MaterialTheme.typography.bodyLarge
+                        )
+                        Text(
+                            text = stringResource(id = R.string.create_habit_selection_manual_desc),
+                            style = MaterialTheme.typography.bodySmall,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant
+                        )
+                    }
+                }
+                HorizontalDivider()
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .clickable(onClick = onAICreate)
+                        .padding(12.dp),
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Icon(
+                        imageVector = Icons.AutoMirrored.Filled.RocketLaunch,
+                        contentDescription = null,
+                        tint = MaterialTheme.colorScheme.primary
+                    )
+                    Spacer(modifier = Modifier.width(16.dp))
+                    Column {
+                        Text(
+                            text = stringResource(id = R.string.create_habit_selection_ai),
+                            style = MaterialTheme.typography.bodyLarge
+                        )
+                        Text(
+                            text = stringResource(id = R.string.create_habit_selection_ai_desc),
+                            style = MaterialTheme.typography.bodySmall,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant
+                        )
+                    }
+                }
+            }
+        },
+        confirmButton = {},
+        dismissButton = {
+            TextButton(onClick = onDismiss) {
+                Text(stringResource(id = R.string.cancel))
+            }
+        }
+    )
+}
+
 // ============= Preview =============
 
 @Preview(showBackground = true)
@@ -1128,6 +1220,7 @@ fun HomeScreenPreview() {
             onCreateHabit = {},
             onNavigateToSettings = {},
             onEditHabit = {},
+            onAICreateHabit = {},
             application = null
         )
     }
