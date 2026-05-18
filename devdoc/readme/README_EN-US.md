@@ -42,7 +42,7 @@
 - [x] **Keep-Alive Service**: Foreground service with boot auto-restart for reliability
 - [ ] **AlarmManager Notifications**: Accurate push reminders based on AlarmManager (Planned)
 - [ ] **LAN Sync**: Sync data between multiple devices over LAN without accounts (Planned, [details](../../devdoc/lan-sync-plan.md))
-- [ ] **AI-Assisted Planning**: Integrate LLM APIs to assist users in creating habits (Planned)
+- [ ] **AI-Assisted Planning**: Integrate LLM APIs + AGenUI (A2UI) for AI-powered habit creation and streaming UI (Planned, [details](../../devdoc/ai-habit-creation-plan.md))
 - [ ] **Records Visualization**: Use WebView and web components for visualizations like weekly check-in time distribution (Planned)
 
 ### 🎨 UI/UX Features
