@@ -108,3 +108,20 @@
 - [ ] 12.2 屏幕旋转测试（状态保持）
 - [ ] 12.3 多语言测试（中文/英文对话）
 - [ ] 12.4 清理调试代码，优化日志输出
+
+## 13. 对话流程修复：连续聊天与打断按钮
+
+- [x] 13.1 新增 `continueConversation()` 方法用于后续消息（ConversationManager.kt）
+  - 不重新检测 `isHabitRelated`，不走 FallbackReply
+  - 不重复插入 system prompt
+  - 仅添加 user message 后直接调 `sendToLLM()`
+- [x] 13.2 `sendMessage()` 区分首次/后续消息（AICreateHabitViewModel.kt）
+  - `conversationManager == null` 时创建 Manager 并调用 `startConversation()`
+  - `conversationManager != null` 时调用 `continueConversation()`
+- [x] 13.3 `streamJob` 赋值使停止按钮生效（ConversationManager.kt）
+  - 添加 `scope: CoroutineScope` 构造参数（传 `viewModelScope`）
+  - `sendToLLM()` 中使用 `scope.launch(Dispatchers.IO)` 并赋值给 `streamJob`
+  - `stop()` 调用 `streamJob?.cancel()` 实际取消当前请求
+- [x] 13.4 LLMClient 可取消改进（LLMClient.kt）
+  - `chat()` 中使用 `delay()` 替代 `Thread.sleep()` 实现可取消等待
+  - 重试循环中添加 `ensureActive()` 检查协程取消

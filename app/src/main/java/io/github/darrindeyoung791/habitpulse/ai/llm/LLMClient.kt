@@ -2,10 +2,12 @@ package io.github.darrindeyoung791.habitpulse.ai.llm
 
 import com.google.gson.Gson
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.ensureActive
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.flow
 import kotlinx.coroutines.flow.flowOn
 import kotlinx.coroutines.withContext
+import kotlinx.coroutines.yield
 import java.io.BufferedReader
 import java.io.InputStreamReader
 import java.net.HttpURLConnection
@@ -39,6 +41,7 @@ class LLMClient(
         var lastCode: Int? = null
 
         repeat(config.maxRetries) { attempt ->
+            ensureActive()
             try {
                 val result = doChat(messages)
                 return@withContext result
@@ -46,7 +49,7 @@ class LLMClient(
                 lastError = e
                 lastCode = getErrorCode(e)
                 if (attempt < config.maxRetries - 1) {
-                    Thread.sleep(1000L * (attempt + 1))
+                    kotlinx.coroutines.delay(1000L * (attempt + 1))
                 }
             }
         }

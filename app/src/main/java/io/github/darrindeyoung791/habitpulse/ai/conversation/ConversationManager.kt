@@ -10,17 +10,22 @@ import io.github.darrindeyoung791.habitpulse.ai.tools.PendingQuestionData
 import io.github.darrindeyoung791.habitpulse.ai.tools.ReplyData
 import io.github.darrindeyoung791.habitpulse.ai.tools.ToolRegistry
 import io.github.darrindeyoung791.habitpulse.ai.tools.ToolResult
+import kotlinx.coroutines.CoroutineScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.ensureActive
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
-import kotlinx.coroutines.flow.collectLatest
+import kotlinx.coroutines.flow.collect
+import kotlinx.coroutines.launch
 
 class ConversationManager(
     private val llmClient: LLMClient,
     private val toolRegistry: ToolRegistry,
     private val habitCountExtractor: HabitCountExtractor,
     private val fallbackReply: FallbackReply,
-    private val streamingEnabled: Boolean = false
+    private val streamingEnabled: Boolean = false,
+    private val scope: CoroutineScope
 ) {
     private val gson = Gson()
 
@@ -98,34 +103,62 @@ class ConversationManager(
 
     private suspend fun sendToLLM() {
         isStreaming = true
+        _state.value = _state.value.copy(isStopped = false)
 
         if (streamingEnabled) {
             var streamingText = ""
-            llmClient.chatStream(messages).collectLatest { chunk ->
-                when (chunk) {
-                    is LLMClient.StreamChunk.Content -> {
-                        streamingText += chunk.delta
-                        _events.value = ConversationEvent.AIMessageReceived(
-                            streamingText,
-                            isStreaming = true
-                        )
+            streamJob = scope.launch(Dispatchers.IO) {
+                try {
+                    llmClient.chatStream(messages).collect { chunk ->
+                        ensureActive()
+                        if (_state.value.isStopped) {
+                            throw kotlinx.coroutines.CancellationException("stopped by user")
+                        }
+                        when (chunk) {
+                            is LLMClient.StreamChunk.Content -> {
+                                streamingText += chunk.delta
+                                _events.value = ConversationEvent.AIMessageReceived(
+                                    streamingText,
+                                    isStreaming = true
+                                )
+                            }
+                            is LLMClient.StreamChunk.Done -> {
+                                processResponse(chunk.fullContent)
+                            }
+                            is LLMClient.StreamChunk.Error -> {
+                                _events.value = ConversationEvent.Error(chunk.message)
+                            }
+                        }
                     }
-                    is LLMClient.StreamChunk.Done -> {
-                        processResponse(chunk.fullContent)
-                    }
-                    is LLMClient.StreamChunk.Error -> {
-                        _events.value = ConversationEvent.Error(chunk.message)
-                    }
+                } catch (_: kotlinx.coroutines.CancellationException) {
+                    // stopped by user
                 }
             }
+            try {
+                streamJob?.join()
+            } catch (_: kotlinx.coroutines.CancellationException) {
+                streamJob?.cancel()
+            }
         } else {
-            when (val result = llmClient.chat(messages)) {
-                is LLMClient.LLMResult.Success -> {
-                    processResponse(result.content)
+            streamJob = scope.launch(Dispatchers.IO) {
+                try {
+                    ensureActive()
+                    when (val result = llmClient.chat(messages)) {
+                        is LLMClient.LLMResult.Success -> {
+                            processResponse(result.content)
+                        }
+                        is LLMClient.LLMResult.Error -> {
+                            _events.value = ConversationEvent.Error(result.message)
+                        }
+                    }
+                } catch (_: kotlinx.coroutines.CancellationException) {
+                    // stopped by user
                 }
-                is LLMClient.LLMResult.Error -> {
-                    _events.value = ConversationEvent.Error(result.message)
-                }
+            }
+            try {
+                streamJob?.join()
+            } catch (_: kotlinx.coroutines.CancellationException) {
+                streamJob?.cancel()
             }
         }
 
@@ -221,6 +254,13 @@ class ConversationManager(
         } catch (e: Exception) {
             emptyMap()
         }
+    }
+
+    suspend fun continueConversation(userInput: String) {
+        if (_state.value.isStopped) return
+
+        messages.add(Message(role = "user", content = userInput))
+        sendToLLM()
     }
 
     fun reset() {

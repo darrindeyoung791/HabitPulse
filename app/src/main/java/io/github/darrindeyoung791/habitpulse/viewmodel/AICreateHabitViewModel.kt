@@ -133,12 +133,14 @@ class AICreateHabitViewModel(application: Application) : AndroidViewModel(applic
                     toolRegistry = toolRegistry,
                     habitCountExtractor = habitCountExtractor,
                     fallbackReply = fallbackReply,
-                    streamingEnabled = streamingEnabled
+                    streamingEnabled = streamingEnabled,
+                    scope = viewModelScope
                 )
                 observeConversation()
+                conversationManager?.startConversation(text)
+            } else {
+                conversationManager?.continueConversation(text)
             }
-
-            conversationManager?.startConversation(text)
         }
     }
 
