@@ -13,12 +13,14 @@ import io.github.darrindeyoung791.habitpulse.ai.tools.ToolResult
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.collectLatest
 
 class ConversationManager(
     private val llmClient: LLMClient,
     private val toolRegistry: ToolRegistry,
     private val habitCountExtractor: HabitCountExtractor,
-    private val fallbackReply: FallbackReply
+    private val fallbackReply: FallbackReply,
+    private val streamingEnabled: Boolean = false
 ) {
     private val gson = Gson()
 
@@ -37,13 +39,16 @@ class ConversationManager(
     private var streamJob: kotlinx.coroutines.Job? = null
 
     sealed class ConversationEvent {
-        data class AIMessageReceived(val text: String, val thoughts: String = "") : ConversationEvent()
+        data class AIMessageReceived(val text: String, val thoughts: String = "", val isStreaming: Boolean = false) : ConversationEvent()
         data class QuestionReceived(val question: PendingQuestionData) : ConversationEvent()
         data class ReplyReceived(val text: String) : ConversationEvent()
         data class HabitCreated(val habit: PartialHabit) : ConversationEvent()
         data class ConfirmationRequested(val habits: List<PartialHabit>) : ConversationEvent()
         data class Error(val message: String) : ConversationEvent()
         object GuardBlocked : ConversationEvent()
+        data class ThinkingStarted(val messageId: String) : ConversationEvent()
+        data class ThinkingUpdated(val messageId: String, val thoughts: String) : ConversationEvent()
+        data class ThinkingEnded(val messageId: String) : ConversationEvent()
     }
 
     suspend fun startConversation(userInput: String) {
@@ -94,12 +99,33 @@ class ConversationManager(
     private suspend fun sendToLLM() {
         isStreaming = true
 
-        when (val result = llmClient.chat(messages)) {
-            is LLMClient.LLMResult.Success -> {
-                processResponse(result.content)
+        if (streamingEnabled) {
+            var streamingText = ""
+            llmClient.chatStream(messages).collectLatest { chunk ->
+                when (chunk) {
+                    is LLMClient.StreamChunk.Content -> {
+                        streamingText += chunk.delta
+                        _events.value = ConversationEvent.AIMessageReceived(
+                            streamingText,
+                            isStreaming = true
+                        )
+                    }
+                    is LLMClient.StreamChunk.Done -> {
+                        processResponse(chunk.fullContent)
+                    }
+                    is LLMClient.StreamChunk.Error -> {
+                        _events.value = ConversationEvent.Error(chunk.message)
+                    }
+                }
             }
-            is LLMClient.LLMResult.Error -> {
-                _events.value = ConversationEvent.Error(result.message)
+        } else {
+            when (val result = llmClient.chat(messages)) {
+                is LLMClient.LLMResult.Success -> {
+                    processResponse(result.content)
+                }
+                is LLMClient.LLMResult.Error -> {
+                    _events.value = ConversationEvent.Error(result.message)
+                }
             }
         }
 
@@ -111,8 +137,13 @@ class ConversationManager(
 
         var displayText = parsed.text
         val toolCalls = parsed.toolCalls
+        val thoughts = parsed.thoughts
 
         messages.add(Message(role = "assistant", content = content))
+
+        if (thoughts.isNotEmpty()) {
+            _events.value = ConversationEvent.ThinkingEnded("")
+        }
 
         var needsIntervention = false
         var interventionMessage: String? = null
@@ -169,7 +200,7 @@ class ConversationManager(
         }
 
         if (toolCalls.isEmpty() || displayText.isNotEmpty()) {
-            _events.value = ConversationEvent.AIMessageReceived(displayText)
+            _events.value = ConversationEvent.AIMessageReceived(displayText, thoughts, isStreaming = false)
         }
 
         if (needsIntervention && interventionMessage != null) {

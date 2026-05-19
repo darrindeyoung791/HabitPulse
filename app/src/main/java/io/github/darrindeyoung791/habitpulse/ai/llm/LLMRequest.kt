@@ -30,7 +30,9 @@ data class ChatResponse(
     @SerializedName("choices")
     val choices: List<Choice>?,
     @SerializedName("error")
-    val error: ResponseError?
+    val error: ResponseError?,
+    @SerializedName("usage")
+    val usage: Usage?
 )
 
 data class Choice(
@@ -46,7 +48,25 @@ data class AssistantMessage(
     @SerializedName("role")
     val role: String?,
     @SerializedName("content")
-    val content: String?
+    val content: String?,
+    @SerializedName("tool_calls")
+    val toolCalls: List<ToolCallData>? = null
+)
+
+data class ToolCallData(
+    @SerializedName("id")
+    val id: String?,
+    @SerializedName("type")
+    val type: String?,
+    @SerializedName("function")
+    val function: FunctionCallData?
+)
+
+data class FunctionCallData(
+    @SerializedName("name")
+    val name: String?,
+    @SerializedName("arguments")
+    val arguments: String?
 )
 
 data class ResponseError(
@@ -56,4 +76,48 @@ data class ResponseError(
     val type: String?,
     @SerializedName("code")
     val code: String?
+)
+
+data class Usage(
+    @SerializedName("prompt_tokens")
+    val promptTokens: Int?,
+    @SerializedName("completion_tokens")
+    val completionTokens: Int?,
+    @SerializedName("total_tokens")
+    val totalTokens: Int?
+)
+
+/**
+ * SSE streaming chunk response from Zhipu / GLM API.
+ * Matches the ChatCompletionChunk schema.
+ */
+data class ChatCompletionChunk(
+    @SerializedName("id")
+    val id: String? = null,
+    @SerializedName("created")
+    val created: Long? = null,
+    @SerializedName("model")
+    val model: String? = null,
+    @SerializedName("choices")
+    val choices: List<ChunkChoice>? = null,
+    @SerializedName("usage")
+    val usage: Usage? = null
+)
+
+data class ChunkChoice(
+    @SerializedName("index")
+    val index: Int? = null,
+    @SerializedName("delta")
+    val delta: Delta? = null,
+    @SerializedName("finish_reason")
+    val finishReason: String? = null
+)
+
+data class Delta(
+    @SerializedName("role")
+    val role: String? = null,
+    @SerializedName("content")
+    val content: String? = null,
+    @SerializedName("reasoning_content")
+    val reasoningContent: String? = null
 )

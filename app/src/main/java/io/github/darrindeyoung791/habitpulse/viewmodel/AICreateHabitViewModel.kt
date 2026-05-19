@@ -15,6 +15,7 @@ import io.github.darrindeyoung791.habitpulse.data.repository.HabitRepository
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
 import java.util.UUID
 
@@ -44,39 +45,19 @@ class AICreateHabitViewModel(application: Application) : AndroidViewModel(applic
     private val _pendingQuestion = MutableStateFlow<PendingQuestionUI?>(null)
     val pendingQuestion: StateFlow<PendingQuestionUI?> = _pendingQuestion.asStateFlow()
 
-    init {
-        viewModelScope.launch {
-            userPreferences.llmApiEndpointFlow.collect { endpoint ->
-                val apiKey = ""
-                val modelName = ""
-                checkAndInitializeClient(endpoint, apiKey, modelName)
-            }
-        }
-    }
-
-    private fun checkAndInitializeClient(endpoint: String, apiKey: String, modelName: String) {
-        if (endpoint.isNotBlank() && apiKey.isNotBlank() && modelName.isNotBlank()) {
-            val client = LLMClient.fromPreferences(endpoint, apiKey, modelName)
-            if (conversationManager == null) {
-                conversationManager = ConversationManager(client, toolRegistry, habitCountExtractor, fallbackReply)
-                observeConversation()
-            }
-        }
-    }
-
     private fun observeConversation() {
         viewModelScope.launch {
             conversationManager?.events?.collect { event ->
                 when (event) {
                     is ConversationManager.ConversationEvent.AIMessageReceived -> {
-                        addAIMessage(event.text)
+                        addOrUpdateAIMessage(event.text, event.thoughts, event.isStreaming)
                         _uiState.value = _uiState.value.copy(
                             isLoading = false,
                             showClearButton = true
                         )
                     }
                     is ConversationManager.ConversationEvent.QuestionReceived -> {
-                        addAIMessage("")
+                        addOrUpdateAIMessage("")
                         val q = event.question
                         _pendingQuestion.value = PendingQuestionUI(
                             questionId = q.questionId,
@@ -87,7 +68,7 @@ class AICreateHabitViewModel(application: Application) : AndroidViewModel(applic
                         )
                     }
                     is ConversationManager.ConversationEvent.ReplyReceived -> {
-                        addAIMessage(event.text)
+                        addOrUpdateAIMessage(event.text)
                         _uiState.value = _uiState.value.copy(isLoading = false)
                     }
                     is ConversationManager.ConversationEvent.HabitCreated -> {
@@ -101,7 +82,7 @@ class AICreateHabitViewModel(application: Application) : AndroidViewModel(applic
                         )
                     }
                     is ConversationManager.ConversationEvent.Error -> {
-                        addAIMessage("错误: ${event.message}")
+                        addOrUpdateAIMessage("错误: ${event.message}")
                         _uiState.value = _uiState.value.copy(
                             isLoading = false,
                             errorMessage = event.message
@@ -113,6 +94,13 @@ class AICreateHabitViewModel(application: Application) : AndroidViewModel(applic
                             isStopped = true
                         )
                     }
+                    is ConversationManager.ConversationEvent.ThinkingStarted -> {
+                        addOrUpdateAIMessage("")
+                    }
+                    is ConversationManager.ConversationEvent.ThinkingUpdated -> {
+                        updateLastMessageThoughts(event.thoughts)
+                    }
+                    is ConversationManager.ConversationEvent.ThinkingEnded -> {}
                     null -> {}
                 }
             }
@@ -123,24 +111,30 @@ class AICreateHabitViewModel(application: Application) : AndroidViewModel(applic
         if (text.isBlank()) return
 
         viewModelScope.launch {
-            val endpoint = ""
-            val apiKey = ""
-            val modelName = ""
+            val endpoint = userPreferences.llmApiEndpointFlow.first()
+            val apiKey = userPreferences.llmApiKeyFlow.first()
+            val modelName = userPreferences.llmModelNameFlow.first()
+            val streamingEnabled = userPreferences.llmStreamingResponseFlow.first()
 
-            userPreferences.llmApiEndpointFlow.collect { ep ->
-                if (endpoint.isBlank()) {
-                    _uiState.value = _uiState.value.copy(
-                        errorMessage = "请先在设置中配置 API"
-                    )
-                }
+            if (endpoint.isBlank() || apiKey.isBlank()) {
+                _uiState.value = _uiState.value.copy(
+                    errorMessage = "请先在设置中配置 API"
+                )
+                return@launch
             }
 
             addUserMessage(text)
-            _uiState.value = _uiState.value.copy(isLoading = true)
+            _uiState.value = _uiState.value.copy(isLoading = true, showClearButton = true)
 
             if (conversationManager == null) {
-                val client = LLMClient.fromPreferences(endpoint, apiKey, modelName)
-                conversationManager = ConversationManager(client, toolRegistry, habitCountExtractor, fallbackReply)
+                val client = LLMClient.fromPreferences(endpoint, apiKey, modelName, streamingEnabled)
+                conversationManager = ConversationManager(
+                    llmClient = client,
+                    toolRegistry = toolRegistry,
+                    habitCountExtractor = habitCountExtractor,
+                    fallbackReply = fallbackReply,
+                    streamingEnabled = streamingEnabled
+                )
                 observeConversation()
             }
 
@@ -239,12 +233,40 @@ class AICreateHabitViewModel(application: Application) : AndroidViewModel(applic
         )
     }
 
-    private fun addAIMessage(text: String) {
-        _messages.value = _messages.value + ChatMessageUIItem(
-            id = UUID.randomUUID().toString(),
-            type = ChatMessageType.AI,
-            text = text
-        )
+    private fun addOrUpdateAIMessage(text: String, thoughts: String = "", isStreaming: Boolean = false) {
+        val currentMessages = _messages.value.toMutableList()
+        val lastMsg = if (currentMessages.isNotEmpty()) currentMessages.last() else null
+
+        if (lastMsg != null && lastMsg.type == ChatMessageType.AI && lastMsg.isStreaming) {
+            currentMessages[currentMessages.lastIndex] = lastMsg.copy(
+                text = text,
+                thoughts = thoughts,
+                isStreaming = isStreaming
+            )
+        } else {
+            currentMessages.add(
+                ChatMessageUIItem(
+                    id = UUID.randomUUID().toString(),
+                    type = ChatMessageType.AI,
+                    text = text,
+                    thoughts = thoughts,
+                    isStreaming = isStreaming
+                )
+            )
+        }
+        _messages.value = currentMessages
+    }
+
+    private fun updateLastMessageThoughts(thoughts: String) {
+        val currentMessages = _messages.value.toMutableList()
+        if (currentMessages.isNotEmpty() && currentMessages.last().type == ChatMessageType.AI) {
+            val lastIndex = currentMessages.lastIndex
+            currentMessages[lastIndex] = currentMessages[lastIndex].copy(
+                thoughts = thoughts,
+                isStreaming = true
+            )
+            _messages.value = currentMessages
+        }
     }
 }
 
@@ -265,7 +287,8 @@ data class ChatMessageUIItem(
     val id: String,
     val type: ChatMessageType,
     val text: String,
-    val thoughts: String = ""
+    val thoughts: String = "",
+    val isStreaming: Boolean = false
 )
 
 enum class ChatMessageType {

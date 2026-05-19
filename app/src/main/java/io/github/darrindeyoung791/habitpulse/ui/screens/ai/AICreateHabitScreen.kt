@@ -1,6 +1,7 @@
 package io.github.darrindeyoung791.habitpulse.ui.screens.ai
 
 import androidx.compose.animation.*
+import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
@@ -14,7 +15,10 @@ import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.automirrored.filled.Send
 import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.Delete
+import androidx.compose.material.icons.filled.ExpandLess
+import androidx.compose.material.icons.filled.ExpandMore
 import androidx.compose.material.icons.filled.Settings
+import androidx.compose.material.icons.filled.Stop
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -36,6 +40,7 @@ import io.github.darrindeyoung791.habitpulse.viewmodel.PendingQuestionUI
 import kotlinx.coroutines.launch
 import androidx.navigation.NavHostController
 import kotlinx.coroutines.flow.first
+import androidx.activity.compose.BackHandler
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -59,6 +64,14 @@ fun AICreateHabitScreen(
 
     val userPreferences = remember { UserPreferences.getInstance(context) }
 
+    BackHandler(enabled = true) {
+        if (hasMessages) {
+            viewModel.showExitConfirmation()
+        } else {
+            onNavigateBack()
+        }
+    }
+
     LaunchedEffect(messages.size) {
         if (messages.isNotEmpty()) {
             listState.animateScrollToItem(messages.size - 1)
@@ -74,7 +87,12 @@ fun AICreateHabitScreen(
     Scaffold(
         topBar = {
             TopAppBar(
-                title = { Text(stringResource(R.string.ai_create_title)) },
+                title = {
+                    Text(
+                        if (uiState.isLoading) stringResource(R.string.ai_streaming_title)
+                        else stringResource(R.string.ai_create_title)
+                    )
+                },
                 navigationIcon = {
                     IconButton(onClick = {
                         if (hasMessages) {
@@ -118,6 +136,7 @@ fun AICreateHabitScreen(
             modifier = Modifier
                 .fillMaxSize()
                 .padding(innerPadding)
+                .windowInsetsPadding(WindowInsets.ime)
         ) {
             if (hasMessages) {
                 LazyColumn(
@@ -137,9 +156,8 @@ fun AICreateHabitScreen(
                             )
                             ChatMessageType.AI -> AIChatBubble(
                                 text = message.text,
-                                modifier = Modifier
-                                    .fillMaxWidth()
-                                    .padding(horizontal = 16.dp, vertical = 8.dp)
+                                thoughts = message.thoughts,
+                                isStreaming = message.isStreaming
                             )
                             ChatMessageType.QUESTION -> {}
                         }
@@ -180,11 +198,9 @@ fun AICreateHabitScreen(
                 onTextChange = { viewModel.updateInputText(it) },
                 onSendClick = {
                     scope.launch {
-                        val endpoint = userPreferences.llmApiEndpointFlow.first()
                         val apiKey = userPreferences.llmApiKeyFlow.first()
-                        val modelName = userPreferences.llmModelNameFlow.first()
 
-                        if (endpoint.isBlank() || apiKey.isBlank()) {
+                        if (apiKey.isBlank()) {
                             viewModel.updateInputText("")
                             return@launch
                         }
@@ -193,6 +209,7 @@ fun AICreateHabitScreen(
                         viewModel.updateInputText("")
                     }
                 },
+                onStopClick = { viewModel.stopGeneration() },
                 isLoading = uiState.isLoading,
                 modifier = Modifier.fillMaxWidth()
             )
@@ -294,12 +311,12 @@ fun UserChatBubble(
         Spacer(modifier = Modifier.weight(1f))
         Card(
             modifier = Modifier,
-            shape = RoundedCornerShape(32.dp),
+            shape = RoundedCornerShape(16.dp),
             colors = cardColor
         ) {
             Text(
                 text = text,
-                modifier = Modifier.padding(16.dp),
+                modifier = Modifier.padding(12.dp),
                 style = MaterialTheme.typography.bodyLarge
             )
         }
@@ -309,29 +326,87 @@ fun UserChatBubble(
 @Composable
 fun AIChatBubble(
     text: String,
+    thoughts: String = "",
+    isStreaming: Boolean = false,
     modifier: Modifier = Modifier
 ) {
-    val cardColor = CardDefaults.cardColors(
-        containerColor = MaterialTheme.colorScheme.surfaceVariant,
-        contentColor = MaterialTheme.colorScheme.onSurfaceVariant
-    )
-
-    Row(
-        modifier = modifier,
-        horizontalArrangement = Arrangement.Start
+    Column(
+        modifier = modifier
+            .fillMaxWidth()
+            .padding(vertical = 8.dp, horizontal = 16.dp)
     ) {
-        Card(
-            modifier = Modifier.weight(1f),
-            shape = RoundedCornerShape(0.dp),
-            colors = cardColor
-        ) {
+        if (thoughts.isNotEmpty()) {
+            ThinkingBlock(
+                thoughts = thoughts,
+                isStreaming = isStreaming
+            )
+            Spacer(modifier = Modifier.height(8.dp))
+        }
+        if (text.isNotEmpty()) {
             Text(
                 text = text,
-                modifier = Modifier.padding(16.dp),
                 style = MaterialTheme.typography.bodyLarge
             )
         }
-        Spacer(modifier = Modifier.weight(1f))
+    }
+}
+
+@Composable
+fun ThinkingBlock(
+    thoughts: String,
+    isStreaming: Boolean = false,
+    modifier: Modifier = Modifier
+) {
+    var isExpanded by remember { mutableStateOf(false) }
+
+    val borderColor = MaterialTheme.colorScheme.outline.copy(alpha = 0.3f)
+    val containerColor = MaterialTheme.colorScheme.surfaceContainerHigh
+
+    Card(
+        modifier = modifier,
+        colors = CardDefaults.cardColors(containerColor = containerColor),
+        border = CardDefaults.outlinedCardBorder().copy(brush = androidx.compose.ui.graphics.SolidColor(borderColor))
+    ) {
+        Column(modifier = Modifier.padding(12.dp)) {
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .clickable { isExpanded = !isExpanded },
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                if (isStreaming) {
+                    CircularProgressIndicator(
+                        modifier = Modifier.size(16.dp),
+                        strokeWidth = 2.dp,
+                        color = MaterialTheme.colorScheme.primary
+                    )
+                } else {
+                    Icon(
+                        imageVector = if (isExpanded) Icons.Default.ExpandLess else Icons.Default.ExpandMore,
+                        contentDescription = null,
+                        tint = MaterialTheme.colorScheme.primary
+                    )
+                }
+                Spacer(modifier = Modifier.width(8.dp))
+                Text(
+                    text = if (isStreaming) stringResource(R.string.thinking_in_progress) else stringResource(R.string.view_thinking),
+                    style = MaterialTheme.typography.labelMedium,
+                    color = MaterialTheme.colorScheme.primary
+                )
+                Spacer(modifier = Modifier.weight(1f))
+            }
+
+            if (isExpanded) {
+                Spacer(modifier = Modifier.height(8.dp))
+                HorizontalDivider(color = borderColor)
+                Spacer(modifier = Modifier.height(8.dp))
+                Text(
+                    text = thoughts,
+                    style = MaterialTheme.typography.bodySmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                )
+            }
+        }
     }
 }
 
@@ -370,57 +445,91 @@ fun AIChatInputBox(
     inputText: String,
     onTextChange: (String) -> Unit,
     onSendClick: () -> Unit,
+    onStopClick: () -> Unit,
     isLoading: Boolean,
     modifier: Modifier = Modifier
 ) {
-    Row(
+    Surface(
         modifier = modifier
             .fillMaxWidth()
-            .background(MaterialTheme.colorScheme.surface)
             .padding(horizontal = 16.dp, vertical = 8.dp),
-        verticalAlignment = Alignment.Bottom
+        shape = RoundedCornerShape(24.dp),
+        color = MaterialTheme.colorScheme.surfaceContainerHigh,
+        border = BorderStroke(1.dp, MaterialTheme.colorScheme.outline.copy(alpha = 0.5f))
     ) {
-        BasicTextField(
-            value = inputText,
-            onValueChange = onTextChange,
-            modifier = Modifier.weight(1f),
-            textStyle = MaterialTheme.typography.bodyLarge.copy(
-                color = MaterialTheme.colorScheme.onSurface
-            ),
-            decorationBox = { innerTextField ->
-                Box {
-                    if (inputText.isEmpty()) {
-                        Text(
-                            text = stringResource(R.string.ai_input_placeholder),
-                            style = MaterialTheme.typography.bodyLarge,
-                            color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.6f)
+        Column(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(start = 4.dp, end = 4.dp, top = 4.dp, bottom = 4.dp)
+        ) {
+            Box(
+                modifier = Modifier
+                    .weight(1f, fill = false)
+                    .fillMaxWidth()
+            ) {
+                BasicTextField(
+                    value = inputText,
+                    onValueChange = onTextChange,
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .defaultMinSize(minHeight = 72.dp)
+                        .padding(horizontal = 12.dp, vertical = 8.dp)
+                        .heightIn(max = 168.dp),
+                    textStyle = MaterialTheme.typography.bodyLarge.copy(
+                        color = MaterialTheme.colorScheme.onSurface
+                    ),
+                    enabled = !isLoading,
+                    decorationBox = { innerTextField ->
+                        Box {
+                            if (inputText.isEmpty()) {
+                                Text(
+                                    text = stringResource(R.string.ai_input_placeholder),
+                                    style = MaterialTheme.typography.bodyLarge,
+                                    color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.6f)
+                                )
+                            }
+                            innerTextField()
+                        }
+                    }
+                )
+            }
+
+            Box(
+                modifier = Modifier.fillMaxWidth(),
+                contentAlignment = Alignment.CenterEnd
+            ) {
+                if (isLoading) {
+                    IconButton(
+                        onClick = onStopClick,
+                        modifier = Modifier.size(48.dp)
+                    ) {
+                        Icon(
+                            imageVector = Icons.Default.Stop,
+                            contentDescription = stringResource(R.string.ai_stop_button),
+                            tint = MaterialTheme.colorScheme.error
                         )
                     }
-                    innerTextField()
-                }
-            }
-        )
-
-        Spacer(modifier = Modifier.width(8.dp))
-
-        IconButton(
-            onClick = {
-                if (isLoading) {
-                    // stop handled elsewhere
-                } else if (inputText.isNotBlank()) {
-                    onSendClick()
-                }
-            }
-        ) {
-            Icon(
-                imageVector = Icons.AutoMirrored.Filled.Send,
-                contentDescription = stringResource(R.string.ai_send_button),
-                tint = if (inputText.isNotBlank() && !isLoading) {
-                    MaterialTheme.colorScheme.primary
                 } else {
-                    MaterialTheme.colorScheme.onSurfaceVariant
+                    IconButton(
+                        onClick = {
+                            if (inputText.isNotBlank()) {
+                                onSendClick()
+                            }
+                        },
+                        modifier = Modifier.size(48.dp)
+                    ) {
+                        Icon(
+                            imageVector = Icons.AutoMirrored.Filled.Send,
+                            contentDescription = stringResource(R.string.ai_send_button),
+                            tint = if (inputText.isNotBlank()) {
+                                MaterialTheme.colorScheme.primary
+                            } else {
+                                MaterialTheme.colorScheme.onSurfaceVariant
+                            }
+                        )
+                    }
                 }
-            )
+            }
         }
     }
 }

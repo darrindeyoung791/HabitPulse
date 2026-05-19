@@ -24,8 +24,19 @@ import androidx.compose.ui.text.input.VisualTransformation
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import io.github.darrindeyoung791.habitpulse.R
+import io.github.darrindeyoung791.habitpulse.ai.llm.LLMConfig
 import io.github.darrindeyoung791.habitpulse.data.preferences.UserPreferences
+import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
+import java.net.SocketTimeoutException
+import java.net.ConnectException
+import java.net.UnknownHostException
+import java.net.MalformedURLException
+import java.net.URL
+import java.net.HttpURLConnection
+import java.io.BufferedReader
+import java.io.InputStreamReader
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -40,6 +51,7 @@ fun AISettingsScreen(
     val apiEndpoint by userPreferences.llmApiEndpointFlow.collectAsStateWithLifecycle(initialValue = "")
     val apiKey by userPreferences.llmApiKeyFlow.collectAsStateWithLifecycle(initialValue = "")
     val modelName by userPreferences.llmModelNameFlow.collectAsStateWithLifecycle(initialValue = "glm-4.7-flash")
+    val streamingEnabled by userPreferences.llmStreamingResponseFlow.collectAsStateWithLifecycle(initialValue = false)
 
     var endpointInput by remember(apiEndpoint) { mutableStateOf(apiEndpoint) }
     var apiKeyInput by remember(apiKey) { mutableStateOf(apiKey) }
@@ -54,8 +66,8 @@ fun AISettingsScreen(
     val presetModels = listOf(
         "glm-4.7-flash" to "glm-4.7-flash (默认)",
         "glm-4-flash" to "glm-4-flash",
-        "glm-4" to "glm-4",
-        "glm-3-flash" to "glm-3-flash"
+        "glm-3-flash" to "glm-3-flash",
+        "glm-5.1" to "glm-5.1 (最新旗舰)"
     )
 
     var modelDropdownExpanded by remember { mutableStateOf(false) }
@@ -110,7 +122,7 @@ fun AISettingsScreen(
                     },
                     modifier = Modifier.fillMaxWidth(),
                     label = { Text(stringResource(id = R.string.ai_settings_api_endpoint_label)) },
-                    placeholder = { Text("https://open.bigmodel.cn/api/paas/v4/") },
+                    placeholder = { Text("https://open.bigmodel.cn/api/paas/v4/chat/completions") },
                     singleLine = true,
                     keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Uri),
                     trailingIcon = {
@@ -157,6 +169,13 @@ fun AISettingsScreen(
                     keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Password),
                     trailingIcon = {
                         Row {
+                            IconButton(onClick = { showApiKey = !showApiKey }) {
+                                Icon(
+                                    imageVector = if (showApiKey) Icons.Default.VisibilityOff else Icons.Default.Visibility,
+                                    contentDescription = if (showApiKey) stringResource(id = R.string.hide_password)
+                                                       else stringResource(id = R.string.show_password)
+                                )
+                            }
                             if (apiKeyInput.isNotEmpty()) {
                                 IconButton(onClick = {
                                     apiKeyInput = ""
@@ -169,13 +188,6 @@ fun AISettingsScreen(
                                         contentDescription = stringResource(id = R.string.clear)
                                     )
                                 }
-                            }
-                            IconButton(onClick = { showApiKey = !showApiKey }) {
-                                Icon(
-                                    imageVector = if (showApiKey) Icons.Default.VisibilityOff else Icons.Default.Visibility,
-                                    contentDescription = if (showApiKey) stringResource(id = R.string.hide_password)
-                                                       else stringResource(id = R.string.show_password)
-                                )
                             }
                         }
                     }
@@ -302,6 +314,36 @@ fun AISettingsScreen(
             }
 
             item {
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(vertical = 8.dp),
+                    horizontalArrangement = Arrangement.SpaceBetween,
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Column(modifier = Modifier.weight(1f)) {
+                        Text(
+                            text = stringResource(id = R.string.ai_settings_streaming),
+                            style = MaterialTheme.typography.bodyLarge
+                        )
+                        Text(
+                            text = stringResource(id = R.string.ai_settings_streaming_description),
+                            style = MaterialTheme.typography.bodyMedium,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant
+                        )
+                    }
+                    Switch(
+                        checked = streamingEnabled,
+                        onCheckedChange = { enabled ->
+                            scope.launch {
+                                userPreferences.setLlmStreamingResponse(enabled)
+                            }
+                        }
+                    )
+                }
+            }
+
+            item {
                 Spacer(modifier = Modifier.height(16.dp))
                 HorizontalDivider()
                 Spacer(modifier = Modifier.height(16.dp))
@@ -327,35 +369,69 @@ sealed class TestResult(val isSuccess: Boolean, val error: String? = null) {
 }
 
 private suspend fun testApiConnection(endpoint: String, apiKey: String, model: String): TestResult {
-    return try {
-        val url = java.net.URL(endpoint)
-        val connection = url.openConnection() as java.net.HttpURLConnection
-        connection.requestMethod = "POST"
-        connection.setRequestProperty("Content-Type", "application/json")
-        connection.setRequestProperty("Authorization", "Bearer $apiKey")
-        connection.doOutput = true
-        connection.connectTimeout = 10000
-        connection.readTimeout = 10000
+    return withContext(Dispatchers.IO) {
+        try {
+            val url = URL(LLMConfig.ensureChatCompletionsUrl(endpoint))
+            val connection = url.openConnection() as HttpURLConnection
+            connection.requestMethod = "POST"
+            connection.setRequestProperty("Content-Type", "application/json")
+            connection.setRequestProperty("Authorization", "Bearer $apiKey")
+            connection.setRequestProperty("Accept", "application/json")
+            connection.doOutput = true
+            connection.useCaches = false
+            connection.connectTimeout = 10000
+            connection.readTimeout = 10000
 
-        val body = """
-            {
-                "model": "$model",
-                "messages": [{"role": "user", "content": "hi"}],
-                "max_tokens": 10
+            val body = """
+                {
+                    "model": "$model",
+                    "messages": [{"role": "user", "content": "hi"}],
+                    "max_tokens": 10
+                }
+            """.trimIndent()
+
+            connection.outputStream.use { it.write(body.toByteArray(Charsets.UTF_8)) }
+
+            val responseCode = connection.responseCode
+
+            when (responseCode) {
+                200 -> TestResult.Success
+                401 -> TestResult.Error("认证失败，请检查 API Key 是否正确")
+                403 -> TestResult.Error("访问被拒绝，请检查 API Key 权限")
+                429 -> TestResult.Success
+                in 400..499 -> {
+                    val errorBody = try {
+                        connection.errorStream?.use { errorInput ->
+                            BufferedReader(InputStreamReader(errorInput, Charsets.UTF_8)).use {
+                                it.readText()
+                            }
+                        } ?: ""
+                    } catch (_: Exception) { "" }
+                    val errorMsg = extractErrorMessage(errorBody) ?: "HTTP $responseCode"
+                    TestResult.Error(errorMsg)
+                }
+                in 500..599 -> TestResult.Error("服务器错误 (HTTP $responseCode)，请稍后重试")
+                else -> TestResult.Error("HTTP $responseCode")
             }
-        """.trimIndent()
-
-        connection.outputStream.use { it.write(body.toByteArray()) }
-
-        val responseCode = connection.responseCode
-        connection.disconnect()
-
-        if (responseCode == 200 || responseCode == 401 || responseCode == 429) {
-            TestResult.Success
-        } else {
-            TestResult.Error("HTTP $responseCode")
+        } catch (e: SocketTimeoutException) {
+            TestResult.Error("连接超时，请检查网络或 API 地址")
+        } catch (e: ConnectException) {
+            TestResult.Error("无法连接到服务器，请检查 API 地址")
+        } catch (e: UnknownHostException) {
+            TestResult.Error("无法解析域名，请检查 API 地址")
+        } catch (e: MalformedURLException) {
+            TestResult.Error("API 地址格式不正确")
+        } catch (e: Exception) {
+            TestResult.Error(e.message ?: "未知错误")
         }
+    }
+}
+
+private fun extractErrorMessage(response: String): String? {
+    return try {
+        val regex = """"message"\s*:\s*"([^"]+)"""".toRegex()
+        regex.find(response)?.groupValues?.getOrNull(1)
     } catch (e: Exception) {
-        TestResult.Error(e.message ?: "Unknown error")
+        null
     }
 }

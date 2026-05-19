@@ -1,12 +1,17 @@
 package io.github.darrindeyoung791.habitpulse.ai.llm
 
+import com.google.gson.Gson
+import com.google.gson.reflect.TypeToken
+
 object ResponseParser {
+    private val gson = Gson()
     private val codeBlockPattern = Regex("""```(\w+)?\s*([\s\S]*?)```""")
-    private val toolCallPattern = Regex("""(\w+)\s*\(\{[^}]*\})""")
+    private val thinkingPattern = Regex("""<thinking>([\s\S]*?)</thinking>""", RegexOption.IGNORE_CASE)
 
     data class ParsedResponse(
         val text: String,
-        val toolCalls: List<ToolCall>
+        val toolCalls: List<ToolCall>,
+        val thoughts: String = ""
     )
 
     data class ToolCall(
@@ -19,6 +24,13 @@ object ResponseParser {
         val toolCalls = mutableListOf<ToolCall>()
         val textWithoutCodeBlocks = StringBuilder()
         var lastEnd = 0
+
+        val thoughtsBuilder = StringBuilder()
+        thinkingPattern.findAll(text).forEach { match ->
+            thoughtsBuilder.append(match.groupValues[1].trim())
+            thoughtsBuilder.append("\n")
+        }
+        val thoughts = thoughtsBuilder.toString().trim()
 
         codeBlockPattern.findAll(text).forEach { match ->
             textWithoutCodeBlocks.append(text.substring(lastEnd, match.range.first))
@@ -42,15 +54,57 @@ object ResponseParser {
 
         textWithoutCodeBlocks.append(text.substring(lastEnd))
 
+        var cleanText = textWithoutCodeBlocks.toString().trim()
+
+        val toolCallsFromJson = parseToolCallsFromJson(text)
+        toolCalls.addAll(toolCallsFromJson)
+
+        if (toolCallsFromJson.isNotEmpty() && cleanText.startsWith("{") && isJsonResponse(cleanText)) {
+            cleanText = ""
+        }
+
         return ParsedResponse(
-            text = textWithoutCodeBlocks.toString().trim(),
-            toolCalls = toolCalls
+            text = cleanText,
+            toolCalls = toolCalls,
+            thoughts = thoughts
         )
+    }
+
+    private fun isJsonResponse(text: String): Boolean {
+        return text.contains("\"choices\"") || text.contains("\"id\"")
+    }
+
+    private fun parseToolCallsFromJson(text: String): List<ToolCall> {
+        val toolCalls = mutableListOf<ToolCall>()
+        try {
+            val type = object : TypeToken<Map<String, Any?>>() {}.type
+            val map: Map<String, Any?> = gson.fromJson(text, type) ?: return toolCalls
+
+            val choices = map["choices"] as? List<Map<String, Any?>>
+            val choice = choices?.firstOrNull()
+            val message = choice?.get("message") as? Map<String, Any?>
+            val calls = message?.get("tool_calls") as? List<Map<String, Any?>>
+
+            calls?.forEach { call ->
+                val type = call["type"] as? String ?: return@forEach
+                if (type != "function") return@forEach
+
+                val function = call["function"] as? Map<String, Any?> ?: return@forEach
+                val name = function["name"] as? String ?: return@forEach
+                val arguments = function["arguments"] as? String ?: "{}"
+
+                if (isValidToolName(name)) {
+                    toolCalls.add(ToolCall(name, arguments, call.toString()))
+                }
+            }
+        } catch (e: Exception) {
+        }
+        return toolCalls
     }
 
     private fun extractToolName(content: String): String? {
         val patterns = listOf(
-            Regex("""^\s*(\w+)\s*\(""""),
+            Regex("""^\s*(\w+)\s*\("""),
             Regex(""""\w+"\s*:\s*\{"""),
             Regex("""\{[\s\S]*?"(\w+)":\s*\{""")
         )

@@ -99,6 +99,7 @@ fun HabitScreenContent(
     bringIntoViewRequester: BringIntoViewRequester = remember { BringIntoViewRequester() },
     forceTabletLandscape: Boolean = false,
     onCreateHabit: () -> Unit,
+    onCreateHabitSelection: () -> Unit,
     onEditHabit: (Habit) -> Unit,
     onNavigateToMultiSelect: (UUID) -> Unit,
     sharedTransitionScope: SharedTransitionScope? = null,
@@ -219,13 +220,7 @@ fun HabitScreenContent(
             } else if (!isSearchActive && habits.isEmpty()) {
                 EmptyStateContent(
                     modifier = Modifier.fillMaxSize(),
-                    onCreateHabit = {
-                        scope.launch {
-                            clickHandler.processClick {
-                                onCreateHabit()
-                            }
-                        }
-                    }
+                    onCreateHabitSelection = onCreateHabitSelection
                 )
             } else {
                 HabitListContent(
@@ -275,7 +270,7 @@ fun HabitScreenContent(
 @Composable
 fun EmptyStateContent(
     modifier: Modifier = Modifier,
-    onCreateHabit: () -> Unit
+    onCreateHabitSelection: () -> Unit
 ) {
     Column(
         modifier = modifier
@@ -301,7 +296,7 @@ fun EmptyStateContent(
 
         Spacer(modifier = Modifier.height(8.dp))
 
-        TextButton(onClick = onCreateHabit) {
+        TextButton(onClick = onCreateHabitSelection) {
             Text(
                 text = stringResource(id = R.string.main_create_habit),
                 style = MaterialTheme.typography.bodyMedium.copy(fontWeight = FontWeight.Normal),
@@ -1510,6 +1505,7 @@ fun HabitScreenPreview() {
         HabitScreenContent(
             application = null,
             onCreateHabit = {},
+            onCreateHabitSelection = {},
             onEditHabit = {},
             onNavigateToMultiSelect = {}
         )

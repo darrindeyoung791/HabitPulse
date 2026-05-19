@@ -315,11 +315,14 @@
     <string name="ai_settings_connection_failed">连接失败</string>
     <string name="ai_settings_notice_title">配置说明</string>
     <string name="ai_settings_notice_content">本应用支持兼容 OpenAI 格式的 LLM API（如智谱 GLM、DeepSeek 等）。\n\nAPI 端点：请填写完整的 API 地址，以斜杠结尾。\nAPI 密钥：请从相应平台获取。\n模型名称：支持智谱 glm-4.7-flash（默认）、glm-4-flash、glm-4 等。</string>
+    <string name="ai_settings_streaming">流式输出</string>
+    <string name="ai_settings_streaming_description">实时显示 AI 思考过程和回答</string>
     <string name="clear">清除</string>
     <string name="show_password">显示密码</string>
     <string name="hide_password">隐藏密码</string>
     <string name="settings_ai_section">AI</string>
-    <string name="settings_ai_section_description">配置 AI 创建习惯功能</string>
+    <string name="settings_ai_section_description">配置 AI 智能创建习惯功能</string>
+    <string name="settings_ai_section_settings_desc">配置 API 端点、密钥和模型</string>
     <string name="create_habit_selection_title">新建习惯</string>
     <string name="create_habit_selection_manual">手动填写</string>
     <string name="create_habit_selection_manual_desc">自己填写所有字段</string>
@@ -328,6 +331,7 @@
 
     <!-- AI Create Habit -->
     <string name="ai_create_title">AI 创建习惯</string>
+    <string name="ai_streaming_title">AI 正在输出…</string>
     <string name="ai_welcome_title">用 AI 创建习惯</string>
     <string name="ai_welcome_subtitle">告诉我你想养成的习惯，我来帮你创建</string>
     <string name="ai_input_placeholder">描述你想养成的习惯…</string>
@@ -347,4 +351,11 @@
     <string name="settings_ai_title">AI 设置</string>
     <string name="confirm">确认</string>
     <string name="cancel">取消</string>
+
+    <!-- Thinking Block -->
+    <string name="hide_thinking">收起思考</string>
+    <string name="view_thinking">查看思考</string>
+    <string name="thinking_in_progress">思考中…</string>
+    <string name="collapse">折叠</string>
+    <string name="expand">展开</string>
 </resources>

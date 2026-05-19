@@ -333,9 +333,9 @@ fun HabitPulseNavGraph(
                     },
                     application = context.applicationContext as HabitPulseApplication,
                     navController = navController
-                )
+)
             }
         }
     }
-    }
+}
 }

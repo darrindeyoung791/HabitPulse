@@ -22,6 +22,7 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.*
 import androidx.compose.material.icons.filled.*
+import androidx.compose.material.icons.automirrored.filled.ArrowForward
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.runtime.saveable.rememberSaveable
@@ -343,6 +344,7 @@ fun HomeScreen(
                         bringIntoViewRequester = bringIntoViewRequester,
                         forceTabletLandscape = forceTabletLandscape == true,
                         onCreateHabit = onCreateHabit,
+                        onCreateHabitSelection = { showCreateHabitDialog = true },
                         onEditHabit = onEditHabit,
                         onNavigateToMultiSelect = { habitId ->
                             multiSelectTargetHabitId = habitId
@@ -1147,7 +1149,46 @@ fun CreateHabitSelectionDialog(
         onDismissRequest = onDismiss,
         title = { Text(stringResource(id = R.string.create_habit_selection_title)) },
         text = {
-            Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+            Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
+                ElevatedCard(
+                    onClick = onAICreate,
+                    modifier = Modifier.fillMaxWidth(),
+                    colors = CardDefaults.elevatedCardColors(
+                        containerColor = MaterialTheme.colorScheme.primaryContainer
+                    ),
+                    elevation = CardDefaults.elevatedCardElevation(defaultElevation = 0.dp)
+                ) {
+                    Row(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(12.dp),
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Icon(
+                            imageVector = Icons.Filled.AutoAwesome,
+                            contentDescription = null,
+                            tint = MaterialTheme.colorScheme.primary
+                        )
+                        Spacer(modifier = Modifier.width(12.dp))
+                        Column(modifier = Modifier.weight(1f)) {
+                            Text(
+                                text = stringResource(id = R.string.create_habit_selection_ai),
+                                style = MaterialTheme.typography.titleMedium,
+                                color = MaterialTheme.colorScheme.onPrimaryContainer
+                            )
+                            Text(
+                                text = stringResource(id = R.string.create_habit_selection_ai_desc),
+                                style = MaterialTheme.typography.bodySmall,
+                                color = MaterialTheme.colorScheme.onPrimaryContainer.copy(alpha = 0.7f)
+                            )
+                        }
+                        Icon(
+                            imageVector = Icons.AutoMirrored.Filled.ArrowForward,
+                            contentDescription = null,
+                            tint = MaterialTheme.colorScheme.primary
+                        )
+                    }
+                }
                 Row(
                     modifier = Modifier
                         .fillMaxWidth()
@@ -1158,9 +1199,9 @@ fun CreateHabitSelectionDialog(
                     Icon(
                         imageVector = Icons.Filled.Edit,
                         contentDescription = null,
-                        tint = MaterialTheme.colorScheme.primary
+                        tint = MaterialTheme.colorScheme.onSurfaceVariant
                     )
-                    Spacer(modifier = Modifier.width(16.dp))
+                    Spacer(modifier = Modifier.width(12.dp))
                     Column {
                         Text(
                             text = stringResource(id = R.string.create_habit_selection_manual),
@@ -1168,32 +1209,6 @@ fun CreateHabitSelectionDialog(
                         )
                         Text(
                             text = stringResource(id = R.string.create_habit_selection_manual_desc),
-                            style = MaterialTheme.typography.bodySmall,
-                            color = MaterialTheme.colorScheme.onSurfaceVariant
-                        )
-                    }
-                }
-                HorizontalDivider()
-                Row(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .clickable(onClick = onAICreate)
-                        .padding(12.dp),
-                    verticalAlignment = Alignment.CenterVertically
-                ) {
-                    Icon(
-                        imageVector = Icons.Filled.AutoAwesome,
-                        contentDescription = null,
-                        tint = MaterialTheme.colorScheme.primary
-                    )
-                    Spacer(modifier = Modifier.width(16.dp))
-                    Column {
-                        Text(
-                            text = stringResource(id = R.string.create_habit_selection_ai),
-                            style = MaterialTheme.typography.bodyLarge
-                        )
-                        Text(
-                            text = stringResource(id = R.string.create_habit_selection_ai_desc),
                             style = MaterialTheme.typography.bodySmall,
                             color = MaterialTheme.colorScheme.onSurfaceVariant
                         )

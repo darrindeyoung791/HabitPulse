@@ -314,14 +314,18 @@
     <string name="ai_settings_connection_failed">Connection failed</string>
     <string name="ai_settings_notice_title">Configuration Guide</string>
     <string name="ai_settings_notice_content">This app supports OpenAI-compatible LLM APIs (such as Zhipu GLM, DeepSeek, etc.).\n\nAPI Endpoint: Fill in the complete API address ending with a slash.\nAPI Key: Obtain from the respective platform.\nModel: Supports Zhipu glm-4.7-flash (default), glm-4-flash, glm-4, etc.</string>
+    <string name="ai_settings_streaming">Streaming Output</string>
+    <string name="ai_settings_streaming_description">Display AI thinking process and responses in real-time</string>
     <string name="clear">Clear</string>
     <string name="show_password">Show password</string>
     <string name="hide_password">Hide password</string>
     <string name="settings_ai_section">AI</string>
-    <string name="settings_ai_section_description">Configure AI habit creation</string>
+    <string name="settings_ai_section_description">Configure AI smart habit creation</string>
+    <string name="settings_ai_section_settings_desc">Configure API endpoint, key and model</string>
 
     <!-- AI Create Habit -->
     <string name="ai_create_title">AI Create Habit</string>
+    <string name="ai_streaming_title">AI Outputting…</string>
     <string name="ai_welcome_title">Create habits with AI</string>
     <string name="ai_welcome_subtitle">Tell me the habits you want to build, I\'ll help you create them</string>
     <string name="ai_input_placeholder">Describe the habit you want to build…</string>
@@ -339,4 +343,13 @@
     <string name="ai_unsupported_question_type">Unsupported question type</string>
     <string name="go_back">Back</string>
     <string name="settings_ai_title">AI Settings</string>
+    <string name="confirm">Confirm</string>
+    <string name="cancel">Cancel</string>
+
+    <!-- Thinking Block -->
+    <string name="hide_thinking">Hide thinking</string>
+    <string name="view_thinking">View thinking</string>
+    <string name="thinking_in_progress">Thinking…</string>
+    <string name="collapse">Collapse</string>
+    <string name="expand">Expand</string>
 </resources>

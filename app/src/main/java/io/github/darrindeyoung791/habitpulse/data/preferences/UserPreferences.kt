@@ -53,6 +53,11 @@ object PreferencesKeys {
      * LLM 模型名称
      */
     val LLM_MODEL_NAME = stringPreferencesKey("llm_model_name")
+
+    /**
+     * LLM 流式输出
+     */
+    val LLM_STREAMING_RESPONSE = booleanPreferencesKey("llm_streaming_response")
 }
 
 /**
@@ -163,10 +168,10 @@ class UserPreferences(private val context: Context) {
 
     /**
      * LLM API 端点的 Flow
-     * 默认值为空字符串
+     * 默认值为智谱 API 端点
      */
     val llmApiEndpointFlow: Flow<String> = context.dataStore.data.map { preferences ->
-        preferences[PreferencesKeys.LLM_API_ENDPOINT] ?: ""
+        preferences[PreferencesKeys.LLM_API_ENDPOINT] ?: "https://open.bigmodel.cn/api/paas/v4/chat/completions"
     }
 
     /**
@@ -215,6 +220,25 @@ class UserPreferences(private val context: Context) {
     suspend fun setLlmModelName(modelName: String) {
         context.dataStore.edit { preferences ->
             preferences[PreferencesKeys.LLM_MODEL_NAME] = modelName
+        }
+    }
+
+    /**
+     * LLM 流式输出的 Flow
+     * 默认值为 false（不开启）
+     */
+    val llmStreamingResponseFlow: Flow<Boolean> = context.dataStore.data.map { preferences ->
+        preferences[PreferencesKeys.LLM_STREAMING_RESPONSE] ?: false
+    }
+
+    /**
+     * 设置 LLM 流式输出
+     *
+     * @param enabled true 为开启，false 为不开启
+     */
+    suspend fun setLlmStreamingResponse(enabled: Boolean) {
+        context.dataStore.edit { preferences ->
+            preferences[PreferencesKeys.LLM_STREAMING_RESPONSE] = enabled
         }
     }
 }

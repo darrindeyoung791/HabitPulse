@@ -27,6 +27,7 @@ import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.automirrored.outlined.Article
+import androidx.compose.material.icons.filled.AutoAwesome
 import androidx.compose.material.icons.outlined.Delete
 import androidx.compose.material.icons.outlined.DeleteForever
 import androidx.compose.material.icons.outlined.FavoriteBorder
@@ -453,6 +454,40 @@ fun SettingsScreen() {
                 modifier = Modifier.fillMaxSize(),
                 state = listState
             ) {
+            // AI 部分（放在最顶部）
+            item {
+                // Section header
+                Text(
+                    text = stringResource(id = R.string.settings_ai_section),
+                    style = MaterialTheme.typography.labelMedium,
+                    color = MaterialTheme.colorScheme.primary,
+                    modifier = Modifier.padding(horizontal = 16.dp, vertical = 16.dp)
+                )
+
+                // 说明文字
+                Text(
+                    text = stringResource(id = R.string.settings_ai_section_description),
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp)
+                )
+
+                SettingsListItem(
+                    headline = stringResource(id = R.string.ai_settings_title),
+                    supportingText = stringResource(id = R.string.settings_ai_section_settings_desc),
+                    leadingIcon = {
+                        Icon(
+                            imageVector = Icons.Filled.AutoAwesome,
+                            contentDescription = null
+                        )
+                    },
+                    onClick = {
+                        val intent = Intent(context, AISettingsActivity::class.java)
+                        context.startActivity(intent)
+                    }
+                )
+            }
+
             // 支持部分
             item {
                 // Section header
@@ -680,7 +715,7 @@ fun SettingsScreen() {
                 )
             }
 
-            // 视觉部分
+            // 关于部分
             if (showForceTabletLandscapeSwitch) {
                 item {
                     // Section header
@@ -716,32 +751,6 @@ fun SettingsScreen() {
                         }
                     )
                 }
-            }
-
-            // AI 部分
-            item {
-                // Section header
-                Text(
-                    text = stringResource(id = R.string.settings_ai_section),
-                    style = MaterialTheme.typography.labelMedium,
-                    color = MaterialTheme.colorScheme.primary,
-                    modifier = Modifier.padding(horizontal = 16.dp, vertical = 16.dp)
-                )
-
-                SettingsListItem(
-                    headline = stringResource(id = R.string.ai_settings_title),
-                    supportingText = stringResource(id = R.string.settings_ai_section_description),
-                    leadingIcon = {
-                        Icon(
-                            imageVector = Icons.Outlined.Settings,
-                            contentDescription = null
-                        )
-                    },
-                    onClick = {
-                        val intent = Intent(context, AISettingsActivity::class.java)
-                        context.startActivity(intent)
-                    }
-                )
             }
 
             // 关于部分
