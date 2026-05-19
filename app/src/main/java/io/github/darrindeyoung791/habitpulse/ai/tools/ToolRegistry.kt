@@ -4,7 +4,8 @@ class ToolRegistry : ToolExecutor {
     private val tools: Map<String, Tool> = listOf(
         CreateHabitTool(),
         QuestionTool(),
-        ReplyTool()
+        ReplyTool(),
+        ConfirmTool()
     ).associateBy { it.name }
 
     override fun canExecute(toolName: String): Boolean {

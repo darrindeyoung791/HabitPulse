@@ -17,6 +17,7 @@ import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.ExpandLess
 import androidx.compose.material.icons.filled.ExpandMore
+import androidx.compose.material.icons.filled.KeyboardArrowDown
 import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material.icons.filled.Stop
 import androidx.compose.material3.*
@@ -61,6 +62,17 @@ fun AICreateHabitScreen(
 
     val listState = rememberLazyListState()
     val hasMessages = messages.isNotEmpty()
+    val hasPendingQuestion = pendingQuestion != null
+
+    val isAtBottom by remember {
+        derivedStateOf {
+            val layoutInfo = listState.layoutInfo
+            val totalItems = layoutInfo.totalItemsCount
+            if (totalItems == 0) return@derivedStateOf true
+            val lastVisibleItem = layoutInfo.visibleItemsInfo.lastOrNull()?.index ?: 0
+            lastVisibleItem >= totalItems - 2
+        }
+    }
 
     val userPreferences = remember { UserPreferences.getInstance(context) }
 
@@ -73,8 +85,14 @@ fun AICreateHabitScreen(
     }
 
     LaunchedEffect(messages.size) {
-        if (messages.isNotEmpty()) {
+        if (messages.isNotEmpty() && isAtBottom) {
             listState.animateScrollToItem(messages.size - 1)
+        }
+    }
+
+    LaunchedEffect(pendingQuestion) {
+        if (pendingQuestion != null) {
+            listState.animateScrollToItem(listState.layoutInfo.totalItemsCount - 1)
         }
     }
 
@@ -139,39 +157,64 @@ fun AICreateHabitScreen(
                 .windowInsetsPadding(WindowInsets.ime)
         ) {
             if (hasMessages) {
-                LazyColumn(
+                Box(
                     modifier = Modifier
                         .weight(1f)
-                        .fillMaxWidth(),
-                    state = listState,
-                    contentPadding = PaddingValues(vertical = 16.dp)
+                        .fillMaxWidth()
                 ) {
-                    itemsIndexed(messages) { index, message ->
-                        when (message.type) {
-                            ChatMessageType.USER -> UserChatBubble(
-                                text = message.text,
-                                modifier = Modifier
-                                    .fillMaxWidth()
-                                    .padding(horizontal = 16.dp, vertical = 8.dp)
-                            )
-                            ChatMessageType.AI -> AIChatBubble(
-                                text = message.text,
-                                thoughts = message.thoughts,
-                                isStreaming = message.isStreaming
-                            )
-                            ChatMessageType.QUESTION -> {}
+                    LazyColumn(
+                        modifier = Modifier.fillMaxSize(),
+                        state = listState,
+                        contentPadding = PaddingValues(vertical = 16.dp)
+                    ) {
+                        itemsIndexed(messages) { index, message ->
+                            when (message.type) {
+                                ChatMessageType.USER -> UserChatBubble(
+                                    text = message.text,
+                                    modifier = Modifier
+                                        .fillMaxWidth()
+                                        .padding(horizontal = 16.dp, vertical = 8.dp)
+                                )
+                                ChatMessageType.AI -> AIChatBubble(
+                                    text = message.text,
+                                    thoughts = message.thoughts,
+                                    isStreaming = message.isStreaming
+                                )
+                                ChatMessageType.QUESTION -> {}
+                            }
+                        }
+
+                        pendingQuestion?.let { question ->
+                            item {
+                                QuestionComponent(
+                                    question = question,
+                                    onAnswer = { answer -> viewModel.submitAnswer(answer) },
+                                    modifier = Modifier
+                                        .fillMaxWidth()
+                                        .padding(horizontal = 16.dp, vertical = 8.dp)
+                                )
+                            }
                         }
                     }
 
-                    pendingQuestion?.let { question ->
-                        item {
-                            QuestionComponent(
-                                question = question,
-                                onAnswer = { answer -> viewModel.submitAnswer(answer) },
-                                modifier = Modifier
-                                    .fillMaxWidth()
-                                    .padding(horizontal = 16.dp, vertical = 8.dp)
-                            )
+                    Column(
+                        modifier = Modifier
+                            .align(Alignment.BottomEnd)
+                            .padding(end = 16.dp, bottom = 8.dp)
+                    ) {
+                        AnimatedVisibility(visible = !isAtBottom && hasMessages) {
+                            SmallFloatingActionButton(
+                                onClick = {
+                                    scope.launch {
+                                        listState.animateScrollToItem(messages.size - 1)
+                                    }
+                                }
+                            ) {
+                                Icon(
+                                    imageVector = Icons.Default.KeyboardArrowDown,
+                                    contentDescription = "滚动到底部"
+                                )
+                            }
                         }
                     }
                 }
@@ -182,7 +225,7 @@ fun AICreateHabitScreen(
                 )
             }
 
-            if (uiState.showClearButton) {
+            if (uiState.showClearButton && !hasPendingQuestion) {
                 TextButton(
                     onClick = { viewModel.showClearConfirmation() },
                     modifier = Modifier.padding(horizontal = 16.dp)
@@ -193,26 +236,28 @@ fun AICreateHabitScreen(
                 }
             }
 
-            AIChatInputBox(
-                inputText = uiState.inputText,
-                onTextChange = { viewModel.updateInputText(it) },
-                onSendClick = {
-                    scope.launch {
-                        val apiKey = userPreferences.llmApiKeyFlow.first()
+            if (!hasPendingQuestion) {
+                AIChatInputBox(
+                    inputText = uiState.inputText,
+                    onTextChange = { viewModel.updateInputText(it) },
+                    onSendClick = {
+                        scope.launch {
+                            val apiKey = userPreferences.llmApiKeyFlow.first()
 
-                        if (apiKey.isBlank()) {
+                            if (apiKey.isBlank()) {
+                                viewModel.updateInputText("")
+                                return@launch
+                            }
+
+                            viewModel.sendMessage(uiState.inputText)
                             viewModel.updateInputText("")
-                            return@launch
                         }
-
-                        viewModel.sendMessage(uiState.inputText)
-                        viewModel.updateInputText("")
-                    }
-                },
-                onStopClick = { viewModel.stopGeneration() },
-                isLoading = uiState.isLoading,
-                modifier = Modifier.fillMaxWidth()
-            )
+                    },
+                    onStopClick = { viewModel.stopGeneration() },
+                    isLoading = uiState.isLoading,
+                    modifier = Modifier.fillMaxWidth()
+                )
+            }
         }
     }
 

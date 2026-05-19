@@ -39,7 +39,6 @@ class ConversationManager(
     private val _events = MutableStateFlow<ConversationEvent?>(null)
     val events: StateFlow<ConversationEvent?> = _events.asStateFlow()
 
-    private var currentLanguage = "zh"
     private var isStreaming = false
     private var streamJob: kotlinx.coroutines.Job? = null
 
@@ -57,18 +56,17 @@ class ConversationManager(
     }
 
     suspend fun startConversation(userInput: String) {
-        currentLanguage = SystemPrompt.detectLanguage(userInput)
         val isHabitRelated = habitCountExtractor.isHabitRelated(userInput)
 
         _state.value = _state.value.copy(isHabitRelated = isHabitRelated)
 
         if (!isHabitRelated) {
-            val reply = fallbackReply.generate(userInput, currentLanguage)
+            val reply = fallbackReply.generate(userInput)
             _events.value = ConversationEvent.ReplyReceived(reply)
             return
         }
 
-        val countResult = habitCountExtractor.extract(userInput, currentLanguage)
+        val countResult = habitCountExtractor.extract(userInput)
         _state.value = _state.value.copy(
             pendingHabitCount = when (countResult) {
                 is HabitCountExtractor.HabitCountResult.Explicit -> countResult.count
@@ -77,7 +75,7 @@ class ConversationManager(
             }
         )
 
-        messages.add(Message(role = "system", content = SystemPrompt.getSystemPrompt(currentLanguage)))
+        messages.add(Message(role = "system", content = SystemPrompt.getSystemPrompt()))
         messages.add(Message(role = "user", content = userInput))
 
         sendToLLM()

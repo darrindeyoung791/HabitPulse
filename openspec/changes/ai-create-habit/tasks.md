@@ -125,3 +125,39 @@
 - [x] 13.4 LLMClient 可取消改进（LLMClient.kt）
   - `chat()` 中使用 `delay()` 替代 `Thread.sleep()` 实现可取消等待
   - 重试循环中添加 `ensureActive()` 检查协程取消
+
+## 14. Tool 调用修复：字段推断 + 引号归一化 + SystemPrompt 优化
+
+- [x] 14.1 新增 `normalizeJsonString()` 归一化函数（ResponseParser.kt）
+  - 替换全角引号 `\u201C\u201D` → `"`，`\u2018\u2019` → `'`
+  - 替换日式引号 `\u300C\u300D` → `"`
+- [x] 14.2 重写 `extractToolName()` 增加字段推断回退（ResponseParser.kt）
+  - 保留原有 3 种前缀模式匹配
+  - 新增回退：`"text"` → reply，`"title"`/`"repeat_cycle"` → create_habit，`"type"`+`"prompt"` → ask_question
+  - 对所有输入先做 `normalizeJsonString()` 归一化
+- [x] 14.3 `extractArguments()` 增加入参归一化（ResponseParser.kt）
+  - 调用 `normalizeJsonString()` 后再提取 JSON
+  - 结果 `trimEnd()` 移除尾随 `)`、空格等
+- [x] 14.4 `parseToolCallsFromJson()` 增加全文本归一化（ResponseParser.kt）
+  - 调用 `normalizeJsonString(text)` 后再用 Gson 解析
+- [x] 14.5 SystemPrompt 改用 `tool_name({...})` 前缀格式（SystemPrompt.kt）
+  - 中/英文提示改为 `ask_question({...})`、`create_habit({...})`、`reply({...})`、`confirm({})`
+  - 要求严格使用半角引号 `"` 而非全角 `"`
+  - 明确说明 `confirm` 工具用于用户确认
+
+## 15. SystemPrompt 精简：移除语言检测，统一英语
+
+- [x] 15.1 删除 `ZH_PROMPT` 常量，只保留英语 prompt（SystemPrompt.kt）
+- [x] 15.2 删除 `detectLanguage()` 方法，停止动态检测输入语言
+- [x] 15.3 简化 `getSystemPrompt()` — 去掉 `language` 参数，直接返回单套 prompt
+- [x] 15.4 prompt 新增 "Follow the user's language — reply in the same language the user writes in" 说明
+- [x] 15.5 删除 `ConversationManager.currentLanguage` 字段（ConversationManager.kt）
+- [x] 15.6 更新 `startConversation()` — 去掉 `detectLanguage()` 调用，`getSystemPrompt()` 无参调用
+
+## 16. Confrim 工具注册 + 重复气泡修复
+
+- [x] 16.1 新建 `ConfirmTool.kt` — 简易工具，`execute()` 返回 `ToolResult.Success(Unit)`
+- [x] 16.2 `ToolRegistry.kt` 注册 `ConfirmTool()` — confirm 工具现在可被 `processResponse()` 的 `when` 分支执行
+- [x] 16.3 修复重复 AI 气泡（AICreateHabitViewModel.kt）
+  - `QuestionReceived`：删除 `addOrUpdateAIMessage("")`，只设 `_pendingQuestion`；问题通过 `PendingQuestionUI` 组件独立渲染
+  - `ThinkingStarted`：删除 `addOrUpdateAIMessage("")`，思考内容附着在后续 `AIMessageReceived`

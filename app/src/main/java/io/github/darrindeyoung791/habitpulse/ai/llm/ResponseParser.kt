@@ -76,9 +76,10 @@ object ResponseParser {
 
     private fun parseToolCallsFromJson(text: String): List<ToolCall> {
         val toolCalls = mutableListOf<ToolCall>()
+        val normalized = normalizeJsonString(text)
         try {
             val type = object : TypeToken<Map<String, Any?>>() {}.type
-            val map: Map<String, Any?> = gson.fromJson(text, type) ?: return toolCalls
+            val map: Map<String, Any?> = gson.fromJson(normalized, type) ?: return toolCalls
 
             val choices = map["choices"] as? List<Map<String, Any?>>
             val choice = choices?.firstOrNull()
@@ -102,15 +103,25 @@ object ResponseParser {
         return toolCalls
     }
 
+    private fun normalizeJsonString(json: String): String {
+        return json
+            .replace('\u201C', '"')
+            .replace('\u201D', '"')
+            .replace('\u2018', '\'')
+            .replace('\u2019', '\'')
+            .replace('\u300C', '"')
+            .replace('\u300D', '"')
+    }
+
     private fun extractToolName(content: String): String? {
-        val patterns = listOf(
+        val normalized = normalizeJsonString(content)
+
+        for (pattern in listOf(
             Regex("""^\s*(\w+)\s*\("""),
             Regex(""""\w+"\s*:\s*\{"""),
             Regex("""\{[\s\S]*?"(\w+)":\s*\{""")
-        )
-
-        for (pattern in patterns) {
-            val match = pattern.find(content)
+        )) {
+            val match = pattern.find(normalized)
             if (match != null) {
                 val name = match.groupValues[1]
                 if (isValidToolName(name)) {
@@ -118,19 +129,24 @@ object ResponseParser {
                 }
             }
         }
-        return null
+
+        return when {
+            normalized.contains("\"text\"") -> "reply"
+            normalized.contains("\"title\"") || normalized.contains("\"repeat_cycle\"") -> "create_habit"
+            normalized.contains("\"type\"") && normalized.contains("\"prompt\"") -> "ask_question"
+            else -> null
+        }
     }
 
     private fun extractArguments(content: String): String {
-        val patterns = listOf(
+        val normalized = normalizeJsonString(content)
+        for (pattern in listOf(
             Regex("""\{[\s\S]*$"""),
             Regex("""\{"[^"]*":\s*[\s\S]*$""")
-        )
-
-        for (pattern in patterns) {
-            val match = pattern.find(content)
+        )) {
+            val match = pattern.find(normalized)
             if (match != null) {
-                return match.value
+                return match.value.trimEnd(')', ' ', '\n', '\r', '\t', ',')
             }
         }
         return "{}"

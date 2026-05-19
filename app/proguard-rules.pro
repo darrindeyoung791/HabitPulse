@@ -27,3 +27,16 @@
 
 # Keep data classes and entities if you have any
 # -keep class io.github.darrindeyoung791.habitpulse.bean.** { *; }
+
+# Gson - keep LLM request/response data classes used by fromJson()
+-keep class io.github.darrindeyoung791.habitpulse.ai.llm.** { *; }
+
+# Gson - keep conversation state data classes
+-keep class io.github.darrindeyoung791.habitpulse.ai.conversation.** { *; }
+
+# Gson - keep tool data classes
+-keep class io.github.darrindeyoung791.habitpulse.ai.tools.** { *; }
+
+# Gson - keep annotations and generic signatures
+-keepattributes Signature
+-keepattributes *Annotation*

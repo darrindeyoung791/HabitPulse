@@ -57,7 +57,7 @@ class AICreateHabitViewModel(application: Application) : AndroidViewModel(applic
                         )
                     }
                     is ConversationManager.ConversationEvent.QuestionReceived -> {
-                        addOrUpdateAIMessage("")
+                        _uiState.value = _uiState.value.copy(isLoading = false)
                         val q = event.question
                         _pendingQuestion.value = PendingQuestionUI(
                             questionId = q.questionId,
@@ -94,9 +94,7 @@ class AICreateHabitViewModel(application: Application) : AndroidViewModel(applic
                             isStopped = true
                         )
                     }
-                    is ConversationManager.ConversationEvent.ThinkingStarted -> {
-                        addOrUpdateAIMessage("")
-                    }
+                    is ConversationManager.ConversationEvent.ThinkingStarted -> {}
                     is ConversationManager.ConversationEvent.ThinkingUpdated -> {
                         updateLastMessageThoughts(event.thoughts)
                     }
@@ -164,6 +162,7 @@ class AICreateHabitViewModel(application: Application) : AndroidViewModel(applic
 
     fun clearConversation() {
         conversationManager?.reset()
+        conversationManager = null
         _messages.value = emptyList()
         _collectedHabits.value = emptyList()
         _pendingQuestion.value = null
