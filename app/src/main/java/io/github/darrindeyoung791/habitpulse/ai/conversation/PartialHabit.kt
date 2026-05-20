@@ -48,13 +48,13 @@ data class PartialHabit(
 
     private fun dayToChinese(day: Int): String {
         return when (day) {
-            0 -> "日"
-            1 -> "一"
-            2 -> "二"
-            3 -> "三"
-            4 -> "四"
-            5 -> "五"
-            6 -> "六"
+            0 -> "一"
+            1 -> "二"
+            2 -> "三"
+            3 -> "四"
+            4 -> "五"
+            5 -> "六"
+            6 -> "日"
             else -> ""
         }
     }

@@ -608,15 +608,15 @@ fun HabitCreationScreen(
                             modifier = Modifier.fillMaxWidth(),
                             horizontalArrangement = Arrangement.spacedBy(4.dp)
                         ) {
-                            // Sunday (0) to Saturday (6)
+                            // Monday (0) to Sunday (6)
                             val dayLabels = listOf(
-                                stringResource(id = R.string.create_habit_day_sunday),
                                 stringResource(id = R.string.create_habit_day_monday),
                                 stringResource(id = R.string.create_habit_day_tuesday),
                                 stringResource(id = R.string.create_habit_day_wednesday),
                                 stringResource(id = R.string.create_habit_day_thursday),
                                 stringResource(id = R.string.create_habit_day_friday),
-                                stringResource(id = R.string.create_habit_day_saturday)
+                                stringResource(id = R.string.create_habit_day_saturday),
+                                stringResource(id = R.string.create_habit_day_sunday)
                             )
 
                             dayLabels.forEachIndexed { index, label ->

@@ -54,6 +54,60 @@ import androidx.activity.compose.BackHandler
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
+private fun NoApiKeyPrompt(
+    onGoToSettings: () -> Unit,
+    onNavigateBack: () -> Unit
+) {
+    Scaffold(
+        topBar = {
+            TopAppBar(
+                title = { Text(stringResource(R.string.ai_create_title)) },
+                navigationIcon = {
+                    IconButton(onClick = onNavigateBack) {
+                        Icon(
+                            imageVector = Icons.AutoMirrored.Filled.ArrowBack,
+                            contentDescription = stringResource(R.string.go_back)
+                        )
+                    }
+                }
+            )
+        }
+    ) { innerPadding ->
+        Column(
+            modifier = Modifier
+                .fillMaxSize()
+                .padding(innerPadding)
+                .padding(32.dp),
+            horizontalAlignment = Alignment.CenterHorizontally,
+            verticalArrangement = Arrangement.Center
+        ) {
+            Text(
+                text = stringResource(R.string.ai_api_key_required_title),
+                style = MaterialTheme.typography.headlineSmall,
+                color = MaterialTheme.colorScheme.onSurface,
+                textAlign = TextAlign.Center
+            )
+
+            Spacer(modifier = Modifier.height(16.dp))
+
+            Text(
+                text = stringResource(R.string.ai_api_key_required_message),
+                style = MaterialTheme.typography.bodyLarge,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                textAlign = TextAlign.Center
+            )
+
+            Spacer(modifier = Modifier.height(24.dp))
+
+            Button(onClick = onGoToSettings) {
+                Text(stringResource(R.string.ai_api_key_required_action))
+            }
+        }
+    }
+}
+
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
 fun AICreateHabitScreen(
     onNavigateBack: () -> Unit,
     onNavigateToSettings: () -> Unit,
@@ -68,6 +122,7 @@ fun AICreateHabitScreen(
     val messages by viewModel.messages.collectAsStateWithLifecycle()
     val collectedHabits by viewModel.collectedHabits.collectAsStateWithLifecycle()
     val pendingQuestion by viewModel.pendingQuestion.collectAsStateWithLifecycle()
+    val confirmedTempIds by viewModel.confirmedTempIds.collectAsStateWithLifecycle()
 
     val listState = rememberLazyListState()
     val hasMessages = messages.isNotEmpty()
@@ -91,6 +146,21 @@ fun AICreateHabitScreen(
     }
 
     val userPreferences = remember { UserPreferences.getInstance(context) }
+
+    var apiKeyConfigured by remember { mutableStateOf<Boolean?>(null) }
+
+    LaunchedEffect(Unit) {
+        val apiKey = userPreferences.llmApiKeyFlow.first()
+        apiKeyConfigured = apiKey.isNotBlank()
+    }
+
+    if (apiKeyConfigured == false) {
+        NoApiKeyPrompt(
+            onGoToSettings = onNavigateToSettings,
+            onNavigateBack = onNavigateBack
+        )
+        return
+    }
 
     BackHandler(enabled = true) {
         if (hasMessages) {
@@ -195,6 +265,8 @@ fun AICreateHabitScreen(
                                     message.habit?.let { habit ->
                                         HabitCreatedCard(
                                             habit = habit,
+                                            isConfirmed = habit.tempId in confirmedTempIds,
+                                            onConfirmClick = { viewModel.confirmHabit(habit.tempId) },
                                             onEditClick = {
                                                 AIPrefillHabitHolder.prefillHabit = habit
                                                 AIPrefillHabitHolder.editingHabitDbId = viewModel.getDbIdForTempId(habit.tempId)
@@ -710,15 +782,15 @@ fun QuestionComponent(
 @Composable
 fun HabitCreatedCard(
     habit: PartialHabit,
+    isConfirmed: Boolean,
+    onConfirmClick: () -> Unit,
     onEditClick: () -> Unit,
     modifier: Modifier = Modifier
 ) {
-    var confirmed by remember { mutableStateOf(false) }
-
     Card(
         modifier = modifier,
         colors = CardDefaults.cardColors(
-            containerColor = if (confirmed)
+            containerColor = if (isConfirmed)
                 MaterialTheme.colorScheme.surfaceContainerHigh
             else
                 MaterialTheme.colorScheme.secondaryContainer
@@ -729,7 +801,7 @@ fun HabitCreatedCard(
                 Icon(
                     imageVector = Icons.Default.CheckCircle,
                     contentDescription = null,
-                    tint = if (confirmed)
+                    tint = if (isConfirmed)
                         MaterialTheme.colorScheme.tertiary
                     else
                         MaterialTheme.colorScheme.primary,
@@ -739,7 +811,7 @@ fun HabitCreatedCard(
                 Text(
                     text = habit.title,
                     style = MaterialTheme.typography.titleMedium,
-                    color = if (confirmed)
+                    color = if (isConfirmed)
                         MaterialTheme.colorScheme.onSurface
                     else
                         MaterialTheme.colorScheme.onSecondaryContainer
@@ -751,7 +823,7 @@ fun HabitCreatedCard(
             Text(
                 text = habit.toSummaryString(),
                 style = MaterialTheme.typography.bodyMedium,
-                color = if (confirmed)
+                color = if (isConfirmed)
                     MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f)
                 else
                     MaterialTheme.colorScheme.onSecondaryContainer.copy(alpha = 0.8f)
@@ -762,7 +834,7 @@ fun HabitCreatedCard(
                 Text(
                     text = "⏰ ${habit.reminderTimes.joinToString(", ")}",
                     style = MaterialTheme.typography.bodySmall,
-                    color = if (confirmed)
+                    color = if (isConfirmed)
                         MaterialTheme.colorScheme.onSurface.copy(alpha = 0.5f)
                     else
                         MaterialTheme.colorScheme.onSecondaryContainer.copy(alpha = 0.7f)
@@ -776,9 +848,9 @@ fun HabitCreatedCard(
                 horizontalArrangement = Arrangement.End,
                 verticalAlignment = Alignment.CenterVertically
             ) {
-                if (!confirmed) {
+                if (!isConfirmed) {
                     OutlinedButton(
-                        onClick = { confirmed = true }
+                        onClick = onConfirmClick
                     ) {
                         Text(stringResource(R.string.habit_card_menu_complete))
                     }

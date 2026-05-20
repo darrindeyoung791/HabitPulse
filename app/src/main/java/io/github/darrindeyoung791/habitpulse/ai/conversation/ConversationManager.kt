@@ -22,8 +22,6 @@ import kotlinx.coroutines.launch
 class ConversationManager(
     private val llmClient: LLMClient,
     private val toolRegistry: ToolRegistry,
-    private val habitCountExtractor: HabitCountExtractor,
-    private val fallbackReply: FallbackReply,
     private val streamingEnabled: Boolean = false,
     private val scope: CoroutineScope
 ) {
@@ -64,28 +62,8 @@ class ConversationManager(
 
     suspend fun startConversation(userInput: String) {
         retryCount = 0
-        val isHabitRelated = habitCountExtractor.isHabitRelated(userInput)
-
-        _state.value = _state.value.copy(isHabitRelated = isHabitRelated)
-
-        if (!isHabitRelated) {
-            val reply = fallbackReply.generate(userInput)
-            _events.value = ConversationEvent.ReplyReceived(reply)
-            return
-        }
-
-        val countResult = habitCountExtractor.extract(userInput)
-        _state.value = _state.value.copy(
-            pendingHabitCount = when (countResult) {
-                is HabitCountExtractor.HabitCountResult.Explicit -> countResult.count
-                is HabitCountExtractor.HabitCountResult.Sequential -> countResult.count
-                is HabitCountExtractor.HabitCountResult.Unknown -> null
-            }
-        )
-
         messages.add(Message(role = "system", content = SystemPrompt.getSystemPrompt()))
         messages.add(Message(role = "user", content = userInput))
-
         sendToLLM()
     }
 
@@ -202,10 +180,7 @@ class ConversationManager(
             _events.value = ConversationEvent.ThinkingEnded("")
         }
 
-        var needsIntervention = false
-        var interventionMessage: String? = null
-        var confirmCalled = false
-        var askQuestionCalled = false
+        var createHabitCalled = false
 
         for (toolCall in toolCalls) {
             if (!toolRegistry.canExecute(toolCall.name)) {
@@ -219,25 +194,19 @@ class ConversationManager(
                 is ToolResult.Success -> {
                     when (toolCall.name) {
                         "ask_question" -> {
-                            askQuestionCalled = true
                             val question = toolResult.data as? PendingQuestionData
                             if (question != null) {
                                 _state.value = _state.value.withIncrementedQuestionCount(question.questionId)
                                 _events.value = ConversationEvent.QuestionReceived(question)
                             }
-                            messages.add(Message(role = "user", content = """["ask_question: question sent to user"]"""))
                         }
                         "create_habit" -> {
+                            createHabitCalled = true
                             val habit = toolResult.data as? PartialHabit
                             if (habit != null) {
                                 _collectedHabits.value = _collectedHabits.value + habit
                                 _state.value = _state.value.withIncrementedHabitCount()
                                 _events.value = ConversationEvent.HabitCreated(habit)
-
-                                val collected = _state.value.collectedHabitCount
-                                val total = _state.value.pendingHabitCount
-                                val countInfo = if (total != null) " ($collected/$total)" else ""
-                                messages.add(Message(role = "user", content = """["create_habit: habit '${habit.title}' collected$countInfo"]"""))
                             }
                         }
                         "reply" -> {
@@ -245,19 +214,9 @@ class ConversationManager(
                             if (reply != null) {
                                 _events.value = ConversationEvent.ReplyReceived(reply.text)
                             }
-                            messages.add(Message(role = "user", content = """["reply: reply sent"]"""))
                         }
                         "confirm" -> {
-                            confirmCalled = true
-                            val pendingCount = _state.value.pendingHabitCount
-                            val collectedCount = _state.value.collectedHabitCount
-
-                            if (pendingCount != null && collectedCount < pendingCount) {
-                                needsIntervention = true
-                                interventionMessage = "用户描述了 $pendingCount 个习惯，已收集 $collectedCount 个，请继续收集剩余的 ${pendingCount - collectedCount} 个习惯。"
-                            } else {
-                                _events.value = ConversationEvent.ConfirmationRequested(_collectedHabits.value)
-                            }
+                            // no-op: confirm is now UI-triggered only
                         }
                     }
                 }
@@ -277,26 +236,14 @@ class ConversationManager(
             _events.value = ConversationEvent.AIMessageReceived(displayText, thoughts, isStreaming = false)
         }
 
-        if (needsIntervention && interventionMessage != null) {
-            messages.add(Message(role = "user", content = interventionMessage))
-        }
-
         val guard = ConversationGuard()
         if (guard.shouldStopConversation(_state.value)) {
             _events.value = ConversationEvent.GuardBlocked
             _state.value = _state.value.copy(isStopped = true)
         }
 
-        if (!confirmCalled && !askQuestionCalled && _collectedHabits.value.isNotEmpty()) {
-            val pendingCount = _state.value.pendingHabitCount
-            val collectedCount = _state.value.collectedHabitCount
-            val allCollected = pendingCount == null || collectedCount >= pendingCount
-
-            _events.value = ConversationEvent.ConfirmationRequested(_collectedHabits.value)
-
-            if (pendingCount != null && !allCollected) {
-                needsAutoContinue = true
-            }
+        if (createHabitCalled) {
+            needsAutoContinue = true
         }
     }
 

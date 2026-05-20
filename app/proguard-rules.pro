@@ -37,6 +37,10 @@
 # Gson - keep tool data classes
 -keep class io.github.darrindeyoung791.habitpulse.ai.tools.** { *; }
 
+# Room entities, enums, and type converters — Enum.valueOf(name) requires constant names to be preserved
+-keep class io.github.darrindeyoung791.habitpulse.data.model.** { *; }
+-keep class io.github.darrindeyoung791.habitpulse.data.database.converter.** { *; }
+
 # Gson - keep annotations and generic signatures
 -keepattributes Signature
 -keepattributes *Annotation*

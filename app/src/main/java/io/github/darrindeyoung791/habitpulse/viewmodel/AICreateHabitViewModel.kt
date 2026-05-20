@@ -36,8 +36,6 @@ class AICreateHabitViewModel(application: Application) : AndroidViewModel(applic
     )
 
     private val toolRegistry = ToolRegistry()
-    private val habitCountExtractor = HabitCountExtractor()
-    private val fallbackReply = FallbackReply()
 
     private var conversationManager: ConversationManager? = null
 
@@ -54,6 +52,9 @@ class AICreateHabitViewModel(application: Application) : AndroidViewModel(applic
 
     private val _pendingQuestion = MutableStateFlow<PendingQuestionUI?>(null)
     val pendingQuestion: StateFlow<PendingQuestionUI?> = _pendingQuestion.asStateFlow()
+
+    private val _confirmedTempIds = MutableStateFlow<Set<UUID>>(emptySet())
+    val confirmedTempIds: StateFlow<Set<UUID>> = _confirmedTempIds.asStateFlow()
 
     private fun observeConversation() {
         viewModelScope.launch {
@@ -143,8 +144,6 @@ class AICreateHabitViewModel(application: Application) : AndroidViewModel(applic
                 conversationManager = ConversationManager(
                     llmClient = client,
                     toolRegistry = toolRegistry,
-                    habitCountExtractor = habitCountExtractor,
-                    fallbackReply = fallbackReply,
                     streamingEnabled = streamingEnabled,
                     scope = viewModelScope
                 )
@@ -181,6 +180,7 @@ class AICreateHabitViewModel(application: Application) : AndroidViewModel(applic
         _collectedHabits.value = emptyList()
         savedPartialToDbId.clear()
         _pendingQuestion.value = null
+        _confirmedTempIds.value = emptySet()
         _uiState.value = _uiState.value.copy(
             isLoading = false,
             showClearButton = false,
@@ -214,6 +214,14 @@ class AICreateHabitViewModel(application: Application) : AndroidViewModel(applic
 
     fun dismissConfirmDialog() {
         _uiState.value = _uiState.value.copy(showConfirmDialog = false)
+    }
+
+    fun confirmHabit(tempId: UUID) {
+        val newConfirmed = _confirmedTempIds.value + tempId
+        _confirmedTempIds.value = newConfirmed
+        if (newConfirmed.size >= _collectedHabits.value.size && _collectedHabits.value.isNotEmpty()) {
+            confirmAndSaveHabits()
+        }
     }
 
     fun confirmAndSaveHabits() {

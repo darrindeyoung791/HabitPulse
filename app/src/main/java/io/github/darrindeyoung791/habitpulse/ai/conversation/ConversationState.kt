@@ -1,7 +1,6 @@
 package io.github.darrindeyoung791.habitpulse.ai.conversation
 
 data class ConversationState(
-    val pendingHabitCount: Int? = null,
     val collectedHabitCount: Int = 0,
     val isHabitRelated: Boolean = true,
     val questionCount: Int = 0,
@@ -28,13 +27,5 @@ data class ConversationState(
 
     fun withStopped(): ConversationState {
         return copy(isStopped = true)
-    }
-
-    fun shouldForceIntervention(): Boolean {
-        return pendingHabitCount != null && collectedHabitCount < pendingHabitCount!!
-    }
-
-    fun isComplete(): Boolean {
-        return pendingHabitCount == null || collectedHabitCount >= pendingHabitCount!!
     }
 }

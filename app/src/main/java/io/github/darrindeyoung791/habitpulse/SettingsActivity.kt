@@ -1207,7 +1207,7 @@ private fun generateSampleHabits(): Pair<List<Habit>, List<HabitCompletion>> {
     val habit2 = Habit(
         title = "晨跑锻炼",
         repeatCycle = RepeatCycle.WEEKLY,
-        repeatDays = JSONArray().apply { put(1); put(3); put(5) }.toString(),
+        repeatDays = JSONArray().apply { put(0); put(2); put(4) }.toString(),
         reminderTimes = generateManyReminders(),
         notes = "跑步前记得热身\n跑完后要拉伸\n注意呼吸节奏\n选择合适的跑鞋\n循序渐进增加距离",
         supervisionMethod = SupervisionMethod.SMS,
@@ -1444,7 +1444,7 @@ private fun generateSampleHabits(): Pair<List<Habit>, List<HabitCompletion>> {
     val habit12 = Habit(
         title = "Morning Jog",
         repeatCycle = RepeatCycle.WEEKLY,
-        repeatDays = JSONArray().apply { put(1); put(3); put(5) }.toString(),
+        repeatDays = JSONArray().apply { put(0); put(2); put(4) }.toString(),
         reminderTimes = generateManyReminders(),
         notes = "Warm up before running\nStretch after exercise\nWear proper shoes\nStart slow and increase gradually\nTrack your progress",
         supervisionMethod = SupervisionMethod.SMS,
@@ -1704,7 +1704,7 @@ private fun generateSampleHabits(): Pair<List<Habit>, List<HabitCompletion>> {
     val habit23 = Habit(
         title = "练习吉他",
         repeatCycle = RepeatCycle.WEEKLY,
-        repeatDays = JSONArray().apply { put(1); put(3); put(5) }.toString(),
+        repeatDays = JSONArray().apply { put(0); put(2); put(4) }.toString(),
         reminderTimes = JSONArray().apply { put("19:00") }.toString(),
         notes = "练习音阶\n学习和弦\n弹奏曲目\n节奏训练",
         supervisionMethod = SupervisionMethod.SMS,

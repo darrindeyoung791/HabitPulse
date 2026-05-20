@@ -309,6 +309,9 @@
     <string name="ai_settings_api_endpoint_label">API 端点</string>
     <string name="ai_settings_api_key">API 密钥</string>
     <string name="ai_settings_api_key_label">API 密钥</string>
+    <string name="ai_api_key_required_title">需要配置 API 密钥</string>
+    <string name="ai_api_key_required_message">请先在设置中配置 API 密钥，然后才能使用 AI 创建习惯功能。</string>
+    <string name="ai_api_key_required_action">前往设置</string>
     <string name="ai_settings_model">模型</string>
     <string name="ai_settings_model_label">选择模型</string>
     <string name="ai_settings_test_connection">测试连接</string>

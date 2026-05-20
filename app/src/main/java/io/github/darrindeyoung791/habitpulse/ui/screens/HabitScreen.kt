@@ -857,13 +857,13 @@ fun HabitCard(
                             verticalArrangement = Arrangement.spacedBy(4.dp)
                         ) {
                             val dayNames = listOf(
-                                stringResource(id = R.string.habit_card_repeat_days_sunday),
                                 stringResource(id = R.string.habit_card_repeat_days_monday),
                                 stringResource(id = R.string.habit_card_repeat_days_tuesday),
                                 stringResource(id = R.string.habit_card_repeat_days_wednesday),
                                 stringResource(id = R.string.habit_card_repeat_days_thursday),
                                 stringResource(id = R.string.habit_card_repeat_days_friday),
-                                stringResource(id = R.string.habit_card_repeat_days_saturday)
+                                stringResource(id = R.string.habit_card_repeat_days_saturday),
+                                stringResource(id = R.string.habit_card_repeat_days_sunday)
                             )
                             val daySeparator = stringResource(id = R.string.habit_card_repeat_days_separator)
                             val repeatCycleText = when (habit.repeatCycle) {
@@ -1152,13 +1152,13 @@ fun ReminderDetailDialog(
                     .verticalScroll(rememberScrollState())
             ) {
                 val dayNames = listOf(
-                    stringResource(id = R.string.habit_card_repeat_days_sunday),
                     stringResource(id = R.string.habit_card_repeat_days_monday),
                     stringResource(id = R.string.habit_card_repeat_days_tuesday),
                     stringResource(id = R.string.habit_card_repeat_days_wednesday),
                     stringResource(id = R.string.habit_card_repeat_days_thursday),
                     stringResource(id = R.string.habit_card_repeat_days_friday),
-                    stringResource(id = R.string.habit_card_repeat_days_saturday)
+                    stringResource(id = R.string.habit_card_repeat_days_saturday),
+                    stringResource(id = R.string.habit_card_repeat_days_sunday)
                 )
                 val daySeparator = stringResource(id = R.string.habit_card_repeat_days_separator)
                 val repeatCycleText = when (repeatCycle) {

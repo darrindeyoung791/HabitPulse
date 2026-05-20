@@ -308,6 +308,9 @@
     <string name="ai_settings_api_endpoint_label">API Endpoint</string>
     <string name="ai_settings_api_key">API Key</string>
     <string name="ai_settings_api_key_label">API Key</string>
+    <string name="ai_api_key_required_title">API Key Required</string>
+    <string name="ai_api_key_required_message">Please configure an API key in Settings before using AI habit creation.</string>
+    <string name="ai_api_key_required_action">Go to Settings</string>
     <string name="ai_settings_model">Model</string>
     <string name="ai_settings_model_label">Select Model</string>
     <string name="ai_settings_test_connection">Test Connection</string>
