@@ -1,6 +1,9 @@
 package io.github.darrindeyoung791.habitpulse.ai.conversation
 
+import java.util.UUID
+
 data class PartialHabit(
+    val tempId: UUID = UUID.randomUUID(),
     val title: String,
     val repeatCycle: String,
     val repeatDays: List<Int> = emptyList(),

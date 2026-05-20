@@ -5,6 +5,8 @@ import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
+import androidx.compose.material.icons.filled.CheckCircle
+import androidx.compose.material.icons.filled.Edit
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.lazy.rememberLazyListState
@@ -35,9 +37,16 @@ import io.github.darrindeyoung791.habitpulse.HabitPulseApplication
 import io.github.darrindeyoung791.habitpulse.R
 import io.github.darrindeyoung791.habitpulse.ai.conversation.PartialHabit
 import io.github.darrindeyoung791.habitpulse.data.preferences.UserPreferences
+import io.github.darrindeyoung791.habitpulse.navigation.Route
 import io.github.darrindeyoung791.habitpulse.viewmodel.AICreateHabitViewModel
+import io.github.darrindeyoung791.habitpulse.viewmodel.AIPrefillHabitHolder
 import io.github.darrindeyoung791.habitpulse.viewmodel.ChatMessageType
 import io.github.darrindeyoung791.habitpulse.viewmodel.PendingQuestionUI
+import androidx.compose.animation.core.Spring
+import androidx.compose.animation.core.animateFloatAsState
+import androidx.compose.animation.core.spring
+import androidx.compose.ui.graphics.graphicsLayer
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import androidx.navigation.NavHostController
 import kotlinx.coroutines.flow.first
@@ -63,6 +72,13 @@ fun AICreateHabitScreen(
     val listState = rememberLazyListState()
     val hasMessages = messages.isNotEmpty()
     val hasPendingQuestion = pendingQuestion != null
+
+    var initialAnimationComplete by remember { mutableStateOf(false) }
+
+    LaunchedEffect(Unit) {
+        delay(2 * 120L + 400L)
+        initialAnimationComplete = true
+    }
 
     val isAtBottom by remember {
         derivedStateOf {
@@ -93,12 +109,6 @@ fun AICreateHabitScreen(
     LaunchedEffect(pendingQuestion) {
         if (pendingQuestion != null) {
             listState.animateScrollToItem(listState.layoutInfo.totalItemsCount - 1)
-        }
-    }
-
-    LaunchedEffect(uiState.habitsSaved) {
-        if (uiState.habitsSaved) {
-            navController.popBackStack()
         }
     }
 
@@ -181,6 +191,21 @@ fun AICreateHabitScreen(
                                     isStreaming = message.isStreaming
                                 )
                                 ChatMessageType.QUESTION -> {}
+                                ChatMessageType.HABIT -> {
+                                    message.habit?.let { habit ->
+                                        HabitCreatedCard(
+                                            habit = habit,
+                                            onEditClick = {
+                                                AIPrefillHabitHolder.prefillHabit = habit
+                                                AIPrefillHabitHolder.editingHabitDbId = viewModel.getDbIdForTempId(habit.tempId)
+                                                navController.navigate(Route.CreateHabit.route)
+                                            },
+                                            modifier = Modifier
+                                                .fillMaxWidth()
+                                                .padding(horizontal = 16.dp, vertical = 8.dp)
+                                        )
+                                    }
+                                }
                             }
                         }
 
@@ -219,10 +244,16 @@ fun AICreateHabitScreen(
                     }
                 }
             } else {
-                AIWelcomeContent(
-                    modifier = Modifier.weight(1f),
-                    onStartChat = { }
-                )
+                AnimatedStaggeredItem(
+                    index = 0,
+                    initialAnimationComplete = initialAnimationComplete,
+                    modifier = Modifier.weight(1f)
+                ) {
+                    AIWelcomeContent(
+                        modifier = Modifier.fillMaxSize(),
+                        onStartChat = { }
+                    )
+                }
             }
 
             if (uiState.showClearButton && !hasPendingQuestion) {
@@ -237,26 +268,31 @@ fun AICreateHabitScreen(
             }
 
             if (!hasPendingQuestion) {
-                AIChatInputBox(
-                    inputText = uiState.inputText,
-                    onTextChange = { viewModel.updateInputText(it) },
-                    onSendClick = {
-                        scope.launch {
-                            val apiKey = userPreferences.llmApiKeyFlow.first()
+                AnimatedStaggeredItem(
+                    index = if (hasMessages) 0 else 1,
+                    initialAnimationComplete = if (hasMessages) true else initialAnimationComplete
+                ) {
+                    AIChatInputBox(
+                        inputText = uiState.inputText,
+                        onTextChange = { viewModel.updateInputText(it) },
+                        onSendClick = {
+                            scope.launch {
+                                val apiKey = userPreferences.llmApiKeyFlow.first()
 
-                            if (apiKey.isBlank()) {
+                                if (apiKey.isBlank()) {
+                                    viewModel.updateInputText("")
+                                    return@launch
+                                }
+
+                                viewModel.sendMessage(uiState.inputText)
                                 viewModel.updateInputText("")
-                                return@launch
                             }
-
-                            viewModel.sendMessage(uiState.inputText)
-                            viewModel.updateInputText("")
-                        }
-                    },
-                    onStopClick = { viewModel.stopGeneration() },
-                    isLoading = uiState.isLoading,
-                    modifier = Modifier.fillMaxWidth()
-                )
+                        },
+                        onStopClick = { viewModel.stopGeneration() },
+                        isLoading = uiState.isLoading,
+                        modifier = Modifier.fillMaxWidth()
+                    )
+                }
             }
         }
     }
@@ -672,6 +708,99 @@ fun QuestionComponent(
 }
 
 @Composable
+fun HabitCreatedCard(
+    habit: PartialHabit,
+    onEditClick: () -> Unit,
+    modifier: Modifier = Modifier
+) {
+    var confirmed by remember { mutableStateOf(false) }
+
+    Card(
+        modifier = modifier,
+        colors = CardDefaults.cardColors(
+            containerColor = if (confirmed)
+                MaterialTheme.colorScheme.surfaceContainerHigh
+            else
+                MaterialTheme.colorScheme.secondaryContainer
+        )
+    ) {
+        Column(modifier = Modifier.padding(16.dp)) {
+            Row(verticalAlignment = Alignment.CenterVertically) {
+                Icon(
+                    imageVector = Icons.Default.CheckCircle,
+                    contentDescription = null,
+                    tint = if (confirmed)
+                        MaterialTheme.colorScheme.tertiary
+                    else
+                        MaterialTheme.colorScheme.primary,
+                    modifier = Modifier.size(24.dp)
+                )
+                Spacer(modifier = Modifier.width(8.dp))
+                Text(
+                    text = habit.title,
+                    style = MaterialTheme.typography.titleMedium,
+                    color = if (confirmed)
+                        MaterialTheme.colorScheme.onSurface
+                    else
+                        MaterialTheme.colorScheme.onSecondaryContainer
+                )
+            }
+
+            Spacer(modifier = Modifier.height(8.dp))
+
+            Text(
+                text = habit.toSummaryString(),
+                style = MaterialTheme.typography.bodyMedium,
+                color = if (confirmed)
+                    MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f)
+                else
+                    MaterialTheme.colorScheme.onSecondaryContainer.copy(alpha = 0.8f)
+            )
+
+            if (habit.reminderTimes.isNotEmpty()) {
+                Spacer(modifier = Modifier.height(4.dp))
+                Text(
+                    text = "⏰ ${habit.reminderTimes.joinToString(", ")}",
+                    style = MaterialTheme.typography.bodySmall,
+                    color = if (confirmed)
+                        MaterialTheme.colorScheme.onSurface.copy(alpha = 0.5f)
+                    else
+                        MaterialTheme.colorScheme.onSecondaryContainer.copy(alpha = 0.7f)
+                )
+            }
+
+            Spacer(modifier = Modifier.height(12.dp))
+
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.End,
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                if (!confirmed) {
+                    OutlinedButton(
+                        onClick = { confirmed = true }
+                    ) {
+                        Text(stringResource(R.string.habit_card_menu_complete))
+                    }
+                    Spacer(modifier = Modifier.width(8.dp))
+                }
+                OutlinedButton(
+                    onClick = onEditClick
+                ) {
+                    Icon(
+                        imageVector = Icons.Default.Edit,
+                        contentDescription = null,
+                        modifier = Modifier.size(16.dp)
+                    )
+                    Spacer(modifier = Modifier.width(4.dp))
+                    Text(stringResource(R.string.habit_card_menu_edit))
+                }
+            }
+        }
+    }
+}
+
+@Composable
 fun ConfirmationDialog(
     habits: List<PartialHabit>,
     onConfirm: () -> Unit,
@@ -703,4 +832,44 @@ fun ConfirmationDialog(
             }
         }
     )
+}
+
+@Composable
+private fun AnimatedStaggeredItem(
+    index: Int,
+    initialAnimationComplete: Boolean,
+    modifier: Modifier = Modifier,
+    content: @Composable () -> Unit
+) {
+    val animationDelayMs = index * 120L
+    val shouldAnimate = !initialAnimationComplete
+    var visible by remember { mutableStateOf(!shouldAnimate) }
+
+    LaunchedEffect(Unit) {
+        if (shouldAnimate) {
+            delay(animationDelayMs)
+            visible = true
+        }
+    }
+
+    val alpha by animateFloatAsState(
+        targetValue = if (visible) 1f else 0f,
+        animationSpec = spring(dampingRatio = 0.85f, stiffness = Spring.StiffnessMediumLow),
+        label = "alpha"
+    )
+
+    val translationY by animateFloatAsState(
+        targetValue = if (visible) 0f else 20f,
+        animationSpec = spring(dampingRatio = 0.85f, stiffness = Spring.StiffnessMediumLow),
+        label = "translationY"
+    )
+
+    Box(
+        modifier = modifier.graphicsLayer {
+            this.alpha = alpha
+            this.translationY = translationY
+        }
+    ) {
+        content()
+    }
 }

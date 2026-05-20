@@ -19,6 +19,14 @@ import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
 import java.util.UUID
 
+object AIPrefillHabitHolder {
+    var prefillHabit: PartialHabit? = null
+    var editingHabitDbId: UUID? = null
+}
+
+private typealias TempId = UUID
+private typealias DbId = UUID
+
 class AICreateHabitViewModel(application: Application) : AndroidViewModel(application) {
     private val userPreferences = UserPreferences.getInstance(application)
     private val app = application as HabitPulseApplication
@@ -41,6 +49,8 @@ class AICreateHabitViewModel(application: Application) : AndroidViewModel(applic
 
     private val _collectedHabits = MutableStateFlow<List<PartialHabit>>(emptyList())
     val collectedHabits: StateFlow<List<PartialHabit>> = _collectedHabits.asStateFlow()
+
+    private val savedPartialToDbId = mutableMapOf<TempId, DbId>()
 
     private val _pendingQuestion = MutableStateFlow<PendingQuestionUI?>(null)
     val pendingQuestion: StateFlow<PendingQuestionUI?> = _pendingQuestion.asStateFlow()
@@ -74,12 +84,16 @@ class AICreateHabitViewModel(application: Application) : AndroidViewModel(applic
                     is ConversationManager.ConversationEvent.HabitCreated -> {
                         _collectedHabits.value = _collectedHabits.value + event.habit
                         _uiState.value = _uiState.value.copy(isLoading = false)
+                        _messages.value = _messages.value + ChatMessageUIItem(
+                            id = UUID.randomUUID().toString(),
+                            type = ChatMessageType.HABIT,
+                            text = "",
+                            habit = event.habit
+                        )
                     }
                     is ConversationManager.ConversationEvent.ConfirmationRequested -> {
-                        _uiState.value = _uiState.value.copy(
-                            isLoading = false,
-                            showConfirmDialog = true
-                        )
+                        _uiState.value = _uiState.value.copy(isLoading = false)
+                        confirmAndSaveHabits()
                     }
                     is ConversationManager.ConversationEvent.Error -> {
                         addOrUpdateAIMessage("错误: ${event.message}")
@@ -165,6 +179,7 @@ class AICreateHabitViewModel(application: Application) : AndroidViewModel(applic
         conversationManager = null
         _messages.value = emptyList()
         _collectedHabits.value = emptyList()
+        savedPartialToDbId.clear()
         _pendingQuestion.value = null
         _uiState.value = _uiState.value.copy(
             isLoading = false,
@@ -205,6 +220,7 @@ class AICreateHabitViewModel(application: Application) : AndroidViewModel(applic
         viewModelScope.launch {
             val habitsToSave = _collectedHabits.value
             for (habit in habitsToSave) {
+                if (habit.tempId in savedPartialToDbId) continue
                 val newHabit = Habit(
                     title = habit.title,
                     repeatCycle = if (habit.repeatCycle == "DAILY") RepeatCycle.DAILY else RepeatCycle.WEEKLY,
@@ -212,13 +228,22 @@ class AICreateHabitViewModel(application: Application) : AndroidViewModel(applic
                     reminderTimes = habit.reminderTimes.joinToString(",", "[\"", "\"]") { it },
                     notes = habit.notes
                 )
-                repository.insertHabit(newHabit)
+                val dbId = repository.insertHabit(newHabit)
+                savedPartialToDbId[habit.tempId] = dbId
             }
-            clearConversation()
             _uiState.value = _uiState.value.copy(
-                showConfirmDialog = false,
-                habitsSaved = true
+                showConfirmDialog = false
             )
+        }
+    }
+
+    fun getDbIdForTempId(tempId: UUID): UUID? = savedPartialToDbId[tempId]
+
+    fun deleteHabitByTempId(tempId: UUID) {
+        val dbId = savedPartialToDbId[tempId] ?: return
+        viewModelScope.launch {
+            repository.getHabitById(dbId)?.let { repository.deleteHabit(it) }
+            savedPartialToDbId.remove(tempId)
         }
     }
 
@@ -289,11 +314,12 @@ data class ChatMessageUIItem(
     val type: ChatMessageType,
     val text: String,
     val thoughts: String = "",
-    val isStreaming: Boolean = false
+    val isStreaming: Boolean = false,
+    val habit: PartialHabit? = null
 )
 
 enum class ChatMessageType {
-    USER, AI, QUESTION
+    USER, AI, QUESTION, HABIT
 }
 
 data class PendingQuestionUI(

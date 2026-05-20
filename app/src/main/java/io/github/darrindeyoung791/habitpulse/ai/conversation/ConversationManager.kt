@@ -41,6 +41,13 @@ class ConversationManager(
 
     private var isStreaming = false
     private var streamJob: kotlinx.coroutines.Job? = null
+    private var retryCount = 0
+    private var needsRetry = false
+    private var needsAutoContinue = false
+
+    companion object {
+        private const val MAX_RETRIES = 10
+    }
 
     sealed class ConversationEvent {
         data class AIMessageReceived(val text: String, val thoughts: String = "", val isStreaming: Boolean = false) : ConversationEvent()
@@ -56,6 +63,7 @@ class ConversationManager(
     }
 
     suspend fun startConversation(userInput: String) {
+        retryCount = 0
         val isHabitRelated = habitCountExtractor.isHabitRelated(userInput)
 
         _state.value = _state.value.copy(isHabitRelated = isHabitRelated)
@@ -83,6 +91,7 @@ class ConversationManager(
 
     suspend fun submitAnswer(answer: String, questionId: String) {
         if (_state.value.isStopped) return
+        retryCount = 0
 
         messages.add(Message(role = "user", content = answer))
         sendToLLM()
@@ -91,6 +100,8 @@ class ConversationManager(
     suspend fun stop() {
         streamJob?.cancel()
         isStreaming = false
+        needsRetry = false
+        needsAutoContinue = false
         _state.value = _state.value.copy(isStopped = true)
 
         val currentHabits = _collectedHabits.value
@@ -100,70 +111,85 @@ class ConversationManager(
     }
 
     private suspend fun sendToLLM() {
-        isStreaming = true
-        _state.value = _state.value.copy(isStopped = false)
+        if (_state.value.isStopped) return
 
         if (streamingEnabled) {
-            var streamingText = ""
-            streamJob = scope.launch(Dispatchers.IO) {
-                try {
-                    llmClient.chatStream(messages).collect { chunk ->
-                        ensureActive()
-                        if (_state.value.isStopped) {
-                            throw kotlinx.coroutines.CancellationException("stopped by user")
+            sendToLLMStreaming()
+        } else {
+            sendToLLMWithRetry()
+        }
+    }
+
+    private suspend fun sendToLLMStreaming() {
+        isStreaming = true
+        _state.value = _state.value.copy(isStopped = false)
+        var streamingText = ""
+
+        streamJob = scope.launch(Dispatchers.IO) {
+            try {
+                llmClient.chatStream(messages).collect { chunk ->
+                    ensureActive()
+                    if (_state.value.isStopped) {
+                        throw kotlinx.coroutines.CancellationException("stopped by user")
+                    }
+                    when (chunk) {
+                        is LLMClient.StreamChunk.Content -> {
+                            streamingText += chunk.delta
+                            _events.value = ConversationEvent.AIMessageReceived(streamingText, isStreaming = true)
                         }
-                        when (chunk) {
-                            is LLMClient.StreamChunk.Content -> {
-                                streamingText += chunk.delta
-                                _events.value = ConversationEvent.AIMessageReceived(
-                                    streamingText,
-                                    isStreaming = true
-                                )
-                            }
-                            is LLMClient.StreamChunk.Done -> {
-                                processResponse(chunk.fullContent)
-                            }
-                            is LLMClient.StreamChunk.Error -> {
-                                _events.value = ConversationEvent.Error(chunk.message)
-                            }
+                        is LLMClient.StreamChunk.Done -> {
+                            processResponse(chunk.fullContent)
+                        }
+                        is LLMClient.StreamChunk.Error -> {
+                            _events.value = ConversationEvent.Error(chunk.message)
                         }
                     }
-                } catch (_: kotlinx.coroutines.CancellationException) {
-                    // stopped by user
                 }
-            }
-            try {
-                streamJob?.join()
-            } catch (_: kotlinx.coroutines.CancellationException) {
-                streamJob?.cancel()
-            }
-        } else {
+            } catch (_: kotlinx.coroutines.CancellationException) { }
+        }
+        try {
+            streamJob?.join()
+        } catch (_: kotlinx.coroutines.CancellationException) {
+            streamJob?.cancel()
+        }
+        isStreaming = false
+    }
+
+    private suspend fun sendToLLMWithRetry() {
+        do {
+            if (_state.value.isStopped) break
+
+            needsAutoContinue = false
+            needsRetry = false
+
+            isStreaming = true
+            _state.value = _state.value.copy(isStopped = false)
+
             streamJob = scope.launch(Dispatchers.IO) {
                 try {
                     ensureActive()
                     when (val result = llmClient.chat(messages)) {
-                        is LLMClient.LLMResult.Success -> {
-                            processResponse(result.content)
-                        }
-                        is LLMClient.LLMResult.Error -> {
-                            _events.value = ConversationEvent.Error(result.message)
-                        }
+                        is LLMClient.LLMResult.Success -> processResponse(result.content)
+                        is LLMClient.LLMResult.Error -> _events.value = ConversationEvent.Error(result.message)
                     }
-                } catch (_: kotlinx.coroutines.CancellationException) {
-                    // stopped by user
-                }
+                } catch (_: kotlinx.coroutines.CancellationException) { }
             }
             try {
                 streamJob?.join()
             } catch (_: kotlinx.coroutines.CancellationException) {
                 streamJob?.cancel()
             }
-        }
 
-        isStreaming = false
+            isStreaming = false
+
+            if (needsAutoContinue) {
+                retryCount = 0
+            }
+        } while ((needsRetry || needsAutoContinue) && retryCount < MAX_RETRIES && !_state.value.isStopped)
     }
 
     private fun processResponse(content: String) {
+        needsRetry = false
         val parsed = ResponseParser.parse(content)
 
         var displayText = parsed.text
@@ -178,6 +204,8 @@ class ConversationManager(
 
         var needsIntervention = false
         var interventionMessage: String? = null
+        var confirmCalled = false
+        var askQuestionCalled = false
 
         for (toolCall in toolCalls) {
             if (!toolRegistry.canExecute(toolCall.name)) {
@@ -191,11 +219,13 @@ class ConversationManager(
                 is ToolResult.Success -> {
                     when (toolCall.name) {
                         "ask_question" -> {
+                            askQuestionCalled = true
                             val question = toolResult.data as? PendingQuestionData
                             if (question != null) {
                                 _state.value = _state.value.withIncrementedQuestionCount(question.questionId)
                                 _events.value = ConversationEvent.QuestionReceived(question)
                             }
+                            messages.add(Message(role = "user", content = """["ask_question: question sent to user"]"""))
                         }
                         "create_habit" -> {
                             val habit = toolResult.data as? PartialHabit
@@ -203,6 +233,11 @@ class ConversationManager(
                                 _collectedHabits.value = _collectedHabits.value + habit
                                 _state.value = _state.value.withIncrementedHabitCount()
                                 _events.value = ConversationEvent.HabitCreated(habit)
+
+                                val collected = _state.value.collectedHabitCount
+                                val total = _state.value.pendingHabitCount
+                                val countInfo = if (total != null) " ($collected/$total)" else ""
+                                messages.add(Message(role = "user", content = """["create_habit: habit '${habit.title}' collected$countInfo"]"""))
                             }
                         }
                         "reply" -> {
@@ -210,8 +245,10 @@ class ConversationManager(
                             if (reply != null) {
                                 _events.value = ConversationEvent.ReplyReceived(reply.text)
                             }
+                            messages.add(Message(role = "user", content = """["reply: reply sent"]"""))
                         }
                         "confirm" -> {
+                            confirmCalled = true
                             val pendingCount = _state.value.pendingHabitCount
                             val collectedCount = _state.value.collectedHabitCount
 
@@ -225,7 +262,13 @@ class ConversationManager(
                     }
                 }
                 is ToolResult.Error -> {
-                    _events.value = ConversationEvent.Error(toolResult.message)
+                    retryCount++
+                    if (retryCount < MAX_RETRIES) {
+                        messages.add(Message(role = "user", content = "[\"${toolCall.name}: 执行出错 - ${toolResult.message}\"]"))
+                        needsRetry = true
+                    } else {
+                        _events.value = ConversationEvent.Error("已自动重试${MAX_RETRIES}次失败: ${toolResult.message}")
+                    }
                 }
             }
         }
@@ -242,6 +285,18 @@ class ConversationManager(
         if (guard.shouldStopConversation(_state.value)) {
             _events.value = ConversationEvent.GuardBlocked
             _state.value = _state.value.copy(isStopped = true)
+        }
+
+        if (!confirmCalled && !askQuestionCalled && _collectedHabits.value.isNotEmpty()) {
+            val pendingCount = _state.value.pendingHabitCount
+            val collectedCount = _state.value.collectedHabitCount
+            val allCollected = pendingCount == null || collectedCount >= pendingCount
+
+            _events.value = ConversationEvent.ConfirmationRequested(_collectedHabits.value)
+
+            if (pendingCount != null && !allCollected) {
+                needsAutoContinue = true
+            }
         }
     }
 
@@ -266,5 +321,8 @@ class ConversationManager(
         _collectedHabits.value = emptyList()
         _state.value = ConversationState()
         _events.value = null
+        retryCount = 0
+        needsRetry = false
+        needsAutoContinue = false
     }
 }

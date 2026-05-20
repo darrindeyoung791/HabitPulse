@@ -88,6 +88,7 @@
     <string name="habit_card_menu_undo">Undo check-in</string>
     <string name="habit_card_menu_edit">Edit</string>
     <string name="habit_card_menu_delete">Delete</string>
+    <string name="habit_card_menu_complete">Done</string>
     <string name="habit_card_delete_confirm_title">Confirm Delete</string>
     <string name="habit_card_delete_confirm_message">Are you sure you want to delete the habit \"%1$s\"? This action cannot be undone.</string>
     <string name="habit_card_delete_confirm">Delete</string>

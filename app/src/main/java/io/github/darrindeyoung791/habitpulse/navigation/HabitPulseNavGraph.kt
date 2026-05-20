@@ -26,6 +26,7 @@ import io.github.darrindeyoung791.habitpulse.ui.screens.MultiSelectSortScreen
 import io.github.darrindeyoung791.habitpulse.ui.screens.WebViewScreen
 import io.github.darrindeyoung791.habitpulse.ui.screens.ai.AICreateHabitScreen
 import io.github.darrindeyoung791.habitpulse.AISettingsActivity
+import io.github.darrindeyoung791.habitpulse.viewmodel.AIPrefillHabitHolder
 import java.util.UUID
 
 /**
@@ -170,6 +171,13 @@ fun HabitPulseNavGraph(
                 ) + fadeOut(animationSpec = tween(durationMillis = 200))
             }
         ) {
+            val prefillHabit = remember { AIPrefillHabitHolder.prefillHabit.also { AIPrefillHabitHolder.prefillHabit = null } }
+            val editingHabitDbId = remember { AIPrefillHabitHolder.editingHabitDbId.also { AIPrefillHabitHolder.editingHabitDbId = null } }
+
+            val isAiEdit = prefillHabit != null && editingHabitDbId != null
+            val editMode = if (isAiEdit) EditMode.EDIT else EditMode.CREATE
+            val habitId = if (isAiEdit) editingHabitDbId else null
+
             Box(
                 modifier = Modifier
                     .fillMaxSize()
@@ -179,9 +187,11 @@ fun HabitPulseNavGraph(
                     onNavigateBack = {
                         navController.popBackStack()
                     },
-                    editMode = EditMode.CREATE,
+                    editMode = editMode,
+                    habitId = habitId,
                     navController = navController,
-                    application = context.applicationContext as HabitPulseApplication
+                    application = context.applicationContext as HabitPulseApplication,
+                    prefillHabit = prefillHabit
                 )
             }
         }

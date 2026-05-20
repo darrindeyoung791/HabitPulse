@@ -206,10 +206,10 @@ class UserPreferences(private val context: Context) {
 
     /**
      * LLM 模型名称的 Flow
-     * 默认值为 "glm-4.7-flash"
+     * 默认值为 "glm-4-flash-250414"
      */
     val llmModelNameFlow: Flow<String> = context.dataStore.data.map { preferences ->
-        preferences[PreferencesKeys.LLM_MODEL_NAME] ?: "glm-4.7-flash"
+        preferences[PreferencesKeys.LLM_MODEL_NAME] ?: "glm-4-flash-250414"
     }
 
     /**

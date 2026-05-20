@@ -56,7 +56,7 @@ class CreateHabitTool : Tool {
 
     private fun parseIntList(value: Any?): List<Int> {
         return when (value) {
-            is List<*> -> value.mapNotNull { it?.toString()?.toIntOrNull() }
+            is List<*> -> value.mapNotNull { (it as? Number)?.toInt() }
             is String -> {
                 try {
                     val type = object : TypeToken<List<Int>>() {}.type

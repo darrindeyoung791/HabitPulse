@@ -161,3 +161,60 @@
 - [x] 16.3 修复重复 AI 气泡（AICreateHabitViewModel.kt）
   - `QuestionReceived`：删除 `addOrUpdateAIMessage("")`，只设 `_pendingQuestion`；问题通过 `PendingQuestionUI` 组件独立渲染
   - `ThinkingStarted`：删除 `addOrUpdateAIMessage("")`，思考内容附着在后续 `AIMessageReceived`
+
+## 17. 工具执行失败自动重试 + Prompt 确认策略优化
+
+- [x] 17.1 ConversationManager 增加重试机制（ConversationManager.kt）
+  - 新增 `retryCount` 字段 + `MAX_RETRIES = 10` 常量
+  - 新增 `needsRetry` 标志位控制重试循环
+  - `processResponse` 遇到 `ToolResult.Error`：递增 `retryCount`，<10 次时添加 `user` 角色错误消息并设 `needsRetry = true`，≥10 次时发射 `Error` 事件
+  - 用户入口（startConversation/submitAnswer/continueConversation）重置 `retryCount = 0`
+  - `stop()` 重置 `needsRetry = false`，打断重试链
+  - `reset()` 重置 `retryCount` 和 `needsRetry`
+  - 非 streaming 模式：`sendToLLMWithRetry()` 循环检查 `needsRetry && retryCount < MAX_RETRIES && !isStopped`，通过递归循环实现自动重试
+  - streaming 模式保留单次执行（增量文本不支持重试）
+- [x] 17.2 SystemPrompt 鼓励直接创建、无需二次确认（SystemPrompt.kt）
+  - 规则 4：从 "After all habits collected, use confirm for user confirmation" 改为 "When all habit info is collected, use confirm to finalize. The system auto-saves — no need to ask the user for confirmation. Just tell the user what was created."
+  - 新增规则 7："Never ask the user whether they want to save — automatic saving is handled by the system"
+- [x] 17.3 ConfirmationRequested 自动保存（AICreateHabitViewModel.kt & AICreateHabitScreen.kt）
+  - ViewModel：`ConfirmationRequested` 事件直接调用 `confirmAndSaveHabits()` 替代设 `showConfirmDialog = true`
+  - 删除 `dismissConfirmDialog()` 方法
+  - UI State：删除 `showConfirmDialog` 字段
+  - Screen：删除 `ConfirmationDialog` 调用
+
+## 18. create_habit 工具修复：Gson 数字解析 + 增量保存 + 自动继续
+
+- [x] 18.1 修复 `CreateHabitTool.parseIntList()` Gson Double 解析问题（CreateHabitTool.kt）
+  - `it?.toString()?.toIntOrNull()` → `(it as? Number)?.toInt()`
+  - 原因：Gson 反序列化 `Map<String, Any?>` 将 JSON 数字转 Double，`"3.0".toIntOrNull() = null`
+- [x] 18.2 PartialHabit 添加 tempId UUID 追踪字段（PartialHabit.kt）
+  - `val tempId: UUID = UUID.randomUUID()`
+  - 用于追踪已保存到 DB 的习惯，避免重复保存
+- [x] 18.3 增量保存 + 保留对话上下文（AICreateHabitViewModel.kt）
+  - `confirmAndSaveHabits()`：只保存未保存的新习惯（通过 tempId 检查）
+  - 不再调用 `clearConversation()`，卡片和消息保持可见
+  - 新增 `savedPartialToDbId: Map<TempId, DbId>` 记录映射
+  - 新增 `deleteHabitByTempId()` 供编辑后清理旧版本
+- [x] 18.4 自动继续对话（ConversationManager.kt）
+  - 新增 `needsAutoContinue` 标志
+  - 自动确认**每次**都发射 `ConfirmationRequested`（不再仅限全部收集）
+  - 当 `pendingCount > collectedCount` 时设置 `needsAutoContinue`
+  - `sendToLLMWithRetry()` 循环条件扩展为 `needsRetry || needsAutoContinue`
+- [x] 18.5 编辑导航使用 EDIT 模式避免重复（HabitPulseNavGraph.kt + AICreateHabitScreen.kt）
+  - AIPrefillHabitHolder 新增 `editingHabitDbId` 字段
+  - Edit 点击时从 ViewModel 获取已保存的 dbId 存入 holder
+  - NavGraph 检测到 AI 编辑时使用 `EditMode.EDIT` + `habitId = dbId`
+  - HabitCreationScreen 直接更新已有记录，不创建重复
+- [x] 18.6 自动保存后不再导航回主页（AICreateHabitViewModel.kt + AICreateHabitScreen.kt）
+  - `confirmAndSaveHabits()` 不再设 `habitsSaved = true`（自动保存不清除会话）
+  - 删除 `LaunchedEffect(uiState.habitsSaved)` 的 `popBackStack()` 调用
+  - 用户通过返回按钮+退出确认对话框控制导航
+- [x] 18.7 修复编辑导航回栈异常（AICreateHabitScreen.kt）
+  - 移除 `launchSingleTop = true`，避免与 NavHost 回栈管理冲突
+- [x] 18.8 优化 HabitCreatedCard 样式（AICreateHabitScreen.kt）
+  - 新增"完成"按钮（点击后淡化卡片颜色，标记已确认）
+  - 保持"编辑"按钮可用
+  - 新增字符串资源 `habit_card_menu_complete` 到全部5个语言文件
+- [x] 18.9 SystemPrompt 新增提醒时间规则（SystemPrompt.kt）
+  - "Do NOT suggest adjusting reminder times (e.g., setting them earlier for 'preparation'). Use the exact time the user specified."
+- [x] 18.10 创建修复文档（openspec）

@@ -89,6 +89,7 @@
     <string name="habit_card_menu_undo">復原打卡</string>
     <string name="habit_card_menu_edit">編輯</string>
     <string name="habit_card_menu_delete">刪除</string>
+    <string name="habit_card_menu_complete">完成</string>
     <string name="habit_card_delete_confirm_title">確認刪除</string>
     <string name="habit_card_delete_confirm_message">確定要刪除習慣「%1$s」嗎？此操作無法復原。</string>
     <string name="habit_card_delete_confirm">刪除</string>
