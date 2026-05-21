@@ -218,3 +218,52 @@
 - [x] 18.9 SystemPrompt 新增提醒时间规则（SystemPrompt.kt）
   - "Do NOT suggest adjusting reminder times (e.g., setting them earlier for 'preparation'). Use the exact time the user specified."
 - [x] 18.10 创建修复文档（openspec）
+
+## 19. 星期映射改为0=周一 + 模糊时间追问 + time_of_day 类型修复
+
+- [x] 19.1 星期映射改为 0=周一～6=周日（SystemPrompt.kt）
+  - 映射描述：`0=Monday/周一, 6=Sunday/周日`
+  - 全部7天逐条列举，无"类推"
+  - 更新工作日/周末示例值
+- [x] 19.2 更新 UI 代码中的星期映射（HabitCreationScreen.kt, HabitScreen.kt x2）
+  - `dayLabels` / `dayNames` 列表顺序改为 周一→周日
+- [x] 19.3 更新 PartialHabit.kt 的 dayToChinese 映射
+  - 交换 0↔日、6↔六
+- [x] 19.4 更新 Habit.kt 文档注释 + 默认值注释
+- [x] 19.5 更新 SettingsActivity.kt 样本数据（3处 [1,3,5] → [0,2,4]）
+- [x] 19.6 SystemPrompt 新增模糊时间追问规则（SystemPrompt.kt）
+  - 模糊时间（早上/中午/晚上无具体时刻）→ ask_question
+  - 有时刻但 AM/PM 不明确 → ask_question，除非能结合语境推断（早饭→AM）
+  - 附正反例子
+- [x] 19.7 在 prompt 中补充 ask_question 可用 type 列表
+  - 列出所有7种合法 type 及对应 UI 行为
+  - 更新例子使用正确 type（time_of_day / choice）
+- [x] 19.8 QuestionTool 新增 time_of_day 类型（QuestionTool.kt）
+  - validTypes 加入 "time_of_day"
+- [x] 19.9 AICreateHabitScreen QuestionComponent 处理 time_of_day
+  - 与 "text" 同分支，使用 OutlinedTextField 自由输入
+- [x] 19.10 抽取 SystemPrompt 到独立 .md 文件（assets/prompts/system_prompt.md）
+  - SystemPrompt.kt 改为从 assets 读取 + 缓存
+- [x] 19.11 ConversationManager 构造参数接收 systemPrompt（ConversationManager.kt）
+  - 移除对 SystemPrompt 类的依赖，用传入的字符串
+- [x] 19.12 AICreateHabitViewModel 读取 prompt 并传入 Manager
+  - 创建 ConversationManager 时调用 SystemPrompt.getSystemPrompt(context)
+
+## 20. ProGuard 审查与修复
+
+- [x] 20.1 修复 AICreateHabitScreen day_of_week 显示（0=周日 → 0=周一）
+  - `days` 列表改为 `("一", "二", "三", "四", "五", "六", "日")`
+- [x] 20.2 新增 viewmodel 包 ProGuard keep 规则
+  - `-keep class io.github.darrindeyoung791.habitpulse.viewmodel.** { *; }`
+- [x] 20.3 通过 Release 构建验证
+
+## 21. 输入框自动聚焦 + API 密钥检测即时生效
+
+- [x] 21.1 进入 AI 界面自动聚焦输入框并弹出键盘
+  - 新增 FocusRequester + LocalSoftwareKeyboardController
+  - LaunchedEffect 延迟 200ms（等入场动画后）请求焦点
+  - AIChatInputBox 新增 focusRequester 参数，BasicTextField 应用 .focusRequester()
+- [x] 21.2 API 密钥检测改为响应式
+  - 替换 LaunchedEffect(Unit) { flow.first() } 为 collectAsStateWithLifecycle()
+  - 用户从设置页配置密钥返回后即时生效，无需离开当前页面
+- [x] 21.3 Debug + Release 构建验证通过

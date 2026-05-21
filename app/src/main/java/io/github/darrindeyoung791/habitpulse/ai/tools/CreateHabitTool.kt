@@ -1,7 +1,6 @@
 package io.github.darrindeyoung791.habitpulse.ai.tools
 
 import com.google.gson.Gson
-import com.google.gson.reflect.TypeToken
 import io.github.darrindeyoung791.habitpulse.ai.conversation.PartialHabit
 
 class CreateHabitTool : Tool {
@@ -44,8 +43,8 @@ class CreateHabitTool : Tool {
             is List<*> -> value.mapNotNull { it?.toString() }
             is String -> {
                 try {
-                    val type = object : TypeToken<List<String>>() {}.type
-                    gson.fromJson(value, type) ?: emptyList()
+                    @Suppress("UNCHECKED_CAST")
+                    (gson.fromJson(value, ArrayList::class.java) as? List<*>)?.mapNotNull { it?.toString() } ?: emptyList()
                 } catch (e: Exception) {
                     emptyList()
                 }
@@ -59,8 +58,8 @@ class CreateHabitTool : Tool {
             is List<*> -> value.mapNotNull { (it as? Number)?.toInt() }
             is String -> {
                 try {
-                    val type = object : TypeToken<List<Int>>() {}.type
-                    gson.fromJson(value, type) ?: emptyList()
+                    @Suppress("UNCHECKED_CAST")
+                    (gson.fromJson(value, ArrayList::class.java) as? List<*>)?.mapNotNull { (it as? Number)?.toInt() } ?: emptyList()
                 } catch (e: Exception) {
                     emptyList()
                 }

@@ -6,6 +6,7 @@ import androidx.lifecycle.viewModelScope
 import io.github.darrindeyoung791.habitpulse.HabitPulseApplication
 import io.github.darrindeyoung791.habitpulse.ai.conversation.*
 import io.github.darrindeyoung791.habitpulse.ai.llm.LLMClient
+import io.github.darrindeyoung791.habitpulse.ai.prompt.SystemPrompt
 import io.github.darrindeyoung791.habitpulse.ai.tools.PendingQuestionData
 import io.github.darrindeyoung791.habitpulse.ai.tools.ToolRegistry
 import io.github.darrindeyoung791.habitpulse.data.model.Habit
@@ -83,13 +84,25 @@ class AICreateHabitViewModel(application: Application) : AndroidViewModel(applic
                         _uiState.value = _uiState.value.copy(isLoading = false)
                     }
                     is ConversationManager.ConversationEvent.HabitCreated -> {
-                        _collectedHabits.value = _collectedHabits.value + event.habit
+                        val partialHabit = event.habit
+                        try {
+                            val newHabit = Habit(
+                                title = partialHabit.title,
+                                repeatCycle = if (partialHabit.repeatCycle == "DAILY") RepeatCycle.DAILY else RepeatCycle.WEEKLY,
+                                repeatDays = partialHabit.repeatDays.joinToString(",", "[", "]") { it.toString() },
+                                reminderTimes = partialHabit.reminderTimes.joinToString(",", "[\"", "\"]") { it },
+                                notes = partialHabit.notes
+                            )
+                            val dbId = repository.insertHabit(newHabit)
+                            savedPartialToDbId[partialHabit.tempId] = dbId
+                        } catch (_: Exception) { }
+                        _collectedHabits.value = _collectedHabits.value + partialHabit
                         _uiState.value = _uiState.value.copy(isLoading = false)
                         _messages.value = _messages.value + ChatMessageUIItem(
                             id = UUID.randomUUID().toString(),
                             type = ChatMessageType.HABIT,
                             text = "",
-                            habit = event.habit
+                            habit = partialHabit
                         )
                     }
                     is ConversationManager.ConversationEvent.ConfirmationRequested -> {
@@ -141,11 +154,13 @@ class AICreateHabitViewModel(application: Application) : AndroidViewModel(applic
 
             if (conversationManager == null) {
                 val client = LLMClient.fromPreferences(endpoint, apiKey, modelName, streamingEnabled)
+                val prompt = SystemPrompt.getSystemPrompt(getApplication())
                 conversationManager = ConversationManager(
                     llmClient = client,
                     toolRegistry = toolRegistry,
                     streamingEnabled = streamingEnabled,
-                    scope = viewModelScope
+                    scope = viewModelScope,
+                    systemPrompt = prompt
                 )
                 observeConversation()
                 conversationManager?.startConversation(text)

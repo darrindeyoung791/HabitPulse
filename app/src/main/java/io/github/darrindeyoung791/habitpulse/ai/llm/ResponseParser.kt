@@ -1,7 +1,6 @@
 package io.github.darrindeyoung791.habitpulse.ai.llm
 
 import com.google.gson.Gson
-import com.google.gson.reflect.TypeToken
 
 object ResponseParser {
     private val gson = Gson()
@@ -78,8 +77,8 @@ object ResponseParser {
         val toolCalls = mutableListOf<ToolCall>()
         val normalized = normalizeJsonString(text)
         try {
-            val type = object : TypeToken<Map<String, Any?>>() {}.type
-            val map: Map<String, Any?> = gson.fromJson(normalized, type) ?: return toolCalls
+            @Suppress("UNCHECKED_CAST")
+            val map: Map<String, Any?> = gson.fromJson(normalized, Map::class.java) as? Map<String, Any?> ?: return toolCalls
 
             val choices = map["choices"] as? List<Map<String, Any?>>
             val choice = choices?.firstOrNull()

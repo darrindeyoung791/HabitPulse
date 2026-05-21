@@ -1,7 +1,6 @@
 package io.github.darrindeyoung791.habitpulse.ai.tools
 
 import com.google.gson.Gson
-import com.google.gson.reflect.TypeToken
 
 class QuestionTool : Tool {
     override val name = "ask_question"
@@ -14,7 +13,7 @@ class QuestionTool : Tool {
             return ToolResult.Error("问题类型不能为空")
         }
 
-        val validTypes = setOf("choice", "time", "day_of_week", "multi_choice", "text", "confirm")
+        val validTypes = setOf("choice", "time", "day_of_week", "multi_choice", "text", "confirm", "time_of_day")
         if (type !in validTypes) {
             return ToolResult.Error("无效的问题类型: $type，可选值: ${validTypes.joinToString()}")
         }
@@ -44,8 +43,8 @@ class QuestionTool : Tool {
             is List<*> -> value.mapNotNull { it?.toString() }
             is String -> {
                 try {
-                    val type = object : TypeToken<List<String>>() {}.type
-                    gson.fromJson(value, type) ?: emptyList()
+                    @Suppress("UNCHECKED_CAST")
+                    (gson.fromJson(value, ArrayList::class.java) as? List<*>)?.mapNotNull { it?.toString() } ?: emptyList()
                 } catch (e: Exception) {
                     emptyList()
                 }

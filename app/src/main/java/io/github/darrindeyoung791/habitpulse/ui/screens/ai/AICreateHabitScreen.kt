@@ -46,6 +46,9 @@ import androidx.compose.animation.core.Spring
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.core.spring
 import androidx.compose.ui.graphics.graphicsLayer
+import androidx.compose.ui.focus.FocusRequester
+import androidx.compose.ui.focus.focusRequester
+import androidx.compose.ui.platform.LocalSoftwareKeyboardController
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import androidx.navigation.NavHostController
@@ -146,15 +149,9 @@ fun AICreateHabitScreen(
     }
 
     val userPreferences = remember { UserPreferences.getInstance(context) }
+    val apiKey by userPreferences.llmApiKeyFlow.collectAsStateWithLifecycle(initialValue = "")
 
-    var apiKeyConfigured by remember { mutableStateOf<Boolean?>(null) }
-
-    LaunchedEffect(Unit) {
-        val apiKey = userPreferences.llmApiKeyFlow.first()
-        apiKeyConfigured = apiKey.isNotBlank()
-    }
-
-    if (apiKeyConfigured == false) {
+    if (apiKey.isBlank()) {
         NoApiKeyPrompt(
             onGoToSettings = onNavigateToSettings,
             onNavigateBack = onNavigateBack
@@ -180,6 +177,15 @@ fun AICreateHabitScreen(
         if (pendingQuestion != null) {
             listState.animateScrollToItem(listState.layoutInfo.totalItemsCount - 1)
         }
+    }
+
+    val focusRequester = remember { FocusRequester() }
+    val keyboardController = LocalSoftwareKeyboardController.current
+
+    LaunchedEffect(Unit) {
+        delay(2 * 120L + 400L + 200L)
+        focusRequester.requestFocus()
+        keyboardController?.show()
     }
 
     Scaffold(
@@ -347,6 +353,7 @@ fun AICreateHabitScreen(
                     AIChatInputBox(
                         inputText = uiState.inputText,
                         onTextChange = { viewModel.updateInputText(it) },
+                        focusRequester = focusRequester,
                         onSendClick = {
                             scope.launch {
                                 val apiKey = userPreferences.llmApiKeyFlow.first()
@@ -597,6 +604,7 @@ fun AIWelcomeContent(
 fun AIChatInputBox(
     inputText: String,
     onTextChange: (String) -> Unit,
+    focusRequester: FocusRequester,
     onSendClick: () -> Unit,
     onStopClick: () -> Unit,
     isLoading: Boolean,
@@ -627,7 +635,8 @@ fun AIChatInputBox(
                         .fillMaxWidth()
                         .defaultMinSize(minHeight = 72.dp)
                         .padding(horizontal = 12.dp, vertical = 8.dp)
-                        .heightIn(max = 168.dp),
+                        .heightIn(max = 168.dp)
+                        .focusRequester(focusRequester),
                     textStyle = MaterialTheme.typography.bodyLarge.copy(
                         color = MaterialTheme.colorScheme.onSurface
                     ),
@@ -744,7 +753,7 @@ fun QuestionComponent(
                     Row(
                         horizontalArrangement = Arrangement.spacedBy(4.dp)
                     ) {
-                        val days = listOf("日", "一", "二", "三", "四", "五", "六")
+                        val days = listOf("一", "二", "三", "四", "五", "六", "日")
                         days.forEachIndexed { index, day ->
                             FilterChip(
                                 selected = false,
@@ -754,7 +763,7 @@ fun QuestionComponent(
                         }
                     }
                 }
-                "text" -> {
+                "text", "time_of_day" -> {
                     var textInput by remember { mutableStateOf("") }
                     OutlinedTextField(
                         value = textInput,

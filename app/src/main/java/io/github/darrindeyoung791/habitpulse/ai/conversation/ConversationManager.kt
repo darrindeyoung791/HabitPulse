@@ -1,11 +1,9 @@
 package io.github.darrindeyoung791.habitpulse.ai.conversation
 
 import com.google.gson.Gson
-import com.google.gson.reflect.TypeToken
 import io.github.darrindeyoung791.habitpulse.ai.llm.LLMClient
 import io.github.darrindeyoung791.habitpulse.ai.llm.Message
 import io.github.darrindeyoung791.habitpulse.ai.llm.ResponseParser
-import io.github.darrindeyoung791.habitpulse.ai.prompt.SystemPrompt
 import io.github.darrindeyoung791.habitpulse.ai.tools.PendingQuestionData
 import io.github.darrindeyoung791.habitpulse.ai.tools.ReplyData
 import io.github.darrindeyoung791.habitpulse.ai.tools.ToolRegistry
@@ -23,7 +21,8 @@ class ConversationManager(
     private val llmClient: LLMClient,
     private val toolRegistry: ToolRegistry,
     private val streamingEnabled: Boolean = false,
-    private val scope: CoroutineScope
+    private val scope: CoroutineScope,
+    private val systemPrompt: String
 ) {
     private val gson = Gson()
 
@@ -62,7 +61,7 @@ class ConversationManager(
 
     suspend fun startConversation(userInput: String) {
         retryCount = 0
-        messages.add(Message(role = "system", content = SystemPrompt.getSystemPrompt()))
+        messages.add(Message(role = "system", content = systemPrompt))
         messages.add(Message(role = "user", content = userInput))
         sendToLLM()
     }
@@ -249,8 +248,8 @@ class ConversationManager(
 
     private fun parseArguments(json: String): Map<String, Any?> {
         return try {
-            val type = object : TypeToken<Map<String, Any?>>() {}.type
-            gson.fromJson(json, type) ?: emptyMap()
+            @Suppress("UNCHECKED_CAST")
+            gson.fromJson(json, Map::class.java) as? Map<String, Any?> ?: emptyMap()
         } catch (e: Exception) {
             emptyMap()
         }
