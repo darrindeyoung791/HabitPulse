@@ -241,9 +241,8 @@ class ConversationManager(
             _state.value = _state.value.copy(isStopped = true)
         }
 
-        if (createHabitCalled) {
-            needsAutoContinue = true
-        }
+        // After create_habit, the conversation stops naturally (no auto-continue).
+        // User confirms via the habit card button, then a continuation message is sent.
     }
 
     private fun parseArguments(json: String): Map<String, Any?> {
@@ -260,6 +259,13 @@ class ConversationManager(
 
         messages.add(Message(role = "user", content = userInput))
         sendToLLM()
+    }
+
+    fun resume() {
+        _state.value = _state.value.copy(isStopped = false)
+        retryCount = 0
+        needsRetry = false
+        needsAutoContinue = false
     }
 
     fun reset() {

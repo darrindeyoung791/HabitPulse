@@ -107,8 +107,10 @@ class AICreateHabitViewModel(application: Application) : AndroidViewModel(applic
                         )
                     }
                     is ConversationManager.ConversationEvent.ConfirmationRequested -> {
-                        _uiState.value = _uiState.value.copy(isLoading = false)
-                        confirmAndSaveHabits()
+                        _uiState.value = _uiState.value.copy(
+                            isLoading = false,
+                            showConfirmDialog = true
+                        )
                     }
                     is ConversationManager.ConversationEvent.Error -> {
                         addOrUpdateAIMessage(getApplication<HabitPulseApplication>().getString(R.string.ai_error_prefix, event.message))
@@ -260,9 +262,13 @@ class AICreateHabitViewModel(application: Application) : AndroidViewModel(applic
                 val dbId = repository.insertHabit(newHabit)
                 savedPartialToDbId[habit.tempId] = dbId
             }
+            _confirmedTempIds.value = emptySet()
             _uiState.value = _uiState.value.copy(
-                showConfirmDialog = false
+                showConfirmDialog = false,
+                isLoading = true
             )
+            conversationManager?.resume()
+            conversationManager?.continueConversation("如有剩余习惯等待建立，请继续。若无，与用户道别")
         }
     }
 
