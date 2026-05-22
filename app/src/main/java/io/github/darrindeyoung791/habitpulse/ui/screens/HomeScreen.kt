@@ -826,11 +826,7 @@ fun HomeScreen(
                     if (showFab) {
                         ExtendedFloatingActionButton(
                             onClick = {
-                                scope.launch {
-                                    clickHandler.processClick {
-                                        onCreateHabit()
-                                    }
-                                }
+                                showCreateHabitDialog = true
                             },
                             icon = {
                                 Icon(imageVector = Icons.Filled.Add, contentDescription = null)

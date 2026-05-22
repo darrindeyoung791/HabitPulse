@@ -174,7 +174,12 @@ class AICreateHabitViewModel(application: Application) : AndroidViewModel(applic
         val question = _pendingQuestion.value ?: return
 
         viewModelScope.launch {
-            addUserMessage(answer)
+            _messages.value = _messages.value + ChatMessageUIItem(
+                id = UUID.randomUUID().toString(),
+                type = ChatMessageType.QUESTION,
+                text = question.prompt,
+                answer = answer
+            )
             _pendingQuestion.value = null
             _uiState.value = _uiState.value.copy(isLoading = true)
 
@@ -338,7 +343,8 @@ data class ChatMessageUIItem(
     val text: String,
     val thoughts: String = "",
     val isStreaming: Boolean = false,
-    val habit: PartialHabit? = null
+    val habit: PartialHabit? = null,
+    val answer: String = ""
 )
 
 enum class ChatMessageType {

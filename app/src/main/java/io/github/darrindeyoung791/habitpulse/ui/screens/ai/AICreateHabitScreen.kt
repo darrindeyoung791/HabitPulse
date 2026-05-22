@@ -41,7 +41,6 @@ import io.github.darrindeyoung791.habitpulse.navigation.Route
 import io.github.darrindeyoung791.habitpulse.viewmodel.AICreateHabitViewModel
 import io.github.darrindeyoung791.habitpulse.viewmodel.AIPrefillHabitHolder
 import io.github.darrindeyoung791.habitpulse.viewmodel.ChatMessageType
-import io.github.darrindeyoung791.habitpulse.viewmodel.PendingQuestionUI
 import androidx.compose.animation.core.Spring
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.core.spring
@@ -266,7 +265,15 @@ fun AICreateHabitScreen(
                                     thoughts = message.thoughts,
                                     isStreaming = message.isStreaming
                                 )
-                                ChatMessageType.QUESTION -> {}
+                                ChatMessageType.QUESTION -> {
+                                    AnsweredQuestionCard(
+                                        questionPrompt = message.text,
+                                        answer = message.answer,
+                                        modifier = Modifier
+                                            .fillMaxWidth()
+                                            .padding(horizontal = 16.dp, vertical = 8.dp)
+                                    )
+                                }
                                 ChatMessageType.HABIT -> {
                                     message.habit?.let { habit ->
                                         HabitCreatedCard(
@@ -291,7 +298,9 @@ fun AICreateHabitScreen(
                             item {
                                 QuestionComponent(
                                     question = question,
-                                    onAnswer = { answer -> viewModel.submitAnswer(answer) },
+                                    onAnswer = { answer ->
+                                        viewModel.submitAnswer(answer)
+                                    },
                                     modifier = Modifier
                                         .fillMaxWidth()
                                         .padding(horizontal = 16.dp, vertical = 8.dp)
@@ -720,7 +729,8 @@ fun QuestionComponent(
             Spacer(modifier = Modifier.height(12.dp))
 
             when (question.type) {
-                "choice" -> {
+                "choice", "confirm" -> {
+                    var customInput by remember { mutableStateOf("") }
                     Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
                         question.options.forEach { option ->
                             Card(
@@ -735,35 +745,137 @@ fun QuestionComponent(
                                 )
                             }
                         }
+                        Spacer(modifier = Modifier.height(4.dp))
+                        OutlinedTextField(
+                            value = customInput,
+                            onValueChange = { customInput = it },
+                            modifier = Modifier.fillMaxWidth(),
+                            placeholder = { Text("或者手动输入") }
+                        )
+                        Spacer(modifier = Modifier.height(4.dp))
+                        Button(
+                            onClick = { onAnswer(customInput) },
+                            enabled = customInput.isNotBlank()
+                        ) {
+                            Text("提交")
+                        }
                     }
                 }
-                "time" -> {
-                    Row(
-                        horizontalArrangement = Arrangement.spacedBy(8.dp)
-                    ) {
-                        question.options.forEach { time ->
-                            AssistChip(
-                                onClick = { onAnswer(time) },
-                                label = { Text(time) }
-                            )
+                "time", "time_of_day" -> {
+                    var customInput by remember { mutableStateOf("") }
+                    Column {
+                        if (question.options.isNotEmpty()) {
+                            Row(
+                                horizontalArrangement = Arrangement.spacedBy(8.dp)
+                            ) {
+                                question.options.forEach { time ->
+                                    AssistChip(
+                                        onClick = { onAnswer(time) },
+                                        label = { Text(time) }
+                                    )
+                                }
+                            }
+                            Spacer(modifier = Modifier.height(8.dp))
+                        }
+                        OutlinedTextField(
+                            value = customInput,
+                            onValueChange = { customInput = it },
+                            modifier = Modifier.fillMaxWidth(),
+                            placeholder = { Text("或者手动输入") }
+                        )
+                        Spacer(modifier = Modifier.height(4.dp))
+                        Button(
+                            onClick = { onAnswer(customInput) },
+                            enabled = customInput.isNotBlank()
+                        ) {
+                            Text("提交")
                         }
                     }
                 }
                 "day_of_week" -> {
-                    Row(
-                        horizontalArrangement = Arrangement.spacedBy(4.dp)
-                    ) {
-                        val days = listOf("一", "二", "三", "四", "五", "六", "日")
-                        days.forEachIndexed { index, day ->
-                            FilterChip(
-                                selected = false,
-                                onClick = { onAnswer(index.toString()) },
-                                label = { Text(day) }
-                            )
+                    var customInput by remember { mutableStateOf("") }
+                    Column {
+                        Row(
+                            horizontalArrangement = Arrangement.spacedBy(4.dp)
+                        ) {
+                            val days = listOf("一", "二", "三", "四", "五", "六", "日")
+                            days.forEachIndexed { index, day ->
+                                FilterChip(
+                                    selected = false,
+                                    onClick = { onAnswer(index.toString()) },
+                                    label = { Text(day) }
+                                )
+                            }
+                        }
+                        Spacer(modifier = Modifier.height(8.dp))
+                        OutlinedTextField(
+                            value = customInput,
+                            onValueChange = { customInput = it },
+                            modifier = Modifier.fillMaxWidth(),
+                            placeholder = { Text("或者手动输入") }
+                        )
+                        Spacer(modifier = Modifier.height(4.dp))
+                        Button(
+                            onClick = { onAnswer(customInput) },
+                            enabled = customInput.isNotBlank()
+                        ) {
+                            Text("提交")
                         }
                     }
                 }
-                "text", "time_of_day" -> {
+                "multi_choice" -> {
+                    var customInput by remember { mutableStateOf("") }
+                    var selectedIndices by remember { mutableStateOf(setOf<Int>()) }
+                    Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+                        question.options.forEachIndexed { index, option ->
+                            Card(
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .clickable {
+                                        selectedIndices = if (index in selectedIndices)
+                                            selectedIndices - index
+                                        else
+                                            selectedIndices + index
+                                    },
+                                colors = CardDefaults.cardColors(
+                                    containerColor = if (index in selectedIndices)
+                                        MaterialTheme.colorScheme.primaryContainer
+                                    else
+                                        MaterialTheme.colorScheme.surface
+                                )
+                            ) {
+                                Text(
+                                    text = option,
+                                    modifier = Modifier.padding(12.dp),
+                                    style = MaterialTheme.typography.bodyMedium
+                                )
+                            }
+                        }
+                        Button(
+                            onClick = {
+                                val selected = selectedIndices.mapNotNull { question.options.getOrNull(it) }
+                                onAnswer(selected.joinToString("、"))
+                            },
+                            enabled = selectedIndices.isNotEmpty()
+                        ) {
+                            Text("提交选择（已选 ${selectedIndices.size} 项）")
+                        }
+                        OutlinedTextField(
+                            value = customInput,
+                            onValueChange = { customInput = it },
+                            modifier = Modifier.fillMaxWidth(),
+                            placeholder = { Text("或者手动输入") }
+                        )
+                        Spacer(modifier = Modifier.height(4.dp))
+                        Button(
+                            onClick = { onAnswer(customInput) },
+                            enabled = customInput.isNotBlank()
+                        ) {
+                            Text("提交")
+                        }
+                    }
+                }
+                "text" -> {
                     var textInput by remember { mutableStateOf("") }
                     OutlinedTextField(
                         value = textInput,
@@ -784,6 +896,34 @@ fun QuestionComponent(
                     )
                 }
             }
+        }
+    }
+}
+
+@Composable
+fun AnsweredQuestionCard(
+    questionPrompt: String,
+    answer: String,
+    modifier: Modifier = Modifier
+) {
+    Card(
+        modifier = modifier,
+        colors = CardDefaults.cardColors(
+            containerColor = MaterialTheme.colorScheme.surfaceContainerHigh
+        )
+    ) {
+        Column(modifier = Modifier.padding(16.dp)) {
+            Text(
+                text = questionPrompt,
+                style = MaterialTheme.typography.bodyLarge,
+                color = MaterialTheme.colorScheme.onSurfaceVariant
+            )
+            Spacer(modifier = Modifier.height(8.dp))
+            Text(
+                text = answer,
+                style = MaterialTheme.typography.titleMedium,
+                color = MaterialTheme.colorScheme.primary
+            )
         }
     }
 }
