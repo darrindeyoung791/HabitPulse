@@ -346,6 +346,16 @@
     <string name="ai_confirm_create">建立</string>
     <string name="ai_text_input_placeholder">輸入你的答案…</string>
     <string name="ai_unsupported_question_type">不支援的問題類型</string>
+    <string name="ai_submit">提交</string>
+    <string name="ai_custom_input_placeholder">手動輸入</string>
+    <string name="ai_submit_selection">提交選擇（已選 %d 項）</string>
+    <string name="ai_day_mon">一</string>
+    <string name="ai_day_tue">二</string>
+    <string name="ai_day_wed">三</string>
+    <string name="ai_day_thu">四</string>
+    <string name="ai_day_fri">五</string>
+    <string name="ai_day_sat">六</string>
+    <string name="ai_day_sun">日</string>
     <string name="go_back">返回</string>
     <string name="settings_ai_title">AI 設定</string>
     <string name="confirm">確認</string>

@@ -750,14 +750,14 @@ fun QuestionComponent(
                             value = customInput,
                             onValueChange = { customInput = it },
                             modifier = Modifier.fillMaxWidth(),
-                            placeholder = { Text("或者手动输入") }
+                            placeholder = { Text(stringResource(R.string.ai_custom_input_placeholder)) }
                         )
                         Spacer(modifier = Modifier.height(4.dp))
                         Button(
                             onClick = { onAnswer(customInput) },
                             enabled = customInput.isNotBlank()
                         ) {
-                            Text("提交")
+                            Text(stringResource(R.string.ai_submit))
                         }
                     }
                 }
@@ -781,14 +781,14 @@ fun QuestionComponent(
                             value = customInput,
                             onValueChange = { customInput = it },
                             modifier = Modifier.fillMaxWidth(),
-                            placeholder = { Text("或者手动输入") }
+                            placeholder = { Text(stringResource(R.string.ai_custom_input_placeholder)) }
                         )
                         Spacer(modifier = Modifier.height(4.dp))
                         Button(
                             onClick = { onAnswer(customInput) },
                             enabled = customInput.isNotBlank()
                         ) {
-                            Text("提交")
+                            Text(stringResource(R.string.ai_submit))
                         }
                     }
                 }
@@ -798,7 +798,15 @@ fun QuestionComponent(
                         Row(
                             horizontalArrangement = Arrangement.spacedBy(4.dp)
                         ) {
-                            val days = listOf("一", "二", "三", "四", "五", "六", "日")
+                            val days = listOf(
+                                stringResource(R.string.ai_day_mon),
+                                stringResource(R.string.ai_day_tue),
+                                stringResource(R.string.ai_day_wed),
+                                stringResource(R.string.ai_day_thu),
+                                stringResource(R.string.ai_day_fri),
+                                stringResource(R.string.ai_day_sat),
+                                stringResource(R.string.ai_day_sun)
+                            )
                             days.forEachIndexed { index, day ->
                                 FilterChip(
                                     selected = false,
@@ -812,14 +820,14 @@ fun QuestionComponent(
                             value = customInput,
                             onValueChange = { customInput = it },
                             modifier = Modifier.fillMaxWidth(),
-                            placeholder = { Text("或者手动输入") }
+                            placeholder = { Text(stringResource(R.string.ai_custom_input_placeholder)) }
                         )
                         Spacer(modifier = Modifier.height(4.dp))
                         Button(
                             onClick = { onAnswer(customInput) },
                             enabled = customInput.isNotBlank()
                         ) {
-                            Text("提交")
+                            Text(stringResource(R.string.ai_submit))
                         }
                     }
                 }
@@ -858,20 +866,20 @@ fun QuestionComponent(
                             },
                             enabled = selectedIndices.isNotEmpty()
                         ) {
-                            Text("提交选择（已选 ${selectedIndices.size} 项）")
+                            Text(stringResource(R.string.ai_submit_selection, selectedIndices.size))
                         }
                         OutlinedTextField(
                             value = customInput,
                             onValueChange = { customInput = it },
                             modifier = Modifier.fillMaxWidth(),
-                            placeholder = { Text("或者手动输入") }
+                            placeholder = { Text(stringResource(R.string.ai_custom_input_placeholder)) }
                         )
                         Spacer(modifier = Modifier.height(4.dp))
                         Button(
                             onClick = { onAnswer(customInput) },
                             enabled = customInput.isNotBlank()
                         ) {
-                            Text("提交")
+                            Text(stringResource(R.string.ai_submit))
                         }
                     }
                 }
