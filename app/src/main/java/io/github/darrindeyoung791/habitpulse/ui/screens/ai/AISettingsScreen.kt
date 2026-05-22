@@ -257,7 +257,7 @@ fun AISettingsScreen(
                         isTesting = true
                         testResult = null
                         scope.launch {
-                            val result = testApiConnection(endpointInput, apiKeyInput, modelInput)
+                            val result = testApiConnection(context, endpointInput, apiKeyInput, modelInput)
                             testResult = result
                             isTesting = false
                         }
@@ -369,7 +369,8 @@ sealed class TestResult(val isSuccess: Boolean, val error: String? = null) {
     data class Error(val message: String) : TestResult(false, message)
 }
 
-private suspend fun testApiConnection(endpoint: String, apiKey: String, model: String): TestResult {
+private suspend fun testApiConnection(context: android.content.Context, endpoint: String, apiKey: String, model: String): TestResult {
+    val res = context.resources
     return withContext(Dispatchers.IO) {
         try {
             val url = URL(LLMConfig.ensureChatCompletionsUrl(endpoint))
@@ -397,8 +398,8 @@ private suspend fun testApiConnection(endpoint: String, apiKey: String, model: S
 
             when (responseCode) {
                 200 -> TestResult.Success
-                401 -> TestResult.Error("认证失败，请检查 API Key 是否正确")
-                403 -> TestResult.Error("访问被拒绝，请检查 API Key 权限")
+                401 -> TestResult.Error(res.getString(R.string.ai_error_auth_failed))
+                403 -> TestResult.Error(res.getString(R.string.ai_error_access_denied))
                 429 -> TestResult.Success
                 in 400..499 -> {
                     val errorBody = try {
@@ -411,19 +412,19 @@ private suspend fun testApiConnection(endpoint: String, apiKey: String, model: S
                     val errorMsg = extractErrorMessage(errorBody) ?: "HTTP $responseCode"
                     TestResult.Error(errorMsg)
                 }
-                in 500..599 -> TestResult.Error("服务器错误 (HTTP $responseCode)，请稍后重试")
+                in 500..599 -> TestResult.Error(res.getString(R.string.ai_error_server_error, responseCode))
                 else -> TestResult.Error("HTTP $responseCode")
             }
         } catch (e: SocketTimeoutException) {
-            TestResult.Error("连接超时，请检查网络或 API 地址")
+            TestResult.Error(res.getString(R.string.ai_error_timeout))
         } catch (e: ConnectException) {
-            TestResult.Error("无法连接到服务器，请检查 API 地址")
+            TestResult.Error(res.getString(R.string.ai_error_connection_failed))
         } catch (e: UnknownHostException) {
-            TestResult.Error("无法解析域名，请检查 API 地址")
+            TestResult.Error(res.getString(R.string.ai_error_dns_failed))
         } catch (e: MalformedURLException) {
-            TestResult.Error("API 地址格式不正确")
+            TestResult.Error(res.getString(R.string.ai_error_invalid_url))
         } catch (e: Exception) {
-            TestResult.Error(e.message ?: "未知错误")
+            TestResult.Error(e.message ?: res.getString(R.string.ai_error_unknown))
         }
     }
 }

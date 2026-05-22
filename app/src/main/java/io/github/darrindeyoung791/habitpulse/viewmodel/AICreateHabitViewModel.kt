@@ -9,6 +9,7 @@ import io.github.darrindeyoung791.habitpulse.ai.llm.LLMClient
 import io.github.darrindeyoung791.habitpulse.ai.prompt.SystemPrompt
 import io.github.darrindeyoung791.habitpulse.ai.tools.PendingQuestionData
 import io.github.darrindeyoung791.habitpulse.ai.tools.ToolRegistry
+import io.github.darrindeyoung791.habitpulse.R
 import io.github.darrindeyoung791.habitpulse.data.model.Habit
 import io.github.darrindeyoung791.habitpulse.data.model.RepeatCycle
 import io.github.darrindeyoung791.habitpulse.data.preferences.UserPreferences
@@ -110,7 +111,7 @@ class AICreateHabitViewModel(application: Application) : AndroidViewModel(applic
                         confirmAndSaveHabits()
                     }
                     is ConversationManager.ConversationEvent.Error -> {
-                        addOrUpdateAIMessage("错误: ${event.message}")
+                        addOrUpdateAIMessage(getApplication<HabitPulseApplication>().getString(R.string.ai_error_prefix, event.message))
                         _uiState.value = _uiState.value.copy(
                             isLoading = false,
                             errorMessage = event.message
@@ -144,7 +145,7 @@ class AICreateHabitViewModel(application: Application) : AndroidViewModel(applic
 
             if (endpoint.isBlank() || apiKey.isBlank()) {
                 _uiState.value = _uiState.value.copy(
-                    errorMessage = "请先在设置中配置 API"
+                    errorMessage = getApplication<HabitPulseApplication>().getString(R.string.ai_error_not_configured)
                 )
                 return@launch
             }

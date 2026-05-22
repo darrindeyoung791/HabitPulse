@@ -355,6 +355,19 @@
     <string name="ai_day_fri">Fri</string>
     <string name="ai_day_sat">Sat</string>
     <string name="ai_day_sun">Sun</string>
+
+    <!-- AI Error Messages -->
+    <string name="ai_error_scroll_to_bottom">Scroll to bottom</string>
+    <string name="ai_error_not_configured">Please configure API in settings</string>
+    <string name="ai_error_prefix">Error: %s</string>
+    <string name="ai_error_auth_failed">Authentication failed, check API Key</string>
+    <string name="ai_error_access_denied">Access denied, check API Key permissions</string>
+    <string name="ai_error_server_error">Server error (HTTP %d), please retry later</string>
+    <string name="ai_error_timeout">Connection timeout, check network or API address</string>
+    <string name="ai_error_connection_failed">Cannot connect to server, check API address</string>
+    <string name="ai_error_dns_failed">DNS resolution failed, check API address</string>
+    <string name="ai_error_invalid_url">Invalid API URL format</string>
+    <string name="ai_error_unknown">Unknown error</string>
     <string name="create_habit_selection_title">New Habit</string>
     <string name="create_habit_selection_manual">Manual</string>
     <string name="create_habit_selection_manual_desc">Fill in all fields yourself</string>

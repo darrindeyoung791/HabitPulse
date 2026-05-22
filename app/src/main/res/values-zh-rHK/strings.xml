@@ -355,6 +355,19 @@
     <string name="ai_day_fri">五</string>
     <string name="ai_day_sat">六</string>
     <string name="ai_day_sun">日</string>
+
+    <!-- AI Error Messages -->
+    <string name="ai_error_scroll_to_bottom">滾動到底部</string>
+    <string name="ai_error_not_configured">請先在設定中配置 API</string>
+    <string name="ai_error_prefix">錯誤：%s</string>
+    <string name="ai_error_auth_failed">認證失敗，請檢查 API Key 是否正確</string>
+    <string name="ai_error_access_denied">存取被拒絕，請檢查 API Key 權限</string>
+    <string name="ai_error_server_error">伺服器錯誤（HTTP %d），請稍後重試</string>
+    <string name="ai_error_timeout">連線逾時，請檢查網路或 API 地址</string>
+    <string name="ai_error_connection_failed">無法連線到伺服器，請檢查 API 地址</string>
+    <string name="ai_error_dns_failed">無法解析網域名稱，請檢查 API 地址</string>
+    <string name="ai_error_invalid_url">API 地址格式不正確</string>
+    <string name="ai_error_unknown">未知錯誤</string>
     <string name="create_habit_selection_title">新建習慣</string>
     <string name="create_habit_selection_manual">手動填寫</string>
     <string name="create_habit_selection_manual_desc">自己填寫所有欄位</string>

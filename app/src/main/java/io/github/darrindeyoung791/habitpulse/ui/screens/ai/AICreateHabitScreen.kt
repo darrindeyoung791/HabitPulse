@@ -316,7 +316,7 @@ fun AICreateHabitScreen(
                             ) {
                                 Icon(
                                     imageVector = Icons.Default.KeyboardArrowDown,
-                                    contentDescription = "滚动到底部"
+                                    contentDescription = stringResource(R.string.ai_error_scroll_to_bottom)
                                 )
                             }
                         }
