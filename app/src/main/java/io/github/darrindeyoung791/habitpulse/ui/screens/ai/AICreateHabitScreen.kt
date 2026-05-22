@@ -15,7 +15,7 @@ import androidx.compose.foundation.text.BasicTextField
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.automirrored.filled.Send
-import androidx.compose.material.icons.filled.Close
+
 import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.ExpandLess
 import androidx.compose.material.icons.filled.ExpandMore
@@ -222,14 +222,6 @@ fun AICreateHabitScreen(
                             imageVector = Icons.Default.Settings,
                             contentDescription = stringResource(R.string.settings_ai_title)
                         )
-                    }
-                    if (uiState.isLoading) {
-                        IconButton(onClick = { viewModel.stopGeneration() }) {
-                            Icon(
-                                imageVector = Icons.Default.Close,
-                                contentDescription = stringResource(R.string.ai_stop_button)
-                            )
-                        }
                     }
                 }
             )
