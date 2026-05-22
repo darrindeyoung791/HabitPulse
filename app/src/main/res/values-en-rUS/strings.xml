@@ -355,6 +355,11 @@
     <string name="ai_day_fri">Fri</string>
     <string name="ai_day_sat">Sat</string>
     <string name="ai_day_sun">Sun</string>
+    <string name="create_habit_selection_title">New Habit</string>
+    <string name="create_habit_selection_manual">Manual</string>
+    <string name="create_habit_selection_manual_desc">Fill in all fields yourself</string>
+    <string name="create_habit_selection_ai">AI Smart Create</string>
+    <string name="create_habit_selection_ai_desc">Describe your habit, AI will help you refine it</string>
     <string name="go_back">Back</string>
     <string name="settings_ai_title">AI Settings</string>
     <string name="confirm">Confirm</string>

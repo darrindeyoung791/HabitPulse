@@ -355,6 +355,11 @@
     <string name="ai_day_fri">五</string>
     <string name="ai_day_sat">六</string>
     <string name="ai_day_sun">日</string>
+    <string name="create_habit_selection_title">新建習慣</string>
+    <string name="create_habit_selection_manual">手動填寫</string>
+    <string name="create_habit_selection_manual_desc">自己填寫所有欄位</string>
+    <string name="create_habit_selection_ai">AI 智能建立</string>
+    <string name="create_habit_selection_ai_desc">描述習慣，AI 幫你逐步完善</string>
     <string name="go_back">返回</string>
     <string name="settings_ai_title">AI 設定</string>
     <string name="confirm">確認</string>
