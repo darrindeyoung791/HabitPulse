@@ -46,7 +46,9 @@ class CreateHabitTool : Tool {
                     @Suppress("UNCHECKED_CAST")
                     (gson.fromJson(value, ArrayList::class.java) as? List<*>)?.mapNotNull { it?.toString() } ?: emptyList()
                 } catch (e: Exception) {
-                    emptyList()
+                    value.split(Regex("[,;、，；\\s]+"))
+                        .map { it.trim() }
+                        .filter { it.isNotEmpty() }
                 }
             }
             else -> emptyList()
@@ -61,7 +63,8 @@ class CreateHabitTool : Tool {
                     @Suppress("UNCHECKED_CAST")
                     (gson.fromJson(value, ArrayList::class.java) as? List<*>)?.mapNotNull { (it as? Number)?.toInt() } ?: emptyList()
                 } catch (e: Exception) {
-                    emptyList()
+                    value.split(Regex("[,;、，；\\s]+"))
+                        .mapNotNull { it.trim().toIntOrNull() }
                 }
             }
             else -> emptyList()
