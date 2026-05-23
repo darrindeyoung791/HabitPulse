@@ -8,10 +8,10 @@ import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.foundation.*
-import androidx.compose.foundation.background
 import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.foundation.layout.*
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Surface
 import androidx.compose.ui.Modifier
 import androidx.compose.animation.core.tween
 import androidx.compose.animation.fadeIn
@@ -145,33 +145,16 @@ class MainActivity : ComponentActivity() {
                     }
                 }
 
-                // 初始淡入淡出动画状态 - 用于splash结束后的平滑过渡
-                var contentFadeInStarted by remember { mutableStateOf(false) }
-
-                LaunchedEffect(showMainContent) {
-                    if (showMainContent && !contentFadeInStarted) {
-                        contentFadeInStarted = true
-                    }
-                }
-
                 if (showMainContent) {
-// 显示主导航（带淡入动画）
-                        AnimatedVisibility(
-                            visible = contentFadeInStarted,
-                            enter = fadeIn(animationSpec = tween(durationMillis = 200)),
-                            label = "mainContentFadeIn"
-                        ) {
-                            Box(
-                                modifier = Modifier
-                                    .fillMaxSize()
-                                    .background(MaterialTheme.colorScheme.background)
-                            ) {
-                                HabitPulseNavGraph(
-                                    navController = navController,
-                                    onHomeDataLoaded = { homeDataLoaded = true }
-                                )
-                            }
-                        }
+                    Surface(
+                        modifier = Modifier.fillMaxSize(),
+                        color = MaterialTheme.colorScheme.background
+                    ) {
+                        HabitPulseNavGraph(
+                            navController = navController,
+                            onHomeDataLoaded = { homeDataLoaded = true }
+                        )
+                    }
                 }
 
                 // 显示广告页面（带淡入淡出过渡动画）

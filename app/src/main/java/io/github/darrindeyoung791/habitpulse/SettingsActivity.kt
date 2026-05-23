@@ -75,7 +75,12 @@ class SettingsActivity : ComponentActivity() {
         enableEdgeToEdge()
         setContent {
             HabitPulseTheme {
-                SettingsScreen()
+                Surface(
+                    modifier = Modifier.fillMaxSize(),
+                    color = MaterialTheme.colorScheme.background
+                ) {
+                    SettingsScreen()
+                }
             }
         }
     }

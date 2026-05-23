@@ -613,5 +613,26 @@ private fun DatePickerDialogContent(...) {
 - Phone Landscape: `screenWidthDp < 1200 && isLandscape` (use `useRail` variable from HomeScreen)
 - Tablet/Portrait: All other cases
 
+### Theme Switch Black Screen Fix (June 2026)
+
+**Background**: Switching system dark/light mode caused a completely black, unresponsive screen with no logcat errors. Restarting the app fixed it. The app uses `isSystemInDarkTheme()` (no custom theme toggle) and `installSplashScreen()`.
+
+**Root Cause**: Deadlock between three interacting components:
+1. **`configChanges` missing `uiMode`** — `AndroidManifest.xml` declared `configChanges` without `uiMode`. System dark mode change triggered Activity destruction + recreation, which re-ran `installSplashScreen()`.
+2. **`AnimatedVisibility` gating content** — Main content was wrapped in `AnimatedVisibility(visible = contentFadeInStarted)` with `contentFadeInStarted = false` initially. `HomeScreen` never entered the composition tree, so `onHomeDataLoaded()` was never called.
+3. **SplashScreen stuck forever** — `setKeepOnScreenCondition { !homeDataLoaded }` kept returning `true`. The SplashScreen library's custom overlay (`@color/black` in dark mode) covered the app permanently, appearing as a black unresponsive screen.
+
+**Fix** (3 changes):
+1. Added `uiMode` to all Activity `configChanges` — prevents recreation; Compose reacts via `LocalConfiguration`.
+2. Removed `AnimatedVisibility` fade-in wrapper and `contentFadeInStarted` state — content renders immediately, breaking the deadlock.
+3. Replaced `Box` + `.background()` with `Surface` at root — `Surface` propagates `LocalContentColor` correctly during theme transitions (unlike bare `.background()`).
+
+**Key Takeaways**:
+- `configChanges` MUST include `uiMode` in Compose projects using `isSystemInDarkTheme()`.
+- Never gate critical initialization (e.g. data loading) behind `AnimatedVisibility(visible = false)` — hidden content never composes, so nothing initializes.
+- `setKeepOnScreenCondition` reads Compose `State` synchronously but is evaluated by the non-Compose SplashScreen library. Any state that depends on content visibility creates a latent deadlock.
+- `Surface` is not just a "background box" — it sets `LocalContentColor` which affects all child composables during theme transitions.
+- When Activity recreation happens (even briefly) and ViewModel is application-scoped, `collectAsStateWithLifecycle` initializes with `initialValue` until the Flow emits — this timing window can cause issues.
+
 ## Qwen Added Memories
 - VitePress docs (docs/) should be user-facing product feature introductions. Old doc/ folder contains technical/dev documentation. Two audiences: users (VitePress) and developers (doc/).
