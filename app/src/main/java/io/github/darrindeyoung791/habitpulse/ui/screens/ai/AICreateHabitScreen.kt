@@ -20,6 +20,7 @@ import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.ExpandLess
 import androidx.compose.material.icons.filled.ExpandMore
 import androidx.compose.material.icons.filled.KeyboardArrowDown
+import androidx.compose.material.icons.filled.Refresh
 import androidx.compose.material.icons.filled.Settings
 import androidx.compose.material.icons.filled.Stop
 import androidx.compose.material3.*
@@ -48,6 +49,7 @@ import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.focus.FocusRequester
 import androidx.compose.ui.focus.focusRequester
 import androidx.compose.ui.platform.LocalSoftwareKeyboardController
+import kotlinx.coroutines.launch
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import androidx.navigation.NavHostController
@@ -252,11 +254,41 @@ fun AICreateHabitScreen(
                                         .fillMaxWidth()
                                         .padding(horizontal = 16.dp, vertical = 8.dp)
                                 )
-                                ChatMessageType.AI -> AIChatBubble(
-                                    text = message.text,
-                                    thoughts = message.thoughts,
-                                    isStreaming = message.isStreaming
-                                )
+                                ChatMessageType.AI -> {
+                                    val isLastMessage = index == messages.lastIndex
+                                    val showRetry = isLastMessage && !message.isStreaming && !uiState.isLoading && pendingQuestion == null
+                                    Column {
+                                        AIChatBubble(
+                                            text = message.text,
+                                            thoughts = message.thoughts,
+                                            isStreaming = message.isStreaming
+                                        )
+                                        if (showRetry) {
+                                            Row(
+                                                modifier = Modifier
+                                                    .fillMaxWidth()
+                                                    .padding(start = 16.dp, top = 4.dp),
+                                                horizontalArrangement = Arrangement.Start
+                                            ) {
+                                                OutlinedButton(
+                                                    onClick = { viewModel.retryLastTurn() },
+                                                    contentPadding = PaddingValues(horizontal = 12.dp, vertical = 4.dp)
+                                                ) {
+                                                    Icon(
+                                                        imageVector = Icons.Default.Refresh,
+                                                        contentDescription = null,
+                                                        modifier = Modifier.size(14.dp)
+                                                    )
+                                                    Spacer(modifier = Modifier.width(4.dp))
+                                                    Text(
+                                                        stringResource(R.string.webview_retry),
+                                                        style = MaterialTheme.typography.labelSmall
+                                                    )
+                                                }
+                                            }
+                                        }
+                                    }
+                                }
                                 ChatMessageType.QUESTION -> {
                                     AnsweredQuestionCard(
                                         questionPrompt = message.text,
@@ -273,9 +305,13 @@ fun AICreateHabitScreen(
                                             isConfirmed = habit.tempId in confirmedTempIds,
                                             onConfirmClick = { viewModel.confirmHabit(habit.tempId) },
                                             onEditClick = {
-                                                AIPrefillHabitHolder.prefillHabit = habit
-                                                AIPrefillHabitHolder.editingHabitDbId = viewModel.getDbIdForTempId(habit.tempId)
-                                                navController.navigate(Route.CreateHabit.route)
+                                                scope.launch {
+                                                    viewModel.saveHabitAndGetId(habit.tempId) { dbId ->
+                                                        AIPrefillHabitHolder.prefillHabit = habit
+                                                        AIPrefillHabitHolder.editingHabitDbId = dbId
+                                                        navController.navigate(Route.CreateHabit.route)
+                                                    }
+                                                }
                                             },
                                             modifier = Modifier
                                                 .fillMaxWidth()
@@ -384,6 +420,7 @@ fun AICreateHabitScreen(
             text = { Text(stringResource(R.string.ai_exit_message)) },
             confirmButton = {
                 TextButton(onClick = {
+                    viewModel.cleanupUnconfirmedHabits()
                     viewModel.dismissExitConfirmation()
                     onNavigateBack()
                 }) {
@@ -722,13 +759,22 @@ fun QuestionComponent(
 
             when (question.type) {
                 "choice", "confirm" -> {
+                    var selectedOption by remember { mutableStateOf<String?>(null) }
                     var customInput by remember { mutableStateOf("") }
                     Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
                         question.options.forEach { option ->
                             Card(
                                 modifier = Modifier
                                     .fillMaxWidth()
-                                    .clickable { onAnswer(option) }
+                                    .clickable {
+                                        selectedOption = if (option == selectedOption) null else option
+                                    },
+                                colors = CardDefaults.cardColors(
+                                    containerColor = if (option == selectedOption)
+                                        MaterialTheme.colorScheme.primaryContainer
+                                    else
+                                        MaterialTheme.colorScheme.surface
+                                )
                             ) {
                                 Text(
                                     text = option,
@@ -746,14 +792,20 @@ fun QuestionComponent(
                         )
                         Spacer(modifier = Modifier.height(4.dp))
                         Button(
-                            onClick = { onAnswer(customInput) },
-                            enabled = customInput.isNotBlank()
+                            onClick = {
+                                val parts = mutableListOf<String>()
+                                if (selectedOption != null) parts.add(selectedOption!!)
+                                if (customInput.isNotBlank()) parts.add(customInput)
+                                onAnswer(parts.joinToString("，"))
+                            },
+                            enabled = selectedOption != null || customInput.isNotBlank()
                         ) {
                             Text(stringResource(R.string.ai_submit))
                         }
                     }
                 }
                 "time", "time_of_day" -> {
+                    var selectedTime by remember { mutableStateOf<String?>(null) }
                     var customInput by remember { mutableStateOf("") }
                     Column {
                         if (question.options.isNotEmpty()) {
@@ -762,7 +814,9 @@ fun QuestionComponent(
                             ) {
                                 question.options.forEach { time ->
                                     AssistChip(
-                                        onClick = { onAnswer(time) },
+                                        onClick = {
+                                            selectedTime = if (time == selectedTime) null else time
+                                        },
                                         label = { Text(time) }
                                     )
                                 }
@@ -777,33 +831,59 @@ fun QuestionComponent(
                         )
                         Spacer(modifier = Modifier.height(4.dp))
                         Button(
-                            onClick = { onAnswer(customInput) },
-                            enabled = customInput.isNotBlank()
+                            onClick = {
+                                val parts = mutableListOf<String>()
+                                if (selectedTime != null) parts.add(selectedTime!!)
+                                if (customInput.isNotBlank()) parts.add(customInput)
+                                onAnswer(parts.joinToString("，"))
+                            },
+                            enabled = selectedTime != null || customInput.isNotBlank()
                         ) {
                             Text(stringResource(R.string.ai_submit))
                         }
                     }
                 }
                 "day_of_week" -> {
+                    var selectedIndices by remember { mutableStateOf(setOf<Int>()) }
                     var customInput by remember { mutableStateOf("") }
+                    val dayIndices = listOf(6, 0, 1, 2, 3, 4, 5)
+                    val dayLabels = listOf(
+                        stringResource(R.string.ai_day_sun),
+                        stringResource(R.string.ai_day_mon),
+                        stringResource(R.string.ai_day_tue),
+                        stringResource(R.string.ai_day_wed),
+                        stringResource(R.string.ai_day_thu),
+                        stringResource(R.string.ai_day_fri),
+                        stringResource(R.string.ai_day_sat),
+                    )
+                    val indexToLabel = mapOf(
+                        6 to dayLabels[0], 0 to dayLabels[1], 1 to dayLabels[2],
+                        2 to dayLabels[3], 3 to dayLabels[4], 4 to dayLabels[5], 5 to dayLabels[6]
+                    )
+                    @OptIn(ExperimentalLayoutApi::class)
                     Column {
-                        Row(
-                            horizontalArrangement = Arrangement.spacedBy(4.dp)
+                        FlowRow(
+                            modifier = Modifier.fillMaxWidth(),
+                            horizontalArrangement = Arrangement.spacedBy(4.dp),
+                            verticalArrangement = Arrangement.spacedBy(4.dp)
                         ) {
-                            val days = listOf(
-                                stringResource(R.string.ai_day_mon),
-                                stringResource(R.string.ai_day_tue),
-                                stringResource(R.string.ai_day_wed),
-                                stringResource(R.string.ai_day_thu),
-                                stringResource(R.string.ai_day_fri),
-                                stringResource(R.string.ai_day_sat),
-                                stringResource(R.string.ai_day_sun)
-                            )
-                            days.forEachIndexed { index, day ->
+                            dayIndices.forEachIndexed { displayPos, actualIndex ->
                                 FilterChip(
-                                    selected = false,
-                                    onClick = { onAnswer(index.toString()) },
-                                    label = { Text(day) }
+                                    modifier = Modifier.width(48.dp),
+                                    selected = actualIndex in selectedIndices,
+                                    onClick = {
+                                        selectedIndices = if (actualIndex in selectedIndices)
+                                            selectedIndices - actualIndex
+                                        else
+                                            selectedIndices + actualIndex
+                                    },
+                                    label = {
+                                        Text(
+                                            text = dayLabels[displayPos],
+                                            textAlign = TextAlign.Center,
+                                            modifier = Modifier.fillMaxWidth()
+                                        )
+                                    }
                                 )
                             }
                         }
@@ -816,10 +896,24 @@ fun QuestionComponent(
                         )
                         Spacer(modifier = Modifier.height(4.dp))
                         Button(
-                            onClick = { onAnswer(customInput) },
-                            enabled = customInput.isNotBlank()
+                            onClick = {
+                                val parts = mutableListOf<String>()
+                                if (selectedIndices.isNotEmpty()) {
+                                    parts.add(selectedIndices.sorted().map { indexToLabel[it]!! }.joinToString("、"))
+                                }
+                                if (customInput.isNotBlank()) {
+                                    parts.add(customInput)
+                                }
+                                onAnswer(parts.joinToString("，"))
+                            },
+                            enabled = selectedIndices.isNotEmpty() || customInput.isNotBlank()
                         ) {
-                            Text(stringResource(R.string.ai_submit))
+                            Text(
+                                if (selectedIndices.isNotEmpty())
+                                    stringResource(R.string.ai_submit_selection, selectedIndices.size)
+                                else
+                                    stringResource(R.string.ai_submit)
+                            )
                         }
                     }
                 }
@@ -851,15 +945,7 @@ fun QuestionComponent(
                                 )
                             }
                         }
-                        Button(
-                            onClick = {
-                                val selected = selectedIndices.mapNotNull { question.options.getOrNull(it) }
-                                onAnswer(selected.joinToString("、"))
-                            },
-                            enabled = selectedIndices.isNotEmpty()
-                        ) {
-                            Text(stringResource(R.string.ai_submit_selection, selectedIndices.size))
-                        }
+                        Spacer(modifier = Modifier.height(4.dp))
                         OutlinedTextField(
                             value = customInput,
                             onValueChange = { customInput = it },
@@ -868,10 +954,25 @@ fun QuestionComponent(
                         )
                         Spacer(modifier = Modifier.height(4.dp))
                         Button(
-                            onClick = { onAnswer(customInput) },
-                            enabled = customInput.isNotBlank()
+                            onClick = {
+                                val parts = mutableListOf<String>()
+                                if (selectedIndices.isNotEmpty()) {
+                                    val selected = selectedIndices.mapNotNull { question.options.getOrNull(it) }
+                                    parts.add(selected.joinToString("、"))
+                                }
+                                if (customInput.isNotBlank()) {
+                                    parts.add(customInput)
+                                }
+                                onAnswer(parts.joinToString("，"))
+                            },
+                            enabled = selectedIndices.isNotEmpty() || customInput.isNotBlank()
                         ) {
-                            Text(stringResource(R.string.ai_submit))
+                            Text(
+                                if (selectedIndices.isNotEmpty())
+                                    stringResource(R.string.ai_submit_selection, selectedIndices.size)
+                                else
+                                    stringResource(R.string.ai_submit)
+                            )
                         }
                     }
                 }
@@ -997,14 +1098,20 @@ fun HabitCreatedCard(
                 horizontalArrangement = Arrangement.End,
                 verticalAlignment = Alignment.CenterVertically
             ) {
-                if (!isConfirmed) {
-                    OutlinedButton(
-                        onClick = onConfirmClick
-                    ) {
-                        Text(stringResource(R.string.habit_card_menu_complete))
+                OutlinedButton(
+                    onClick = onConfirmClick,
+                    enabled = !isConfirmed,
+                    colors = if (isConfirmed) {
+                        ButtonDefaults.outlinedButtonColors(
+                            contentColor = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.38f)
+                        )
+                    } else {
+                        ButtonDefaults.outlinedButtonColors()
                     }
-                    Spacer(modifier = Modifier.width(8.dp))
+                ) {
+                    Text(stringResource(R.string.habit_card_menu_complete))
                 }
+                Spacer(modifier = Modifier.width(8.dp))
                 OutlinedButton(
                     onClick = onEditClick
                 ) {

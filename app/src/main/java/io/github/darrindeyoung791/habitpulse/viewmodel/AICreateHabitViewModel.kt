@@ -86,17 +86,6 @@ class AICreateHabitViewModel(application: Application) : AndroidViewModel(applic
                     }
                     is ConversationManager.ConversationEvent.HabitCreated -> {
                         val partialHabit = event.habit
-                        try {
-                            val newHabit = Habit(
-                                title = partialHabit.title,
-                                repeatCycle = if (partialHabit.repeatCycle == "DAILY") RepeatCycle.DAILY else RepeatCycle.WEEKLY,
-                                repeatDays = partialHabit.repeatDays.joinToString(",", "[", "]") { it.toString() },
-                                reminderTimes = partialHabit.reminderTimes.joinToString(",", "[\"", "\"]") { it },
-                                notes = partialHabit.notes
-                            )
-                            val dbId = repository.insertHabit(newHabit)
-                            savedPartialToDbId[partialHabit.tempId] = dbId
-                        } catch (_: Exception) { }
                         _collectedHabits.value = _collectedHabits.value + partialHabit
                         _uiState.value = _uiState.value.copy(isLoading = false)
                         _messages.value = _messages.value + ChatMessageUIItem(
@@ -196,7 +185,36 @@ class AICreateHabitViewModel(application: Application) : AndroidViewModel(applic
         }
     }
 
+    fun retryLastTurn() {
+        viewModelScope.launch {
+            conversationManager?.retry()
+
+            val msgs = _messages.value.toMutableList()
+            val lastAI = msgs.indexOfLast { it.type == ChatMessageType.AI }
+            if (lastAI >= 0) {
+                val removedTempIds = msgs.drop(lastAI)
+                    .filter { it.type == ChatMessageType.HABIT && it.habit != null }
+                    .map { it.habit!!.tempId }
+                    .toSet()
+
+                while (msgs.size > lastAI) {
+                    msgs.removeAt(msgs.lastIndex)
+                }
+                _messages.value = msgs
+
+                if (removedTempIds.isNotEmpty()) {
+                    _collectedHabits.value = _collectedHabits.value.filter { it.tempId !in removedTempIds }
+                    removedTempIds.forEach { savedPartialToDbId.remove(it) }
+                }
+            }
+
+            _pendingQuestion.value = null
+            _uiState.value = _uiState.value.copy(isLoading = true)
+        }
+    }
+
     fun clearConversation() {
+        cleanupUnconfirmedHabits()
         conversationManager?.reset()
         conversationManager = null
         _messages.value = emptyList()
@@ -240,29 +258,22 @@ class AICreateHabitViewModel(application: Application) : AndroidViewModel(applic
     }
 
     fun confirmHabit(tempId: UUID) {
-        val newConfirmed = _confirmedTempIds.value + tempId
-        _confirmedTempIds.value = newConfirmed
-        if (newConfirmed.size >= _collectedHabits.value.size && _collectedHabits.value.isNotEmpty()) {
-            confirmAndSaveHabits()
+        viewModelScope.launch {
+            saveHabitIfNeeded(tempId)
+            val newConfirmed = _confirmedTempIds.value + tempId
+            _confirmedTempIds.value = newConfirmed
+            if (newConfirmed.size >= _collectedHabits.value.size && _collectedHabits.value.isNotEmpty()) {
+                confirmAndSaveHabits()
+            }
         }
     }
 
     fun confirmAndSaveHabits() {
         viewModelScope.launch {
-            val habitsToSave = _collectedHabits.value
-            for (habit in habitsToSave) {
-                if (habit.tempId in savedPartialToDbId) continue
-                val newHabit = Habit(
-                    title = habit.title,
-                    repeatCycle = if (habit.repeatCycle == "DAILY") RepeatCycle.DAILY else RepeatCycle.WEEKLY,
-                    repeatDays = habit.repeatDays.joinToString(",", "[", "]") { it.toString() },
-                    reminderTimes = habit.reminderTimes.joinToString(",", "[\"", "\"]") { it },
-                    notes = habit.notes
-                )
-                val dbId = repository.insertHabit(newHabit)
-                savedPartialToDbId[habit.tempId] = dbId
+            for (habit in _collectedHabits.value) {
+                saveHabitIfNeeded(habit.tempId)
             }
-            _confirmedTempIds.value = emptySet()
+            _confirmedTempIds.value = _collectedHabits.value.map { it.tempId }.toSet()
             _uiState.value = _uiState.value.copy(
                 showConfirmDialog = false,
                 isLoading = true
@@ -280,6 +291,40 @@ class AICreateHabitViewModel(application: Application) : AndroidViewModel(applic
             repository.getHabitById(dbId)?.let { repository.deleteHabit(it) }
             savedPartialToDbId.remove(tempId)
         }
+    }
+
+    fun saveHabitAndGetId(tempId: UUID, onComplete: (UUID?) -> Unit) {
+        viewModelScope.launch {
+            saveHabitIfNeeded(tempId)
+            onComplete(savedPartialToDbId[tempId])
+        }
+    }
+
+    fun cleanupUnconfirmedHabits() {
+        viewModelScope.launch {
+            for ((tempId, dbId) in savedPartialToDbId.toList()) {
+                if (tempId !in _confirmedTempIds.value) {
+                    repository.getHabitById(dbId)?.let { repository.deleteHabit(it) }
+                }
+            }
+        }
+    }
+
+    private suspend fun saveHabitIfNeeded(tempId: UUID) {
+        if (tempId in savedPartialToDbId) return
+        val habit = _collectedHabits.value.find { it.tempId == tempId } ?: return
+        val dbId = repository.insertHabit(toHabitEntity(habit))
+        savedPartialToDbId[tempId] = dbId
+    }
+
+    private fun toHabitEntity(partial: PartialHabit): Habit {
+        return Habit(
+            title = partial.title,
+            repeatCycle = if (partial.repeatCycle == "DAILY") RepeatCycle.DAILY else RepeatCycle.WEEKLY,
+            repeatDays = partial.repeatDays.joinToString(",", "[", "]") { it.toString() },
+            reminderTimes = partial.reminderTimes.joinToString(",", "[\"", "\"]") { it },
+            notes = partial.notes
+        )
     }
 
     fun updateInputText(text: String) {

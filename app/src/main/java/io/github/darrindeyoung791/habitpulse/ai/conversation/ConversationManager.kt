@@ -254,6 +254,24 @@ class ConversationManager(
         }
     }
 
+    suspend fun retry() {
+        if (isStreaming) return
+
+        _state.value = _state.value.copy(isStopped = false)
+
+        val lastAssistant = messages.indexOfLast { it.role == "assistant" }
+        if (lastAssistant >= 0) {
+            while (messages.size > lastAssistant) {
+                messages.removeAt(messages.lastIndex)
+            }
+        }
+
+        retryCount = 0
+        needsRetry = false
+        needsAutoContinue = false
+        sendToLLM()
+    }
+
     suspend fun continueConversation(userInput: String) {
         if (_state.value.isStopped) return
 

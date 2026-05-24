@@ -608,32 +608,33 @@ fun HabitCreationScreen(
                             modifier = Modifier.fillMaxWidth(),
                             horizontalArrangement = Arrangement.spacedBy(4.dp)
                         ) {
-                            // Monday (0) to Sunday (6)
+                            // Display order: 日一二三四五六
+                            // Actual indices: 6, 0, 1, 2, 3, 4, 5
+                            val dayIndices = listOf(6, 0, 1, 2, 3, 4, 5)
                             val dayLabels = listOf(
+                                stringResource(id = R.string.create_habit_day_sunday),
                                 stringResource(id = R.string.create_habit_day_monday),
                                 stringResource(id = R.string.create_habit_day_tuesday),
                                 stringResource(id = R.string.create_habit_day_wednesday),
                                 stringResource(id = R.string.create_habit_day_thursday),
                                 stringResource(id = R.string.create_habit_day_friday),
-                                stringResource(id = R.string.create_habit_day_saturday),
-                                stringResource(id = R.string.create_habit_day_sunday)
+                                stringResource(id = R.string.create_habit_day_saturday)
                             )
 
-                            dayLabels.forEachIndexed { index, label ->
+                            dayIndices.forEachIndexed { displayPos, actualIndex ->
                                 FilterChip(
-                                    selected = selectedRepeatDays.contains(index),
+                                    selected = selectedRepeatDays.contains(actualIndex),
                                     onClick = {
-                                        selectedRepeatDays = if (selectedRepeatDays.contains(index)) {
-                                            selectedRepeatDays - index
+                                        selectedRepeatDays = if (selectedRepeatDays.contains(actualIndex)) {
+                                            selectedRepeatDays - actualIndex
                                         } else {
-                                            selectedRepeatDays + index
+                                            selectedRepeatDays + actualIndex
                                         }
-                                        // 用户选择日期时清除错误状态
                                         showRepeatDaysError = false
                                     },
                                     label = {
                                         Text(
-                                            text = label,
+                                            text = dayLabels[displayPos],
                                             textAlign = TextAlign.Center,
                                             modifier = Modifier.fillMaxWidth()
                                         )
