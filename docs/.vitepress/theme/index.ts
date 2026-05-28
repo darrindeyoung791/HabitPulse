@@ -21,7 +21,7 @@ export default {
   enhanceApp({ app }) {
     app.component('FeatureCard', FeatureCard)
   },
-    setup() {
+  setup() {
     const route = useRoute();
     const initZoom = () => {
       // mediumZoom('[data-zoomable]', { background: 'var(--vp-c-bg)' }); // 默认

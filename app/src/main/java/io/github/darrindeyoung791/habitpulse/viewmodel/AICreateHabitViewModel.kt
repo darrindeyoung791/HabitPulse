@@ -322,7 +322,7 @@ class AICreateHabitViewModel(application: Application) : AndroidViewModel(applic
             title = partial.title,
             repeatCycle = if (partial.repeatCycle == "DAILY") RepeatCycle.DAILY else RepeatCycle.WEEKLY,
             repeatDays = partial.repeatDays.joinToString(",", "[", "]") { it.toString() },
-            reminderTimes = partial.reminderTimes.joinToString(",", "[\"", "\"]") { it },
+            reminderTimes = partial.reminderTimes.joinToString(",", "[", "]") { "\"${it}\"" },
             notes = partial.notes
         )
     }
