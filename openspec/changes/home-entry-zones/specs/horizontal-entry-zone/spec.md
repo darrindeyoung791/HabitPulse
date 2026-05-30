@@ -71,6 +71,49 @@ EntryZone SHALL 在所有导航模式下正常显示。
 - **WHEN** 平板竖屏模式（BottomNavigationBar）
 - **THEN** EntryZone 占满可用宽度
 
+### Requirement: 横向渐变淡出效果
+系统 SHALL 在 EntryZone 的 LazyRow 左右边缘渲染渐变半透明遮罩。
+
+#### Scenario: 滚动时显示边缘淡出
+- **WHEN** LazyRow 未滚动到起点或终点
+- **THEN** 对应侧显示 16dp 宽的水平渐变遮罩（background → Transparent），200ms tween 动画
+- **WHEN** LazyRow 滚动到起点或终点
+- **THEN** 对应侧的渐变遮罩淡出（alpha → 0）
+
+### Requirement: 紧凑化卡片渲染
+入口卡片 SHALL 采用紧凑布局以减少横向空间占用。
+
+#### Scenario: 尺寸缩减
+- **GIVEN** 入口卡片渲染
+- **THEN** 内边距为 8dp，图标框为 24dp（圆角 8dp），图标为 14dp，标题使用 titleSmall
+- **THEN** 卡片最小宽度为 64dp
+
+### Requirement: 条件渲染
+系统 SHALL 根据卡片类型决定显示的视觉元素。
+
+#### Scenario: 今日卡片
+- **GIVEN** "今天"卡片渲染
+- **THEN** 显示 List 图标、标题"今天"、仅数字计数徽章（无单位）
+
+#### Scenario: 同步卡片（未连接）
+- **GIVEN** 局域网同步卡片渲染且功能未连接
+- **THEN** 隐藏标题文字和徽章
+- **THEN** Sync 图标颜色使用 disabled 灰色（onSurface color 38% alpha）
+
+#### Scenario: 统计卡片
+- **GIVEN** "统计"卡片渲染
+- **THEN** 不显示图标和徽章
+- **THEN** 仅显示"统计"标题文字
+
+### Requirement: 空习惯隐藏
+系统 SHALL 在习惯列表为空时隐藏 EntryZone。
+
+#### Scenario: 无习惯时隐藏
+- **WHEN** 习惯列表为空（habits.isEmpty()）
+- **THEN** EntryZone 不显示，仅显示空的习惯列表提示
+- **WHEN** 习惯列表不为空
+- **THEN** EntryZone 在习惯列表顶部正常显示
+
 ### Requirement: 可扩展性
 EntryZone SHALL 支持通过数据列表添加更多入口卡片。
 
