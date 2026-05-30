@@ -6,6 +6,7 @@ import androidx.datastore.core.DataStore
 import androidx.datastore.preferences.core.Preferences
 import androidx.datastore.preferences.core.booleanPreferencesKey
 import androidx.datastore.preferences.core.edit
+import androidx.datastore.preferences.core.stringPreferencesKey
 import androidx.datastore.preferences.preferencesDataStore
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.map
@@ -37,6 +38,26 @@ object PreferencesKeys {
      * 是否开启持久通知以保持后台运行
      */
     val PERSISTENT_NOTIFICATION = booleanPreferencesKey("persistent_notification")
+
+    /**
+     * LLM API 端点
+     */
+    val LLM_API_ENDPOINT = stringPreferencesKey("llm_api_endpoint")
+
+    /**
+     * LLM API 密钥
+     */
+    val LLM_API_KEY = stringPreferencesKey("llm_api_key")
+
+    /**
+     * LLM 模型名称
+     */
+    val LLM_MODEL_NAME = stringPreferencesKey("llm_model_name")
+
+    /**
+     * LLM 流式输出
+     */
+    val LLM_STREAMING_RESPONSE = booleanPreferencesKey("llm_streaming_response")
 }
 
 /**
@@ -142,6 +163,82 @@ class UserPreferences(private val context: Context) {
     suspend fun setPersistentNotification(enabled: Boolean) {
         context.dataStore.edit { preferences ->
             preferences[PreferencesKeys.PERSISTENT_NOTIFICATION] = enabled
+        }
+    }
+
+    /**
+     * LLM API 端点的 Flow
+     * 默认值为智谱 API 端点
+     */
+    val llmApiEndpointFlow: Flow<String> = context.dataStore.data.map { preferences ->
+        preferences[PreferencesKeys.LLM_API_ENDPOINT] ?: "https://open.bigmodel.cn/api/paas/v4/chat/completions"
+    }
+
+    /**
+     * 设置 LLM API 端点
+     *
+     * @param endpoint API 端点 URL
+     */
+    suspend fun setLlmApiEndpoint(endpoint: String) {
+        context.dataStore.edit { preferences ->
+            preferences[PreferencesKeys.LLM_API_ENDPOINT] = endpoint
+        }
+    }
+
+    /**
+     * LLM API 密钥的 Flow
+     * 默认值为空字符串
+     */
+    val llmApiKeyFlow: Flow<String> = context.dataStore.data.map { preferences ->
+        preferences[PreferencesKeys.LLM_API_KEY] ?: ""
+    }
+
+    /**
+     * 设置 LLM API 密钥
+     *
+     * @param apiKey API 密钥
+     */
+    suspend fun setLlmApiKey(apiKey: String) {
+        context.dataStore.edit { preferences ->
+            preferences[PreferencesKeys.LLM_API_KEY] = apiKey
+        }
+    }
+
+    /**
+     * LLM 模型名称的 Flow
+     * 默认值为 "glm-4-flash-250414"
+     */
+    val llmModelNameFlow: Flow<String> = context.dataStore.data.map { preferences ->
+        preferences[PreferencesKeys.LLM_MODEL_NAME] ?: "glm-4-flash-250414"
+    }
+
+    /**
+     * 设置 LLM 模型名称
+     *
+     * @param modelName 模型名称
+     */
+    suspend fun setLlmModelName(modelName: String) {
+        context.dataStore.edit { preferences ->
+            preferences[PreferencesKeys.LLM_MODEL_NAME] = modelName
+        }
+    }
+
+    /**
+     * LLM 流式输出的 Flow
+     * 默认值为 false（不开启）
+     */
+    val llmStreamingResponseFlow: Flow<Boolean> = context.dataStore.data.map { preferences ->
+        preferences[PreferencesKeys.LLM_STREAMING_RESPONSE] ?: false
+    }
+
+    /**
+     * 设置 LLM 流式输出
+     *
+     * @param enabled true 为开启，false 为不开启
+     */
+    suspend fun setLlmStreamingResponse(enabled: Boolean) {
+        context.dataStore.edit { preferences ->
+            preferences[PreferencesKeys.LLM_STREAMING_RESPONSE] = enabled
         }
     }
 }

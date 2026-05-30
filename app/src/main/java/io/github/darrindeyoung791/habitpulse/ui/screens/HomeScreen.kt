@@ -22,6 +22,7 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.*
 import androidx.compose.material.icons.filled.*
+import androidx.compose.material.icons.automirrored.filled.ArrowForward
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.runtime.saveable.rememberSaveable
@@ -76,6 +77,7 @@ fun HomeScreen(
     onNavigateToSettings: () -> Unit,
     onEditHabit: (Habit) -> Unit,
     onNavigateToMultiSelect: (habitId: UUID) -> Unit = {},
+    onAICreateHabit: () -> Unit = {},
     application: HabitPulseApplication? = null,
     onHomeDataLoaded: () -> Unit = {},
     sharedTransitionScope: SharedTransitionScope? = null,
@@ -88,6 +90,9 @@ fun HomeScreen(
 
     // Track which habit is transitioning to MultiSelect (for shared element)
     var multiSelectTargetHabitId by remember { mutableStateOf<java.util.UUID?>(null) }
+
+    // FAB selection dialog state
+    var showCreateHabitDialog by remember { mutableStateOf(false) }
 
     // Focus requester for TalkBack initial focus
     val titleFocusRequester = remember { androidx.compose.ui.focus.FocusRequester() }
@@ -339,6 +344,7 @@ fun HomeScreen(
                         bringIntoViewRequester = bringIntoViewRequester,
                         forceTabletLandscape = forceTabletLandscape == true,
                         onCreateHabit = onCreateHabit,
+                        onCreateHabitSelection = { showCreateHabitDialog = true },
                         onEditHabit = onEditHabit,
                         onNavigateToMultiSelect = { habitId ->
                             multiSelectTargetHabitId = habitId
@@ -719,11 +725,7 @@ fun HomeScreen(
                     if (showFab) {
                         ExtendedFloatingActionButton(
                             onClick = {
-                                scope.launch {
-                                    clickHandler.processClick {
-                                        onCreateHabit()
-                                    }
-                                }
+                                showCreateHabitDialog = true
                             },
                             icon = {
                                 Icon(imageVector = Icons.Filled.Add, contentDescription = null)
@@ -824,11 +826,7 @@ fun HomeScreen(
                     if (showFab) {
                         ExtendedFloatingActionButton(
                             onClick = {
-                                scope.launch {
-                                    clickHandler.processClick {
-                                        onCreateHabit()
-                                    }
-                                }
+                                showCreateHabitDialog = true
                             },
                             icon = {
                                 Icon(imageVector = Icons.Filled.Add, contentDescription = null)
@@ -894,11 +892,7 @@ fun HomeScreen(
                 if (showFab) {
                     ExtendedFloatingActionButton(
                         onClick = {
-                            scope.launch {
-                                clickHandler.processClick {
-                                    onCreateHabit()
-                                }
-                            }
+                            showCreateHabitDialog = true
                         },
                         icon = {
                             Icon(imageVector = Icons.Filled.Add, contentDescription = null)
@@ -964,6 +958,29 @@ fun HomeScreen(
                 onDateSelected = { recordsVM.selectDate(it) }
             )
         }
+    }
+
+    // FAB - Create Habit Selection Dialog
+    if (showCreateHabitDialog) {
+        CreateHabitSelectionDialog(
+            onDismiss = { showCreateHabitDialog = false },
+            onManualCreate = {
+                showCreateHabitDialog = false
+                scope.launch {
+                    clickHandler.processClick {
+                        onCreateHabit()
+                    }
+                }
+            },
+            onAICreate = {
+                showCreateHabitDialog = false
+                scope.launch {
+                    clickHandler.processClick {
+                        onAICreateHabit()
+                    }
+                }
+            }
+        )
     }
 }
 
@@ -1118,6 +1135,92 @@ fun CollapsedNavigationBar(
     }
 }
 
+@Composable
+fun CreateHabitSelectionDialog(
+    onDismiss: () -> Unit,
+    onManualCreate: () -> Unit,
+    onAICreate: () -> Unit
+) {
+    AlertDialog(
+        onDismissRequest = onDismiss,
+        title = { Text(stringResource(id = R.string.create_habit_selection_title)) },
+        text = {
+            Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
+                ElevatedCard(
+                    onClick = onAICreate,
+                    modifier = Modifier.fillMaxWidth(),
+                    colors = CardDefaults.elevatedCardColors(
+                        containerColor = MaterialTheme.colorScheme.primaryContainer
+                    ),
+                    elevation = CardDefaults.elevatedCardElevation(defaultElevation = 0.dp)
+                ) {
+                    Row(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(12.dp),
+                        verticalAlignment = Alignment.CenterVertically
+                    ) {
+                        Icon(
+                            imageVector = Icons.Filled.AutoAwesome,
+                            contentDescription = null,
+                            tint = MaterialTheme.colorScheme.primary
+                        )
+                        Spacer(modifier = Modifier.width(12.dp))
+                        Column(modifier = Modifier.weight(1f)) {
+                            Text(
+                                text = stringResource(id = R.string.create_habit_selection_ai),
+                                style = MaterialTheme.typography.titleMedium,
+                                color = MaterialTheme.colorScheme.onPrimaryContainer
+                            )
+                            Text(
+                                text = stringResource(id = R.string.create_habit_selection_ai_desc),
+                                style = MaterialTheme.typography.bodySmall,
+                                color = MaterialTheme.colorScheme.onPrimaryContainer.copy(alpha = 0.7f)
+                            )
+                        }
+                        Icon(
+                            imageVector = Icons.AutoMirrored.Filled.ArrowForward,
+                            contentDescription = null,
+                            tint = MaterialTheme.colorScheme.primary
+                        )
+                    }
+                }
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .clickable(onClick = onManualCreate)
+                        .padding(12.dp),
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Icon(
+                        imageVector = Icons.Filled.Edit,
+                        contentDescription = null,
+                        tint = MaterialTheme.colorScheme.onSurfaceVariant
+                    )
+                    Spacer(modifier = Modifier.width(12.dp))
+                    Column {
+                        Text(
+                            text = stringResource(id = R.string.create_habit_selection_manual),
+                            style = MaterialTheme.typography.bodyLarge
+                        )
+                        Text(
+                            text = stringResource(id = R.string.create_habit_selection_manual_desc),
+                            style = MaterialTheme.typography.bodySmall,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant
+                        )
+                    }
+                }
+            }
+        },
+        confirmButton = {},
+        dismissButton = {
+            TextButton(onClick = onDismiss) {
+                Text(stringResource(id = R.string.cancel))
+            }
+        }
+    )
+}
+
 // ============= Preview =============
 
 @Preview(showBackground = true)
@@ -1128,6 +1231,7 @@ fun HomeScreenPreview() {
             onCreateHabit = {},
             onNavigateToSettings = {},
             onEditHabit = {},
+            onAICreateHabit = {},
             application = null
         )
     }

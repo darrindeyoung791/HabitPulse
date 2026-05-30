@@ -24,6 +24,9 @@ import io.github.darrindeyoung791.habitpulse.ui.screens.HabitCreationScreen
 import io.github.darrindeyoung791.habitpulse.ui.screens.HomeScreen
 import io.github.darrindeyoung791.habitpulse.ui.screens.MultiSelectSortScreen
 import io.github.darrindeyoung791.habitpulse.ui.screens.WebViewScreen
+import io.github.darrindeyoung791.habitpulse.ui.screens.ai.AICreateHabitScreen
+import io.github.darrindeyoung791.habitpulse.AISettingsActivity
+import io.github.darrindeyoung791.habitpulse.viewmodel.AIPrefillHabitHolder
 import java.util.UUID
 
 /**
@@ -135,6 +138,14 @@ fun HabitPulseNavGraph(
                             }
                         }
                     },
+                    onAICreateHabit = {
+                        navController.navigate(Route.AICreateHabit.route) {
+                            launchSingleTop = true
+                            popUpTo(Route.Home.route) {
+                                inclusive = false
+                            }
+                        }
+                    },
                     application = context.applicationContext as HabitPulseApplication,
                     onHomeDataLoaded = onHomeDataLoaded,
                     sharedTransitionScope = sharedTransitionScope,
@@ -160,6 +171,13 @@ fun HabitPulseNavGraph(
                 ) + fadeOut(animationSpec = tween(durationMillis = 200))
             }
         ) {
+            val prefillHabit = remember { AIPrefillHabitHolder.prefillHabit.also { AIPrefillHabitHolder.prefillHabit = null } }
+            val editingHabitDbId = remember { AIPrefillHabitHolder.editingHabitDbId.also { AIPrefillHabitHolder.editingHabitDbId = null } }
+
+            val isAiEdit = prefillHabit != null && editingHabitDbId != null
+            val editMode = if (isAiEdit) EditMode.EDIT else EditMode.CREATE
+            val habitId = if (isAiEdit) editingHabitDbId else null
+
             Box(
                 modifier = Modifier
                     .fillMaxSize()
@@ -169,9 +187,11 @@ fun HabitPulseNavGraph(
                     onNavigateBack = {
                         navController.popBackStack()
                     },
-                    editMode = EditMode.CREATE,
+                    editMode = editMode,
+                    habitId = habitId,
                     navController = navController,
-                    application = context.applicationContext as HabitPulseApplication
+                    application = context.applicationContext as HabitPulseApplication,
+                    prefillHabit = prefillHabit
                 )
             }
         }
@@ -290,6 +310,42 @@ fun HabitPulseNavGraph(
                 )
             }
         }
+        composable(
+            route = Route.AICreateHabit.route,
+            enterTransition = {
+                slideInVertically(
+                    initialOffsetY = { fullHeight -> fullHeight },
+                    animationSpec = spring(
+                        dampingRatio = 0.75f,
+                        stiffness = Spring.StiffnessLow
+                    )
+                ) + fadeIn(animationSpec = tween(durationMillis = 400))
+            },
+            exitTransition = {
+                slideOutVertically(
+                    targetOffsetY = { fullHeight -> fullHeight },
+                    animationSpec = tween(durationMillis = 200)
+                ) + fadeOut(animationSpec = tween(durationMillis = 200))
+            }
+        ) {
+            Box(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .clip(RoundedCornerShape(cornerRadius))
+            ) {
+                AICreateHabitScreen(
+                    onNavigateBack = {
+                        navController.popBackStack()
+                    },
+                    onNavigateToSettings = {
+                        val intent = android.content.Intent(context, AISettingsActivity::class.java)
+                        context.startActivity(intent)
+                    },
+                    application = context.applicationContext as HabitPulseApplication,
+                    navController = navController
+)
+            }
+        }
     }
-    }
+}
 }

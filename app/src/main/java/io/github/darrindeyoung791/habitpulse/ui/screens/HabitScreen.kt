@@ -99,6 +99,7 @@ fun HabitScreenContent(
     bringIntoViewRequester: BringIntoViewRequester = remember { BringIntoViewRequester() },
     forceTabletLandscape: Boolean = false,
     onCreateHabit: () -> Unit,
+    onCreateHabitSelection: () -> Unit,
     onEditHabit: (Habit) -> Unit,
     onNavigateToMultiSelect: (UUID) -> Unit,
     sharedTransitionScope: SharedTransitionScope? = null,
@@ -219,13 +220,7 @@ fun HabitScreenContent(
             } else if (!isSearchActive && habits.isEmpty()) {
                 EmptyStateContent(
                     modifier = Modifier.fillMaxSize(),
-                    onCreateHabit = {
-                        scope.launch {
-                            clickHandler.processClick {
-                                onCreateHabit()
-                            }
-                        }
-                    }
+                    onCreateHabitSelection = onCreateHabitSelection
                 )
             } else {
                 HabitListContent(
@@ -275,7 +270,7 @@ fun HabitScreenContent(
 @Composable
 fun EmptyStateContent(
     modifier: Modifier = Modifier,
-    onCreateHabit: () -> Unit
+    onCreateHabitSelection: () -> Unit
 ) {
     Column(
         modifier = modifier
@@ -301,7 +296,7 @@ fun EmptyStateContent(
 
         Spacer(modifier = Modifier.height(8.dp))
 
-        TextButton(onClick = onCreateHabit) {
+        TextButton(onClick = onCreateHabitSelection) {
             Text(
                 text = stringResource(id = R.string.main_create_habit),
                 style = MaterialTheme.typography.bodyMedium.copy(fontWeight = FontWeight.Normal),
@@ -862,13 +857,13 @@ fun HabitCard(
                             verticalArrangement = Arrangement.spacedBy(4.dp)
                         ) {
                             val dayNames = listOf(
-                                stringResource(id = R.string.habit_card_repeat_days_sunday),
                                 stringResource(id = R.string.habit_card_repeat_days_monday),
                                 stringResource(id = R.string.habit_card_repeat_days_tuesday),
                                 stringResource(id = R.string.habit_card_repeat_days_wednesday),
                                 stringResource(id = R.string.habit_card_repeat_days_thursday),
                                 stringResource(id = R.string.habit_card_repeat_days_friday),
-                                stringResource(id = R.string.habit_card_repeat_days_saturday)
+                                stringResource(id = R.string.habit_card_repeat_days_saturday),
+                                stringResource(id = R.string.habit_card_repeat_days_sunday)
                             )
                             val daySeparator = stringResource(id = R.string.habit_card_repeat_days_separator)
                             val repeatCycleText = when (habit.repeatCycle) {
@@ -1157,13 +1152,13 @@ fun ReminderDetailDialog(
                     .verticalScroll(rememberScrollState())
             ) {
                 val dayNames = listOf(
-                    stringResource(id = R.string.habit_card_repeat_days_sunday),
                     stringResource(id = R.string.habit_card_repeat_days_monday),
                     stringResource(id = R.string.habit_card_repeat_days_tuesday),
                     stringResource(id = R.string.habit_card_repeat_days_wednesday),
                     stringResource(id = R.string.habit_card_repeat_days_thursday),
                     stringResource(id = R.string.habit_card_repeat_days_friday),
-                    stringResource(id = R.string.habit_card_repeat_days_saturday)
+                    stringResource(id = R.string.habit_card_repeat_days_saturday),
+                    stringResource(id = R.string.habit_card_repeat_days_sunday)
                 )
                 val daySeparator = stringResource(id = R.string.habit_card_repeat_days_separator)
                 val repeatCycleText = when (repeatCycle) {
@@ -1510,6 +1505,7 @@ fun HabitScreenPreview() {
         HabitScreenContent(
             application = null,
             onCreateHabit = {},
+            onCreateHabitSelection = {},
             onEditHabit = {},
             onNavigateToMultiSelect = {}
         )

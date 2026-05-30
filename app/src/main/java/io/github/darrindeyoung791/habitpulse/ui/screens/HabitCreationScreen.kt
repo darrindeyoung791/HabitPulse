@@ -142,7 +142,8 @@ fun HabitCreationScreen(
     editMode: EditMode = EditMode.CREATE,
     habitId: UUID? = null,
     navController: androidx.navigation.NavHostController? = null,
-    application: HabitPulseApplication? = null
+    application: HabitPulseApplication? = null,
+    prefillHabit: io.github.darrindeyoung791.habitpulse.ai.conversation.PartialHabit? = null
 ) {
     val context = LocalContext.current
     val hapticFeedback = LocalHapticFeedback.current
@@ -187,10 +188,15 @@ fun HabitCreationScreen(
         initialAnimationComplete = true
     }
 
-    // UI 状态变量
-    var habitName by remember { mutableStateOf("") }
-    var repeatCycle by remember { mutableStateOf(RepeatCycle.DAILY) }
-    var reminderTimes by remember { mutableStateOf<List<String>>(emptyList()) }
+    // UI 状态变量 - 支持预填数据
+    var habitName by remember(prefillHabit) { mutableStateOf(prefillHabit?.title ?: "") }
+    var repeatCycle by remember(prefillHabit) { mutableStateOf(
+        when (prefillHabit?.repeatCycle?.uppercase()) {
+            "WEEKLY" -> RepeatCycle.WEEKLY
+            else -> RepeatCycle.DAILY
+        }
+    ) }
+    var reminderTimes by remember(prefillHabit) { mutableStateOf(prefillHabit?.reminderTimes ?: emptyList()) }
     var showTimePicker by remember { mutableStateOf(false) }
     var currentTimePickerTime by remember { mutableStateOf(java.time.LocalTime.now()) }
     var isReminderExpanded by remember { mutableStateOf(false) }
@@ -212,10 +218,10 @@ fun HabitCreationScreen(
     var isPhoneListExpanded by remember { mutableStateOf(false) }
 
     // Repeat days state (for weekly cycle)
-    var selectedRepeatDays by remember { mutableStateOf<Set<Int>>(setOf()) }
+    var selectedRepeatDays by remember(prefillHabit) { mutableStateOf<Set<Int>>(prefillHabit?.repeatDays?.toSet() ?: setOf()) }
 
     // Notes state
-    var notes by remember { mutableStateOf("") }
+    var notes by remember(prefillHabit) { mutableStateOf(prefillHabit?.notes ?: "") }
     var showNotesMaxToast by remember { mutableStateOf(false) }
 
     // Focus requester for habit name field (only for CREATE mode)
@@ -602,7 +608,9 @@ fun HabitCreationScreen(
                             modifier = Modifier.fillMaxWidth(),
                             horizontalArrangement = Arrangement.spacedBy(4.dp)
                         ) {
-                            // Sunday (0) to Saturday (6)
+                            // Display order: 日一二三四五六
+                            // Actual indices: 6, 0, 1, 2, 3, 4, 5
+                            val dayIndices = listOf(6, 0, 1, 2, 3, 4, 5)
                             val dayLabels = listOf(
                                 stringResource(id = R.string.create_habit_day_sunday),
                                 stringResource(id = R.string.create_habit_day_monday),
@@ -613,21 +621,20 @@ fun HabitCreationScreen(
                                 stringResource(id = R.string.create_habit_day_saturday)
                             )
 
-                            dayLabels.forEachIndexed { index, label ->
+                            dayIndices.forEachIndexed { displayPos, actualIndex ->
                                 FilterChip(
-                                    selected = selectedRepeatDays.contains(index),
+                                    selected = selectedRepeatDays.contains(actualIndex),
                                     onClick = {
-                                        selectedRepeatDays = if (selectedRepeatDays.contains(index)) {
-                                            selectedRepeatDays - index
+                                        selectedRepeatDays = if (selectedRepeatDays.contains(actualIndex)) {
+                                            selectedRepeatDays - actualIndex
                                         } else {
-                                            selectedRepeatDays + index
+                                            selectedRepeatDays + actualIndex
                                         }
-                                        // 用户选择日期时清除错误状态
                                         showRepeatDaysError = false
                                     },
                                     label = {
                                         Text(
-                                            text = label,
+                                            text = dayLabels[displayPos],
                                             textAlign = TextAlign.Center,
                                             modifier = Modifier.fillMaxWidth()
                                         )

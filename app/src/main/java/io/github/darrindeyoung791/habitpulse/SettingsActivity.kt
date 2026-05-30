@@ -27,6 +27,7 @@ import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.automirrored.outlined.Article
+import androidx.compose.material.icons.filled.AutoAwesome
 import androidx.compose.material.icons.outlined.Delete
 import androidx.compose.material.icons.outlined.DeleteForever
 import androidx.compose.material.icons.outlined.FavoriteBorder
@@ -34,6 +35,7 @@ import androidx.compose.material.icons.outlined.HelpOutline
 import androidx.compose.material.icons.outlined.Info
 import androidx.compose.material.icons.outlined.Notifications
 import androidx.compose.material.icons.outlined.Person
+import androidx.compose.material.icons.outlined.Settings
 import androidx.compose.material.icons.outlined.Storage
 import androidx.compose.material.icons.outlined.Tablet
 import androidx.compose.material3.*
@@ -73,7 +75,12 @@ class SettingsActivity : ComponentActivity() {
         enableEdgeToEdge()
         setContent {
             HabitPulseTheme {
-                SettingsScreen()
+                Surface(
+                    modifier = Modifier.fillMaxSize(),
+                    color = MaterialTheme.colorScheme.background
+                ) {
+                    SettingsScreen()
+                }
             }
         }
     }
@@ -452,6 +459,40 @@ fun SettingsScreen() {
                 modifier = Modifier.fillMaxSize(),
                 state = listState
             ) {
+            // AI 部分（放在最顶部）
+            item {
+                // Section header
+                Text(
+                    text = stringResource(id = R.string.settings_ai_section),
+                    style = MaterialTheme.typography.labelMedium,
+                    color = MaterialTheme.colorScheme.primary,
+                    modifier = Modifier.padding(horizontal = 16.dp, vertical = 16.dp)
+                )
+
+                // 说明文字
+                Text(
+                    text = stringResource(id = R.string.settings_ai_section_description),
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant,
+                    modifier = Modifier.padding(horizontal = 16.dp, vertical = 8.dp)
+                )
+
+                SettingsListItem(
+                    headline = stringResource(id = R.string.ai_settings_title),
+                    supportingText = stringResource(id = R.string.settings_ai_section_settings_desc),
+                    leadingIcon = {
+                        Icon(
+                            imageVector = Icons.Filled.AutoAwesome,
+                            contentDescription = null
+                        )
+                    },
+                    onClick = {
+                        val intent = Intent(context, AISettingsActivity::class.java)
+                        context.startActivity(intent)
+                    }
+                )
+            }
+
             // 支持部分
             item {
                 // Section header
@@ -679,7 +720,7 @@ fun SettingsScreen() {
                 )
             }
 
-            // 视觉部分
+            // 关于部分
             if (showForceTabletLandscapeSwitch) {
                 item {
                     // Section header
@@ -1171,7 +1212,7 @@ private fun generateSampleHabits(): Pair<List<Habit>, List<HabitCompletion>> {
     val habit2 = Habit(
         title = "晨跑锻炼",
         repeatCycle = RepeatCycle.WEEKLY,
-        repeatDays = JSONArray().apply { put(1); put(3); put(5) }.toString(),
+        repeatDays = JSONArray().apply { put(0); put(2); put(4) }.toString(),
         reminderTimes = generateManyReminders(),
         notes = "跑步前记得热身\n跑完后要拉伸\n注意呼吸节奏\n选择合适的跑鞋\n循序渐进增加距离",
         supervisionMethod = SupervisionMethod.SMS,
@@ -1408,7 +1449,7 @@ private fun generateSampleHabits(): Pair<List<Habit>, List<HabitCompletion>> {
     val habit12 = Habit(
         title = "Morning Jog",
         repeatCycle = RepeatCycle.WEEKLY,
-        repeatDays = JSONArray().apply { put(1); put(3); put(5) }.toString(),
+        repeatDays = JSONArray().apply { put(0); put(2); put(4) }.toString(),
         reminderTimes = generateManyReminders(),
         notes = "Warm up before running\nStretch after exercise\nWear proper shoes\nStart slow and increase gradually\nTrack your progress",
         supervisionMethod = SupervisionMethod.SMS,
@@ -1668,7 +1709,7 @@ private fun generateSampleHabits(): Pair<List<Habit>, List<HabitCompletion>> {
     val habit23 = Habit(
         title = "练习吉他",
         repeatCycle = RepeatCycle.WEEKLY,
-        repeatDays = JSONArray().apply { put(1); put(3); put(5) }.toString(),
+        repeatDays = JSONArray().apply { put(0); put(2); put(4) }.toString(),
         reminderTimes = JSONArray().apply { put("19:00") }.toString(),
         notes = "练习音阶\n学习和弦\n弹奏曲目\n节奏训练",
         supervisionMethod = SupervisionMethod.SMS,

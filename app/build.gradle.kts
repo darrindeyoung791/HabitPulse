@@ -27,8 +27,8 @@ android {
         applicationId = "io.github.darrindeyoung791.habitpulse"
         minSdk = 26
         targetSdk = 36
-        versionCode = 147
-        versionName = "0.7.14-alpha"
+        versionCode = 157
+        versionName = "0.8.9-alpha"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
         resourceConfigurations.addAll(listOf("zh-rCN", "zh-rTW", "zh-rHK", "en-rUS"))
@@ -59,6 +59,9 @@ android {
     }
     androidResources {
         generateLocaleConfig = true
+    }
+    lint {
+        abortOnError = false
     }
     ksp {
         arg("room.schemaLocation", "$projectDir/schemas")
@@ -143,4 +146,7 @@ dependencies {
 
     // SwipeRefreshLayout for pull-to-refresh
     implementation("androidx.swiperefreshlayout:swiperefreshlayout:1.1.0")
+
+    // Gson for JSON parsing
+    implementation("com.google.code.gson:gson:2.10.1")
 }

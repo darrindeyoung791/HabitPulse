@@ -28,7 +28,7 @@ enum class SupervisionMethod {
  * @property id 习惯唯一标识符 (UUID)
  * @property title 习惯标题
  * @property repeatCycle 重复周期 (DAILY/WEEKLY)
- * @property repeatDays 重复日期 (JSON 格式，如 [1,3,5] 表示周一、三、五)
+ * @property repeatDays 重复日期 (JSON 格式，如 [0,2,4] 表示周一、三、五)
  * @property reminderTimes 提醒时间列表 (JSON 格式，如 ["08:00","20:00"])
  * @property notes 备注信息
  * @property supervisionMethod 监督方式
@@ -51,7 +51,7 @@ data class Habit(
 
     val repeatCycle: RepeatCycle = RepeatCycle.DAILY,
 
-    val repeatDays: String = "[]",  // JSON format: [0,1,2,3,4,5,6]
+    val repeatDays: String = "[]",  // JSON format: [0,1,2,3,4,5,6] where 0=Monday, 6=Sunday
 
     val reminderTimes: String = "[]",  // JSON format: ["08:00","20:00"]
 

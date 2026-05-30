@@ -88,6 +88,7 @@
     <string name="habit_card_menu_undo">撤銷打卡</string>
     <string name="habit_card_menu_edit">編輯</string>
     <string name="habit_card_menu_delete">刪除</string>
+    <string name="habit_card_menu_complete">完成</string>
     <string name="habit_card_delete_confirm_title">確認刪除</string>
     <string name="habit_card_delete_confirm_message">確定要刪除習慣「%1$s」嗎？此操作無法撤銷。</string>
     <string name="habit_card_delete_confirm">刪除</string>
@@ -300,4 +301,87 @@
     <string name="webview_network_error_open_browser">在瀏覽器中打開</string>
     <string name="webview_network_error_close">關閉</string>
     <string name="webview_network_error_back">返回</string>
+
+    <!-- AI Settings -->
+    <string name="ai_settings_title">AI 設定</string>
+    <string name="ai_settings_api_endpoint">API 端點</string>
+    <string name="ai_settings_api_endpoint_label">API 端點</string>
+    <string name="ai_settings_api_key">API 密鑰</string>
+    <string name="ai_settings_api_key_label">API 密鑰</string>
+    <string name="ai_api_key_required_title">需要配置 API 密鑰</string>
+    <string name="ai_api_key_required_message">請先在設定中配置 API 密鑰，然後才能使用 AI 建立習慣功能。</string>
+    <string name="ai_api_key_required_action">前往設定</string>
+    <string name="ai_settings_model">模型</string>
+    <string name="ai_settings_model_label">選擇模型</string>
+    <string name="ai_settings_test_connection">測試連接</string>
+    <string name="ai_settings_connection_success">連接成功</string>
+    <string name="ai_settings_connection_failed">連接失敗</string>
+    <string name="ai_settings_notice_title">配置說明</string>
+    <string name="ai_settings_notice_content">本應用支持兼容 OpenAI 格式的 LLM API（如智譜 GLM、DeepSeek 等）。\n\nAPI 端點：請填寫完整的 API 地址，以斜槓結尾。\nAPI 密鑰：請從相應平台獲取。\n模型名稱：支持智譜 glm-4.7-flash（預設）、glm-4-flash、glm-4 等。</string>
+    <string name="ai_settings_streaming">串流輸出</string>
+    <string name="ai_settings_streaming_description">即時顯示 AI 思考過程和回覆</string>
+    <string name="clear">清除</string>
+    <string name="show_password">顯示密碼</string>
+    <string name="hide_password">隱藏密碼</string>
+    <string name="settings_ai_section">AI</string>
+    <string name="settings_ai_section_description">配置 AI 智能建立習慣功能</string>
+    <string name="settings_ai_section_settings_desc">配置 API 端點、密鑰和模型</string>
+
+    <!-- AI Create Habit -->
+    <string name="ai_create_title">AI 建立習慣</string>
+    <string name="ai_streaming_title">AI 正在輸出…</string>
+    <string name="ai_welcome_title">用 AI 建立習慣</string>
+    <string name="ai_welcome_subtitle">告訴我你想養成的習慣，我來幫你建立</string>
+    <string name="ai_input_placeholder">描述你想養成的習慣…</string>
+    <string name="ai_send_button">發送</string>
+    <string name="ai_stop_button">停止</string>
+    <string name="ai_clear_conversation">清除對話</string>
+    <string name="ai_exit_title">確認離開？</string>
+    <string name="ai_exit_message">離開後對話將不保留。</string>
+    <string name="ai_clear_title">清除對話？</string>
+    <string name="ai_clear_message">這將清除所有訊息。</string>
+    <string name="ai_confirm_title">確認建立</string>
+    <string name="ai_confirm_message">建立 %d 個習慣？</string>
+    <string name="ai_confirm_create">建立</string>
+    <string name="ai_text_input_placeholder">輸入你的答案…</string>
+    <string name="ai_unsupported_question_type">不支援的問題類型</string>
+    <string name="ai_submit">提交</string>
+    <string name="ai_custom_input_placeholder">手動輸入</string>
+    <string name="ai_submit_selection">提交選擇（已選 %d 項）</string>
+    <string name="ai_day_mon">一</string>
+    <string name="ai_day_tue">二</string>
+    <string name="ai_day_wed">三</string>
+    <string name="ai_day_thu">四</string>
+    <string name="ai_day_fri">五</string>
+    <string name="ai_day_sat">六</string>
+    <string name="ai_day_sun">日</string>
+
+    <!-- AI Error Messages -->
+    <string name="ai_error_scroll_to_bottom">滾動到底部</string>
+    <string name="ai_error_not_configured">請先在設定中配置 API</string>
+    <string name="ai_error_prefix">錯誤：%s</string>
+    <string name="ai_error_auth_failed">認證失敗，請檢查 API Key 是否正確</string>
+    <string name="ai_error_access_denied">存取被拒絕，請檢查 API Key 權限</string>
+    <string name="ai_error_server_error">伺服器錯誤（HTTP %d），請稍後重試</string>
+    <string name="ai_error_timeout">連線逾時，請檢查網路或 API 地址</string>
+    <string name="ai_error_connection_failed">無法連線到伺服器，請檢查 API 地址</string>
+    <string name="ai_error_dns_failed">無法解析網域名稱，請檢查 API 地址</string>
+    <string name="ai_error_invalid_url">API 地址格式不正確</string>
+    <string name="ai_error_unknown">未知錯誤</string>
+    <string name="create_habit_selection_title">新建習慣</string>
+    <string name="create_habit_selection_manual">手動填寫</string>
+    <string name="create_habit_selection_manual_desc">自己填寫所有欄位</string>
+    <string name="create_habit_selection_ai">AI 智能建立</string>
+    <string name="create_habit_selection_ai_desc">描述習慣，AI 幫你逐步完善</string>
+    <string name="go_back">返回</string>
+    <string name="settings_ai_title">AI 設定</string>
+    <string name="confirm">確認</string>
+    <string name="cancel">取消</string>
+
+    <!-- Thinking Block -->
+    <string name="hide_thinking">收起思考</string>
+    <string name="view_thinking">查看思考</string>
+    <string name="thinking_in_progress">思考中…</string>
+    <string name="collapse">折叠</string>
+    <string name="expand">展開</string>
 </resources>
