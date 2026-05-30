@@ -107,7 +107,10 @@ fun HabitScreenContent(
     nestedScrollConnection: androidx.compose.ui.input.nestedscroll.NestedScrollConnection? = null,
     multiSelectTargetHabitId: UUID? = null,
     isSearchActive: Boolean = false,
-    onSearchActiveChange: (Boolean) -> Unit = {}
+    onSearchActiveChange: (Boolean) -> Unit = {},
+    onViewTodayHabits: () -> Unit = {},
+    onViewLanSync: () -> Unit = {},
+    onViewStats: () -> Unit = {}
 ) {
     val context = LocalContext.current
     val clickHandler = rememberDebounceClickHandler()
@@ -164,6 +167,39 @@ fun HabitScreenContent(
         }
     }
 
+    val todayTitle = stringResource(id = R.string.entry_zone_today_habits)
+    val todayBadge = stringResource(id = R.string.entry_zone_today_habits_badge, habits.size)
+    val lanTitle = stringResource(id = R.string.entry_zone_lan_sync)
+    val lanBadge = stringResource(id = R.string.entry_zone_lan_sync_badge)
+    val statsTitle = stringResource(id = R.string.entry_zone_stats)
+    val statsBadge = stringResource(id = R.string.entry_zone_stats_badge)
+
+    val entryItems = remember(todayTitle, todayBadge, lanTitle, lanBadge, statsTitle, statsBadge, onViewTodayHabits, onViewLanSync, onViewStats) {
+        listOf(
+            EntryItem(
+                id = "today",
+                icon = Icons.Filled.List,
+                title = todayTitle,
+                badgeText = todayBadge,
+                onClick = onViewTodayHabits
+            ),
+            EntryItem(
+                id = "lan_sync",
+                icon = Icons.Filled.Sync,
+                title = lanTitle,
+                badgeText = lanBadge,
+                onClick = onViewLanSync
+            ),
+            EntryItem(
+                id = "stats",
+                icon = Icons.Filled.BarChart,
+                title = statsTitle,
+                badgeText = statsBadge,
+                onClick = onViewStats
+            )
+        )
+    }
+
     Column(modifier = modifier.fillMaxSize()) {
         AnimatedVisibility(
             visible = isSearchActive,
@@ -218,10 +254,15 @@ fun HabitScreenContent(
             } else if (!isSearchActive && !hasLoadedHabits) {
                 Box(modifier = Modifier.fillMaxSize()) {}
             } else if (!isSearchActive && habits.isEmpty()) {
-                EmptyStateContent(
-                    modifier = Modifier.fillMaxSize(),
-                    onCreateHabitSelection = onCreateHabitSelection
-                )
+                Column(modifier = Modifier.fillMaxSize()) {
+                    if (!isSearchActive && entryItems.isNotEmpty()) {
+                        EntryZone(entries = entryItems)
+                    }
+                    EmptyStateContent(
+                        modifier = Modifier.weight(1f),
+                        onCreateHabitSelection = onCreateHabitSelection
+                    )
+                }
             } else {
                 HabitListContent(
                     modifier = Modifier.fillMaxSize(),
@@ -246,7 +287,12 @@ fun HabitScreenContent(
                     searchQuery = searchQuery,
                     sharedTransitionScope = sharedTransitionScope,
                     animatedContentScope = animatedContentScope,
-                    multiSelectTargetHabitId = multiSelectTargetHabitId
+                    multiSelectTargetHabitId = multiSelectTargetHabitId,
+                    entryZone = {
+                        if (!isSearchActive && entryItems.isNotEmpty()) {
+                            EntryZone(entries = entryItems)
+                        }
+                    }
                 )
             }
         }
@@ -324,7 +370,8 @@ fun HabitListContent(
     searchQuery: String = "",
     sharedTransitionScope: SharedTransitionScope? = null,
     animatedContentScope: AnimatedContentScope? = null,
-    multiSelectTargetHabitId: UUID? = null
+    multiSelectTargetHabitId: UUID? = null,
+    entryZone: @Composable () -> Unit = {}
 ) {
     val configuration = LocalConfiguration.current
     var screenWidthDp = configuration.screenWidthDp
@@ -347,6 +394,10 @@ fun HabitListContent(
             modifier = waterfallModifier,
             scrollState = waterfallScrollState
         ) {
+            Box(modifier = Modifier.padding(horizontal = horizontalPadding)) {
+                entryZone()
+            }
+
             if (bringIntoViewRequester != null) {
                 Box(
                     modifier = Modifier
@@ -415,9 +466,12 @@ fun HabitListContent(
         ScrollableLazyColumnWithScrollbar(
             modifier = listModifier,
             listState = listState,
-            contentPadding = PaddingValues(horizontal = horizontalPadding, vertical = 16.dp),
+            contentPadding = PaddingValues(start = horizontalPadding, top = 8.dp, end = horizontalPadding, bottom = 16.dp),
             verticalArrangement = Arrangement.spacedBy(8.dp)
         ) {
+            item {
+                entryZone()
+            }
             items(
                 items = habits,
                 key = { it.id.toString() },
@@ -736,6 +790,7 @@ fun HabitCard(
     onNavigateToMultiSelect: (habitId: UUID) -> Unit = {},
     modifier: Modifier = Modifier,
     isNewlyAdded: Boolean = false,
+    showMultiSelectMenuItem: Boolean = true,
     searchQuery: String = "",
     sharedTransitionScope: SharedTransitionScope? = null,
     animatedContentScope: AnimatedContentScope? = null,
@@ -971,20 +1026,22 @@ fun HabitCard(
                     }
                 )
 
-                DropdownMenuItem(
-                    text = { Text(text = stringResource(id = R.string.habit_context_menu_multi_select)) },
-                    leadingIcon = {
-                        Icon(
-                            imageVector = Icons.Filled.DragHandle,
-                            contentDescription = null,
-                            modifier = Modifier.size(24.dp)
-                        )
-                    },
-                    onClick = {
-                        onNavigateToMultiSelect(habit.id)
-                        showMenu = false
-                    }
-                )
+                if (showMultiSelectMenuItem) {
+                    DropdownMenuItem(
+                        text = { Text(text = stringResource(id = R.string.habit_context_menu_multi_select)) },
+                        leadingIcon = {
+                            Icon(
+                                imageVector = Icons.Filled.DragHandle,
+                                contentDescription = null,
+                                modifier = Modifier.size(24.dp)
+                            )
+                        },
+                        onClick = {
+                            onNavigateToMultiSelect(habit.id)
+                            showMenu = false
+                        }
+                    )
+                }
 
                 DropdownMenuItem(
                     text = { Text(text = stringResource(id = R.string.habit_card_menu_delete)) },

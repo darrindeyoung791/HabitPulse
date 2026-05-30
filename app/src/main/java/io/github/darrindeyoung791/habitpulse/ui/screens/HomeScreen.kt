@@ -78,6 +78,9 @@ fun HomeScreen(
     onEditHabit: (Habit) -> Unit,
     onNavigateToMultiSelect: (habitId: UUID) -> Unit = {},
     onAICreateHabit: () -> Unit = {},
+    onViewTodayHabits: () -> Unit = {},
+    onViewLanSync: () -> Unit = {},
+    onViewStats: () -> Unit = {},
     application: HabitPulseApplication? = null,
     onHomeDataLoaded: () -> Unit = {},
     sharedTransitionScope: SharedTransitionScope? = null,
@@ -350,6 +353,9 @@ fun HomeScreen(
                             multiSelectTargetHabitId = habitId
                             onNavigateToMultiSelect(habitId)
                         },
+                        onViewTodayHabits = onViewTodayHabits,
+                        onViewLanSync = onViewLanSync,
+                        onViewStats = onViewStats,
                         sharedTransitionScope = sharedTransitionScope,
                         animatedContentScope = animatedContentScope,
                         nestedScrollConnection = habitsScrollBehavior.nestedScrollConnection,

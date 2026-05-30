@@ -20,6 +20,9 @@ sealed class Route(val route: String) {
     object AISettings : Route("ai_settings")
     object AICreateHabit : Route("ai_create_habit")
     object MultiSelectSort : Route("multi_select_sort")
+    object TodayHabits : Route("today_habits")
+    object LanSync : Route("lan_sync")
+    object Stats : Route("stats")
     object Help : Route("help?url={url}") {
         fun createRoute(url: String): String = "help?url=${java.net.URLEncoder.encode(url, "UTF-8")}"
     }

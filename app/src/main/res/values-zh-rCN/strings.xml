@@ -301,4 +301,19 @@
     <string name="webview_network_error_open_browser">在浏览器中打开</string>
     <string name="webview_network_error_close">关闭</string>
     <string name="webview_network_error_back">返回</string>
+
+    <!-- Entry Zone -->
+    <string name="entry_zone_today_habits">今天</string>
+    <string name="entry_zone_today_habits_badge">%d 项</string>
+    <string name="entry_zone_lan_sync">同步</string>
+    <string name="entry_zone_lan_sync_badge">未连接</string>
+    <string name="entry_zone_lan_sync_placeholder_title">同步</string>
+    <string name="entry_zone_lan_sync_placeholder_desc">局域网同步功能正在开发中，敬请期待！</string>
+    <string name="entry_zone_stats">统计</string>
+    <string name="entry_zone_stats_badge">可视化</string>
+    <string name="entry_zone_stats_placeholder_title">统计</string>
+    <string name="entry_zone_stats_placeholder_desc">统计信息可视化功能正在开发中，敬请期待！</string>
+    <string name="today_section_soon">即将开始</string>
+    <string name="today_section_later">稍后</string>
+    <string name="today_section_allday">全天</string>
 </resources>
