@@ -137,13 +137,13 @@ private fun EntryCard(
 ) {
     val hasLeftContent = entry.icon != null || entry.iconContent != null
     val iconContainerBackground = when {
-        entry.iconTint != null && entry.icon != null -> Color.Transparent
+        entry.iconTint != null && entry.icon != null -> MaterialTheme.colorScheme.onSurface.copy(alpha = 0.08f)
         else -> MaterialTheme.colorScheme.primaryContainer
     }
 
     Card(
         modifier = modifier
-            .widthIn(min = 148.dp)
+            .widthIn(min = 100.dp)
             .clickable { entry.onClick() },
         shape = RoundedCornerShape(16.dp),
         colors = CardDefaults.cardColors(

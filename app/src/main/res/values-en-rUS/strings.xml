@@ -388,13 +388,13 @@
     <!-- Entry Zone -->
     <string name="entry_zone_today_habits">Today</string>
     <string name="entry_zone_today_habits_badge">%d items</string>
-    <string name="entry_zone_lan_sync">Sync</string>
+    <string name="entry_zone_lan_sync">LAN Sync</string>
     <string name="entry_zone_lan_sync_badge">Offline</string>
-    <string name="entry_zone_lan_sync_placeholder_title">Sync</string>
+    <string name="entry_zone_lan_sync_placeholder_title">LAN Sync</string>
     <string name="entry_zone_lan_sync_placeholder_desc">LAN sync feature is under development. Stay tuned!</string>
-    <string name="entry_zone_stats">Stats</string>
+    <string name="entry_zone_stats">Visual Stats</string>
     <string name="entry_zone_stats_badge">Visual</string>
-    <string name="entry_zone_stats_placeholder_title">Stats</string>
+    <string name="entry_zone_stats_placeholder_title">Visual Stats</string>
     <string name="entry_zone_stats_placeholder_desc">Statistics visualization is under development. Stay tuned!</string>
     <string name="today_section_soon">Starting Soon</string>
     <string name="today_section_later">Later</string>
