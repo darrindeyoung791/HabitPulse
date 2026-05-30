@@ -1,17 +1,25 @@
 package io.github.darrindeyoung791.habitpulse.ui.screens
 
+import androidx.compose.animation.core.animateFloatAsState
+import androidx.compose.animation.core.tween
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Brush
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.layout.onSizeChanged
+import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
@@ -31,9 +39,50 @@ fun EntryZone(
 ) {
     if (entries.isEmpty()) return
 
+    val listState = rememberLazyListState()
+    val density = LocalDensity.current
+    var contentHeight by remember { mutableStateOf(0.dp) }
+
+    val isAtStart = remember { mutableStateOf(true) }
+    val isAtEnd = remember { mutableStateOf(false) }
+
+    LaunchedEffect(listState.firstVisibleItemIndex, listState.firstVisibleItemScrollOffset) {
+        val layoutInfo = listState.layoutInfo
+        val totalCount = layoutInfo.totalItemsCount
+        val visibleItems = layoutInfo.visibleItemsInfo
+
+        isAtStart.value = listState.firstVisibleItemIndex == 0 && listState.firstVisibleItemScrollOffset == 0
+
+        if (totalCount > 0 && visibleItems.isNotEmpty()) {
+            val lastVisibleItem = visibleItems.last()
+            val isLastItemVisible = lastVisibleItem.index == totalCount - 1
+            val viewportWidth = layoutInfo.viewportSize.width
+            val itemEnd = lastVisibleItem.offset + lastVisibleItem.size
+            isAtEnd.value = isLastItemVisible && itemEnd <= viewportWidth
+        } else {
+            isAtEnd.value = true
+        }
+    }
+
+    val startGradientAlpha by animateFloatAsState(
+        targetValue = if (isAtStart.value) 0f else 1f,
+        animationSpec = tween(durationMillis = 200),
+        label = "entryZoneStartGradientAlpha"
+    )
+    val endGradientAlpha by animateFloatAsState(
+        targetValue = if (isAtEnd.value) 0f else 1f,
+        animationSpec = tween(durationMillis = 200),
+        label = "entryZoneEndGradientAlpha"
+    )
+
     Box(modifier = modifier.fillMaxWidth()) {
         LazyRow(
-            modifier = Modifier.fillMaxWidth(),
+            state = listState,
+            modifier = Modifier
+                .fillMaxWidth()
+                .onSizeChanged { size ->
+                    contentHeight = with(density) { size.height.toDp() }
+                },
             horizontalArrangement = Arrangement.spacedBy(12.dp),
             contentPadding = PaddingValues(vertical = 8.dp)
         ) {
@@ -44,6 +93,38 @@ fun EntryZone(
                 EntryCard(entry = entry)
             }
         }
+
+        Box(
+            modifier = Modifier
+                .width(16.dp)
+                .height(if (contentHeight > 0.dp) contentHeight else 1.dp)
+                .align(Alignment.CenterStart)
+                .alpha(startGradientAlpha)
+                .background(
+                    Brush.horizontalGradient(
+                        colors = listOf(
+                            MaterialTheme.colorScheme.background,
+                            Color.Transparent
+                        )
+                    )
+                )
+        )
+
+        Box(
+            modifier = Modifier
+                .width(16.dp)
+                .height(if (contentHeight > 0.dp) contentHeight else 1.dp)
+                .align(Alignment.CenterEnd)
+                .alpha(endGradientAlpha)
+                .background(
+                    Brush.horizontalGradient(
+                        colors = listOf(
+                            Color.Transparent,
+                            MaterialTheme.colorScheme.background
+                        )
+                    )
+                )
+        )
     }
 }
 
