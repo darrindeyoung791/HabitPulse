@@ -168,33 +168,33 @@ fun HabitScreenContent(
     }
 
     val todayTitle = stringResource(id = R.string.entry_zone_today_habits)
-    val todayBadgeText = stringResource(id = R.string.entry_zone_today_habits_badge, habits.size)
+    val todayBadge = stringResource(id = R.string.entry_zone_today_habits_badge, habits.size)
     val lanTitle = stringResource(id = R.string.entry_zone_lan_sync)
+    val lanBadge = stringResource(id = R.string.entry_zone_lan_sync_badge)
     val statsTitle = stringResource(id = R.string.entry_zone_stats)
-    val disabledTint = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.38f)
+    val statsBadge = stringResource(id = R.string.entry_zone_stats_badge)
 
-    val entryItems = remember(disabledTint, todayTitle, todayBadgeText, lanTitle, statsTitle, onViewTodayHabits, onViewLanSync, onViewStats) {
+    val entryItems = remember(todayTitle, todayBadge, lanTitle, lanBadge, statsTitle, statsBadge, onViewTodayHabits, onViewLanSync, onViewStats) {
         listOf(
             EntryItem(
                 id = "today",
                 icon = Icons.Filled.List,
                 title = todayTitle,
-                badgeText = todayBadgeText,
+                badgeText = todayBadge,
                 onClick = onViewTodayHabits
             ),
             EntryItem(
                 id = "lan_sync",
                 icon = Icons.Filled.Sync,
-                title = null,
-                badgeText = null,
-                iconTint = disabledTint,
+                title = lanTitle,
+                badgeText = lanBadge,
                 onClick = onViewLanSync
             ),
             EntryItem(
                 id = "stats",
-                icon = null,
+                icon = Icons.Filled.BarChart,
                 title = statsTitle,
-                badgeText = null,
+                badgeText = statsBadge,
                 onClick = onViewStats
             )
         )
@@ -254,10 +254,15 @@ fun HabitScreenContent(
             } else if (!isSearchActive && !hasLoadedHabits) {
                 Box(modifier = Modifier.fillMaxSize()) {}
             } else if (!isSearchActive && habits.isEmpty()) {
-                EmptyStateContent(
-                    modifier = Modifier.fillMaxSize(),
-                    onCreateHabitSelection = onCreateHabitSelection
-                )
+                Column(modifier = Modifier.fillMaxSize()) {
+                    if (!isSearchActive && entryItems.isNotEmpty()) {
+                        EntryZone(entries = entryItems)
+                    }
+                    EmptyStateContent(
+                        modifier = Modifier.weight(1f),
+                        onCreateHabitSelection = onCreateHabitSelection
+                    )
+                }
             } else {
                 HabitListContent(
                     modifier = Modifier.fillMaxSize(),

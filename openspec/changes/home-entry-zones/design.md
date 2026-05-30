@@ -52,42 +52,20 @@
 ```kotlin
 data class EntryItem(
     val id: String,
-    val icon: ImageVector?,        // 可为 null（统计卡片无图标）
-    val title: String?,            // 可为 null（同步未连接时隐藏标题）
-    val badgeText: String?,        // 可为 null（同步/统计卡片无徽章）
-    val iconTint: Color? = null,   // 覆盖图标颜色（同步未连接时灰色）
+    val icon: ImageVector,
+    val title: String,
+    val description: String,
+    val badgeText: String?,
     val onClick: () -> Unit
 )
 ```
-- **理由**：纯数据驱动，点击行为通过 lambda 注入。可空字段支持条件渲染，iconTint 支持视觉状态区分
-
-### D6: 卡片紧凑化设计
-- **选择**：缩小卡片内边距（12→8dp）、图标尺寸（32→24dp）、最小宽度（148→64dp）
-- **理由**：入口卡片仅 3 张，无需大尺寸图标和文字。紧凑设计在窄屏手机上减少滚动需求
-- **替代方案**：保持原尺寸 — 占用空间大、入门区域过于醒目
-
-### D7: 同步未连接状态表达
-- **选择**：隐藏标题文字，图标置灰（onSurface 38% alpha）
-- **理由**：不使用文字"未连接"可节省空间；灰色图标暗示功能不可用状态，语义明确
-- **替代方案**：显示"未连接"badge — 占用额外宽度
-
-### D8: 统计卡片简化
-- **选择**：移除 BarChart 图标和"可视化"徽章，仅保留标题文字
-- **理由**：统计功能尚未实现，图标和"可视化"徽章与无功能状态不匹配。纯文字卡片更轻量且诚实
-- **替代方案**：保留图标和"敬请期待"徽章 — 语义上矛盾（可视化未实现却显示可视化图标）
-
-### D9: 空习惯隐藏 EntryZone
-- **选择**：习惯列表为空时不显示 EntryZone
-- **理由**：入口卡片（今日、同步、统计）在有习惯时才有实际意义。无习惯时显示空状态引导更清晰
-- **替代方案**：始终显示 EntryZone — 卡片点击跳转后功能仍不完整
+- **理由**：纯数据驱动，点击行为通过 lambda 注入，便于后续扩展和测试
 
 ## Risks / Trade-offs
 
 | 风险 | 缓解措施 |
 |------|----------|
-| 横向滚动区域在窄屏手机上宽度不足，卡片内容被截断 | 卡片最小宽度 64dp，允许截断文本用 ellipsis |
+| 横向滚动区域在窄屏手机上宽度不足，卡片内容被截断 | 卡片最小宽度 150dp，允许截断文本用 ellipsis；badge 文字自适应 |
 | 瀑布流模式下 EntryZone 与双列布局的边距对齐 | EntryZone 使用与瀑布流相同的 horizontalPadding（16dp） |
 | LazyRow 套在 LazyColumn 中可能嵌套滚动冲突 | LazyRow 默认拦截横向滚动，LazyColumn 拦截纵向，Compose 自动处理嵌套滚动 |
 | 新增路由需要更新 NavGraph 和 Route 定义 | 遵循现有命名规范，复用 HomeScreen 的 callback 模式 |
-| 同步/统计卡片条件渲染可能造成视觉不一致 | 同步卡片仅图标、统计卡片仅文字，两者宽度差异较大但设计上可接受（统一为紧凑圆角卡片样式） |
-| IconTint 在 remember 块内捕获 MaterialTheme 值，主题切换时可能不更新 | 将 disabledTint 提取为 remember 的 key，主题变化时重新计算 |

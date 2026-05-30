@@ -388,7 +388,7 @@
 
     <!-- Entry Zone -->
     <string name="entry_zone_today_habits">今天</string>
-    <string name="entry_zone_today_habits_badge">%d</string>
+    <string name="entry_zone_today_habits_badge">%d 项</string>
     <string name="entry_zone_lan_sync">同步</string>
     <string name="entry_zone_lan_sync_badge">未连接</string>
     <string name="entry_zone_lan_sync_placeholder_title">同步</string>
