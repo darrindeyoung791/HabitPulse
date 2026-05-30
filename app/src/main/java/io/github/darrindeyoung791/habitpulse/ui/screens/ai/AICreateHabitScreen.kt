@@ -28,8 +28,11 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.res.stringResource
+import android.content.res.Configuration
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
@@ -122,6 +125,11 @@ fun AICreateHabitScreen(
     val context = LocalContext.current
     val scope = rememberCoroutineScope()
 
+    val configuration = LocalConfiguration.current
+    val isLandscape = configuration.orientation == Configuration.ORIENTATION_LANDSCAPE
+    val density = LocalDensity.current
+    val imeVisible = WindowInsets.ime.getBottom(density) > 0
+
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
     val messages by viewModel.messages.collectAsStateWithLifecycle()
     val collectedHabits by viewModel.collectedHabits.collectAsStateWithLifecycle()
@@ -191,42 +199,44 @@ fun AICreateHabitScreen(
 
     Scaffold(
         topBar = {
-            TopAppBar(
-                title = {
-                    Text(
-                        if (uiState.isLoading) stringResource(R.string.ai_streaming_title)
-                        else stringResource(R.string.ai_create_title)
-                    )
-                },
-                navigationIcon = {
-                    IconButton(onClick = {
-                        if (hasMessages) {
-                            viewModel.showExitConfirmation()
-                        } else {
-                            onNavigateBack()
-                        }
-                    }) {
-                        Icon(
-                            imageVector = Icons.AutoMirrored.Filled.ArrowBack,
-                            contentDescription = stringResource(R.string.go_back)
+            if (!(isLandscape && imeVisible)) {
+                TopAppBar(
+                    title = {
+                        Text(
+                            if (uiState.isLoading) stringResource(R.string.ai_streaming_title)
+                            else stringResource(R.string.ai_create_title)
                         )
-                    }
-                },
-                actions = {
-                    IconButton(onClick = {
-                        if (hasMessages) {
-                            viewModel.showSettingsConfirmation()
-                        } else {
-                            onNavigateToSettings()
+                    },
+                    navigationIcon = {
+                        IconButton(onClick = {
+                            if (hasMessages) {
+                                viewModel.showExitConfirmation()
+                            } else {
+                                onNavigateBack()
+                            }
+                        }) {
+                            Icon(
+                                imageVector = Icons.AutoMirrored.Filled.ArrowBack,
+                                contentDescription = stringResource(R.string.go_back)
+                            )
                         }
-                    }) {
-                        Icon(
-                            imageVector = Icons.Default.Settings,
-                            contentDescription = stringResource(R.string.settings_ai_title)
-                        )
+                    },
+                    actions = {
+                        IconButton(onClick = {
+                            if (hasMessages) {
+                                viewModel.showSettingsConfirmation()
+                            } else {
+                                onNavigateToSettings()
+                            }
+                        }) {
+                            Icon(
+                                imageVector = Icons.Default.Settings,
+                                contentDescription = stringResource(R.string.settings_ai_title)
+                            )
+                        }
                     }
-                }
-            )
+                )
+            }
         }
     ) { innerPadding ->
         Column(
@@ -406,6 +416,7 @@ fun AICreateHabitScreen(
                         },
                         onStopClick = { viewModel.stopGeneration() },
                         isLoading = uiState.isLoading,
+                        isLandscape = isLandscape,
                         modifier = Modifier.fillMaxWidth()
                     )
                 }
@@ -646,6 +657,7 @@ fun AIChatInputBox(
     onSendClick: () -> Unit,
     onStopClick: () -> Unit,
     isLoading: Boolean,
+    isLandscape: Boolean = false,
     modifier: Modifier = Modifier
 ) {
     Surface(
@@ -669,11 +681,12 @@ fun AIChatInputBox(
                 BasicTextField(
                     value = inputText,
                     onValueChange = onTextChange,
+                    maxLines = if (isLandscape) 2 else Int.MAX_VALUE,
                     modifier = Modifier
                         .fillMaxWidth()
-                        .defaultMinSize(minHeight = 72.dp)
+                        .defaultMinSize(minHeight = if (isLandscape) 56.dp else 72.dp)
                         .padding(horizontal = 12.dp, vertical = 8.dp)
-                        .heightIn(max = 168.dp)
+                        .heightIn(max = if (isLandscape) 80.dp else 168.dp)
                         .focusRequester(focusRequester),
                     textStyle = MaterialTheme.typography.bodyLarge.copy(
                         color = MaterialTheme.colorScheme.onSurface
