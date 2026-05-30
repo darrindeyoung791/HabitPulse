@@ -23,11 +23,16 @@ import java.time.DayOfWeek
 import java.time.Duration
 import java.time.LocalDate
 import java.time.LocalTime
+import androidx.navigation.NavHostController
+import io.github.darrindeyoung791.habitpulse.ui.utils.rememberDebounceClickHandler
+import io.github.darrindeyoung791.habitpulse.ui.utils.rememberHideKeyboardAndNavigateBack
+import kotlinx.coroutines.launch
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun TodayHabitsScreen(
     onNavigateBack: () -> Unit,
+    navController: NavHostController,
     onEditHabit: (Habit) -> Unit,
     application: HabitPulseApplication? = null
 ) {
@@ -109,6 +114,9 @@ fun TodayHabitsScreen(
     }
 
     val listState = remember { LazyListState() }
+    val scope = rememberCoroutineScope()
+    val clickHandler = rememberDebounceClickHandler()
+    val hideKeyboardAndNavigateBack = rememberHideKeyboardAndNavigateBack(navController)
 
     Scaffold(
         topBar = {
@@ -120,7 +128,7 @@ fun TodayHabitsScreen(
                     )
                 },
                 navigationIcon = {
-                    IconButton(onClick = onNavigateBack) {
+                    IconButton(onClick = { scope.launch { clickHandler.processClick { hideKeyboardAndNavigateBack() } } }) {
                         Icon(
                             imageVector = Icons.AutoMirrored.Filled.ArrowBack,
                             contentDescription = stringResource(id = R.string.settings_back)

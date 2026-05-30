@@ -58,6 +58,8 @@ import kotlinx.coroutines.launch
 import androidx.navigation.NavHostController
 import kotlinx.coroutines.flow.first
 import androidx.activity.compose.BackHandler
+import io.github.darrindeyoung791.habitpulse.ui.utils.rememberDebounceClickHandler
+import io.github.darrindeyoung791.habitpulse.ui.utils.rememberHideKeyboardAndNavigateBack
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -124,6 +126,8 @@ fun AICreateHabitScreen(
     val viewModel: AICreateHabitViewModel = viewModel()
     val context = LocalContext.current
     val scope = rememberCoroutineScope()
+    val clickHandler = rememberDebounceClickHandler()
+    val hideKeyboardAndNavigateBack = rememberHideKeyboardAndNavigateBack(navController)
 
     val configuration = LocalConfiguration.current
     val isLandscape = configuration.orientation == Configuration.ORIENTATION_LANDSCAPE
@@ -212,7 +216,11 @@ fun AICreateHabitScreen(
                             if (hasMessages) {
                                 viewModel.showExitConfirmation()
                             } else {
-                                onNavigateBack()
+                                scope.launch {
+                                    clickHandler.processClick {
+                                        hideKeyboardAndNavigateBack()
+                                    }
+                                }
                             }
                         }) {
                             Icon(

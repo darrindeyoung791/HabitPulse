@@ -364,6 +364,7 @@ fun HabitPulseNavGraph(
                     onNavigateBack = {
                         navController.popBackStack()
                     },
+                    navController = navController,
                     onEditHabit = { habit ->
                         navController.navigate(Route.EditHabit.createRoute(habit.id)) {
                             launchSingleTop = true
@@ -402,7 +403,8 @@ fun HabitPulseNavGraph(
                 LanSyncPlaceholderScreen(
                     onNavigateBack = {
                         navController.popBackStack()
-                    }
+                    },
+                    navController = navController
                 )
             }
         }
@@ -432,7 +434,8 @@ fun HabitPulseNavGraph(
                 StatsPlaceholderScreen(
                     onNavigateBack = {
                         navController.popBackStack()
-                    }
+                    },
+                    navController = navController
                 )
             }
         }
