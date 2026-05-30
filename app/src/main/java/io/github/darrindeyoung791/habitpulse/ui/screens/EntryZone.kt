@@ -26,10 +26,11 @@ import androidx.compose.ui.unit.dp
 
 data class EntryItem(
     val id: String,
-    val icon: ImageVector,
-    val title: String,
+    val icon: ImageVector?,
+    val title: String?,
     val badgeText: String?,
     val iconTint: Color? = null,
+    val iconContent: String? = null,
     val onClick: () -> Unit
 )
 
@@ -134,6 +135,12 @@ private fun EntryCard(
     entry: EntryItem,
     modifier: Modifier = Modifier
 ) {
+    val hasLeftContent = entry.icon != null || entry.iconContent != null
+    val iconContainerBackground = when {
+        entry.iconTint != null && entry.icon != null -> Color.Transparent
+        else -> MaterialTheme.colorScheme.primaryContainer
+    }
+
     Card(
         modifier = modifier
             .widthIn(min = 148.dp)
@@ -150,31 +157,44 @@ private fun EntryCard(
                     .padding(start = 12.dp, end = 12.dp, top = 12.dp, bottom = 12.dp),
                 verticalAlignment = Alignment.CenterVertically
             ) {
-                Box(
-                    modifier = Modifier
-                        .size(32.dp)
-                        .clip(RoundedCornerShape(10.dp))
-                        .background(MaterialTheme.colorScheme.primaryContainer),
-                    contentAlignment = Alignment.Center
-                ) {
-                    Icon(
-                        imageVector = entry.icon,
-                        contentDescription = null,
-                        modifier = Modifier.size(18.dp),
-                        tint = entry.iconTint ?: MaterialTheme.colorScheme.onPrimaryContainer
-                    )
+                if (hasLeftContent) {
+                    Box(
+                        modifier = Modifier
+                            .size(32.dp)
+                            .clip(RoundedCornerShape(10.dp))
+                            .background(iconContainerBackground),
+                        contentAlignment = Alignment.Center
+                    ) {
+                        if (entry.iconContent != null) {
+                            Text(
+                                text = entry.iconContent,
+                                style = MaterialTheme.typography.titleSmall,
+                                fontWeight = FontWeight.Bold,
+                                color = MaterialTheme.colorScheme.onPrimaryContainer
+                            )
+                        } else if (entry.icon != null) {
+                            Icon(
+                                imageVector = entry.icon,
+                                contentDescription = null,
+                                modifier = Modifier.size(18.dp),
+                                tint = entry.iconTint ?: MaterialTheme.colorScheme.onPrimaryContainer
+                            )
+                        }
+                    }
+
+                    Spacer(modifier = Modifier.width(8.dp))
                 }
 
-                Spacer(modifier = Modifier.width(8.dp))
-
-                Text(
-                    text = entry.title,
-                    style = MaterialTheme.typography.titleMedium,
-                    fontWeight = FontWeight.SemiBold,
-                    color = MaterialTheme.colorScheme.onSurface,
-                    maxLines = 1,
-                    overflow = TextOverflow.Ellipsis
-                )
+                if (entry.title != null) {
+                    Text(
+                        text = entry.title,
+                        style = MaterialTheme.typography.titleMedium,
+                        fontWeight = FontWeight.SemiBold,
+                        color = MaterialTheme.colorScheme.onSurface,
+                        maxLines = 1,
+                        overflow = TextOverflow.Ellipsis
+                    )
+                }
             }
 
             if (entry.badgeText != null) {

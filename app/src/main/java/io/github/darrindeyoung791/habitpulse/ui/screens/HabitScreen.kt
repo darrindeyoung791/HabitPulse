@@ -168,18 +168,19 @@ fun HabitScreenContent(
     }
 
     val todayTitle = stringResource(id = R.string.entry_zone_today_habits)
-    val todayBadgeText = stringResource(id = R.string.entry_zone_today_habits_badge, habits.size)
     val lanTitle = stringResource(id = R.string.entry_zone_lan_sync)
     val statsTitle = stringResource(id = R.string.entry_zone_stats)
     val disabledTint = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.38f)
+    val todayCount = habits.size.toString()
 
-    val entryItems = remember(disabledTint, todayTitle, todayBadgeText, lanTitle, statsTitle, onViewTodayHabits, onViewLanSync, onViewStats) {
+    val entryItems = remember(disabledTint, todayTitle, todayCount, lanTitle, statsTitle, onViewTodayHabits, onViewLanSync, onViewStats) {
         listOf(
             EntryItem(
                 id = "today",
-                icon = Icons.Filled.List,
+                icon = null,
                 title = todayTitle,
-                badgeText = todayBadgeText,
+                badgeText = null,
+                iconContent = todayCount,
                 onClick = onViewTodayHabits
             ),
             EntryItem(
