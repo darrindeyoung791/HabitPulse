@@ -255,15 +255,10 @@ fun HabitScreenContent(
             } else if (!isSearchActive && !hasLoadedHabits) {
                 Box(modifier = Modifier.fillMaxSize()) {}
             } else if (!isSearchActive && habits.isEmpty()) {
-                Column(modifier = Modifier.fillMaxSize()) {
-                    if (!isSearchActive && entryItems.isNotEmpty()) {
-                        EntryZone(entries = entryItems)
-                    }
-                    EmptyStateContent(
-                        modifier = Modifier.weight(1f),
-                        onCreateHabitSelection = onCreateHabitSelection
-                    )
-                }
+                EmptyStateContent(
+                    modifier = Modifier.fillMaxSize(),
+                    onCreateHabitSelection = onCreateHabitSelection
+                )
             } else {
                 HabitListContent(
                     modifier = Modifier.fillMaxSize(),
