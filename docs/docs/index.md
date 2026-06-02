@@ -27,9 +27,6 @@ hero:
       link: https://github.com/darrindeyoung791/HabitPulse
 
 features:
-  - icon: 🪶
-    title: 极致小巧
-    details: 安装包仅 3 MB 左右，比一首歌更小。与臃肿繁杂说再见。
   - icon: 🎯
     title: 习惯管理
     details: 创建自定义周期习惯，记录每次打卡时间。完整的打卡历史让你清晰看到坚持的轨迹。

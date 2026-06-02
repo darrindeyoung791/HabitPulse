@@ -80,6 +80,7 @@ export default defineConfig({
           { text: '帮助与反馈', link: '/tutorial/help-and-feedback' },
           { text: '初次上手', link: '/tutorial/first-time' },
           { text: '新建与编辑习惯', link: '/tutorial/add-and-edit-habit' },
+          { text: 'AI 新建习惯', link: '/tutorial/AI-create-habit' },
           { text: '删除与排序习惯', link: '/tutorial/delete-and-sort-habit' },
           { text: '打卡习惯', link: '/tutorial/checkin' },
           { text: '联系人', link: '/tutorial/contacts' },
@@ -90,6 +91,7 @@ export default defineConfig({
       {
         text: '高级设置',
         items: [
+          { text: '配置 AI', link: '/advanced/AI-config' },
           { text: '后台保活', link: '/advanced/stayin-alive' },
           { text: '空间清理', link: '/advanced/storage-cleanup' },
           { text: '强制平板模式', link: '/advanced/force-tablet-landscape' },

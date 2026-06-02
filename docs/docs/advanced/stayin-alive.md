@@ -33,4 +33,4 @@ HabitPulse 需要持续在后台运行，才能够及时通知你完成习惯。
 
 HabitPulse 在后台耗电量非常低，因为 HabitPulse 十分小巧，没有多余功能在后台运行。
 
-典型情况下，HabitPulse 每周耗电约 400 mAh。
+典型情况下，HabitPulse 每周耗电小于 400 mAh。

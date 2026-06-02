@@ -15,7 +15,7 @@
 
 ---
 
-## 📱 简介
+## 简介
 
 **HabitPulse** 是一款采用 Material Design 3 设计风格的 Android 习惯追踪应用，致力于帮助用户建立和维持良好的日常习惯。通过简洁直观的界面设计和智能化的提醒机制，让习惯养成变得更加轻松有效。
 
@@ -29,9 +29,9 @@
 
 ---
 
-## ✨ 功能特性
+## 功能特性
 
-### 🎯 核心功能
+### 核心功能
 - [x] **习惯追踪**：创建、管理和追踪日常习惯，记录每一次打卡
 - [x] **打卡记录**：完整的打卡历史记录，支持查看任意日期的完成情况
 - [x] **多选与排序**：长按习惯卡片进入多选模式，支持拖拽排序和批量删除
@@ -40,12 +40,12 @@
 - [x] **搜索与过滤**：实时搜索习惯，按习惯/日期筛选打卡记录
 - [x] **智能提醒**：支持设置每日/每周重复提醒时间
 - [x] **保活服务**：前台服务保持应用活跃，支持开机自启
+- [x] **AI 辅助规划**：接入大语言模型 API + AGenUI (A2UI)，实现 AI 辅助创建习惯和流式 UI（完善中，[方案详情](devdoc/ai-habit-creation-plan.md)）
 - [ ] **通知提醒**：基于 AlarmManager 的准时提醒（计划中）
 - [ ] **局域网同步**：无需注册账号，通过局域网在多台设备间同步数据（计划中，[方案详情](devdoc/lan-sync-plan.md)）
-- [ ] **AI 辅助规划**：接入大语言模型 API + AGenUI (A2UI)，实现 AI 辅助创建习惯和流式 UI（计划中，[方案详情](devdoc/ai-habit-creation-plan.md)）
 - [ ] **记录可视化**：使用 WebView 和网页制作可视化组件，如一周打卡时间分布等（计划中）
 
-### 🎨 UI/UX 特性
+### UI/UX 特性
 - **Material Design 3**：采用最新的 MD3 设计规范，界面简洁美观
 - **动态配色**：支持 Android 12+ 的动态主题色（Material You）
 - **响应式布局**：完美适配手机和平板，支持横竖屏切换（Bottom Bar / Rail / Drawer）
@@ -55,7 +55,7 @@
 - **多语言**：支持简体中文、繁体中文、英语
 - **WebView 安全**：SSL 证书警告 + 外部链接离开确认
 
-### 🔧 技术特性
+### 技术特性
 - **Jetpack Compose**：声明式 UI 框架，现代化开发体验
 - **Room 数据库**：本地数据持久化，离线可用
 - **ViewModel + Flow**：响应式架构，数据驱动 UI
@@ -65,7 +65,7 @@
 
 ---
 
-## 🖼️ 界面预览
+## 界面预览
 
 <div align="center">
 
@@ -78,7 +78,7 @@
 
 ---
 
-## 🚀 快速开始
+## 快速开始
 
 ### 环境要求
 - **Android Studio**：最新版
@@ -135,7 +135,7 @@ cd HabitPulse
 
 ---
 
-## 🛠️ 技术栈
+## 技术栈
 
 | 组件 | 版本 | 说明 |
 |------|------|------|
@@ -148,12 +148,12 @@ cd HabitPulse
 | **ViewModel** | 2.8.7 | UI 状态管理 |
 | **前台服务** | Android Foreground Service | 保活与开机自启 |
 | **偏好存储** | DataStore 1.1.1 | 现代化偏好存储 |
-| **构建工具** | Gradle 9.4.0 + AGP 9.1.0 | 项目构建系统 |
+| **构建工具** | Gradle 9.4.0 + AGP 9.1.1 | 项目构建系统 |
 | **JVM 目标** | Java 17 | 编译字节码版本 |
 
 ---
 
-## 📦 项目结构
+## 项目结构
 
 ```
 HabitPulse/
@@ -189,13 +189,13 @@ HabitPulse/
 │   └── package.json                         # Node.js 项目配置
 ├── openspec/                                # OpenSpec 变更管理工作流
 ├── QWEN.md                                  # AI 项目上下文文档
-├── AGENTS.md                                # AI 代理项目上下文文档
+├── AGENTS.md                                # AI 项目上下文文档
 └── README.md                                # 项目说明文档
 ```
 
 ---
 
-## 📖 用户文档站
+## 用户文档站
 
 HabitPulse 维护一个面向用户的文档站点，使用 **VitePress** 构建并通过 GitHub Actions 自动部署到 **GitHub Pages**。
 
@@ -217,7 +217,7 @@ npm run docs:build  # 构建到 docs/.vitepress/dist/
 
 ---
 
-## 📄 数据库设计
+## 数据库设计
 
 ### 核心数据表
 
@@ -254,17 +254,17 @@ npm run docs:build  # 构建到 docs/.vitepress/dist/
 | completedDateLocal | TEXT | 本地日期 (yyyy-MM-dd) |
 | timeZone | TEXT | 时区信息 |
 
-> 📚 详细的数据库设计文档将在未来更新中给出
+> 详细的数据库设计文档将在未来更新中给出
 
 ---
 
-## 🤝 贡献指南
+## 贡献指南
 
 我们欢迎各种形式的贡献！
 
-现阶段欢迎优先通过 [issue](https://github.com/darrindeyoung791/HabitPulse/issues) 反馈问题或提出建议。中英文 issue 均可，其他语言我们将翻译后处理，并统一使用英文回复。
+现阶段欢迎优先通过 [issue](https://github.com/darrindeyoung791/HabitPulse/issues) 反馈问题、提出建议。中英文 issue 均可，其他语言我们将翻译后处理，并统一使用英文回复。
 
-如果你想提交 PR，因为本项目是业余维护，review 和合并可能需要较长时间，敬请谅解。
+如果你想提交 PR，因为本项目是业余维护，代码核查与合并可能需要较长时间，敬请谅解。
 
 ### OpenSpec 工作流
 本项目使用 **OpenSpec** 进行变更管理：
@@ -283,7 +283,7 @@ npm run docs:build  # 构建到 docs/.vitepress/dist/
 ---
 
 
-## 📜 开源协议
+## 开源协议
 
 本项目采用 [MIT 协议](LICENSE) 开源。
 
