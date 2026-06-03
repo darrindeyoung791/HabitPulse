@@ -198,7 +198,7 @@ fun RewardBottomSheet(
  * 勾选图标从小到大，不旋转
  */
 @Composable
-private fun AnimatedCheckIcon(
+internal fun AnimatedCheckIcon(
     animationStarted: Boolean,
     containerColor: androidx.compose.ui.graphics.Color
 ) {
