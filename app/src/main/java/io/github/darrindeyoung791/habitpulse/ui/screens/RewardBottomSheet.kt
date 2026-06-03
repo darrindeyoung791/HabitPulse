@@ -58,6 +58,8 @@ import io.github.darrindeyoung791.habitpulse.data.model.Habit
 import io.github.darrindeyoung791.habitpulse.data.model.SupervisionMethod
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.outlined.Check
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.vector.ImageVector
 import kotlin.math.PI
 import kotlin.math.cos
 import kotlin.math.sin
@@ -170,7 +172,7 @@ fun RewardBottomSheet(
             
             // 动画图标区域（手机横屏时不显示，为按钮留出空间）
             if (!isPhoneLandscape) {
-                AnimatedCheckIcon(
+                AnimatedFeedbackIcon(
                     animationStarted = animationStarted,
                     containerColor = MaterialTheme.colorScheme.primaryContainer
                 )
@@ -193,16 +195,17 @@ fun RewardBottomSheet(
 }
 
 /**
- * 带动画效果的勾选图标
+ * 带动画效果的反馈图标
  * 背景形状从小到大，顺时针旋转
- * 勾选图标从小到大，不旋转
+ * 图标从小到大，不旋转
  */
 @Composable
-internal fun AnimatedCheckIcon(
+internal fun AnimatedFeedbackIcon(
     animationStarted: Boolean,
-    containerColor: androidx.compose.ui.graphics.Color
+    containerColor: Color,
+    icon: ImageVector = Icons.Outlined.Check,
+    iconTint: Color = MaterialTheme.colorScheme.onPrimaryContainer
 ) {
-    // 背景形状动画
     val backgroundScale by animateFloatAsState(
         targetValue = if (animationStarted) 1f else 0.5f,
         animationSpec = tween(
@@ -221,7 +224,6 @@ internal fun AnimatedCheckIcon(
         label = "backgroundRotation"
     )
     
-    // 勾选图标动画（稍微延迟）
     val iconScale by animateFloatAsState(
         targetValue = if (animationStarted) 1f else 0.3f,
         animationSpec = tween(
@@ -236,7 +238,6 @@ internal fun AnimatedCheckIcon(
         contentAlignment = Alignment.Center,
         modifier = Modifier.size(160.dp)
     ) {
-        // 背景形状 - 12 角星形
         Canvas(
             modifier = Modifier
                 .size(140.dp)
@@ -249,10 +250,9 @@ internal fun AnimatedCheckIcon(
             val center = Offset(size.width / 2, size.height / 2)
             val outerRadius = canvasSize / 2
             val innerRadius = outerRadius * 0.8f
-            val cornerRadius = 12.dp.toPx()  // 圆角半径，越小角越尖
+            val cornerRadius = 12.dp.toPx()
 
-            // 创建星形顶点
-            val numPoints = 12  // 12 个角
+            val numPoints = 12
             val points = mutableListOf<Offset>()
             for (i in 0 until numPoints * 2) {
                 val angle = (PI * i / numPoints) - PI / 2
@@ -262,7 +262,6 @@ internal fun AnimatedCheckIcon(
                 points.add(Offset(x, y))
             }
 
-            // 创建带圆角的路径
             val path = Path()
             path.moveTo(points[0].x, points[0].y)
             
@@ -271,21 +270,17 @@ internal fun AnimatedCheckIcon(
                 val current = points[i]
                 val next = points[(i + 1) % points.size]
                 
-                // 计算从当前点到前一点的方向
                 val toPrevX = prev.x - current.x
                 val toPrevY = prev.y - current.y
                 val toPrevLen = kotlin.math.sqrt(toPrevX * toPrevX + toPrevY * toPrevY)
                 
-                // 计算从当前点到下一点的方向
                 val toNextX = next.x - current.x
                 val toNextY = next.y - current.y
                 val toNextLen = kotlin.math.sqrt(toNextX * toNextX + toNextY * toNextY)
                 
-                // 计算圆角起点（在当前点到前一点的边上，距离顶点 cornerRadius 处）
                 val cornerStartX = current.x + (toPrevX / toPrevLen) * cornerRadius
                 val cornerStartY = current.y + (toPrevY / toPrevLen) * cornerRadius
                 
-                // 计算圆角终点（在当前点到下一点的边上，距离顶点 cornerRadius 处）
                 val cornerEndX = current.x + (toNextX / toNextLen) * cornerRadius
                 val cornerEndY = current.y + (toNextY / toNextLen) * cornerRadius
                 
@@ -295,7 +290,6 @@ internal fun AnimatedCheckIcon(
                     path.lineTo(cornerStartX, cornerStartY)
                 }
                 
-                // 使用二次贝塞尔曲线绘制圆角
                 path.quadraticTo(
                     current.x, current.y,
                     cornerEndX, cornerEndY
@@ -306,14 +300,13 @@ internal fun AnimatedCheckIcon(
             drawPath(path, color = containerColor)
         }
         
-        // 勾选图标
         Icon(
-            imageVector = Icons.Outlined.Check,
+            imageVector = icon,
             contentDescription = null,
             modifier = Modifier
                 .size(80.dp)
                 .scale(iconScale),
-            tint = MaterialTheme.colorScheme.onPrimaryContainer
+            tint = iconTint
         )
     }
 }

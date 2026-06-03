@@ -37,7 +37,10 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.*
 import androidx.compose.material.icons.outlined.Check
+import androidx.compose.material.icons.outlined.Close
 import androidx.compose.material.icons.outlined.LibraryAdd
+import androidx.compose.material.icons.outlined.Schedule
+import androidx.compose.material.icons.outlined.Warning
 import androidx.compose.material.icons.outlined.Search
 import androidx.compose.material3.*
 import androidx.compose.ui.draw.scale
@@ -112,7 +115,6 @@ fun HabitScreenContent(
     animatedContentScope: AnimatedContentScope? = null,
     nestedScrollConnection: androidx.compose.ui.input.nestedscroll.NestedScrollConnection? = null,
     multiSelectTargetHabitId: UUID? = null,
-    transitioningEntryId: String? = null,
     isSearchActive: Boolean = false,
     onSearchActiveChange: (Boolean) -> Unit = {},
     onViewAboutToStart: () -> Unit = {},
@@ -335,10 +337,7 @@ fun HabitScreenContent(
                     entryZone = {
                         if (!isSearchActive && entryItems.isNotEmpty()) {
                             EntryZone(
-                                entries = entryItems,
-                                transitioningEntryId = transitioningEntryId,
-                                sharedTransitionScope = sharedTransitionScope,
-                                animatedContentScope = animatedContentScope
+                                entries = entryItems
                             )
                         }
                     }
@@ -432,9 +431,21 @@ internal fun CheckInFeedbackSheet(
 
             Spacer(modifier = Modifier.height(32.dp))
 
-            AnimatedCheckIcon(
+            val (feedbackIcon, feedbackIconTint, feedbackContainerColor) = when (type) {
+                HabitViewModel.CheckInFeedbackType.LATE_CHECK_IN ->
+                    Triple(Icons.Outlined.Warning, MaterialTheme.colorScheme.tertiary, MaterialTheme.colorScheme.tertiaryContainer)
+                HabitViewModel.CheckInFeedbackType.ALREADY_COMPLETED ->
+                    Triple(Icons.Outlined.Close, MaterialTheme.colorScheme.onSurfaceVariant, MaterialTheme.colorScheme.surfaceVariant)
+                HabitViewModel.CheckInFeedbackType.TOO_EARLY ->
+                    Triple(Icons.Outlined.Schedule, MaterialTheme.colorScheme.tertiary, MaterialTheme.colorScheme.tertiaryContainer)
+                else ->
+                    Triple(Icons.Outlined.Check, MaterialTheme.colorScheme.onPrimaryContainer, MaterialTheme.colorScheme.primaryContainer)
+            }
+            AnimatedFeedbackIcon(
                 animationStarted = animationStarted,
-                containerColor = MaterialTheme.colorScheme.primaryContainer
+                containerColor = feedbackContainerColor,
+                icon = feedbackIcon,
+                iconTint = feedbackIconTint
             )
 
             Spacer(modifier = Modifier.height(32.dp))

@@ -203,9 +203,9 @@ fun HabitPulseNavGraph(
                     initialOffsetY = { fullHeight -> fullHeight },
                     animationSpec = spring(
                         dampingRatio = 0.75f,
-                        stiffness = Spring.StiffnessLow
+                        stiffness = Spring.StiffnessMediumLow
                     )
-                ) + fadeIn(animationSpec = tween(durationMillis = 400))
+                ) + fadeIn(animationSpec = tween(durationMillis = 300))
             },
             exitTransition = {
                 slideOutVertically(
@@ -248,9 +248,9 @@ fun HabitPulseNavGraph(
                     initialOffsetY = { fullHeight -> fullHeight },
                     animationSpec = spring(
                         dampingRatio = 0.75f,
-                        stiffness = Spring.StiffnessLow
+                        stiffness = Spring.StiffnessMediumLow
                     )
-                ) + fadeIn(animationSpec = tween(durationMillis = 400))
+                ) + fadeIn(animationSpec = tween(durationMillis = 300))
             },
             exitTransition = {
                 slideOutVertically(
@@ -283,9 +283,9 @@ fun HabitPulseNavGraph(
                     initialOffsetY = { fullHeight -> fullHeight },
                     animationSpec = spring(
                         dampingRatio = 0.75f,
-                        stiffness = Spring.StiffnessLow
+                        stiffness = Spring.StiffnessMediumLow
                     )
-                ) + fadeIn(animationSpec = tween(durationMillis = 400))
+                ) + fadeIn(animationSpec = tween(durationMillis = 300))
             },
             exitTransition = {
                 slideOutVertically(
@@ -328,9 +328,9 @@ fun HabitPulseNavGraph(
                     initialOffsetY = { fullHeight -> fullHeight },
                     animationSpec = spring(
                         dampingRatio = 0.75f,
-                        stiffness = Spring.StiffnessLow
+                        stiffness = Spring.StiffnessMediumLow
                     )
-                ) + fadeIn(animationSpec = tween(durationMillis = 400))
+                ) + fadeIn(animationSpec = tween(durationMillis = 300))
             },
             exitTransition = {
                 slideOutVertically(
@@ -359,14 +359,21 @@ fun HabitPulseNavGraph(
                 navArgument("filter") { type = NavType.StringType }
             ),
             enterTransition = {
-                fadeIn(animationSpec = tween(durationMillis = 350))
+                slideInVertically(
+                    initialOffsetY = { fullHeight -> fullHeight },
+                    animationSpec = spring(
+                        dampingRatio = 0.75f,
+                        stiffness = Spring.StiffnessMediumLow
+                    )
+                ) + fadeIn(animationSpec = tween(durationMillis = 300))
             },
             exitTransition = {
-                fadeOut(animationSpec = tween(durationMillis = 200))
+                slideOutVertically(
+                    targetOffsetY = { fullHeight -> fullHeight },
+                    animationSpec = tween(durationMillis = 200)
+                ) + fadeOut(animationSpec = tween(durationMillis = 200))
             }
         ) { backStackEntry ->
-            val animatedContentScope = this
-            val sharedTransitionScope = this@SharedTransitionLayout
             Box(
                 modifier = Modifier
                     .fillMaxSize()
@@ -387,9 +394,7 @@ fun HabitPulseNavGraph(
                             }
                         }
                     },
-                    application = context.applicationContext as HabitPulseApplication,
-                    sharedTransitionScope = sharedTransitionScope,
-                    animatedContentScope = animatedContentScope
+                    application = context.applicationContext as HabitPulseApplication
                 )
             }
         }
@@ -400,9 +405,9 @@ fun HabitPulseNavGraph(
                     initialOffsetY = { fullHeight -> fullHeight },
                     animationSpec = spring(
                         dampingRatio = 0.75f,
-                        stiffness = Spring.StiffnessLow
+                        stiffness = Spring.StiffnessMediumLow
                     )
-                ) + fadeIn(animationSpec = tween(durationMillis = 400))
+                ) + fadeIn(animationSpec = tween(durationMillis = 300))
             },
             exitTransition = {
                 slideOutVertically(
@@ -431,9 +436,9 @@ fun HabitPulseNavGraph(
                     initialOffsetY = { fullHeight -> fullHeight },
                     animationSpec = spring(
                         dampingRatio = 0.75f,
-                        stiffness = Spring.StiffnessLow
+                        stiffness = Spring.StiffnessMediumLow
                     )
-                ) + fadeIn(animationSpec = tween(durationMillis = 400))
+                ) + fadeIn(animationSpec = tween(durationMillis = 300))
             },
             exitTransition = {
                 slideOutVertically(
@@ -462,9 +467,9 @@ fun HabitPulseNavGraph(
                     initialOffsetY = { fullHeight -> fullHeight },
                     animationSpec = spring(
                         dampingRatio = 0.75f,
-                        stiffness = Spring.StiffnessLow
+                        stiffness = Spring.StiffnessMediumLow
                     )
-                ) + fadeIn(animationSpec = tween(durationMillis = 400))
+                ) + fadeIn(animationSpec = tween(durationMillis = 300))
             },
             exitTransition = {
                 slideOutVertically(

@@ -1,9 +1,5 @@
 package io.github.darrindeyoung791.habitpulse.ui.screens
 
-import androidx.compose.animation.AnimatedContentScope
-import androidx.compose.animation.ExperimentalSharedTransitionApi
-import androidx.compose.animation.SharedTransitionScope
-import androidx.compose.animation.core.FastOutSlowInEasing
 import androidx.compose.animation.core.tween
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyListState
@@ -37,16 +33,14 @@ import io.github.darrindeyoung791.habitpulse.ui.utils.rememberHideKeyboardAndNav
 import io.github.darrindeyoung791.habitpulse.ui.utils.StaggeredListItem
 import kotlinx.coroutines.launch
 
-@OptIn(ExperimentalMaterial3Api::class, ExperimentalSharedTransitionApi::class)
+@OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun TodayHabitsScreen(
     filter: String = "today",
     onNavigateBack: () -> Unit,
     navController: NavHostController,
     onEditHabit: (Habit) -> Unit,
-    application: HabitPulseApplication? = null,
-    sharedTransitionScope: SharedTransitionScope? = null,
-    animatedContentScope: AnimatedContentScope? = null
+    application: HabitPulseApplication? = null
 ) {
     val context = androidx.compose.ui.platform.LocalContext.current
 
@@ -127,23 +121,10 @@ fun TodayHabitsScreen(
                         "overdue" -> R.string.entry_zone_overdue
                         else -> R.string.entry_zone_today_habits
                     }
-                    Box(
-                        modifier = if (sharedTransitionScope != null && animatedContentScope != null) {
-                            with(sharedTransitionScope) {
-                                Modifier.sharedElement(
-                                    sharedContentState = rememberSharedContentState(key = "entry_title_$filter"),
-                                    animatedVisibilityScope = animatedContentScope,
-                                    boundsTransform = { _, _ ->
-                                        tween(durationMillis = 350, easing = FastOutSlowInEasing)
-                                    }
-                                )
-                            }
-                        } else Modifier
-                    ) {
-                        Text(
-                            text = stringResource(id = titleRes)
-                        )
-                    }
+                    Text(
+                        text = stringResource(id = titleRes),
+                        fontWeight = FontWeight.SemiBold
+                    )
                 },
                 navigationIcon = {
                     IconButton(onClick = { scope.launch { clickHandler.processClick { hideKeyboardAndNavigateBack() } } }) {
@@ -164,20 +145,6 @@ fun TodayHabitsScreen(
             modifier = Modifier
                 .fillMaxSize()
                 .padding(paddingValues)
-                .then(
-                    if (sharedTransitionScope != null && animatedContentScope != null) {
-                        with(sharedTransitionScope) {
-                            Modifier.sharedBounds(
-                                sharedContentState = rememberSharedContentState(key = "entry_bg_$filter"),
-                                animatedVisibilityScope = animatedContentScope,
-                                boundsTransform = { _, _ ->
-                                    tween(durationMillis = 350, easing = FastOutSlowInEasing)
-                                },
-                                zIndexInOverlay = 0f
-                            )
-                        }
-                    } else Modifier
-                )
         ) {
             if (flatSortedList.isEmpty()) {
                 Box(
