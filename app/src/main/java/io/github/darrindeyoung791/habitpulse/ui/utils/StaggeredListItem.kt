@@ -4,9 +4,9 @@ import androidx.compose.animation.core.Spring
 import androidx.compose.animation.core.animateFloat
 import androidx.compose.animation.core.spring
 import androidx.compose.animation.core.updateTransition
+import androidx.compose.foundation.gestures.ScrollableState
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.lazy.LazyListState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.State
@@ -21,7 +21,7 @@ import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.filter
 
 @Composable
-fun rememberAnimationsFrozen(listState: LazyListState): State<Boolean> {
+fun rememberAnimationsFrozen(scrollableState: ScrollableState): State<Boolean> {
     val frozen = remember { mutableStateOf(false) }
 
     LaunchedEffect(Unit) {
@@ -29,8 +29,8 @@ fun rememberAnimationsFrozen(listState: LazyListState): State<Boolean> {
         frozen.value = true
     }
 
-    LaunchedEffect(listState) {
-        snapshotFlow { listState.isScrollInProgress }
+    LaunchedEffect(scrollableState) {
+        snapshotFlow { scrollableState.isScrollInProgress }
             .filter { it }
             .collect {
                 frozen.value = true
@@ -44,6 +44,7 @@ fun rememberAnimationsFrozen(listState: LazyListState): State<Boolean> {
 fun StaggeredListItem(
     index: Int,
     animationsFrozen: Boolean,
+    modifier: Modifier = Modifier,
     content: @Composable () -> Unit
 ) {
     var animationTriggered by remember { mutableStateOf(false) }
@@ -53,6 +54,12 @@ fun StaggeredListItem(
             delay(index * 30L)
         }
         animationTriggered = true
+    }
+
+    LaunchedEffect(animationsFrozen) {
+        if (animationsFrozen) {
+            animationTriggered = true
+        }
     }
 
     val transition = updateTransition(targetState = animationTriggered, label = "staggeredListItem")
@@ -73,7 +80,7 @@ fun StaggeredListItem(
     ) { triggered -> if (triggered) 0f else 25f }
 
     Box(
-        modifier = Modifier
+        modifier = modifier
             .fillMaxWidth()
             .graphicsLayer {
                 this.alpha = alpha

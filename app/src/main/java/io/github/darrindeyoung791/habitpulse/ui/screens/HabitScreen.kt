@@ -531,7 +531,9 @@ fun HabitListContent(
     val useStaggeredGrid = isLandscape && screenWidthDp >= 840
     val horizontalPadding = 16.dp
 
-    val animationsFrozen by rememberAnimationsFrozen(listState)
+    val animationsFrozen by rememberAnimationsFrozen(
+        if (useStaggeredGrid) waterfallScrollState else listState
+    )
 
     if (useStaggeredGrid) {
         val column1Habits = habitsWithStatus.filterIndexed { index, _ -> index % 2 == 0 }
@@ -566,9 +568,8 @@ fun HabitListContent(
                     verticalArrangement = Arrangement.spacedBy(8.dp)
                 ) {
                     column1Habits.forEachIndexed { colIndex, ws ->
-                        val globalIndex = colIndex * 2
                         StaggeredListItem(
-                            index = globalIndex,
+                            index = colIndex,
                             animationsFrozen = animationsFrozen
                         ) {
                             HabitCard(
@@ -595,9 +596,8 @@ fun HabitListContent(
                     verticalArrangement = Arrangement.spacedBy(8.dp)
                 ) {
                     column2Habits.forEachIndexed { colIndex, ws ->
-                        val globalIndex = colIndex * 2 + 1
                         StaggeredListItem(
-                            index = globalIndex,
+                            index = colIndex,
                             animationsFrozen = animationsFrozen
                         ) {
                             HabitCard(

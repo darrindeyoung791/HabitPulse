@@ -264,7 +264,8 @@ fun ContactsScreenContent(
                                     val globalIndex = rowIndex * 2
                                     StaggeredListItem(
                                         index = globalIndex,
-                                        animationsFrozen = animationsFrozen
+                                        animationsFrozen = animationsFrozen,
+                                        modifier = Modifier.weight(1f)
                                     ) {
                                         ContactCard(
                                             contact = contact,
@@ -275,8 +276,7 @@ fun ContactsScreenContent(
                                                     ContactsViewModel.DeleteConfirmType.FROM_ALL_HABITS,
                                                     contact = contact
                                                 )
-                                            },
-                                            modifier = Modifier.weight(1f)
+                                            }
                                         )
                                     }
                                 } ?: Spacer(modifier = Modifier.weight(1f))
@@ -285,7 +285,8 @@ fun ContactsScreenContent(
                                     val globalIndex = rowIndex * 2 + 1
                                     StaggeredListItem(
                                         index = globalIndex,
-                                        animationsFrozen = animationsFrozen
+                                        animationsFrozen = animationsFrozen,
+                                        modifier = Modifier.weight(1f)
                                     ) {
                                         ContactCard(
                                             contact = contact,
@@ -296,8 +297,7 @@ fun ContactsScreenContent(
                                                     ContactsViewModel.DeleteConfirmType.FROM_ALL_HABITS,
                                                     contact = contact
                                                 )
-                                            },
-                                            modifier = Modifier.weight(1f)
+                                            }
                                         )
                                     }
                                 } ?: Spacer(modifier = Modifier.weight(1f))
@@ -376,7 +376,8 @@ fun ContactsScreenContent(
                                     val globalIndex = rowIndex * 2
                                     StaggeredListItem(
                                         index = globalIndex,
-                                        animationsFrozen = animationsFrozen
+                                        animationsFrozen = animationsFrozen,
+                                        modifier = Modifier.weight(1f)
                                     ) {
                                         ContactCard(
                                             contact = contact,
@@ -387,8 +388,7 @@ fun ContactsScreenContent(
                                                     ContactsViewModel.DeleteConfirmType.FROM_ALL_HABITS,
                                                     contact = contact
                                                 )
-                                            },
-                                            modifier = Modifier.weight(1f)
+                                            }
                                         )
                                     }
                                 } ?: Spacer(modifier = Modifier.weight(1f))
@@ -397,7 +397,8 @@ fun ContactsScreenContent(
                                     val globalIndex = rowIndex * 2 + 1
                                     StaggeredListItem(
                                         index = globalIndex,
-                                        animationsFrozen = animationsFrozen
+                                        animationsFrozen = animationsFrozen,
+                                        modifier = Modifier.weight(1f)
                                     ) {
                                         ContactCard(
                                             contact = contact,
@@ -408,8 +409,7 @@ fun ContactsScreenContent(
                                                     ContactsViewModel.DeleteConfirmType.FROM_ALL_HABITS,
                                                     contact = contact
                                                 )
-                                            },
-                                            modifier = Modifier.weight(1f)
+                                            }
                                         )
                                     }
                                 } ?: Spacer(modifier = Modifier.weight(1f))
