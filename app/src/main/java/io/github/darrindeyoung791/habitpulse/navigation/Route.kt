@@ -20,7 +20,9 @@ sealed class Route(val route: String) {
     object AISettings : Route("ai_settings")
     object AICreateHabit : Route("ai_create_habit")
     object MultiSelectSort : Route("multi_select_sort")
-    object TodayHabits : Route("today_habits")
+    object TodayHabits : Route("today_habits/{filter}") {
+        fun createRoute(filter: String): String = "today_habits/$filter"
+    }
     object LanSync : Route("lan_sync")
     object Stats : Route("stats")
     object Help : Route("help?url={url}") {

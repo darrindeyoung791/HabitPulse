@@ -149,8 +149,24 @@ fun HabitPulseNavGraph(
                             }
                         }
                     },
+                    onViewAboutToStart = {
+                        navController.navigate(Route.TodayHabits.createRoute("about_to_start")) {
+                            launchSingleTop = true
+                            popUpTo(Route.Home.route) {
+                                inclusive = false
+                            }
+                        }
+                    },
                     onViewTodayHabits = {
-                        navController.navigate(Route.TodayHabits.route) {
+                        navController.navigate(Route.TodayHabits.createRoute("today")) {
+                            launchSingleTop = true
+                            popUpTo(Route.Home.route) {
+                                inclusive = false
+                            }
+                        }
+                    },
+                    onViewOverdue = {
+                        navController.navigate(Route.TodayHabits.createRoute("overdue")) {
                             launchSingleTop = true
                             popUpTo(Route.Home.route) {
                                 inclusive = false
@@ -339,6 +355,9 @@ fun HabitPulseNavGraph(
         }
         composable(
             route = Route.TodayHabits.route,
+            arguments = listOf(
+                navArgument("filter") { type = NavType.StringType }
+            ),
             enterTransition = {
                 slideInVertically(
                     initialOffsetY = { fullHeight -> fullHeight },
@@ -354,13 +373,15 @@ fun HabitPulseNavGraph(
                     animationSpec = tween(durationMillis = 200)
                 ) + fadeOut(animationSpec = tween(durationMillis = 200))
             }
-        ) {
+        ) { backStackEntry ->
             Box(
                 modifier = Modifier
                     .fillMaxSize()
                     .clip(RoundedCornerShape(cornerRadius))
             ) {
+                val filter = backStackEntry.arguments?.getString("filter") ?: "today"
                 TodayHabitsScreen(
+                    filter = filter,
                     onNavigateBack = {
                         navController.popBackStack()
                     },

@@ -112,7 +112,9 @@ fun HabitScreenContent(
     multiSelectTargetHabitId: UUID? = null,
     isSearchActive: Boolean = false,
     onSearchActiveChange: (Boolean) -> Unit = {},
+    onViewAboutToStart: () -> Unit = {},
     onViewTodayHabits: () -> Unit = {},
+    onViewOverdue: () -> Unit = {},
     onViewLanSync: () -> Unit = {},
     onViewStats: () -> Unit = {}
 ) {
@@ -187,7 +189,7 @@ fun HabitScreenContent(
     val aboutToStartCardColor = MaterialTheme.colorScheme.tertiaryContainer.copy(alpha = 0.5f)
     val overdueCardColor = MaterialTheme.colorScheme.errorContainer.copy(alpha = 0.5f)
 
-    val entryItems = remember(pendingTodayCount, aboutToStartCount, overdueCount, todayTitle, aboutToStartTitle, overdueTitle, lanTitle, statsTitle, disabledTint, tertiaryColor, errorColor, todayCardColor, aboutToStartCardColor, overdueCardColor, onViewTodayHabits, onViewLanSync, onViewStats) {
+    val entryItems = remember(pendingTodayCount, aboutToStartCount, overdueCount, todayTitle, aboutToStartTitle, overdueTitle, lanTitle, statsTitle, disabledTint, tertiaryColor, errorColor, todayCardColor, aboutToStartCardColor, overdueCardColor, onViewAboutToStart, onViewTodayHabits, onViewOverdue, onViewLanSync, onViewStats) {
         buildList {
             if (aboutToStartCount > 0) {
                 add(EntryItem(
@@ -198,7 +200,7 @@ fun HabitScreenContent(
                     iconTint = tertiaryColor,
                     containerColor = tertiaryColor.copy(alpha = 0.15f),
                     cardColor = aboutToStartCardColor,
-                    onClick = onViewTodayHabits
+                    onClick = onViewAboutToStart
                 ))
             }
             if (pendingTodayCount > 0) {
@@ -222,7 +224,7 @@ fun HabitScreenContent(
                     iconTint = errorColor,
                     containerColor = errorColor.copy(alpha = 0.15f),
                     cardColor = overdueCardColor,
-                    onClick = onViewTodayHabits
+                    onClick = onViewOverdue
                 ))
             }
             add(EntryItem(

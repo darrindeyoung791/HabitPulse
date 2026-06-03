@@ -15,6 +15,7 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import io.github.darrindeyoung791.habitpulse.HabitPulseApplication
 import io.github.darrindeyoung791.habitpulse.R
 import io.github.darrindeyoung791.habitpulse.data.model.Habit
+import io.github.darrindeyoung791.habitpulse.data.model.HabitStatus
 import io.github.darrindeyoung791.habitpulse.data.model.HabitWithStatus
 import io.github.darrindeyoung791.habitpulse.data.model.RepeatCycle
 import io.github.darrindeyoung791.habitpulse.data.repository.HabitRepository
@@ -32,6 +33,7 @@ import kotlinx.coroutines.launch
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun TodayHabitsScreen(
+    filter: String = "today",
     onNavigateBack: () -> Unit,
     navController: NavHostController,
     onEditHabit: (Habit) -> Unit,
@@ -78,40 +80,25 @@ fun TodayHabitsScreen(
         }
     }
 
-    val sections = remember(todayHabitsWithStatus, now) {
-        val soonTitle = context.getString(R.string.today_section_soon)
-        val laterTitle = context.getString(R.string.today_section_later)
-        val alldayTitle = context.getString(R.string.today_section_allday)
+    val filteredHabits = remember(todayHabitsWithStatus, filter) {
+        when (filter) {
+            "about_to_start" -> todayHabitsWithStatus.filter { it.status.contains(HabitStatus.ABOUT_TO_START) }
+            "overdue" -> todayHabitsWithStatus.filter { it.isCompletelyOverdue }
+            else -> todayHabitsWithStatus
+        }
+    }
 
-        val sorted = todayHabitsWithStatus.sortedBy { ws ->
+    val flatSortedList = remember(filteredHabits, now) {
+        filteredHabits.sortedBy { ws ->
             val times = ws.habit.getReminderTimesList()
             if (times.isEmpty()) "99:99" else times.min()
-        }
-
-        val soonList = mutableListOf<HabitWithStatus>()
-        val laterList = mutableListOf<HabitWithStatus>()
-        val alldayList = mutableListOf<HabitWithStatus>()
-
-        for (ws in sorted) {
-            val habit = ws.habit
-            val times = habit.getReminderTimesList()
-            if (times.isEmpty()) {
-                alldayList.add(ws)
-            } else {
+        }.sortedBy { ws ->
+            val times = ws.habit.getReminderTimesList()
+            if (times.isEmpty()) 2 else {
                 val parts = times.min().split(":")
                 val reminderTime = LocalTime.of(parts[0].toInt(), parts[1].toInt())
-                if (reminderTime <= now || Duration.between(now, reminderTime).toMinutes() < 60) {
-                    soonList.add(ws)
-                } else {
-                    laterList.add(ws)
-                }
+                if (reminderTime <= now || Duration.between(now, reminderTime).toMinutes() < 60) 0 else 1
             }
-        }
-
-        buildList {
-            if (soonList.isNotEmpty()) add(soonTitle to soonList)
-            if (laterList.isNotEmpty()) add(laterTitle to laterList)
-            if (alldayList.isNotEmpty()) add(alldayTitle to alldayList)
         }
     }
 
@@ -124,9 +111,13 @@ fun TodayHabitsScreen(
         topBar = {
             TopAppBar(
                 title = {
+                    val titleRes = when (filter) {
+                        "about_to_start" -> R.string.entry_zone_about_to_start
+                        "overdue" -> R.string.entry_zone_overdue
+                        else -> R.string.entry_zone_today_habits
+                    }
                     Text(
-                        text = stringResource(id = R.string.entry_zone_today_habits),
-                        fontWeight = FontWeight.SemiBold
+                        text = stringResource(id = titleRes)
                     )
                 },
                 navigationIcon = {
@@ -149,7 +140,7 @@ fun TodayHabitsScreen(
                 .fillMaxSize()
                 .padding(paddingValues)
         ) {
-            if (sections.isEmpty()) {
+            if (flatSortedList.isEmpty()) {
                 Box(
                     modifier = Modifier.fillMaxSize(),
                     contentAlignment = androidx.compose.ui.Alignment.Center
@@ -167,37 +158,26 @@ fun TodayHabitsScreen(
                     contentPadding = PaddingValues(start = 16.dp, top = 8.dp, end = 16.dp, bottom = 16.dp),
                     verticalArrangement = Arrangement.spacedBy(8.dp)
                 ) {
-                    sections.forEach { (title, habitList) ->
-                        item(key = "header_$title") {
-                            Text(
-                                text = title,
-                                style = MaterialTheme.typography.titleSmall,
-                                fontWeight = FontWeight.SemiBold,
-                                color = MaterialTheme.colorScheme.primary,
-                                modifier = Modifier.padding(vertical = 8.dp)
-                            )
-                        }
-                        items(
-                            items = habitList,
-                            key = { it.habit.id.toString() }
-                        ) { ws ->
-                            HabitCard(
-                                habitWithStatus = ws,
-                                onClick = { onEditHabit(ws.habit) },
-                                onCheckIn = {
-                                    viewModel.performSlotCheckIn(ws.habit)
-                                },
-                                onUndoCompletion = { viewModel.undoHabitCompletion(ws.habit) },
-                                onEditHabit = { onEditHabit(ws.habit) },
-                                onDeleteHabit = {
-                                    viewModel.deleteHabit(ws.habit)
-                                    application?.recordsViewModel?.refreshRecords()
-                                },
-                                onNavigateToMultiSelect = {},
-                                modifier = Modifier.fillMaxWidth(),
-                                showMultiSelectMenuItem = false
-                            )
-                        }
+                    items(
+                        items = flatSortedList,
+                        key = { it.habit.id.toString() }
+                    ) { ws ->
+                        HabitCard(
+                            habitWithStatus = ws,
+                            onClick = { onEditHabit(ws.habit) },
+                            onCheckIn = {
+                                viewModel.performSlotCheckIn(ws.habit)
+                            },
+                            onUndoCompletion = { viewModel.undoHabitCompletion(ws.habit) },
+                            onEditHabit = { onEditHabit(ws.habit) },
+                            onDeleteHabit = {
+                                viewModel.deleteHabit(ws.habit)
+                                application?.recordsViewModel?.refreshRecords()
+                            },
+                            onNavigateToMultiSelect = {},
+                            modifier = Modifier.fillMaxWidth(),
+                            showMultiSelectMenuItem = false
+                        )
                     }
                     item {
                         Spacer(modifier = Modifier.height(100.dp))

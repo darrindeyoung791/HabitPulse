@@ -78,7 +78,9 @@ fun HomeScreen(
     onEditHabit: (Habit) -> Unit,
     onNavigateToMultiSelect: (habitId: UUID) -> Unit = {},
     onAICreateHabit: () -> Unit = {},
+    onViewAboutToStart: () -> Unit = {},
     onViewTodayHabits: () -> Unit = {},
+    onViewOverdue: () -> Unit = {},
     onViewLanSync: () -> Unit = {},
     onViewStats: () -> Unit = {},
     application: HabitPulseApplication? = null,
@@ -353,7 +355,9 @@ fun HomeScreen(
                             multiSelectTargetHabitId = habitId
                             onNavigateToMultiSelect(habitId)
                         },
+                        onViewAboutToStart = onViewAboutToStart,
                         onViewTodayHabits = onViewTodayHabits,
+                        onViewOverdue = onViewOverdue,
                         onViewLanSync = onViewLanSync,
                         onViewStats = onViewStats,
                         sharedTransitionScope = sharedTransitionScope,
