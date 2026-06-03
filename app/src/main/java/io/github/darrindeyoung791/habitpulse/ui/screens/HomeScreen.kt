@@ -96,6 +96,9 @@ fun HomeScreen(
     // Track which habit is transitioning to MultiSelect (for shared element)
     var multiSelectTargetHabitId by remember { mutableStateOf<java.util.UUID?>(null) }
 
+    // Track which EntryZone card is transitioning to TodayHabits (for shared element)
+    var transitioningEntryId by remember { mutableStateOf<String?>(null) }
+
     // FAB selection dialog state
     var showCreateHabitDialog by remember { mutableStateOf(false) }
 
@@ -355,14 +358,24 @@ fun HomeScreen(
                             multiSelectTargetHabitId = habitId
                             onNavigateToMultiSelect(habitId)
                         },
-                        onViewAboutToStart = onViewAboutToStart,
-                        onViewTodayHabits = onViewTodayHabits,
-                        onViewOverdue = onViewOverdue,
+                        onViewAboutToStart = {
+                            transitioningEntryId = "about_to_start"
+                            onViewAboutToStart()
+                        },
+                        onViewTodayHabits = {
+                            transitioningEntryId = "today"
+                            onViewTodayHabits()
+                        },
+                        onViewOverdue = {
+                            transitioningEntryId = "overdue"
+                            onViewOverdue()
+                        },
                         onViewLanSync = onViewLanSync,
                         onViewStats = onViewStats,
                         sharedTransitionScope = sharedTransitionScope,
                         animatedContentScope = animatedContentScope,
                         nestedScrollConnection = habitsScrollBehavior.nestedScrollConnection,
+                        transitioningEntryId = transitioningEntryId,
                         multiSelectTargetHabitId = multiSelectTargetHabitId,
                         isSearchActive = isHabitsSearchActive,
                         onSearchActiveChange = { isHabitsSearchActive = it }

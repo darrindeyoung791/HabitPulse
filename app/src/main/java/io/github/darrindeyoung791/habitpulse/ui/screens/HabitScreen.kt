@@ -24,7 +24,7 @@ import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyListScope
 import androidx.compose.foundation.lazy.LazyListState
-import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.relocation.BringIntoViewRequester
 import androidx.compose.foundation.relocation.bringIntoViewRequester
 import androidx.compose.foundation.rememberScrollState
@@ -84,7 +84,9 @@ import io.github.darrindeyoung791.habitpulse.data.model.HabitWithStatus
 import io.github.darrindeyoung791.habitpulse.data.model.RepeatCycle
 import io.github.darrindeyoung791.habitpulse.data.repository.HabitRepository
 import io.github.darrindeyoung791.habitpulse.ui.theme.HabitPulseTheme
+import io.github.darrindeyoung791.habitpulse.ui.utils.rememberAnimationsFrozen
 import io.github.darrindeyoung791.habitpulse.ui.utils.rememberDebounceClickHandler
+import io.github.darrindeyoung791.habitpulse.ui.utils.StaggeredListItem
 import io.github.darrindeyoung791.habitpulse.utils.OnboardingPreferences
 import io.github.darrindeyoung791.habitpulse.viewmodel.HabitViewModel
 import kotlinx.coroutines.delay
@@ -110,6 +112,7 @@ fun HabitScreenContent(
     animatedContentScope: AnimatedContentScope? = null,
     nestedScrollConnection: androidx.compose.ui.input.nestedscroll.NestedScrollConnection? = null,
     multiSelectTargetHabitId: UUID? = null,
+    transitioningEntryId: String? = null,
     isSearchActive: Boolean = false,
     onSearchActiveChange: (Boolean) -> Unit = {},
     onViewAboutToStart: () -> Unit = {},
@@ -331,7 +334,12 @@ fun HabitScreenContent(
                     multiSelectTargetHabitId = multiSelectTargetHabitId,
                     entryZone = {
                         if (!isSearchActive && entryItems.isNotEmpty()) {
-                            EntryZone(entries = entryItems)
+                            EntryZone(
+                                entries = entryItems,
+                                transitioningEntryId = transitioningEntryId,
+                                sharedTransitionScope = sharedTransitionScope,
+                                animatedContentScope = animatedContentScope
+                            )
                         }
                     }
                 )
@@ -523,6 +531,8 @@ fun HabitListContent(
     val useStaggeredGrid = isLandscape && screenWidthDp >= 840
     val horizontalPadding = 16.dp
 
+    val animationsFrozen by rememberAnimationsFrozen(listState)
+
     if (useStaggeredGrid) {
         val column1Habits = habitsWithStatus.filterIndexed { index, _ -> index % 2 == 0 }
         val column2Habits = habitsWithStatus.filterIndexed { index, _ -> index % 2 == 1 }
@@ -555,22 +565,28 @@ fun HabitListContent(
                     modifier = Modifier.weight(1f),
                     verticalArrangement = Arrangement.spacedBy(8.dp)
                 ) {
-                    column1Habits.forEach { ws ->
-                        HabitCard(
-                            habitWithStatus = ws,
-                            onClick = { onHabitClick(ws.habit) },
-                            onCheckIn = { onCheckIn(ws.habit) },
-                            onUndoCompletion = { onUndoCompletion(ws.habit) },
-                            onEditHabit = { onHabitClick(ws.habit) },
-                            onDeleteHabit = { onDeleteHabit(ws.habit) },
-                            onNavigateToMultiSelect = { habitId -> onNavigateToMultiSelect(habitId) },
-                            isNewlyAdded = (ws.habit.id == newlyAddedHabitId),
-                            searchQuery = searchQuery,
-                            modifier = Modifier.fillMaxWidth(),
-                            sharedTransitionScope = sharedTransitionScope,
-                            animatedContentScope = animatedContentScope,
-                            isMultiSelectTarget = (ws.habit.id == multiSelectTargetHabitId)
-                        )
+                    column1Habits.forEachIndexed { colIndex, ws ->
+                        val globalIndex = colIndex * 2
+                        StaggeredListItem(
+                            index = globalIndex,
+                            animationsFrozen = animationsFrozen
+                        ) {
+                            HabitCard(
+                                habitWithStatus = ws,
+                                onClick = { onHabitClick(ws.habit) },
+                                onCheckIn = { onCheckIn(ws.habit) },
+                                onUndoCompletion = { onUndoCompletion(ws.habit) },
+                                onEditHabit = { onHabitClick(ws.habit) },
+                                onDeleteHabit = { onDeleteHabit(ws.habit) },
+                                onNavigateToMultiSelect = { habitId -> onNavigateToMultiSelect(habitId) },
+                                isNewlyAdded = (ws.habit.id == newlyAddedHabitId),
+                                searchQuery = searchQuery,
+                                modifier = Modifier.fillMaxWidth(),
+                                sharedTransitionScope = sharedTransitionScope,
+                                animatedContentScope = animatedContentScope,
+                                isMultiSelectTarget = (ws.habit.id == multiSelectTargetHabitId)
+                            )
+                        }
                     }
                 }
 
@@ -578,22 +594,28 @@ fun HabitListContent(
                     modifier = Modifier.weight(1f),
                     verticalArrangement = Arrangement.spacedBy(8.dp)
                 ) {
-                    column2Habits.forEach { ws ->
-                        HabitCard(
-                            habitWithStatus = ws,
-                            onClick = { onHabitClick(ws.habit) },
-                            onCheckIn = { onCheckIn(ws.habit) },
-                            onUndoCompletion = { onUndoCompletion(ws.habit) },
-                            onEditHabit = { onHabitClick(ws.habit) },
-                            onDeleteHabit = { onDeleteHabit(ws.habit) },
-                            onNavigateToMultiSelect = { habitId -> onNavigateToMultiSelect(habitId) },
-                            isNewlyAdded = (ws.habit.id == newlyAddedHabitId),
-                            searchQuery = searchQuery,
-                            modifier = Modifier.fillMaxWidth(),
-                            sharedTransitionScope = sharedTransitionScope,
-                            animatedContentScope = animatedContentScope,
-                            isMultiSelectTarget = (ws.habit.id == multiSelectTargetHabitId)
-                        )
+                    column2Habits.forEachIndexed { colIndex, ws ->
+                        val globalIndex = colIndex * 2 + 1
+                        StaggeredListItem(
+                            index = globalIndex,
+                            animationsFrozen = animationsFrozen
+                        ) {
+                            HabitCard(
+                                habitWithStatus = ws,
+                                onClick = { onHabitClick(ws.habit) },
+                                onCheckIn = { onCheckIn(ws.habit) },
+                                onUndoCompletion = { onUndoCompletion(ws.habit) },
+                                onEditHabit = { onHabitClick(ws.habit) },
+                                onDeleteHabit = { onDeleteHabit(ws.habit) },
+                                onNavigateToMultiSelect = { habitId -> onNavigateToMultiSelect(habitId) },
+                                isNewlyAdded = (ws.habit.id == newlyAddedHabitId),
+                                searchQuery = searchQuery,
+                                modifier = Modifier.fillMaxWidth(),
+                                sharedTransitionScope = sharedTransitionScope,
+                                animatedContentScope = animatedContentScope,
+                                isMultiSelectTarget = (ws.habit.id == multiSelectTargetHabitId)
+                            )
+                        }
                     }
                 }
             }
@@ -611,25 +633,30 @@ fun HabitListContent(
             item {
                 entryZone()
             }
-            items(
+            itemsIndexed(
                 items = habitsWithStatus,
-                key = { it.habit.id.toString() },
-                contentType = { "habitCard" }
-            ) { ws ->
-                HabitCard(
-                    habitWithStatus = ws,
-                    onClick = { onHabitClick(ws.habit) },
-                    onCheckIn = { onCheckIn(ws.habit) },
-                    onUndoCompletion = { onUndoCompletion(ws.habit) },
-                    onEditHabit = { onHabitClick(ws.habit) },
-                    onDeleteHabit = { onDeleteHabit(ws.habit) },
-                    onNavigateToMultiSelect = { habitId -> onNavigateToMultiSelect(habitId) },
-                    isNewlyAdded = (ws.habit.id == newlyAddedHabitId),
-                    searchQuery = searchQuery,
-                    sharedTransitionScope = sharedTransitionScope,
-                    animatedContentScope = animatedContentScope,
-                    isMultiSelectTarget = (ws.habit.id == multiSelectTargetHabitId)
-                )
+                key = { _, item -> item.habit.id.toString() },
+                contentType = { _, _ -> "habitCard" }
+            ) { index, ws ->
+                StaggeredListItem(
+                    index = index,
+                    animationsFrozen = animationsFrozen
+                ) {
+                    HabitCard(
+                        habitWithStatus = ws,
+                        onClick = { onHabitClick(ws.habit) },
+                        onCheckIn = { onCheckIn(ws.habit) },
+                        onUndoCompletion = { onUndoCompletion(ws.habit) },
+                        onEditHabit = { onHabitClick(ws.habit) },
+                        onDeleteHabit = { onDeleteHabit(ws.habit) },
+                        onNavigateToMultiSelect = { habitId -> onNavigateToMultiSelect(habitId) },
+                        isNewlyAdded = (ws.habit.id == newlyAddedHabitId),
+                        searchQuery = searchQuery,
+                        sharedTransitionScope = sharedTransitionScope,
+                        animatedContentScope = animatedContentScope,
+                        isMultiSelectTarget = (ws.habit.id == multiSelectTargetHabitId)
+                    )
+                }
             }
             item {
                 Spacer(modifier = Modifier.height(100.dp))

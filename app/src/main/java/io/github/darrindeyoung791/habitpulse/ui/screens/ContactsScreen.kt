@@ -30,7 +30,7 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.windowInsetsPadding
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyListState
-import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
@@ -95,6 +95,8 @@ import io.github.darrindeyoung791.habitpulse.data.model.RepeatCycle
 import io.github.darrindeyoung791.habitpulse.data.model.SupervisionMethod
 import io.github.darrindeyoung791.habitpulse.data.repository.HabitRepository
 import io.github.darrindeyoung791.habitpulse.ui.theme.HabitPulseTheme
+import io.github.darrindeyoung791.habitpulse.ui.utils.rememberAnimationsFrozen
+import io.github.darrindeyoung791.habitpulse.ui.utils.StaggeredListItem
 import io.github.darrindeyoung791.habitpulse.viewmodel.ContactsViewModel
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.runBlocking
@@ -178,6 +180,8 @@ fun ContactsScreenContent(
     // Use two-column layout for tablets in landscape (≥840dp), same as HomeScreen
     val useTwoColumnLayout = isLandscape && screenWidthDp >= 840
 
+    val animationsFrozen by rememberAnimationsFrozen(listState)
+
     Column(
         modifier = nestedScrollModifier.fillMaxSize()
     ) {
@@ -246,44 +250,56 @@ fun ContactsScreenContent(
                     ) {
                         val contactRows = filteredContacts.chunked(2)
 
-                        items(
+                        itemsIndexed(
                             items = contactRows,
-                            key = { row ->
+                            key = { _, row ->
                                 "${row.getOrNull(0)?.type}_${row.getOrNull(0)?.value ?: ""}-${row.getOrNull(1)?.type}_${row.getOrNull(1)?.value ?: ""}"
                             }
-                        ) { row ->
+                        ) { rowIndex, row ->
                             Row(
                                 modifier = Modifier.fillMaxWidth(),
                                 horizontalArrangement = Arrangement.spacedBy(16.dp)
                             ) {
                                 row.getOrNull(0)?.let { contact ->
-                                    ContactCard(
-                                        contact = contact,
-                                        habits = habits.filter { it.id in contact.habitIds },
-                                        onClick = { viewModel.selectContact(contact) },
-                                        onDeleteFromAll = {
-                                            viewModel.showDeleteConfirmDialog(
-                                                ContactsViewModel.DeleteConfirmType.FROM_ALL_HABITS,
-                                                contact = contact
-                                            )
-                                        },
-                                        modifier = Modifier.weight(1f)
-                                    )
+                                    val globalIndex = rowIndex * 2
+                                    StaggeredListItem(
+                                        index = globalIndex,
+                                        animationsFrozen = animationsFrozen
+                                    ) {
+                                        ContactCard(
+                                            contact = contact,
+                                            habits = habits.filter { it.id in contact.habitIds },
+                                            onClick = { viewModel.selectContact(contact) },
+                                            onDeleteFromAll = {
+                                                viewModel.showDeleteConfirmDialog(
+                                                    ContactsViewModel.DeleteConfirmType.FROM_ALL_HABITS,
+                                                    contact = contact
+                                                )
+                                            },
+                                            modifier = Modifier.weight(1f)
+                                        )
+                                    }
                                 } ?: Spacer(modifier = Modifier.weight(1f))
 
                                 row.getOrNull(1)?.let { contact ->
-                                    ContactCard(
-                                        contact = contact,
-                                        habits = habits.filter { it.id in contact.habitIds },
-                                        onClick = { viewModel.selectContact(contact) },
-                                        onDeleteFromAll = {
-                                            viewModel.showDeleteConfirmDialog(
-                                                ContactsViewModel.DeleteConfirmType.FROM_ALL_HABITS,
-                                                contact = contact
-                                            )
-                                        },
-                                        modifier = Modifier.weight(1f)
-                                    )
+                                    val globalIndex = rowIndex * 2 + 1
+                                    StaggeredListItem(
+                                        index = globalIndex,
+                                        animationsFrozen = animationsFrozen
+                                    ) {
+                                        ContactCard(
+                                            contact = contact,
+                                            habits = habits.filter { it.id in contact.habitIds },
+                                            onClick = { viewModel.selectContact(contact) },
+                                            onDeleteFromAll = {
+                                                viewModel.showDeleteConfirmDialog(
+                                                    ContactsViewModel.DeleteConfirmType.FROM_ALL_HABITS,
+                                                    contact = contact
+                                                )
+                                            },
+                                            modifier = Modifier.weight(1f)
+                                        )
+                                    }
                                 } ?: Spacer(modifier = Modifier.weight(1f))
                             }
                         }
@@ -300,21 +316,26 @@ fun ContactsScreenContent(
                         contentPadding = PaddingValues(horizontal = 16.dp, vertical = 8.dp),
                         verticalArrangement = Arrangement.spacedBy(8.dp)
                     ) {
-                        items(
+                        itemsIndexed(
                             items = filteredContacts,
-                            key = { "${it.type}_${it.value}" }
-                        ) { contact ->
-                            ContactCard(
-                                contact = contact,
-                                habits = habits.filter { it.id in contact.habitIds },
-                                onClick = { viewModel.selectContact(contact) },
-                                onDeleteFromAll = {
-                                    viewModel.showDeleteConfirmDialog(
-                                        ContactsViewModel.DeleteConfirmType.FROM_ALL_HABITS,
-                                        contact = contact
-                                    )
-                                }
-                            )
+                            key = { _, item -> "${item.type}_${item.value}" }
+                        ) { index, contact ->
+                            StaggeredListItem(
+                                index = index,
+                                animationsFrozen = animationsFrozen
+                            ) {
+                                ContactCard(
+                                    contact = contact,
+                                    habits = habits.filter { it.id in contact.habitIds },
+                                    onClick = { viewModel.selectContact(contact) },
+                                    onDeleteFromAll = {
+                                        viewModel.showDeleteConfirmDialog(
+                                            ContactsViewModel.DeleteConfirmType.FROM_ALL_HABITS,
+                                            contact = contact
+                                        )
+                                    }
+                                )
+                            }
                         }
 
                         item {
@@ -341,44 +362,56 @@ fun ContactsScreenContent(
                     ) {
                         val contactRows = filteredContacts.chunked(2)
 
-                        items(
+                        itemsIndexed(
                             items = contactRows,
-                            key = { row ->
+                            key = { _, row ->
                                 "${row.getOrNull(0)?.type}_${row.getOrNull(0)?.value ?: ""}-${row.getOrNull(1)?.type}_${row.getOrNull(1)?.value ?: ""}"
                             }
-                        ) { row ->
+                        ) { rowIndex, row ->
                             Row(
                                 modifier = Modifier.fillMaxWidth(),
                                 horizontalArrangement = Arrangement.spacedBy(16.dp)
                             ) {
                                 row.getOrNull(0)?.let { contact ->
-                                    ContactCard(
-                                        contact = contact,
-                                        habits = habits.filter { it.id in contact.habitIds },
-                                        onClick = { viewModel.selectContact(contact) },
-                                        onDeleteFromAll = {
-                                            viewModel.showDeleteConfirmDialog(
-                                                ContactsViewModel.DeleteConfirmType.FROM_ALL_HABITS,
-                                                contact = contact
-                                            )
-                                        },
-                                        modifier = Modifier.weight(1f)
-                                    )
+                                    val globalIndex = rowIndex * 2
+                                    StaggeredListItem(
+                                        index = globalIndex,
+                                        animationsFrozen = animationsFrozen
+                                    ) {
+                                        ContactCard(
+                                            contact = contact,
+                                            habits = habits.filter { it.id in contact.habitIds },
+                                            onClick = { viewModel.selectContact(contact) },
+                                            onDeleteFromAll = {
+                                                viewModel.showDeleteConfirmDialog(
+                                                    ContactsViewModel.DeleteConfirmType.FROM_ALL_HABITS,
+                                                    contact = contact
+                                                )
+                                            },
+                                            modifier = Modifier.weight(1f)
+                                        )
+                                    }
                                 } ?: Spacer(modifier = Modifier.weight(1f))
 
                                 row.getOrNull(1)?.let { contact ->
-                                    ContactCard(
-                                        contact = contact,
-                                        habits = habits.filter { it.id in contact.habitIds },
-                                        onClick = { viewModel.selectContact(contact) },
-                                        onDeleteFromAll = {
-                                            viewModel.showDeleteConfirmDialog(
-                                                ContactsViewModel.DeleteConfirmType.FROM_ALL_HABITS,
-                                                contact = contact
-                                            )
-                                        },
-                                        modifier = Modifier.weight(1f)
-                                    )
+                                    val globalIndex = rowIndex * 2 + 1
+                                    StaggeredListItem(
+                                        index = globalIndex,
+                                        animationsFrozen = animationsFrozen
+                                    ) {
+                                        ContactCard(
+                                            contact = contact,
+                                            habits = habits.filter { it.id in contact.habitIds },
+                                            onClick = { viewModel.selectContact(contact) },
+                                            onDeleteFromAll = {
+                                                viewModel.showDeleteConfirmDialog(
+                                                    ContactsViewModel.DeleteConfirmType.FROM_ALL_HABITS,
+                                                    contact = contact
+                                                )
+                                            },
+                                            modifier = Modifier.weight(1f)
+                                        )
+                                    }
                                 } ?: Spacer(modifier = Modifier.weight(1f))
                             }
                         }
@@ -395,21 +428,26 @@ fun ContactsScreenContent(
                         contentPadding = PaddingValues(horizontal = 16.dp, vertical = 8.dp),
                         verticalArrangement = Arrangement.spacedBy(8.dp)
                     ) {
-                        items(
+                        itemsIndexed(
                             items = filteredContacts,
-                            key = { "${it.type}_${it.value}" }
-                        ) { contact ->
-                            ContactCard(
-                                contact = contact,
-                                habits = habits.filter { it.id in contact.habitIds },
-                                onClick = { viewModel.selectContact(contact) },
-                                onDeleteFromAll = {
-                                    viewModel.showDeleteConfirmDialog(
-                                        ContactsViewModel.DeleteConfirmType.FROM_ALL_HABITS,
-                                        contact = contact
-                                    )
-                                }
-                            )
+                            key = { _, item -> "${item.type}_${item.value}" }
+                        ) { index, contact ->
+                            StaggeredListItem(
+                                index = index,
+                                animationsFrozen = animationsFrozen
+                            ) {
+                                ContactCard(
+                                    contact = contact,
+                                    habits = habits.filter { it.id in contact.habitIds },
+                                    onClick = { viewModel.selectContact(contact) },
+                                    onDeleteFromAll = {
+                                        viewModel.showDeleteConfirmDialog(
+                                            ContactsViewModel.DeleteConfirmType.FROM_ALL_HABITS,
+                                            contact = contact
+                                        )
+                                    }
+                                )
+                            }
                         }
 
                         item {

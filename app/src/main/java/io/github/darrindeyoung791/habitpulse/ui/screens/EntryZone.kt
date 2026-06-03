@@ -1,5 +1,8 @@
 package io.github.darrindeyoung791.habitpulse.ui.screens
 
+import androidx.compose.animation.AnimatedContentScope
+import androidx.compose.animation.ExperimentalSharedTransitionApi
+import androidx.compose.animation.SharedTransitionScope
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.core.tween
 import androidx.compose.foundation.background
@@ -36,9 +39,13 @@ data class EntryItem(
     val onClick: () -> Unit
 )
 
+@OptIn(ExperimentalSharedTransitionApi::class)
 @Composable
 fun EntryZone(
     entries: List<EntryItem>,
+    transitioningEntryId: String? = null,
+    sharedTransitionScope: SharedTransitionScope? = null,
+    animatedContentScope: AnimatedContentScope? = null,
     modifier: Modifier = Modifier
 ) {
     if (entries.isEmpty()) return
@@ -94,7 +101,12 @@ fun EntryZone(
                 items = entries,
                 key = { it.id }
             ) { entry ->
-                EntryCard(entry = entry)
+                EntryCard(
+                    entry = entry,
+                    transitioningEntryId = transitioningEntryId,
+                    sharedTransitionScope = sharedTransitionScope,
+                    animatedContentScope = animatedContentScope
+                )
             }
         }
 
@@ -132,11 +144,16 @@ fun EntryZone(
     }
 }
 
+@OptIn(ExperimentalSharedTransitionApi::class)
 @Composable
 private fun EntryCard(
     entry: EntryItem,
+    transitioningEntryId: String? = null,
+    sharedTransitionScope: SharedTransitionScope? = null,
+    animatedContentScope: AnimatedContentScope? = null,
     modifier: Modifier = Modifier
 ) {
+    val isTransitioning = entry.id == transitioningEntryId
     val hasLeftContent = entry.icon != null || entry.iconContent != null
     val iconContainerBackground = entry.containerColor ?: when {
         entry.iconTint != null && entry.icon != null -> MaterialTheme.colorScheme.onSurface.copy(alpha = 0.08f)
@@ -146,7 +163,23 @@ private fun EntryCard(
     Card(
         modifier = modifier
             .widthIn(min = 100.dp)
-            .clickable { entry.onClick() },
+            .clickable { entry.onClick() }
+            .then(
+                if (isTransitioning && sharedTransitionScope != null && animatedContentScope != null) {
+                    with(sharedTransitionScope) {
+                        Modifier.sharedBounds(
+                            sharedContentState = rememberSharedContentState(key = "entry_bg_${entry.id}"),
+                            animatedVisibilityScope = animatedContentScope,
+                            boundsTransform = { _, _ ->
+                                tween(durationMillis = 350, easing = androidx.compose.animation.core.FastOutSlowInEasing)
+                            },
+                            zIndexInOverlay = 0f
+                        )
+                    }
+                } else {
+                    Modifier
+                }
+            ),
         shape = RoundedCornerShape(16.dp),
         colors = CardDefaults.cardColors(
             containerColor = entry.cardColor ?: MaterialTheme.colorScheme.surfaceContainerHigh
@@ -190,6 +223,19 @@ private fun EntryCard(
                 if (entry.title != null) {
                     Text(
                         text = entry.title,
+                        modifier = if (isTransitioning && sharedTransitionScope != null && animatedContentScope != null) {
+                            with(sharedTransitionScope) {
+                                Modifier.sharedElement(
+                                    sharedContentState = rememberSharedContentState(key = "entry_title_${entry.id}"),
+                                    animatedVisibilityScope = animatedContentScope,
+                                    boundsTransform = { _, _ ->
+                                        tween(durationMillis = 350, easing = androidx.compose.animation.core.FastOutSlowInEasing)
+                                    }
+                                )
+                            }
+                        } else {
+                            Modifier
+                        },
                         style = MaterialTheme.typography.titleMedium,
                         fontWeight = FontWeight.Normal,
                         color = MaterialTheme.colorScheme.onSurface,

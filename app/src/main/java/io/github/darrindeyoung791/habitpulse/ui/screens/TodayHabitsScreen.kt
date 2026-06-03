@@ -1,8 +1,13 @@
 package io.github.darrindeyoung791.habitpulse.ui.screens
 
+import androidx.compose.animation.AnimatedContentScope
+import androidx.compose.animation.ExperimentalSharedTransitionApi
+import androidx.compose.animation.SharedTransitionScope
+import androidx.compose.animation.core.FastOutSlowInEasing
+import androidx.compose.animation.core.tween
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyListState
-import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material3.*
@@ -26,18 +31,22 @@ import java.time.Duration
 import java.time.LocalDate
 import java.time.LocalTime
 import androidx.navigation.NavHostController
+import io.github.darrindeyoung791.habitpulse.ui.utils.rememberAnimationsFrozen
 import io.github.darrindeyoung791.habitpulse.ui.utils.rememberDebounceClickHandler
 import io.github.darrindeyoung791.habitpulse.ui.utils.rememberHideKeyboardAndNavigateBack
+import io.github.darrindeyoung791.habitpulse.ui.utils.StaggeredListItem
 import kotlinx.coroutines.launch
 
-@OptIn(ExperimentalMaterial3Api::class)
+@OptIn(ExperimentalMaterial3Api::class, ExperimentalSharedTransitionApi::class)
 @Composable
 fun TodayHabitsScreen(
     filter: String = "today",
     onNavigateBack: () -> Unit,
     navController: NavHostController,
     onEditHabit: (Habit) -> Unit,
-    application: HabitPulseApplication? = null
+    application: HabitPulseApplication? = null,
+    sharedTransitionScope: SharedTransitionScope? = null,
+    animatedContentScope: AnimatedContentScope? = null
 ) {
     val context = androidx.compose.ui.platform.LocalContext.current
 
@@ -107,6 +116,8 @@ fun TodayHabitsScreen(
     val clickHandler = rememberDebounceClickHandler()
     val hideKeyboardAndNavigateBack = rememberHideKeyboardAndNavigateBack(navController)
 
+    val animationsFrozen by rememberAnimationsFrozen(listState)
+
     Scaffold(
         topBar = {
             TopAppBar(
@@ -116,9 +127,23 @@ fun TodayHabitsScreen(
                         "overdue" -> R.string.entry_zone_overdue
                         else -> R.string.entry_zone_today_habits
                     }
-                    Text(
-                        text = stringResource(id = titleRes)
-                    )
+                    Box(
+                        modifier = if (sharedTransitionScope != null && animatedContentScope != null) {
+                            with(sharedTransitionScope) {
+                                Modifier.sharedElement(
+                                    sharedContentState = rememberSharedContentState(key = "entry_title_$filter"),
+                                    animatedVisibilityScope = animatedContentScope,
+                                    boundsTransform = { _, _ ->
+                                        tween(durationMillis = 350, easing = FastOutSlowInEasing)
+                                    }
+                                )
+                            }
+                        } else Modifier
+                    ) {
+                        Text(
+                            text = stringResource(id = titleRes)
+                        )
+                    }
                 },
                 navigationIcon = {
                     IconButton(onClick = { scope.launch { clickHandler.processClick { hideKeyboardAndNavigateBack() } } }) {
@@ -139,6 +164,20 @@ fun TodayHabitsScreen(
             modifier = Modifier
                 .fillMaxSize()
                 .padding(paddingValues)
+                .then(
+                    if (sharedTransitionScope != null && animatedContentScope != null) {
+                        with(sharedTransitionScope) {
+                            Modifier.sharedBounds(
+                                sharedContentState = rememberSharedContentState(key = "entry_bg_$filter"),
+                                animatedVisibilityScope = animatedContentScope,
+                                boundsTransform = { _, _ ->
+                                    tween(durationMillis = 350, easing = FastOutSlowInEasing)
+                                },
+                                zIndexInOverlay = 0f
+                            )
+                        }
+                    } else Modifier
+                )
         ) {
             if (flatSortedList.isEmpty()) {
                 Box(
@@ -158,26 +197,31 @@ fun TodayHabitsScreen(
                     contentPadding = PaddingValues(start = 16.dp, top = 8.dp, end = 16.dp, bottom = 16.dp),
                     verticalArrangement = Arrangement.spacedBy(8.dp)
                 ) {
-                    items(
+                    itemsIndexed(
                         items = flatSortedList,
-                        key = { it.habit.id.toString() }
-                    ) { ws ->
-                        HabitCard(
-                            habitWithStatus = ws,
-                            onClick = { onEditHabit(ws.habit) },
-                            onCheckIn = {
-                                viewModel.performSlotCheckIn(ws.habit)
-                            },
-                            onUndoCompletion = { viewModel.undoHabitCompletion(ws.habit) },
-                            onEditHabit = { onEditHabit(ws.habit) },
-                            onDeleteHabit = {
-                                viewModel.deleteHabit(ws.habit)
-                                application?.recordsViewModel?.refreshRecords()
-                            },
-                            onNavigateToMultiSelect = {},
-                            modifier = Modifier.fillMaxWidth(),
-                            showMultiSelectMenuItem = false
-                        )
+                        key = { _, item -> item.habit.id.toString() }
+                    ) { index, ws ->
+                        StaggeredListItem(
+                            index = index,
+                            animationsFrozen = animationsFrozen
+                        ) {
+                            HabitCard(
+                                habitWithStatus = ws,
+                                onClick = { onEditHabit(ws.habit) },
+                                onCheckIn = {
+                                    viewModel.performSlotCheckIn(ws.habit)
+                                },
+                                onUndoCompletion = { viewModel.undoHabitCompletion(ws.habit) },
+                                onEditHabit = { onEditHabit(ws.habit) },
+                                onDeleteHabit = {
+                                    viewModel.deleteHabit(ws.habit)
+                                    application?.recordsViewModel?.refreshRecords()
+                                },
+                                onNavigateToMultiSelect = {},
+                                modifier = Modifier.fillMaxWidth(),
+                                showMultiSelectMenuItem = false
+                            )
+                        }
                     }
                     item {
                         Spacer(modifier = Modifier.height(100.dp))

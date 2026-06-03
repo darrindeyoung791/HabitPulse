@@ -359,21 +359,14 @@ fun HabitPulseNavGraph(
                 navArgument("filter") { type = NavType.StringType }
             ),
             enterTransition = {
-                slideInVertically(
-                    initialOffsetY = { fullHeight -> fullHeight },
-                    animationSpec = spring(
-                        dampingRatio = 0.75f,
-                        stiffness = Spring.StiffnessLow
-                    )
-                ) + fadeIn(animationSpec = tween(durationMillis = 400))
+                fadeIn(animationSpec = tween(durationMillis = 350))
             },
             exitTransition = {
-                slideOutVertically(
-                    targetOffsetY = { fullHeight -> fullHeight },
-                    animationSpec = tween(durationMillis = 200)
-                ) + fadeOut(animationSpec = tween(durationMillis = 200))
+                fadeOut(animationSpec = tween(durationMillis = 200))
             }
         ) { backStackEntry ->
+            val animatedContentScope = this
+            val sharedTransitionScope = this@SharedTransitionLayout
             Box(
                 modifier = Modifier
                     .fillMaxSize()
@@ -394,7 +387,9 @@ fun HabitPulseNavGraph(
                             }
                         }
                     },
-                    application = context.applicationContext as HabitPulseApplication
+                    application = context.applicationContext as HabitPulseApplication,
+                    sharedTransitionScope = sharedTransitionScope,
+                    animatedContentScope = animatedContentScope
                 )
             }
         }
