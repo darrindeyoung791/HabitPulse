@@ -375,12 +375,14 @@ internal fun CheckInFeedbackSheet(
         HabitViewModel.CheckInFeedbackType.LATE_CHECK_IN -> stringResource(R.string.check_in_feedback_late_title)
         HabitViewModel.CheckInFeedbackType.ALREADY_COMPLETED -> stringResource(R.string.check_in_feedback_already_completed_title)
         HabitViewModel.CheckInFeedbackType.TOO_EARLY -> stringResource(R.string.check_in_feedback_too_early_title)
+        HabitViewModel.CheckInFeedbackType.CHECK_IN_SUCCESS -> stringResource(R.string.check_in_feedback_success_title)
         else -> ""
     }
     val message = when (type) {
         HabitViewModel.CheckInFeedbackType.LATE_CHECK_IN -> stringResource(R.string.check_in_feedback_late_message)
         HabitViewModel.CheckInFeedbackType.ALREADY_COMPLETED -> stringResource(R.string.check_in_feedback_already_completed_message)
         HabitViewModel.CheckInFeedbackType.TOO_EARLY -> stringResource(R.string.check_in_feedback_too_early_message, earliestSlot)
+        HabitViewModel.CheckInFeedbackType.CHECK_IN_SUCCESS -> stringResource(R.string.check_in_feedback_success_message)
         else -> ""
     }
 

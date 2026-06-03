@@ -402,6 +402,8 @@
     <string name="check_in_feedback_already_completed_message">You\'ve already checked in today</string>
     <string name="check_in_feedback_too_early_title">Too Early</string>
     <string name="check_in_feedback_too_early_message">Earliest check-in at %s</string>
+    <string name="check_in_feedback_success_title">Checked In</string>
+    <string name="check_in_feedback_success_message">Keep it up!</string>
     <string name="check_in_feedback_dismiss">Got it</string>
     <string name="entry_zone_about_to_start">About to Start</string>
     <string name="entry_zone_overdue">Overdue</string>
@@ -409,7 +411,7 @@
     <string name="entry_zone_stats_badge">Visual</string>
     <string name="entry_zone_stats_placeholder_title">Visual Stats</string>
     <string name="entry_zone_stats_placeholder_desc">Statistics visualization is under development. Stay tuned!</string>
-    <string name="today_section_soon">Starting Soon</string>
+    <string name="today_section_soon">About to Start</string>
     <string name="today_section_later">Later</string>
     <string name="today_section_allday">All Day</string>
 </resources>

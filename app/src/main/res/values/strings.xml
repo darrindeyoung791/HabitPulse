@@ -403,6 +403,8 @@
     <string name="check_in_feedback_already_completed_message">今日已经打卡，不能重复打卡</string>
     <string name="check_in_feedback_too_early_title">时间未到</string>
     <string name="check_in_feedback_too_early_message">最早 %s 可打卡</string>
+    <string name="check_in_feedback_success_title">打卡成功</string>
+    <string name="check_in_feedback_success_message">继续保持！</string>
     <string name="check_in_feedback_dismiss">知道了</string>
     <string name="entry_zone_about_to_start">即将开始</string>
     <string name="entry_zone_overdue">逾期</string>

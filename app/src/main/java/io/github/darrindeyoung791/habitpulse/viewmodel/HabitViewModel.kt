@@ -281,7 +281,7 @@ class HabitViewModel(
         data class TooEarly(val earliestSlotTime: String) : CheckInResult()
     }
 
-    enum class CheckInFeedbackType { NONE, LATE_CHECK_IN, ALREADY_COMPLETED, TOO_EARLY }
+    enum class CheckInFeedbackType { NONE, LATE_CHECK_IN, ALREADY_COMPLETED, TOO_EARLY, CHECK_IN_SUCCESS }
 
     private val _checkInFeedbackType = MutableStateFlow(CheckInFeedbackType.NONE)
     val checkInFeedbackType: StateFlow<CheckInFeedbackType> = _checkInFeedbackType.asStateFlow()
@@ -302,9 +302,10 @@ class HabitViewModel(
                     loadTodayCompletions()
                     if (result.isLate) {
                         _checkInFeedbackType.value = CheckInFeedbackType.LATE_CHECK_IN
-                    }
-                    if (result.isAllCompleted && !result.isLate) {
+                    } else if (result.isAllCompleted) {
                         showRewardSheet(habit)
+                    } else {
+                        _checkInFeedbackType.value = CheckInFeedbackType.CHECK_IN_SUCCESS
                     }
                 }
                 is CheckInResult.AlreadyCompleted -> {
