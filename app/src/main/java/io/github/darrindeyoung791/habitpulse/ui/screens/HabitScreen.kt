@@ -77,6 +77,8 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import io.github.darrindeyoung791.habitpulse.HabitPulseApplication
 import io.github.darrindeyoung791.habitpulse.R
 import io.github.darrindeyoung791.habitpulse.data.model.Habit
+import io.github.darrindeyoung791.habitpulse.data.model.HabitStatus
+import io.github.darrindeyoung791.habitpulse.data.model.HabitWithStatus
 import io.github.darrindeyoung791.habitpulse.data.model.RepeatCycle
 import io.github.darrindeyoung791.habitpulse.data.repository.HabitRepository
 import io.github.darrindeyoung791.habitpulse.ui.theme.HabitPulseTheme
@@ -128,13 +130,17 @@ fun HabitScreenContent(
         }
     }
 
+    val habitsWithStatus by viewModel.habitsWithStatusForDisplay.collectAsStateWithLifecycle()
+    val filteredHabitsWithStatus by viewModel.filteredHabitsWithStatus.collectAsStateWithLifecycle()
     val habits by viewModel.habitsFlow.collectAsStateWithLifecycle(initialValue = emptyList())
-    val filteredHabits by viewModel.filteredHabitsFlow.collectAsStateWithLifecycle(initialValue = emptyList())
     val isLoading by viewModel.isLoading.collectAsStateWithLifecycle(initialValue = true)
     val newlyAddedHabitId by viewModel.newlyAddedHabitId.collectAsStateWithLifecycle(initialValue = null)
     val searchQuery by viewModel.searchQuery.collectAsStateWithLifecycle(initialValue = "")
     val rewardSheetHabit by viewModel.rewardSheetHabit.collectAsStateWithLifecycle(initialValue = null)
     val showRewardSheet by viewModel.showRewardSheet.collectAsStateWithLifecycle(initialValue = false)
+    val pendingTodayCount by viewModel.pendingTodayCount.collectAsStateWithLifecycle(initialValue = 0)
+    val aboutToStartCount by viewModel.aboutToStartCount.collectAsStateWithLifecycle(initialValue = 0)
+    val overdueCount by viewModel.overdueCount.collectAsStateWithLifecycle(initialValue = 0)
 
     var hasLoadedHabits by remember { mutableStateOf(false) }
     var isSearchFocused by remember { mutableStateOf(false) }
@@ -168,37 +174,73 @@ fun HabitScreenContent(
     }
 
     val todayTitle = stringResource(id = R.string.entry_zone_today_habits)
+    val aboutToStartTitle = stringResource(id = R.string.entry_zone_about_to_start)
+    val overdueTitle = stringResource(id = R.string.entry_zone_overdue)
     val lanTitle = stringResource(id = R.string.entry_zone_lan_sync)
     val statsTitle = stringResource(id = R.string.entry_zone_stats)
     val disabledTint = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.38f)
-    val todayCount = habits.size.toString()
+    val tertiaryColor = MaterialTheme.colorScheme.tertiary
+    val errorColor = MaterialTheme.colorScheme.error
+    val todayCardColor = MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.5f)
+    val aboutToStartCardColor = MaterialTheme.colorScheme.tertiaryContainer.copy(alpha = 0.5f)
+    val overdueCardColor = MaterialTheme.colorScheme.errorContainer.copy(alpha = 0.5f)
 
-    val entryItems = remember(disabledTint, todayTitle, todayCount, lanTitle, statsTitle, onViewTodayHabits, onViewLanSync, onViewStats) {
-        listOf(
-            EntryItem(
-                id = "today",
-                icon = null,
-                title = todayTitle,
-                badgeText = null,
-                iconContent = todayCount,
-                onClick = onViewTodayHabits
-            ),
-            EntryItem(
+    val entryItems = remember(pendingTodayCount, aboutToStartCount, overdueCount, todayTitle, aboutToStartTitle, overdueTitle, lanTitle, statsTitle, disabledTint, tertiaryColor, errorColor, todayCardColor, aboutToStartCardColor, overdueCardColor, onViewTodayHabits, onViewLanSync, onViewStats) {
+        buildList {
+            if (aboutToStartCount > 0) {
+                add(EntryItem(
+                    id = "about_to_start",
+                    icon = Icons.Filled.Notifications,
+                    title = aboutToStartTitle,
+                    badgeText = null,
+                    iconTint = tertiaryColor,
+                    containerColor = tertiaryColor.copy(alpha = 0.15f),
+                    cardColor = aboutToStartCardColor,
+                    onClick = onViewTodayHabits
+                ))
+            }
+            if (pendingTodayCount > 0) {
+                add(EntryItem(
+                    id = "today",
+                    icon = null,
+                    title = todayTitle,
+                    badgeText = null,
+                    iconContent = pendingTodayCount.toString(),
+                    cardColor = todayCardColor,
+                    onClick = onViewTodayHabits
+                ))
+            }
+            if (overdueCount > 0) {
+                add(EntryItem(
+                    id = "overdue",
+                    icon = null,
+                    title = overdueTitle,
+                    badgeText = null,
+                    iconContent = overdueCount.toString(),
+                    iconTint = errorColor,
+                    containerColor = errorColor.copy(alpha = 0.15f),
+                    cardColor = overdueCardColor,
+                    onClick = onViewTodayHabits
+                ))
+            }
+            add(EntryItem(
                 id = "lan_sync",
                 icon = Icons.Filled.Sync,
                 title = lanTitle,
                 badgeText = null,
                 iconTint = disabledTint,
+                cardColor = todayCardColor,
                 onClick = onViewLanSync
-            ),
-            EntryItem(
+            ))
+            add(EntryItem(
                 id = "stats",
                 icon = Icons.Filled.BarChart,
                 title = statsTitle,
                 badgeText = null,
+                cardColor = todayCardColor,
                 onClick = onViewStats
-            )
-        )
+            ))
+        }
     }
 
     Column(modifier = modifier.fillMaxSize()) {
@@ -244,7 +286,7 @@ fun HabitScreenContent(
                 ) {
                     CircularProgressIndicator()
                 }
-            } else if (isSearchActive && filteredHabits.isEmpty()) {
+            } else if (isSearchActive && filteredHabitsWithStatus.isEmpty()) {
                 SearchEmptyState(
                     modifier = Modifier.fillMaxSize(),
                     onClearSearch = {
@@ -262,11 +304,10 @@ fun HabitScreenContent(
             } else {
                 HabitListContent(
                     modifier = Modifier.fillMaxSize(),
-                    habits = if (isSearchActive) filteredHabits else habits,
+                    habitsWithStatus = if (isSearchActive) filteredHabitsWithStatus else habitsWithStatus,
                     onHabitClick = { onEditHabit(it) },
                     onCheckIn = { habit ->
-                        viewModel.incrementCompletionCount(habit)
-                        viewModel.showRewardSheet(habit)
+                        viewModel.performSlotCheckIn(habit)
                     },
                     onUndoCompletion = { viewModel.undoHabitCompletion(it) },
                     onDeleteHabit = { habit ->
@@ -306,6 +347,77 @@ fun HabitScreenContent(
             onNotifySupervisor = { viewModel.dismissRewardSheet() },
             onSkipNotification = { viewModel.dismissRewardSheet() }
         )
+    }
+
+    val checkInFeedbackType by viewModel.checkInFeedbackType.collectAsStateWithLifecycle()
+    val tooEarlyEarliestSlot by viewModel.tooEarlyEarliestSlot.collectAsStateWithLifecycle()
+    if (checkInFeedbackType != HabitViewModel.CheckInFeedbackType.NONE) {
+        CheckInFeedbackSheet(
+            type = checkInFeedbackType,
+            earliestSlot = tooEarlyEarliestSlot,
+            onDismiss = { viewModel.dismissCheckInFeedback() }
+        )
+    }
+}
+
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+internal fun CheckInFeedbackSheet(
+    type: HabitViewModel.CheckInFeedbackType,
+    earliestSlot: String,
+    onDismiss: () -> Unit
+) {
+    val sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
+
+    val title = when (type) {
+        HabitViewModel.CheckInFeedbackType.LATE_CHECK_IN -> stringResource(R.string.check_in_feedback_late_title)
+        HabitViewModel.CheckInFeedbackType.ALREADY_COMPLETED -> stringResource(R.string.check_in_feedback_already_completed_title)
+        HabitViewModel.CheckInFeedbackType.TOO_EARLY -> stringResource(R.string.check_in_feedback_too_early_title)
+        else -> ""
+    }
+    val message = when (type) {
+        HabitViewModel.CheckInFeedbackType.LATE_CHECK_IN -> stringResource(R.string.check_in_feedback_late_message)
+        HabitViewModel.CheckInFeedbackType.ALREADY_COMPLETED -> stringResource(R.string.check_in_feedback_already_completed_message)
+        HabitViewModel.CheckInFeedbackType.TOO_EARLY -> stringResource(R.string.check_in_feedback_too_early_message, earliestSlot)
+        else -> ""
+    }
+
+    ModalBottomSheet(
+        onDismissRequest = onDismiss,
+        sheetState = sheetState
+    ) {
+        Column(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(horizontal = 24.dp, vertical = 32.dp),
+            horizontalAlignment = Alignment.CenterHorizontally
+        ) {
+            Text(
+                text = title,
+                style = MaterialTheme.typography.headlineSmall,
+                fontWeight = FontWeight.Bold,
+                textAlign = TextAlign.Center
+            )
+
+            Spacer(modifier = Modifier.height(8.dp))
+
+            Text(
+                text = message,
+                style = MaterialTheme.typography.headlineSmall,
+                fontWeight = FontWeight.Bold,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                textAlign = TextAlign.Center
+            )
+
+            Spacer(modifier = Modifier.height(32.dp))
+
+            Button(
+                onClick = onDismiss,
+                modifier = Modifier.fillMaxWidth()
+            ) {
+                Text(text = stringResource(R.string.check_in_feedback_dismiss))
+            }
+        }
     }
 }
 
@@ -351,7 +463,7 @@ fun EmptyStateContent(
 @Composable
 fun HabitListContent(
     modifier: Modifier = Modifier,
-    habits: List<Habit>,
+    habitsWithStatus: List<HabitWithStatus>,
     onHabitClick: (Habit) -> Unit,
     onCheckIn: (Habit) -> Unit,
     onUndoCompletion: (Habit) -> Unit,
@@ -381,8 +493,8 @@ fun HabitListContent(
     val horizontalPadding = 16.dp
 
     if (useStaggeredGrid) {
-        val column1Habits = habits.filterIndexed { index, _ -> index % 2 == 0 }
-        val column2Habits = habits.filterIndexed { index, _ -> index % 2 == 1 }
+        val column1Habits = habitsWithStatus.filterIndexed { index, _ -> index % 2 == 0 }
+        val column2Habits = habitsWithStatus.filterIndexed { index, _ -> index % 2 == 1 }
 
         val waterfallModifier = if (nestedScrollConnection != null) modifier.nestedScroll(nestedScrollConnection) else modifier
 
@@ -412,21 +524,21 @@ fun HabitListContent(
                     modifier = Modifier.weight(1f),
                     verticalArrangement = Arrangement.spacedBy(8.dp)
                 ) {
-                    column1Habits.forEach { habit ->
+                    column1Habits.forEach { ws ->
                         HabitCard(
-                            habit = habit,
-                            onClick = { onHabitClick(habit) },
-                            onCheckIn = { onCheckIn(habit) },
-                            onUndoCompletion = { onUndoCompletion(habit) },
-                            onEditHabit = { onHabitClick(habit) },
-                            onDeleteHabit = { onDeleteHabit(habit) },
+                            habitWithStatus = ws,
+                            onClick = { onHabitClick(ws.habit) },
+                            onCheckIn = { onCheckIn(ws.habit) },
+                            onUndoCompletion = { onUndoCompletion(ws.habit) },
+                            onEditHabit = { onHabitClick(ws.habit) },
+                            onDeleteHabit = { onDeleteHabit(ws.habit) },
                             onNavigateToMultiSelect = { habitId -> onNavigateToMultiSelect(habitId) },
-                            isNewlyAdded = (habit.id == newlyAddedHabitId),
+                            isNewlyAdded = (ws.habit.id == newlyAddedHabitId),
                             searchQuery = searchQuery,
                             modifier = Modifier.fillMaxWidth(),
                             sharedTransitionScope = sharedTransitionScope,
                             animatedContentScope = animatedContentScope,
-                            isMultiSelectTarget = (habit.id == multiSelectTargetHabitId)
+                            isMultiSelectTarget = (ws.habit.id == multiSelectTargetHabitId)
                         )
                     }
                 }
@@ -435,21 +547,21 @@ fun HabitListContent(
                     modifier = Modifier.weight(1f),
                     verticalArrangement = Arrangement.spacedBy(8.dp)
                 ) {
-                    column2Habits.forEach { habit ->
+                    column2Habits.forEach { ws ->
                         HabitCard(
-                            habit = habit,
-                            onClick = { onHabitClick(habit) },
-                            onCheckIn = { onCheckIn(habit) },
-                            onUndoCompletion = { onUndoCompletion(habit) },
-                            onEditHabit = { onHabitClick(habit) },
-                            onDeleteHabit = { onDeleteHabit(habit) },
+                            habitWithStatus = ws,
+                            onClick = { onHabitClick(ws.habit) },
+                            onCheckIn = { onCheckIn(ws.habit) },
+                            onUndoCompletion = { onUndoCompletion(ws.habit) },
+                            onEditHabit = { onHabitClick(ws.habit) },
+                            onDeleteHabit = { onDeleteHabit(ws.habit) },
                             onNavigateToMultiSelect = { habitId -> onNavigateToMultiSelect(habitId) },
-                            isNewlyAdded = (habit.id == newlyAddedHabitId),
+                            isNewlyAdded = (ws.habit.id == newlyAddedHabitId),
                             searchQuery = searchQuery,
                             modifier = Modifier.fillMaxWidth(),
                             sharedTransitionScope = sharedTransitionScope,
                             animatedContentScope = animatedContentScope,
-                            isMultiSelectTarget = (habit.id == multiSelectTargetHabitId)
+                            isMultiSelectTarget = (ws.habit.id == multiSelectTargetHabitId)
                         )
                     }
                 }
@@ -469,23 +581,23 @@ fun HabitListContent(
                 entryZone()
             }
             items(
-                items = habits,
-                key = { it.id.toString() },
+                items = habitsWithStatus,
+                key = { it.habit.id.toString() },
                 contentType = { "habitCard" }
-            ) { habit ->
+            ) { ws ->
                 HabitCard(
-                    habit = habit,
-                    onClick = { onHabitClick(habit) },
-                    onCheckIn = { onCheckIn(habit) },
-                    onUndoCompletion = { onUndoCompletion(habit) },
-                    onEditHabit = { onHabitClick(habit) },
-                    onDeleteHabit = { onDeleteHabit(habit) },
+                    habitWithStatus = ws,
+                    onClick = { onHabitClick(ws.habit) },
+                    onCheckIn = { onCheckIn(ws.habit) },
+                    onUndoCompletion = { onUndoCompletion(ws.habit) },
+                    onEditHabit = { onHabitClick(ws.habit) },
+                    onDeleteHabit = { onDeleteHabit(ws.habit) },
                     onNavigateToMultiSelect = { habitId -> onNavigateToMultiSelect(habitId) },
-                    isNewlyAdded = (habit.id == newlyAddedHabitId),
+                    isNewlyAdded = (ws.habit.id == newlyAddedHabitId),
                     searchQuery = searchQuery,
                     sharedTransitionScope = sharedTransitionScope,
                     animatedContentScope = animatedContentScope,
-                    isMultiSelectTarget = (habit.id == multiSelectTargetHabitId)
+                    isMultiSelectTarget = (ws.habit.id == multiSelectTargetHabitId)
                 )
             }
             item {
@@ -777,7 +889,18 @@ fun ScrollableWaterfallWithScrollbar(
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun HabitCard(
-    habit: Habit,
+    habitWithStatus: HabitWithStatus = HabitWithStatus(
+        habit = Habit(
+            title = "每天喝水",
+            completedToday = false,
+            completionCount = 15,
+            repeatCycle = RepeatCycle.DAILY,
+            reminderTimes = "[\"08:00\",\"12:00\",\"20:00\"]",
+            notes = "记得每次喝水时要慢慢喝"
+        ),
+        todayCompletions = emptyList(),
+        status = setOf(HabitStatus.PENDING_TODAY)
+    ),
     onClick: () -> Unit,
     onCheckIn: () -> Unit,
     onUndoCompletion: () -> Unit,
@@ -792,6 +915,9 @@ fun HabitCard(
     animatedContentScope: AnimatedContentScope? = null,
     isMultiSelectTarget: Boolean = false
 ) {
+    val habit = habitWithStatus.habit
+    val status = habitWithStatus.status
+    val todayCompletions = habitWithStatus.todayCompletions
     var showMenu by remember { mutableStateOf(false) }
     var showReminderDialog by remember { mutableStateOf(false) }
     var showNotesDialog by remember { mutableStateOf(false) }
@@ -874,32 +1000,74 @@ fun HabitCard(
                         modifier = Modifier.weight(1f),
                         verticalArrangement = Arrangement.spacedBy(8.dp)
                     ) {
-                        Text(
-                            text = highlightText(habit.title, searchQuery),
-                            style = MaterialTheme.typography.headlineSmall,
-                            fontWeight = FontWeight.Bold,
-                            color = MaterialTheme.colorScheme.onSurface,
-                            maxLines = 2,
-                            overflow = TextOverflow.Ellipsis,
-                            modifier = Modifier.then(
-                                if (isMultiSelectTarget && sharedTransitionScope != null && animatedContentScope != null) {
-                                    with(sharedTransitionScope) {
-                                        Modifier.sharedElement(
-                                            sharedContentState = rememberSharedContentState(key = "title-${habit.id}"),
-                                            animatedVisibilityScope = animatedContentScope,
-                                            boundsTransform = { _, _ ->
-                                                tween(durationMillis = 350, easing = FastOutSlowInEasing)
+                        Row(
+                            verticalAlignment = Alignment.CenterVertically,
+                            horizontalArrangement = Arrangement.spacedBy(8.dp)
+                        ) {
+                            Text(
+                                text = highlightText(habit.title, searchQuery),
+                                style = MaterialTheme.typography.headlineSmall,
+                                fontWeight = FontWeight.Bold,
+                                color = MaterialTheme.colorScheme.onSurface,
+                                maxLines = 2,
+                                overflow = TextOverflow.Ellipsis,
+                                modifier = Modifier
+                                    .weight(1f, fill = false)
+                                    .then(
+                                        if (isMultiSelectTarget && sharedTransitionScope != null && animatedContentScope != null) {
+                                            with(sharedTransitionScope) {
+                                                Modifier.sharedElement(
+                                                    sharedContentState = rememberSharedContentState(key = "title-${habit.id}"),
+                                                    animatedVisibilityScope = animatedContentScope,
+                                                    boundsTransform = { _, _ ->
+                                                        tween(durationMillis = 350, easing = FastOutSlowInEasing)
+                                                    }
+                                                )
                                             }
-                                        )
-                                    }
-                                } else {
-                                    Modifier
-                                }
+                                        } else {
+                                            Modifier
+                                        }
+                                    )
                             )
-                        )
 
+                            val badgeText = when {
+                                HabitStatus.COMPLETED_TODAY in status -> stringResource(id = R.string.habit_card_status_completed)
+                                HabitStatus.OVERDUE in status -> stringResource(id = R.string.habit_card_status_overdue)
+                                HabitStatus.ABOUT_TO_START in status -> stringResource(id = R.string.habit_card_status_about_to_start)
+                                else -> null
+                            }
+                            val badgeColor = when {
+                                HabitStatus.COMPLETED_TODAY in status -> MaterialTheme.colorScheme.primary
+                                HabitStatus.OVERDUE in status -> MaterialTheme.colorScheme.error
+                                HabitStatus.ABOUT_TO_START in status -> MaterialTheme.colorScheme.tertiary
+                                else -> Color.Transparent
+                            }
+                            if (badgeText != null) {
+                                Surface(
+                                    shape = RoundedCornerShape(4.dp),
+                                    color = badgeColor.copy(alpha = 0.15f)
+                                ) {
+                                    Text(
+                                        text = badgeText,
+                                        style = MaterialTheme.typography.labelSmall,
+                                        color = badgeColor,
+                                        fontWeight = FontWeight.Medium,
+                                        modifier = Modifier.padding(horizontal = 6.dp, vertical = 2.dp)
+                                    )
+                                }
+                            }
+                        }
+
+                        val progressText = if (reminderTimes.size > 1) {
+                            val completedToday = todayCompletions.size
+                            stringResource(id = R.string.habit_card_progress_format, completedToday, reminderTimes.size)
+                        } else ""
                         Text(
-                            text = stringResource(id = R.string.habit_card_completed_count, habit.completionCount),
+                            text = if (progressText.isEmpty()) {
+                                stringResource(id = R.string.habit_card_completed_count, habit.completionCount)
+                            } else {
+                                "${stringResource(id = R.string.habit_card_completed_count, habit.completionCount)} · $progressText"
+                            },
                             style = MaterialTheme.typography.bodyLarge,
                             color = MaterialTheme.colorScheme.onSurfaceVariant
                         )
@@ -1570,13 +1738,17 @@ fun HabitScreenPreview() {
 fun HabitCardPreview() {
     HabitPulseTheme {
         HabitCard(
-            habit = Habit(
-                title = "每天喝水",
-                completedToday = false,
-                completionCount = 15,
-                repeatCycle = RepeatCycle.DAILY,
-                reminderTimes = "[\"08:00\",\"12:00\",\"20:00\"]",
-                notes = "记得每次喝水时要慢慢喝\n不要一口气喝完\n最好喝温水"
+            habitWithStatus = HabitWithStatus(
+                habit = Habit(
+                    title = "每天喝水",
+                    completedToday = false,
+                    completionCount = 15,
+                    repeatCycle = RepeatCycle.DAILY,
+                    reminderTimes = "[\"08:00\",\"12:00\",\"20:00\"]",
+                    notes = "记得每次喝水时要慢慢喝\n不要一口气喝完\n最好喝温水"
+                ),
+                todayCompletions = emptyList(),
+                status = setOf(HabitStatus.PENDING_TODAY, HabitStatus.ABOUT_TO_START)
             ),
             onClick = {},
             onCheckIn = {},
@@ -1593,14 +1765,24 @@ fun HabitCardPreview() {
 fun HabitCardCompletedPreview() {
     HabitPulseTheme {
         HabitCard(
-            habit = Habit(
-                title = "晨跑",
-                completedToday = true,
-                completionCount = 30,
-                repeatCycle = RepeatCycle.WEEKLY,
-                repeatDays = "[1,3,5]",
-                reminderTimes = "[\"06:00\"]",
-                notes = "跑步前记得热身\n跑完后要拉伸"
+            habitWithStatus = HabitWithStatus(
+                habit = Habit(
+                    title = "晨跑",
+                    completedToday = true,
+                    completionCount = 30,
+                    repeatCycle = RepeatCycle.WEEKLY,
+                    repeatDays = "[1,3,5]",
+                    reminderTimes = "[\"06:00\"]",
+                    notes = "跑步前记得热身\n跑完后要拉伸"
+                ),
+                todayCompletions = listOf(
+                    io.github.darrindeyoung791.habitpulse.data.model.HabitCompletion(
+                        habitId = UUID.randomUUID(),
+                        completedDateLocal = io.github.darrindeyoung791.habitpulse.data.model.HabitCompletion.getTodayDate(),
+                        slotTime = "06:00"
+                    )
+                ),
+                status = setOf(HabitStatus.COMPLETED_TODAY)
             ),
             onClick = {},
             onCheckIn = {},
@@ -1617,13 +1799,17 @@ fun HabitCardCompletedPreview() {
 fun HabitCardWithNotesPreview() {
     HabitPulseTheme {
         HabitCard(
-            habit = Habit(
-                title = "阅读",
-                completedToday = false,
-                completionCount = 5,
-                repeatCycle = RepeatCycle.DAILY,
-                reminderTimes = "[\"21:00\"]",
-                notes = "每天至少读 30 分钟\n记录读书笔记\n分享读书心得"
+            habitWithStatus = HabitWithStatus(
+                habit = Habit(
+                    title = "阅读",
+                    completedToday = false,
+                    completionCount = 5,
+                    repeatCycle = RepeatCycle.DAILY,
+                    reminderTimes = "[\"21:00\"]",
+                    notes = "每天至少读 30 分钟\n记录读书笔记\n分享读书心得"
+                ),
+                todayCompletions = emptyList(),
+                status = setOf(HabitStatus.PENDING_TODAY)
             ),
             onClick = {},
             onCheckIn = {},
@@ -1753,6 +1939,14 @@ internal class FakeHabitDao : io.github.darrindeyoung791.habitpulse.data.databas
         }
     }
 
+    override suspend fun incrementCompletionCountWithCompleted(id: UUID, completed: Boolean, timestamp: Long) {
+        // No-op for preview/fake
+    }
+
+    override suspend fun undoSlotCompletion(id: UUID, completed: Boolean, timestamp: Long) {
+        // No-op for preview/fake
+    }
+
     override suspend fun resetAllCompletionStatus(timestamp: Long) {
         habits.replaceAll { habit ->
             habit.copy(
@@ -1866,4 +2060,6 @@ internal class FakeHabitCompletionDao : io.github.darrindeyoung791.habitpulse.da
     override suspend fun getCompletionCountByHabitId(habitId: UUID): Int {
         return completions.count { it.habitId == habitId }
     }
+
+    override suspend fun getCompletionByHabitIdDateAndSlot(habitId: UUID, date: String, slotTime: String): io.github.darrindeyoung791.habitpulse.data.model.HabitCompletion? = null
 }

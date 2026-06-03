@@ -897,6 +897,12 @@ private class FakeHabitDaoForContacts : io.github.darrindeyoung791.habitpulse.da
     override suspend fun updateCompletionStatus(id: UUID, completed: Boolean, timestamp: Long) {}
     override suspend fun undoCompletionStatus(id: UUID, timestamp: Long) {}
     override suspend fun incrementCompletionCount(id: UUID, timestamp: Long) {}
+    override suspend fun incrementCompletionCountWithCompleted(id: UUID, completed: Boolean, timestamp: Long) {
+        // No-op for preview/fake
+    }
+    override suspend fun undoSlotCompletion(id: UUID, completed: Boolean, timestamp: Long) {
+        // No-op for preview/fake
+    }
     override suspend fun resetAllCompletionStatus(timestamp: Long) {}
     override fun getHabitCount(): kotlinx.coroutines.flow.Flow<Int> =
         kotlinx.coroutines.flow.flowOf(habits.size)
@@ -967,6 +973,8 @@ private class FakeHabitCompletionDaoForContacts : io.github.darrindeyoung791.hab
         kotlinx.coroutines.flow.flowOf(0)
 
     override suspend fun getCompletionCountByHabitId(habitId: UUID): Int = 0
+
+    override suspend fun getCompletionByHabitIdDateAndSlot(habitId: UUID, date: String, slotTime: String): io.github.darrindeyoung791.habitpulse.data.model.HabitCompletion? = null
 }
 
 // ============= Previews =============

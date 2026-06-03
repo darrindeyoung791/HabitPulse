@@ -16,6 +16,8 @@ import java.util.UUID
  * @property completedDate 打卡完成时间戳
  * @property completedDateLocal 打卡完成日期的本地表示 (yyyy-MM-dd 格式，用于按日期查询)
  * @property timeZone 打卡时的时区 ID，用于处理跨时区场景
+ * @property slotTime 绑定的提醒时段 (如 "08:00")，用于按时段严格绑定打卡
+ * @property isLate 是否为逾期补卡（超过时段+1h后打卡）
  */
 @Entity(
     tableName = "habit_completions",
@@ -42,7 +44,11 @@ data class HabitCompletion(
 
     val completedDateLocal: String,
 
-    val timeZone: String = java.util.TimeZone.getDefault().id
+    val timeZone: String = java.util.TimeZone.getDefault().id,
+
+    val slotTime: String = "",
+
+    val isLate: Boolean = false
 ) {
     /**
      * 获取打卡日期（yyyy-MM-dd 格式）

@@ -15,6 +15,7 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import io.github.darrindeyoung791.habitpulse.HabitPulseApplication
 import io.github.darrindeyoung791.habitpulse.R
 import io.github.darrindeyoung791.habitpulse.data.model.Habit
+import io.github.darrindeyoung791.habitpulse.data.model.HabitWithStatus
 import io.github.darrindeyoung791.habitpulse.data.model.RepeatCycle
 import io.github.darrindeyoung791.habitpulse.data.repository.HabitRepository
 import io.github.darrindeyoung791.habitpulse.utils.OnboardingPreferences
@@ -50,16 +51,16 @@ fun TodayHabitsScreen(
         }
     }
 
-    val allHabits by viewModel.habitsFlow.collectAsStateWithLifecycle(initialValue = emptyList())
+    val allWithStatus by viewModel.habitsWithStatusForDisplay.collectAsStateWithLifecycle()
     val rewardSheetHabit by viewModel.rewardSheetHabit.collectAsStateWithLifecycle(initialValue = null)
     val showRewardSheet by viewModel.showRewardSheet.collectAsStateWithLifecycle(initialValue = false)
 
     val todayDayOfWeek = LocalDate.now().dayOfWeek
     val now = LocalTime.now()
 
-    val todayHabits = remember(allHabits, todayDayOfWeek) {
-        allHabits.filter { habit ->
-            when (habit.repeatCycle) {
+    val todayHabitsWithStatus = remember(allWithStatus, todayDayOfWeek) {
+        allWithStatus.filter { ws ->
+            when (ws.habit.repeatCycle) {
                 RepeatCycle.DAILY -> true
                 RepeatCycle.WEEKLY -> {
                     val dayIndex = when (todayDayOfWeek) {
@@ -71,37 +72,38 @@ fun TodayHabitsScreen(
                         DayOfWeek.SATURDAY -> 5
                         DayOfWeek.SUNDAY -> 6
                     }
-                    dayIndex in habit.getRepeatDaysList()
+                    dayIndex in ws.habit.getRepeatDaysList()
                 }
             }
         }
     }
 
-    val sections = remember(todayHabits, now) {
+    val sections = remember(todayHabitsWithStatus, now) {
         val soonTitle = context.getString(R.string.today_section_soon)
         val laterTitle = context.getString(R.string.today_section_later)
         val alldayTitle = context.getString(R.string.today_section_allday)
 
-        val sorted = todayHabits.sortedBy { habit ->
-            val times = habit.getReminderTimesList()
+        val sorted = todayHabitsWithStatus.sortedBy { ws ->
+            val times = ws.habit.getReminderTimesList()
             if (times.isEmpty()) "99:99" else times.min()
         }
 
-        val soonList = mutableListOf<Habit>()
-        val laterList = mutableListOf<Habit>()
-        val alldayList = mutableListOf<Habit>()
+        val soonList = mutableListOf<HabitWithStatus>()
+        val laterList = mutableListOf<HabitWithStatus>()
+        val alldayList = mutableListOf<HabitWithStatus>()
 
-        for (habit in sorted) {
+        for (ws in sorted) {
+            val habit = ws.habit
             val times = habit.getReminderTimesList()
             if (times.isEmpty()) {
-                alldayList.add(habit)
+                alldayList.add(ws)
             } else {
                 val parts = times.min().split(":")
                 val reminderTime = LocalTime.of(parts[0].toInt(), parts[1].toInt())
                 if (reminderTime <= now || Duration.between(now, reminderTime).toMinutes() < 60) {
-                    soonList.add(habit)
+                    soonList.add(ws)
                 } else {
-                    laterList.add(habit)
+                    laterList.add(ws)
                 }
             }
         }
@@ -177,19 +179,18 @@ fun TodayHabitsScreen(
                         }
                         items(
                             items = habitList,
-                            key = { it.id.toString() }
-                        ) { habit ->
+                            key = { it.habit.id.toString() }
+                        ) { ws ->
                             HabitCard(
-                                habit = habit,
-                                onClick = { onEditHabit(habit) },
+                                habitWithStatus = ws,
+                                onClick = { onEditHabit(ws.habit) },
                                 onCheckIn = {
-                                    viewModel.incrementCompletionCount(habit)
-                                    viewModel.showRewardSheet(habit)
+                                    viewModel.performSlotCheckIn(ws.habit)
                                 },
-                                onUndoCompletion = { viewModel.undoHabitCompletion(habit) },
-                                onEditHabit = { onEditHabit(habit) },
+                                onUndoCompletion = { viewModel.undoHabitCompletion(ws.habit) },
+                                onEditHabit = { onEditHabit(ws.habit) },
                                 onDeleteHabit = {
-                                    viewModel.deleteHabit(habit)
+                                    viewModel.deleteHabit(ws.habit)
                                     application?.recordsViewModel?.refreshRecords()
                                 },
                                 onNavigateToMultiSelect = {},
@@ -217,6 +218,16 @@ fun TodayHabitsScreen(
             onComplete = { viewModel.dismissRewardSheet() },
             onNotifySupervisor = { viewModel.dismissRewardSheet() },
             onSkipNotification = { viewModel.dismissRewardSheet() }
+        )
+    }
+
+    val checkInFeedbackType by viewModel.checkInFeedbackType.collectAsStateWithLifecycle()
+    val tooEarlyEarliestSlot by viewModel.tooEarlyEarliestSlot.collectAsStateWithLifecycle()
+    if (checkInFeedbackType != HabitViewModel.CheckInFeedbackType.NONE) {
+        CheckInFeedbackSheet(
+            type = checkInFeedbackType,
+            earliestSlot = tooEarlyEarliestSlot,
+            onDismiss = { viewModel.dismissCheckInFeedback() }
         )
     }
 }

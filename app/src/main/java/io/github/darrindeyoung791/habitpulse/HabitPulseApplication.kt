@@ -44,6 +44,7 @@ class HabitPulseApplication : Application() {
             }
         })
         .addMigrations(HabitDatabase.MIGRATION_2_3)  // Migration from v2 to v3
+        .addMigrations(HabitDatabase.MIGRATION_3_4)  // Migration from v3 to v4
         .build()
     }
 

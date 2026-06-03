@@ -31,6 +31,8 @@ data class EntryItem(
     val badgeText: String?,
     val iconTint: Color? = null,
     val iconContent: String? = null,
+    val containerColor: Color? = null,
+    val cardColor: Color? = null,
     val onClick: () -> Unit
 )
 
@@ -136,7 +138,7 @@ private fun EntryCard(
     modifier: Modifier = Modifier
 ) {
     val hasLeftContent = entry.icon != null || entry.iconContent != null
-    val iconContainerBackground = when {
+    val iconContainerBackground = entry.containerColor ?: when {
         entry.iconTint != null && entry.icon != null -> MaterialTheme.colorScheme.onSurface.copy(alpha = 0.08f)
         else -> MaterialTheme.colorScheme.primaryContainer
     }
@@ -147,7 +149,7 @@ private fun EntryCard(
             .clickable { entry.onClick() },
         shape = RoundedCornerShape(16.dp),
         colors = CardDefaults.cardColors(
-            containerColor = MaterialTheme.colorScheme.surfaceContainerHigh
+            containerColor = entry.cardColor ?: MaterialTheme.colorScheme.surfaceContainerHigh
         )
     ) {
         Box(modifier = Modifier.fillMaxWidth()) {
@@ -169,8 +171,8 @@ private fun EntryCard(
                             Text(
                                 text = entry.iconContent,
                                 style = MaterialTheme.typography.titleSmall,
-                                fontWeight = FontWeight.Bold,
-                                color = MaterialTheme.colorScheme.onPrimaryContainer
+                                fontWeight = FontWeight.Normal,
+                                color = entry.iconTint ?: MaterialTheme.colorScheme.onPrimaryContainer
                             )
                         } else if (entry.icon != null) {
                             Icon(
@@ -189,7 +191,7 @@ private fun EntryCard(
                     Text(
                         text = entry.title,
                         style = MaterialTheme.typography.titleMedium,
-                        fontWeight = FontWeight.SemiBold,
+                        fontWeight = FontWeight.Normal,
                         color = MaterialTheme.colorScheme.onSurface,
                         maxLines = 1,
                         overflow = TextOverflow.Ellipsis

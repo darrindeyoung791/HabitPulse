@@ -1482,6 +1482,14 @@ private class FakeHabitDaoForCreation : io.github.darrindeyoung791.habitpulse.da
         }
     }
 
+    override suspend fun incrementCompletionCountWithCompleted(id: java.util.UUID, completed: Boolean, timestamp: Long) {
+        // No-op for preview/fake
+    }
+
+    override suspend fun undoSlotCompletion(id: java.util.UUID, completed: Boolean, timestamp: Long) {
+        // No-op for preview/fake
+    }
+
     override suspend fun resetAllCompletionStatus(timestamp: Long) {
         habits.replaceAll { habit ->
             habit.copy(
@@ -1596,4 +1604,6 @@ private class FakeHabitCompletionDaoForCreation : io.github.darrindeyoung791.hab
     override suspend fun getCompletionCountByHabitId(habitId: java.util.UUID): Int {
         return completions.count { it.habitId == habitId }
     }
+
+    override suspend fun getCompletionByHabitIdDateAndSlot(habitId: java.util.UUID, date: String, slotTime: String): io.github.darrindeyoung791.habitpulse.data.model.HabitCompletion? = null
 }

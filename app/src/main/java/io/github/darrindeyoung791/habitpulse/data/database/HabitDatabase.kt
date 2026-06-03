@@ -15,17 +15,18 @@ import io.github.darrindeyoung791.habitpulse.data.model.HabitCompletion
 /**
  * HabitPulse Room 数据库
  *
- * 数据库版本：3
+ * 数据库版本：4
  * 包含：habits 表、habit_completions 表
  * 
  * Version history:
  * - v1: Initial schema with habits table
  * - v2: Added habit_completions table
  * - v3: Added sortOrder and timeZone columns to habits table
+ * - v4: Added slotTime and isLate columns to habit_completions table for slot-based check-in
  */
 @Database(
     entities = [Habit::class, HabitCompletion::class],
-    version = 3,
+    version = 4,
     exportSchema = true
 )
 @TypeConverters(
@@ -57,6 +58,13 @@ abstract class HabitDatabase : RoomDatabase() {
                 database.execSQL("ALTER TABLE habits ADD COLUMN sortOrder INTEGER NOT NULL DEFAULT 0")
                 // Add timeZone column with default value (will be set at runtime)
                 database.execSQL("ALTER TABLE habits ADD COLUMN timeZone TEXT NOT NULL DEFAULT ''")
+            }
+        }
+
+        val MIGRATION_3_4 = object : Migration(3, 4) {
+            override fun migrate(database: SupportSQLiteDatabase) {
+                database.execSQL("ALTER TABLE habit_completions ADD COLUMN slotTime TEXT NOT NULL DEFAULT ''")
+                database.execSQL("ALTER TABLE habit_completions ADD COLUMN isLate INTEGER NOT NULL DEFAULT 0")
             }
         }
     }

@@ -352,9 +352,25 @@ The project is in **early development stage** (v0.5.19-alpha):
 - ✅ WebView in Settings - GitHub link opens in WebView instead of external browser
 - ✅ URL Variables - Domain allowlist uses RouteConfig variables for easy renaming
 - ✅ Predictive Back Gesture Fix - 修复返回手势与系统预测性返回动画冲突导致的杀后台问题
+- ✅ Check-in Status System (Phase 1-4) - Slot-based check-in with DAO v4 migration, status engine, `HabitWithStatus` data class, ViewModel flows, and UI integration:
+  - ✅ DB v4 migration (`slotTime`, `isLate` columns in habit_completions; `MIGRATION_3_4`)
+  - ✅ DAO methods: `getCompletionsByDate()`, `getCompletionByHabitIdDateAndSlot()`
+  - ✅ Repository: `performSlotCheckIn()`, `undoSlotCompletion()`, `getTodayCompletions()`
+  - ✅ `HabitStatus` enum + `HabitWithStatus` data class with `pendingCount` / `isCompletelyOverdue`
+  - ✅ Status engine: `calculateHabitStatus()` with ABOUT_TO_START / OVERDUE / COMPLETED_TODAY detection
+  - ✅ Count flows: `pendingTodayCount`, `aboutToStartCount`, `overdueCount`
+  - ✅ 60s day-change polling with ProcessLifecycleOwner
+  - ✅ Slot-based check-in: `findTargetSlot` (earliest incomplete), 1h window, overdue detection
+  - ✅ `CheckInResult` sealed class for feedback (Success/AlreadyCompleted/TooEarly)
+  - ✅ Undo: deletes most recent completion record
+  - ✅ RewardSheet gated to on-time full completion only
+  - ✅ HabitCard status badges (已完成/即将开始/逾期) with colored chips
+  - ✅ HabitCard progress display (x/y for multi-reminder habits)
+  - ✅ EntryZone dynamic cards (今日提醒/即将开始/逾期) with auto-hide on zero count
+  - ✅ `filteredHabitsWithStatus` StateFlow for search with status data
+  - ✅ TodayHabitsScreen migrated to `habitsWithStatusForDisplay`
 
 ### In Progress
-- 🔄 Count section (track unplanned events, such as game scores)
 - 🔄 Calendar section
 
 ### Planned
@@ -368,8 +384,8 @@ The project is in **early development stage** (v0.5.19-alpha):
 
 - **Namespace**: `io.github.darrindeyoung791.habitpulse`
 - **Application ID**: `io.github.darrindeyoung791.habitpulse`
-- **Version Code**: 144
-- **Version Name**: 0.7.11-alpha
+- **Version Code**: 160
+- **Version Name**: 0.8.12-alpha
 
 ## Screen Flow
 
