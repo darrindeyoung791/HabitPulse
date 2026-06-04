@@ -6,8 +6,8 @@
 
 [![MIT License](https://img.shields.io/badge/License-MIT-yellow.svg)](https://choosealicense.com/licenses/MIT/)
 [![Platform](https://img.shields.io/badge/Platform-Android-green.svg)](https://developer.android.com/)
-[![Kotlin](https://img.shields.io/badge/Kotlin-2.3.20-purple.svg)](https://kotlinlang.org/)
-[![Compose BOM](https://img.shields.io/badge/Compose%20BOM-2026.03.00-brightgreen.svg)](https://developer.android.com/jetpack/compose/bom)
+[![Kotlin](https://img.shields.io/badge/Kotlin-2.4.0-purple.svg)](https://kotlinlang.org/)
+[![Compose BOM](https://img.shields.io/badge/Compose%20BOM-2026.05.01-brightgreen.svg)](https://developer.android.com/jetpack/compose/bom)
 [![Room](https://img.shields.io/badge/Room-2.8.4-blue.svg)](https://developer.android.com/training/data-storage/room)
 [![API](https://img.shields.io/badge/API-26%2B-orange.svg)](https://developer.android.com/about/versions/oreo/android-8.0-api-26)
 
@@ -15,7 +15,7 @@
 
 ---
 
-## 📱 Introduction
+## Introduction
 
 **HabitPulse** is an Android habit tracking application built with Material Design 3, dedicated to helping users build and maintain good daily habits. Through a concise and intuitive interface design and intelligent reminder mechanisms, habit formation becomes easier and more effective.
 
@@ -29,9 +29,9 @@
 
 ---
 
-## ✨ Features
+## Features
 
-### 🎯 Core Features
+### Core Features
 - [x] **Habit Tracking**: Create, manage, and track daily habits, recording every check-in
 - [x] **Check-in Records**: Complete check-in history, supporting viewing completion status for any date
 - [x] **Multi-Select & Sort**: Long-press habit cards to enter multi-select mode, drag-and-drop reorder, and batch delete
@@ -45,7 +45,7 @@
 - [ ] **AI-Assisted Planning**: Integrate LLM APIs + AGenUI (A2UI) for AI-powered habit creation and streaming UI (Planned, [details](../../devdoc/ai-habit-creation-plan.md))
 - [ ] **Records Visualization**: Use WebView and web components for visualizations like weekly check-in time distribution (Planned)
 
-### 🎨 UI/UX Features
+### UI/UX Features
 - **Material Design 3**: Follows the latest MD3 design specifications with a clean and beautiful interface
 - **Dynamic Color**: Supports dynamic theming (Material You) on Android 12+
 - **Responsive Layout**: Adapts to phones and tablets in all orientations (Bottom Bar / Rail / Drawer)
@@ -55,7 +55,7 @@
 - **Internationalization**: Simplified Chinese, Traditional Chinese (HK/TW), English (US)
 - **WebView Security**: SSL certificate warnings and external link confirmation dialogs
 
-### 🔧 Technical Features
+### Technical Features
 - **Jetpack Compose**: Declarative UI framework for a modern development experience
 - **Room Database**: Local data persistence, available offline
 - **ViewModel + Flow**: Reactive architecture, data-driven UI
@@ -65,7 +65,7 @@
 
 ---
 
-## 🖼️ Interface Preview
+## Interface Preview
 
 <div align="center">
 
@@ -78,7 +78,7 @@
 
 ---
 
-## 🚀 Quick Start
+## Quick Start
 
 ### Requirements
 - **Android Studio**: Latest version
@@ -135,25 +135,25 @@ If you use VSCode for development, you need to configure the JDK 17 path in [`.v
 
 ---
 
-## 🛠️ Tech Stack
+## Tech Stack
 
 | Component | Version | Description |
 |-----------|---------|-------------|
-| **Language** | Kotlin 2.3.20 | Modern Android development language |
-| **UI Framework** | Jetpack Compose (BOM 2026.03.00) | Declarative UI framework |
-| **Material 3** | 1.4.0 | Material Design 3 component library |
-| **Navigation** | Navigation Compose 2.8.0 | Page navigation and animations |
+| **Language** | Kotlin 2.4.0 | Modern Android development language |
+| **UI Framework** | Jetpack Compose (BOM 2026.05.01) | Declarative UI framework |
+| **Material 3** | Compose Material3 (managed by BOM) | Material Design 3 component library |
+| **Navigation** | Navigation Compose 2.9.8 | Page navigation and animations |
 | **Database** | Room 2.8.4 | Local data persistence |
 | **Lifecycle** | 2.10.0 | Lifecycle-aware components |
-| **ViewModel** | 2.8.7 | UI state management |
+| **ViewModel** | 2.10.0 | UI state management |
 | **Foreground Service** | Android Foreground Service | Keep-alive with boot auto-restart |
-| **Preferences** | DataStore 1.1.1 | Modern preference storage |
-| **Build Tools** | Gradle 9.4.0 + AGP 9.1.0 | Project build system |
+| **Preferences** | DataStore 1.2.1 | Modern preference storage |
+| **Build Tools** | Gradle 9.5.1 + AGP 9.2.1 | Project build system |
 | **JVM Target** | Java 17 | Compiled bytecode version |
 
 ---
 
-## 📦 Project Structure
+## Project Structure
 
 ```
 HabitPulse/
@@ -195,7 +195,7 @@ HabitPulse/
 
 ---
 
-## 📖 User Documentation Site
+## User Documentation Site
 
 HabitPulse maintains a user-facing documentation site built with **VitePress** and automatically deployed to **GitHub Pages** via GitHub Actions.
 
@@ -217,7 +217,7 @@ npm run docs:build  # Build to docs/.vitepress/dist/
 
 ---
 
-## 📄 Database Design
+## Database Design
 
 ### Core Tables
 
@@ -254,11 +254,11 @@ Records detailed information for each habit check-in.
 | completedDateLocal | TEXT | Local date (yyyy-MM-dd) |
 | timeZone | TEXT | Timezone information |
 
-> 📚 Detailed database design documentation will be provided in future updates.
+> Detailed database design documentation will be provided in future updates.
 
 ---
 
-## 🤝 Contributing
+## Contributing
 
 We welcome all forms of contributions!
 
@@ -282,7 +282,7 @@ Found a bug? Please report it via [Issues](https://github.com/darrindeyoung791/H
 
 ---
 
-## 📜 License
+## License
 
 This project is open source under the [MIT License](../../LICENSE).
 

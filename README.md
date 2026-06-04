@@ -6,8 +6,8 @@
 
 [![MIT License](https://img.shields.io/badge/License-MIT-yellow.svg)](https://choosealicense.com/licenses/mit/)
 [![Platform](https://img.shields.io/badge/Platform-Android-green.svg)](https://developer.android.com/)
-[![Kotlin](https://img.shields.io/badge/Kotlin-2.3.20-purple.svg)](https://kotlinlang.org/)
-[![Compose BOM](https://img.shields.io/badge/Compose%20BOM-2026.03.00-brightgreen.svg)](https://developer.android.com/jetpack/compose/bom)
+[![Kotlin](https://img.shields.io/badge/Kotlin-2.4.0-purple.svg)](https://kotlinlang.org/)
+[![Compose BOM](https://img.shields.io/badge/Compose%20BOM-2026.05.01-brightgreen.svg)](https://developer.android.com/jetpack/compose/bom)
 [![Room](https://img.shields.io/badge/Room-2.8.4-blue.svg)](https://developer.android.com/training/data-storage/room)
 [![API](https://img.shields.io/badge/API-26%2B-orange.svg)](https://developer.android.com/about/versions/oreo)
 
@@ -15,7 +15,7 @@
 
 ---
 
-## 📱 简介
+## 简介
 
 **HabitPulse** 是一款采用 Material Design 3 设计风格的 Android 习惯追踪应用，致力于帮助用户建立和维持良好的日常习惯。通过简洁直观的界面设计和智能化的提醒机制，让习惯养成变得更加轻松有效。
 
@@ -29,9 +29,9 @@
 
 ---
 
-## ✨ 功能特性
+## 功能特性
 
-### 🎯 核心功能
+### 核心功能
 - [x] **习惯追踪**：创建、管理和追踪日常习惯，记录每一次打卡
 - [x] **打卡记录**：完整的打卡历史记录，支持查看任意日期的完成情况
 - [x] **多选与排序**：长按习惯卡片进入多选模式，支持拖拽排序和批量删除
@@ -45,7 +45,7 @@
 - [ ] **AI 辅助规划**：接入大语言模型 API + AGenUI (A2UI)，实现 AI 辅助创建习惯和流式 UI（计划中，[方案详情](devdoc/ai-habit-creation-plan.md)）
 - [ ] **记录可视化**：使用 WebView 和网页制作可视化组件，如一周打卡时间分布等（计划中）
 
-### 🎨 UI/UX 特性
+### UI/UX 特性
 - **Material Design 3**：采用最新的 MD3 设计规范，界面简洁美观
 - **动态配色**：支持 Android 12+ 的动态主题色（Material You）
 - **响应式布局**：完美适配手机和平板，支持横竖屏切换（Bottom Bar / Rail / Drawer）
@@ -55,7 +55,7 @@
 - **多语言**：支持简体中文、繁体中文、英语
 - **WebView 安全**：SSL 证书警告 + 外部链接离开确认
 
-### 🔧 技术特性
+### 技术特性
 - **Jetpack Compose**：声明式 UI 框架，现代化开发体验
 - **Room 数据库**：本地数据持久化，离线可用
 - **ViewModel + Flow**：响应式架构，数据驱动 UI
@@ -65,7 +65,7 @@
 
 ---
 
-## 🖼️ 界面预览
+## 界面预览
 
 <div align="center">
 
@@ -78,7 +78,7 @@
 
 ---
 
-## 🚀 快速开始
+## 快速开始
 
 ### 环境要求
 - **Android Studio**：最新版
@@ -135,25 +135,25 @@ cd HabitPulse
 
 ---
 
-## 🛠️ 技术栈
+## 技术栈
 
 | 组件 | 版本 | 说明 |
 |------|------|------|
-| **语言** | Kotlin 2.3.20 | 现代化 Android 开发语言 |
-| **UI 框架** | Jetpack Compose (BOM 2026.03.00) | 声明式 UI 框架 |
-| **Material 3** | 1.4.0 | Material Design 3 组件库 |
-| **导航** | Navigation Compose 2.8.0 | 页面导航与动画 |
+| **语言** | Kotlin 2.4.0 | 现代化 Android 开发语言 |
+| **UI 框架** | Jetpack Compose (BOM 2026.05.01) | 声明式 UI 框架 |
+| **Material 3** | Compose Material3 (由 BOM 管理) | Material Design 3 组件库 |
+| **导航** | Navigation Compose 2.9.8 | 页面导航与动画 |
 | **数据库** | Room 2.8.4 | 本地数据持久化 |
 | **生命周期** | 2.10.0 | 生命周期感知组件 |
-| **ViewModel** | 2.8.7 | UI 状态管理 |
+| **ViewModel** | 2.10.0 | UI 状态管理 |
 | **前台服务** | Android Foreground Service | 保活与开机自启 |
-| **偏好存储** | DataStore 1.1.1 | 现代化偏好存储 |
-| **构建工具** | Gradle 9.4.0 + AGP 9.1.0 | 项目构建系统 |
+| **偏好存储** | DataStore 1.2.1 | 现代化偏好存储 |
+| **构建工具** | Gradle 9.5.1 + AGP 9.2.1 | 项目构建系统 |
 | **JVM 目标** | Java 17 | 编译字节码版本 |
 
 ---
 
-## 📦 项目结构
+## 项目结构
 
 ```
 HabitPulse/
@@ -195,7 +195,7 @@ HabitPulse/
 
 ---
 
-## 📖 用户文档站
+## 用户文档站
 
 HabitPulse 维护一个面向用户的文档站点，使用 **VitePress** 构建并通过 GitHub Actions 自动部署到 **GitHub Pages**。
 
@@ -217,7 +217,7 @@ npm run docs:build  # 构建到 docs/.vitepress/dist/
 
 ---
 
-## 📄 数据库设计
+## 数据库设计
 
 ### 核心数据表
 
@@ -254,11 +254,11 @@ npm run docs:build  # 构建到 docs/.vitepress/dist/
 | completedDateLocal | TEXT | 本地日期 (yyyy-MM-dd) |
 | timeZone | TEXT | 时区信息 |
 
-> 📚 详细的数据库设计文档将在未来更新中给出
+> 详细的数据库设计文档将在未来更新中给出
 
 ---
 
-## 🤝 贡献指南
+## 贡献指南
 
 我们欢迎各种形式的贡献！
 
@@ -283,7 +283,7 @@ npm run docs:build  # 构建到 docs/.vitepress/dist/
 ---
 
 
-## 📜 开源协议
+## 开源协议
 
 本项目采用 [MIT 协议](LICENSE) 开源。
 
