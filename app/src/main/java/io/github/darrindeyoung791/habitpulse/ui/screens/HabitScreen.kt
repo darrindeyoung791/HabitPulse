@@ -16,6 +16,7 @@ import androidx.compose.animation.scaleOut
 import androidx.compose.animation.slideInVertically
 import androidx.compose.animation.slideOutVertically
 import androidx.compose.animation.togetherWith
+import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.ScrollState
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
@@ -25,6 +26,12 @@ import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyListScope
 import androidx.compose.foundation.lazy.LazyListState
 import androidx.compose.foundation.lazy.itemsIndexed
+import androidx.compose.foundation.lazy.staggeredgrid.LazyVerticalStaggeredGrid
+import androidx.compose.foundation.lazy.staggeredgrid.LazyStaggeredGridScope
+import androidx.compose.foundation.lazy.staggeredgrid.LazyStaggeredGridState
+import androidx.compose.foundation.lazy.staggeredgrid.StaggeredGridCells
+import androidx.compose.foundation.lazy.staggeredgrid.StaggeredGridItemSpan
+import androidx.compose.foundation.lazy.staggeredgrid.itemsIndexed as staggeredItemsIndexed
 import androidx.compose.foundation.relocation.BringIntoViewRequester
 import androidx.compose.foundation.relocation.bringIntoViewRequester
 import androidx.compose.foundation.rememberScrollState
@@ -98,14 +105,14 @@ import kotlinx.coroutines.flow.flowOf
 import kotlinx.coroutines.launch
 import java.util.UUID
 
-@OptIn(ExperimentalMaterial3Api::class)
+@OptIn(ExperimentalMaterial3Api::class, ExperimentalFoundationApi::class)
 @Composable
 fun HabitScreenContent(
     modifier: Modifier = Modifier,
     application: HabitPulseApplication? = null,
     scrollBehavior: TopAppBarScrollBehavior? = null,
     listState: LazyListState = remember { LazyListState() },
-    waterfallScrollState: ScrollState = remember { ScrollState(0) },
+    waterfallScrollState: LazyStaggeredGridState = remember { LazyStaggeredGridState() },
     bringIntoViewRequester: BringIntoViewRequester = remember { BringIntoViewRequester() },
     forceTabletLandscape: Boolean = false,
     onCreateHabit: () -> Unit,
@@ -527,7 +534,7 @@ fun HabitListContent(
     nestedScrollConnection: androidx.compose.ui.input.nestedscroll.NestedScrollConnection? = null,
     newlyAddedHabitId: UUID? = null,
     listState: LazyListState = remember { LazyListState() },
-    waterfallScrollState: ScrollState,
+    waterfallScrollState: LazyStaggeredGridState,
     bringIntoViewRequester: BringIntoViewRequester? = null,
     forceTabletLandscape: Boolean = false,
     searchQuery: String = "",
@@ -552,91 +559,59 @@ fun HabitListContent(
     )
 
     if (useStaggeredGrid) {
-        val column1Habits = habitsWithStatus.filterIndexed { index, _ -> index % 2 == 0 }
-        val column2Habits = habitsWithStatus.filterIndexed { index, _ -> index % 2 == 1 }
+        val gridModifier = if (nestedScrollConnection != null) modifier.nestedScroll(nestedScrollConnection) else modifier
 
-        val waterfallModifier = if (nestedScrollConnection != null) modifier.nestedScroll(nestedScrollConnection) else modifier
-
-        ScrollableWaterfallWithScrollbar(
-            modifier = waterfallModifier,
-            scrollState = waterfallScrollState
+        ScrollableStaggeredGridWithScrollbar(
+            modifier = gridModifier,
+            gridState = waterfallScrollState,
+            contentPadding = PaddingValues(start = horizontalPadding, top = 0.dp, end = horizontalPadding, bottom = 16.dp)
         ) {
-            Box(modifier = Modifier.padding(horizontal = horizontalPadding)) {
-                entryZone()
+            item(span = StaggeredGridItemSpan.FullLine) {
+                Box(modifier = Modifier.fillMaxWidth()) {
+                    entryZone()
+                }
             }
 
             if (bringIntoViewRequester != null) {
-                Box(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .height(1.dp)
-                        .bringIntoViewRequester(bringIntoViewRequester)
-                ) {}
-            }
-            Row(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(horizontal = horizontalPadding),
-                horizontalArrangement = Arrangement.spacedBy(16.dp)
-            ) {
-                Column(
-                    modifier = Modifier.weight(1f),
-                    verticalArrangement = Arrangement.spacedBy(8.dp)
-                ) {
-                    column1Habits.forEachIndexed { colIndex, ws ->
-                        StaggeredListItem(
-                            index = colIndex,
-                            animationsFrozen = animationsFrozen
-                        ) {
-                            HabitCard(
-                                habitWithStatus = ws,
-                                onClick = { onHabitClick(ws.habit) },
-                                onCheckIn = { onCheckIn(ws.habit) },
-                                onUndoCompletion = { onUndoCompletion(ws.habit) },
-                                onEditHabit = { onHabitClick(ws.habit) },
-                                onDeleteHabit = { onDeleteHabit(ws.habit) },
-                                onNavigateToMultiSelect = { habitId -> onNavigateToMultiSelect(habitId) },
-                                isNewlyAdded = (ws.habit.id == newlyAddedHabitId),
-                                searchQuery = searchQuery,
-                                modifier = Modifier.fillMaxWidth(),
-                                sharedTransitionScope = sharedTransitionScope,
-                                animatedContentScope = animatedContentScope,
-                                isMultiSelectTarget = (ws.habit.id == multiSelectTargetHabitId)
-                            )
-                        }
-                    }
-                }
-
-                Column(
-                    modifier = Modifier.weight(1f),
-                    verticalArrangement = Arrangement.spacedBy(8.dp)
-                ) {
-                    column2Habits.forEachIndexed { colIndex, ws ->
-                        StaggeredListItem(
-                            index = colIndex,
-                            animationsFrozen = animationsFrozen
-                        ) {
-                            HabitCard(
-                                habitWithStatus = ws,
-                                onClick = { onHabitClick(ws.habit) },
-                                onCheckIn = { onCheckIn(ws.habit) },
-                                onUndoCompletion = { onUndoCompletion(ws.habit) },
-                                onEditHabit = { onHabitClick(ws.habit) },
-                                onDeleteHabit = { onDeleteHabit(ws.habit) },
-                                onNavigateToMultiSelect = { habitId -> onNavigateToMultiSelect(habitId) },
-                                isNewlyAdded = (ws.habit.id == newlyAddedHabitId),
-                                searchQuery = searchQuery,
-                                modifier = Modifier.fillMaxWidth(),
-                                sharedTransitionScope = sharedTransitionScope,
-                                animatedContentScope = animatedContentScope,
-                                isMultiSelectTarget = (ws.habit.id == multiSelectTargetHabitId)
-                            )
-                        }
-                    }
+                item(span = StaggeredGridItemSpan.FullLine) {
+                    Box(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .height(1.dp)
+                            .bringIntoViewRequester(bringIntoViewRequester)
+                    ) {}
                 }
             }
 
-            Spacer(modifier = Modifier.height(100.dp))
+            staggeredItemsIndexed(
+                items = habitsWithStatus,
+                key = { _, item -> item.habit.id.toString() }
+            ) { index, ws ->
+                StaggeredListItem(
+                    index = index,
+                    animationsFrozen = animationsFrozen
+                ) {
+                    HabitCard(
+                        habitWithStatus = ws,
+                        onClick = { onHabitClick(ws.habit) },
+                        onCheckIn = { onCheckIn(ws.habit) },
+                        onUndoCompletion = { onUndoCompletion(ws.habit) },
+                        onEditHabit = { onHabitClick(ws.habit) },
+                        onDeleteHabit = { onDeleteHabit(ws.habit) },
+                        onNavigateToMultiSelect = { habitId -> onNavigateToMultiSelect(habitId) },
+                        isNewlyAdded = (ws.habit.id == newlyAddedHabitId),
+                        searchQuery = searchQuery,
+                        modifier = Modifier.fillMaxWidth(),
+                        sharedTransitionScope = sharedTransitionScope,
+                        animatedContentScope = animatedContentScope,
+                        isMultiSelectTarget = (ws.habit.id == multiSelectTargetHabitId)
+                    )
+                }
+            }
+
+            item(span = StaggeredGridItemSpan.FullLine) {
+                Spacer(modifier = Modifier.height(100.dp))
+            }
         }
     } else {
         val listModifier = if (nestedScrollConnection != null) modifier.nestedScroll(nestedScrollConnection) else modifier
@@ -806,6 +781,159 @@ fun ScrollableLazyColumnWithScrollbar(
                 val estimatedTotalContentHeightPx = (sumVisibleHeights + remainingItems * averageItemHeightPx).coerceAtLeast(viewportHeightPx)
 
                 val currentScrollPx = listState.firstVisibleItemIndex * averageItemHeightPx + listState.firstVisibleItemScrollOffset.toFloat()
+                val totalScrollablePx = (estimatedTotalContentHeightPx - viewportHeightPx).coerceAtLeast(1f)
+                val scrollFraction = (currentScrollPx / totalScrollablePx).coerceIn(0f, 1f)
+
+                val indicatorHeightFraction = (viewportHeightPx / estimatedTotalContentHeightPx).coerceIn(0.03f, 1f)
+                val indicatorHeightPx = viewportHeightPx * indicatorHeightFraction
+                val offsetYPx = (viewportHeightPx - indicatorHeightPx) * scrollFraction
+
+                val animIndicatorHeightPx by animateFloatAsState(targetValue = indicatorHeightPx, animationSpec = tween(durationMillis = 80))
+                val animOffsetYPx by animateFloatAsState(targetValue = offsetYPx, animationSpec = tween(durationMillis = 80))
+
+                BoxWithConstraints(modifier = Modifier.fillMaxSize()) {
+                    val indicatorHeight = with(density) { animIndicatorHeightPx.toDp() }
+                    val offsetY = with(density) { animOffsetYPx.toDp() }
+
+                    Box(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .height(indicatorHeight)
+                            .offset(y = offsetY)
+                            .background(
+                                color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f),
+                                shape = RoundedCornerShape(2.dp)
+                            )
+                    )
+                }
+            }
+        }
+    }
+}
+
+@OptIn(ExperimentalFoundationApi::class)
+@Composable
+fun ScrollableStaggeredGridWithScrollbar(
+    modifier: Modifier = Modifier,
+    gridState: LazyStaggeredGridState,
+    contentPadding: PaddingValues = PaddingValues(0.dp),
+    content: LazyStaggeredGridScope.() -> Unit
+) {
+    val isScrollbarVisible = remember { mutableStateOf(true) }
+    val scrollbarAlpha by animateFloatAsState(
+        targetValue = if (isScrollbarVisible.value) 1f else 0f,
+        animationSpec = tween(durationMillis = 300)
+    )
+
+    val isAtTop = remember { mutableStateOf(true) }
+    val isAtBottom = remember { mutableStateOf(false) }
+
+    LaunchedEffect(gridState) {
+        snapshotFlow { gridState.isScrollInProgress }
+            .collect { scrolling ->
+                isScrollbarVisible.value = true
+                if (!scrolling) {
+                    delay(1200)
+                    if (!gridState.isScrollInProgress) {
+                        isScrollbarVisible.value = false
+                    }
+                }
+            }
+    }
+
+    LaunchedEffect(gridState.firstVisibleItemIndex, gridState.firstVisibleItemScrollOffset) {
+        val layoutInfo = gridState.layoutInfo
+        val totalCount = layoutInfo.totalItemsCount
+        val visibleItems = layoutInfo.visibleItemsInfo
+
+        isAtTop.value = gridState.firstVisibleItemIndex == 0 && gridState.firstVisibleItemScrollOffset == 0
+
+        if (totalCount > 0 && visibleItems.isNotEmpty()) {
+            val lastIndex = layoutInfo.visibleItemsInfo.maxOf { info -> info.index }
+            isAtBottom.value = lastIndex >= totalCount - 1
+        } else {
+            isAtBottom.value = true
+        }
+    }
+
+    val topGradientAlpha by animateFloatAsState(
+        targetValue = if (isAtTop.value) 0f else 1f,
+        animationSpec = tween(durationMillis = 200),
+        label = "gridTopGradientAlpha"
+    )
+    val bottomGradientAlpha by animateFloatAsState(
+        targetValue = if (isAtBottom.value) 0f else 1f,
+        animationSpec = tween(durationMillis = 200),
+        label = "gridBottomGradientAlpha"
+    )
+
+    Box(modifier = modifier.fillMaxSize()) {
+        LazyVerticalStaggeredGrid(
+            columns = StaggeredGridCells.Fixed(2),
+            modifier = Modifier.fillMaxSize(),
+            state = gridState,
+            contentPadding = contentPadding,
+            horizontalArrangement = Arrangement.spacedBy(16.dp),
+            verticalItemSpacing = 8.dp
+        ) {
+            content()
+        }
+
+        Box(
+            modifier = Modifier
+                .fillMaxWidth()
+                .height(16.dp)
+                .align(Alignment.TopCenter)
+                .alpha(topGradientAlpha)
+                .background(
+                    Brush.verticalGradient(
+                        colors = listOf(
+                            MaterialTheme.colorScheme.background,
+                            Color.Transparent
+                        )
+                    )
+                )
+        )
+
+        Box(
+            modifier = Modifier
+                .fillMaxWidth()
+                .height(16.dp)
+                .align(Alignment.BottomCenter)
+                .alpha(bottomGradientAlpha)
+                .background(
+                    Brush.verticalGradient(
+                        colors = listOf(
+                            Color.Transparent,
+                            MaterialTheme.colorScheme.background
+                        )
+                    )
+                )
+        )
+
+        Box(
+            modifier = Modifier
+                .fillMaxHeight()
+                .width(4.dp)
+                .align(Alignment.CenterEnd)
+                .padding(end = 2.dp)
+                .alpha(scrollbarAlpha)
+        ) {
+            val density = LocalDensity.current
+            val layoutInfo = gridState.layoutInfo
+            val totalCount = layoutInfo.totalItemsCount
+            val visibleItems = layoutInfo.visibleItemsInfo
+            val visibleCount = visibleItems.size
+
+            if (totalCount > 0 && visibleCount > 0) {
+                val viewportHeightPx = layoutInfo.viewportSize.height.toFloat()
+                val sumHeights = visibleItems.sumOf { info -> info.size.height }.toFloat()
+                val averageItemHeightPx = (sumHeights / visibleCount).coerceAtLeast(1f)
+                val columns = 2
+                val itemsPerColumn = (totalCount / columns.toFloat()).coerceAtLeast(1f)
+                val estimatedTotalContentHeightPx = itemsPerColumn * averageItemHeightPx
+                val itemsAbove = gridState.firstVisibleItemIndex.toFloat() / columns
+                val currentScrollPx = itemsAbove * averageItemHeightPx + gridState.firstVisibleItemScrollOffset.toFloat()
                 val totalScrollablePx = (estimatedTotalContentHeightPx - viewportHeightPx).coerceAtLeast(1f)
                 val scrollFraction = (currentScrollPx / totalScrollablePx).coerceIn(0f, 1f)
 

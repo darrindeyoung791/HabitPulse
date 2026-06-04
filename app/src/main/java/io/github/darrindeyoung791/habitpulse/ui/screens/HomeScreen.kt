@@ -10,13 +10,14 @@ import androidx.compose.animation.fadeOut
 import androidx.compose.animation.scaleIn
 import androidx.compose.animation.scaleOut
 import androidx.compose.animation.togetherWith
-import androidx.compose.foundation.ScrollState
 import android.util.Log
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.background
 import androidx.compose.foundation.focusable
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.lazy.LazyListState
+import androidx.compose.foundation.lazy.staggeredgrid.LazyStaggeredGridState
 import androidx.compose.foundation.relocation.BringIntoViewRequester
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material.icons.Icons
@@ -70,7 +71,7 @@ fun HomeSection.iconResource() = when (this) {
     HomeSection.Records -> Icons.Filled.Assessment
 }
 
-@OptIn(ExperimentalMaterial3Api::class)
+@OptIn(ExperimentalMaterial3Api::class, ExperimentalFoundationApi::class)
 @Composable
 fun HomeScreen(
     onCreateHabit: () -> Unit,
@@ -216,8 +217,8 @@ fun HomeScreen(
         androidx.compose.foundation.lazy.LazyListState()
     }
     // Use rememberSaveable with proper Saver to preserve scroll position when returning from other screens
-    val waterfallScrollState = rememberSaveable(saver = androidx.compose.foundation.ScrollState.Saver) {
-        androidx.compose.foundation.ScrollState(0)
+    val waterfallScrollState = rememberSaveable(saver = LazyStaggeredGridState.Saver) {
+        LazyStaggeredGridState()
     }
     val bringIntoViewRequester = remember { BringIntoViewRequester() }
     val recordsScrollState = rememberSaveable(saver = androidx.compose.foundation.lazy.LazyListState.Saver) {
@@ -272,15 +273,9 @@ fun HomeScreen(
                         if (isWaterfallMode) {
                             // Waterfall mode: only scroll waterfallScrollState with animation
                             try {
-                                waterfallScrollState.animateScrollTo(0)
+                                waterfallScrollState.animateScrollToItem(0)
                             } catch (e: Exception) {
-                                Log.d("HomeScreen", "waterfall animateScrollTo failed: ${e.message}")
-                                // Fallback to instant scroll if animation fails
-                                try {
-                                    waterfallScrollState.scrollTo(0)
-                                } catch (e2: Exception) {
-                                    Log.d("HomeScreen", "waterfall scrollTo fallback failed: ${e2.message}")
-                                }
+                                Log.d("HomeScreen", "waterfall animateScrollToItem failed: ${e.message}")
                             }
                         } else {
                             // Single column mode: only scroll habitsScrollState
