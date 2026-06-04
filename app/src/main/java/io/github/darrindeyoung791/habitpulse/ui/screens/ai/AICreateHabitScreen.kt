@@ -147,7 +147,7 @@ fun AICreateHabitScreen(
     var initialAnimationComplete by remember { mutableStateOf(false) }
 
     LaunchedEffect(Unit) {
-        delay(2 * 120L + 400L)
+        delay(3 * 80L + 400L)
         initialAnimationComplete = true
     }
 
@@ -196,54 +196,59 @@ fun AICreateHabitScreen(
     val keyboardController = LocalSoftwareKeyboardController.current
 
     LaunchedEffect(Unit) {
-        delay(2 * 120L + 400L + 200L)
         focusRequester.requestFocus()
         keyboardController?.show()
     }
 
     Scaffold(
         topBar = {
-            if (!(isLandscape && imeVisible)) {
-                TopAppBar(
-                    title = {
-                        Text(
-                            if (uiState.isLoading) stringResource(R.string.ai_streaming_title)
-                            else stringResource(R.string.ai_create_title)
-                        )
-                    },
-                    navigationIcon = {
-                        IconButton(onClick = {
-                            if (hasMessages) {
-                                viewModel.showExitConfirmation()
-                            } else {
-                                scope.launch {
-                                    clickHandler.processClick {
-                                        hideKeyboardAndNavigateBack()
+            AnimatedStaggeredItem(
+                index = 0,
+                applyScale = false,
+                initialAnimationComplete = initialAnimationComplete
+            ) {
+                if (!(isLandscape && imeVisible)) {
+                    TopAppBar(
+                        title = {
+                            Text(
+                                if (uiState.isLoading) stringResource(R.string.ai_streaming_title)
+                                else stringResource(R.string.ai_create_title)
+                            )
+                        },
+                        navigationIcon = {
+                            IconButton(onClick = {
+                                if (hasMessages) {
+                                    viewModel.showExitConfirmation()
+                                } else {
+                                    scope.launch {
+                                        clickHandler.processClick {
+                                            hideKeyboardAndNavigateBack()
+                                        }
                                     }
                                 }
+                            }) {
+                                Icon(
+                                    imageVector = Icons.AutoMirrored.Filled.ArrowBack,
+                                    contentDescription = stringResource(R.string.go_back)
+                                )
                             }
-                        }) {
-                            Icon(
-                                imageVector = Icons.AutoMirrored.Filled.ArrowBack,
-                                contentDescription = stringResource(R.string.go_back)
-                            )
-                        }
-                    },
-                    actions = {
-                        IconButton(onClick = {
-                            if (hasMessages) {
-                                viewModel.showSettingsConfirmation()
-                            } else {
-                                onNavigateToSettings()
+                        },
+                        actions = {
+                            IconButton(onClick = {
+                                if (hasMessages) {
+                                    viewModel.showSettingsConfirmation()
+                                } else {
+                                    onNavigateToSettings()
+                                }
+                            }) {
+                                Icon(
+                                    imageVector = Icons.Default.Settings,
+                                    contentDescription = stringResource(R.string.settings_ai_title)
+                                )
                             }
-                        }) {
-                            Icon(
-                                imageVector = Icons.Default.Settings,
-                                contentDescription = stringResource(R.string.settings_ai_title)
-                            )
                         }
-                    }
-                )
+                    )
+                }
             }
         }
     ) { innerPadding ->
@@ -378,7 +383,7 @@ fun AICreateHabitScreen(
                 }
             } else {
                 AnimatedStaggeredItem(
-                    index = 0,
+                    index = 1,
                     initialAnimationComplete = initialAnimationComplete,
                     modifier = Modifier.weight(1f)
                 ) {
@@ -402,7 +407,7 @@ fun AICreateHabitScreen(
 
             if (!hasPendingQuestion) {
                 AnimatedStaggeredItem(
-                    index = if (hasMessages) 0 else 1,
+                    index = if (hasMessages) 1 else 2,
                     initialAnimationComplete = if (hasMessages) true else initialAnimationComplete
                 ) {
                     AIChatInputBox(
@@ -1187,10 +1192,11 @@ fun ConfirmationDialog(
 private fun AnimatedStaggeredItem(
     index: Int,
     initialAnimationComplete: Boolean,
+    applyScale: Boolean = true,
     modifier: Modifier = Modifier,
     content: @Composable () -> Unit
 ) {
-    val animationDelayMs = index * 120L
+    val animationDelayMs = index * 80L
     val shouldAnimate = !initialAnimationComplete
     var visible by remember { mutableStateOf(!shouldAnimate) }
 
@@ -1213,10 +1219,20 @@ private fun AnimatedStaggeredItem(
         label = "translationY"
     )
 
+    val scaleVal by animateFloatAsState(
+        targetValue = if (visible || !applyScale) 1f else 0.96f,
+        animationSpec = spring(dampingRatio = 0.85f, stiffness = Spring.StiffnessMediumLow),
+        label = "scale"
+    )
+
     Box(
         modifier = modifier.graphicsLayer {
             this.alpha = alpha
             this.translationY = translationY
+            if (applyScale) {
+                this.scaleX = scaleVal
+                this.scaleY = scaleVal
+            }
         }
     ) {
         content()
