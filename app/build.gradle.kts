@@ -31,7 +31,6 @@ android {
         versionName = "0.8.18-alpha"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
-        resourceConfigurations.addAll(listOf("zh-rCN", "zh-rTW", "zh-rHK", "en-rUS"))
     }
 
     buildTypes {
@@ -59,6 +58,7 @@ android {
     }
     androidResources {
         generateLocaleConfig = true
+        localeFilters += listOf("zh-rCN", "zh-rTW", "zh-rHK", "en-rUS")
     }
     lint {
         abortOnError = false
@@ -106,11 +106,11 @@ dependencies {
     ksp("androidx.room:room-compiler:$roomVersion")
 
     // Lifecycle and ViewModel
-    implementation("androidx.lifecycle:lifecycle-viewmodel-compose:2.8.7")
-    implementation("androidx.lifecycle:lifecycle-runtime-compose:2.8.7")
+    implementation("androidx.lifecycle:lifecycle-viewmodel-compose:2.10.0")
+    implementation("androidx.lifecycle:lifecycle-runtime-compose:2.10.0")
 
     // DataStore for preferences
-    implementation("androidx.datastore:datastore-preferences:1.1.1")
+    implementation("androidx.datastore:datastore-preferences:1.2.1")
 
     implementation("androidx.compose.material:material-icons-core")
     implementation("androidx.compose.material:material-icons-extended")
@@ -142,11 +142,11 @@ dependencies {
     implementation("com.mikepenz:aboutlibraries-compose-m3:13.2.1")
 
     // Reorderable for drag-and-drop sorting
-    implementation("sh.calvin.reorderable:reorderable:3.0.0")
+    implementation("sh.calvin.reorderable:reorderable:3.1.0")
 
     // SwipeRefreshLayout for pull-to-refresh
     implementation("androidx.swiperefreshlayout:swiperefreshlayout:1.1.0")
 
     // Gson for JSON parsing
-    implementation("com.google.code.gson:gson:2.10.1")
+    implementation("com.google.code.gson:gson:2.14.0")
 }

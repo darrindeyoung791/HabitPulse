@@ -110,7 +110,7 @@ HabitPulse/
 │   └── proguard-rules.pro                       # ProGuard rules
 ├── gradle/
 │   └── wrapper/
-│       └── gradle-wrapper.properties            # Gradle 9.4.0
+│       └── gradle-wrapper.properties            # Gradle 9.5.1
 ├── build.gradle.kts                             # Root build config
 ├── settings.gradle.kts                          # Project settings
 ├── gradle.properties                            # Gradle properties
@@ -191,7 +191,7 @@ Records every habit completion with timestamp.
 ```
 
 ### Gradle Version
-- **Gradle**: 9.4.0
+- **Gradle**: 9.5.1
 - **Android Gradle Plugin**: 9.1.0
 - **Kotlin**: 2.3.20
 - **KSP**: 2.3.6
@@ -199,12 +199,12 @@ Records every habit completion with timestamp.
 ## Dependencies
 
 ### Core
-- `androidx.core.ktx` (1.17.0) - Kotlin extensions for Android
+- `androidx.core.ktx` (1.18.0) - Kotlin extensions for Android
 - `androidx.lifecycle.runtime.ktx` (2.10.0) - Lifecycle components
-- `androidx.lifecycle.viewmodel.compose` (2.8.7) - ViewModel Compose integration
-- `androidx.activity.compose` (1.10.1) - Compose integration with Activity
-- `androidx.activity.ktx` (1.10.1) - Kotlin extensions for Activity
-- `androidx.navigation.compose` (2.8.0) - Navigation Compose
+- `androidx.lifecycle.viewmodel.compose` (2.10.0) - ViewModel Compose integration
+- `androidx.activity.compose` (1.13.0) - Compose integration with Activity
+- `androidx.activity.ktx` (1.13.0) - Kotlin extensions for Activity
+- `androidx.navigation.compose` (2.9.8) - Navigation Compose
 
 ### Room Database
 - `androidx.room:room-runtime` (2.8.4) - Room database runtime
@@ -222,7 +222,7 @@ Records every habit completion with timestamp.
 - `androidx.core:core-splashscreen` (1.0.1) - Splash screen compatibility
 - `com.google.android.material:material` (1.10.0) - Material components for dynamic colors
 - `sh.calvin.reorderable:reorderable` (3.0.0) - Drag-and-drop reordering library
-- `androidx.datastore:datastore-preferences` (1.1.1) - Modern preferences storage
+- `androidx.datastore:datastore-preferences` (1.2.1) - Modern preferences storage
 - `com.mikepenz:aboutlibraries` (13.2.1) - Open source license display
 
 ### Testing
