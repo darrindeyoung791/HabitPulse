@@ -2,6 +2,7 @@ package io.github.darrindeyoung791.habitpulse.ui.screens.ai
 
 import android.widget.Toast
 import androidx.activity.ComponentActivity
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyListState
@@ -51,7 +52,7 @@ fun AISettingsScreen(
     val apiEndpoint by userPreferences.llmApiEndpointFlow.collectAsStateWithLifecycle(initialValue = "")
     val apiKey by userPreferences.llmApiKeyFlow.collectAsStateWithLifecycle(initialValue = "")
     val modelName by userPreferences.llmModelNameFlow.collectAsStateWithLifecycle(initialValue = "glm-4-flash-250414")
-    val streamingEnabled by userPreferences.llmStreamingResponseFlow.collectAsStateWithLifecycle(initialValue = false)
+    val streamingEnabled by userPreferences.llmStreamingResponseFlow.collectAsStateWithLifecycle(initialValue = true)
 
     var endpointInput by remember(apiEndpoint) { mutableStateOf(apiEndpoint) }
     var apiKeyInput by remember(apiKey) { mutableStateOf(apiKey) }
@@ -318,7 +319,12 @@ fun AISettingsScreen(
                 Row(
                     modifier = Modifier
                         .fillMaxWidth()
-                        .padding(vertical = 8.dp),
+                        .padding(vertical = 8.dp)
+                        .clickable {
+                            scope.launch {
+                                userPreferences.setLlmStreamingResponse(!streamingEnabled)
+                            }
+                        },
                     horizontalArrangement = Arrangement.SpaceBetween,
                     verticalAlignment = Alignment.CenterVertically
                 ) {

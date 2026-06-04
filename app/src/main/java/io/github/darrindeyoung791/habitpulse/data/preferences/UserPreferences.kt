@@ -228,7 +228,7 @@ class UserPreferences(private val context: Context) {
      * 默认值为 false（不开启）
      */
     val llmStreamingResponseFlow: Flow<Boolean> = context.dataStore.data.map { preferences ->
-        preferences[PreferencesKeys.LLM_STREAMING_RESPONSE] ?: false
+        preferences[PreferencesKeys.LLM_STREAMING_RESPONSE] ?: true
     }
 
     /**
