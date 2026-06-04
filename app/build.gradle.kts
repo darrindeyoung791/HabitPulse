@@ -27,8 +27,8 @@ android {
         applicationId = "io.github.darrindeyoung791.habitpulse"
         minSdk = 26
         targetSdk = 36
-        versionCode = 165
-        versionName = "0.8.17-alpha"
+        versionCode = 166
+        versionName = "0.8.18-alpha"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
         resourceConfigurations.addAll(listOf("zh-rCN", "zh-rTW", "zh-rHK", "en-rUS"))
@@ -112,9 +112,9 @@ dependencies {
     // DataStore for preferences
     implementation("androidx.datastore:datastore-preferences:1.1.1")
 
-    implementation("androidx.compose.material:material-icons-core:1.7.6")
-    implementation("androidx.compose.material:material-icons-extended:1.7.6")
-    implementation("androidx.compose.material3:material3:1.4.0")
+    implementation("androidx.compose.material:material-icons-core")
+    implementation("androidx.compose.material:material-icons-extended")
+    implementation("androidx.compose.material3:material3")
     implementation("androidx.core:core-splashscreen:1.0.1")
     // Material library required for DynamicColors.applyToActivitiesIfAvailable
     implementation("com.google.android.material:material:1.10.0")

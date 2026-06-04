@@ -212,11 +212,11 @@ Records every habit completion with timestamp.
 - `androidx.room:room-compiler` (2.8.4) - Room annotation processor (KSP)
 
 ### Compose UI
-- `androidx.compose.bom` (2026.03.00) - Compose Bill of Materials
+- `androidx.compose.bom` (2026.05.01) - Compose Bill of Materials
 - `androidx.compose.ui` - Core Compose UI
-- `androidx.compose.material3` (1.4.0) - Material Design 3 components
-- `androidx.compose.material.icons.core` (1.7.6) - Material icons core
-- `androidx.compose.material.icons.extended` (1.7.6) - Material icons extended
+- `androidx.compose.material3` - Material Design 3 components
+- `androidx.compose.material.icons.core` - Material icons core
+- `androidx.compose.material.icons.extended` - Material icons extended
 
 ### Other
 - `androidx.core:core-splashscreen` (1.0.1) - Splash screen compatibility
