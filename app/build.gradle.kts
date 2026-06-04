@@ -6,7 +6,7 @@ plugins {
     alias(libs.plugins.android.application)
     alias(libs.plugins.kotlin.compose)
     id("com.google.devtools.ksp") version "2.3.9"
-    id("com.mikepenz.aboutlibraries.plugin.android") version "14.1.0"
+    id("com.mikepenz.aboutlibraries.plugin.android") version "14.2.1"
 }
 
 aboutLibraries {
@@ -139,7 +139,7 @@ dependencies {
     debugImplementation(libs.androidx.compose.ui.test.manifest)
 
     // AboutLibraries for open source licenses display
-    implementation("com.mikepenz:aboutlibraries-compose-m3:14.1.0")
+    implementation("com.mikepenz:aboutlibraries-compose-m3:14.2.1")
 
     // Reorderable for drag-and-drop sorting
     implementation("sh.calvin.reorderable:reorderable:3.1.0")

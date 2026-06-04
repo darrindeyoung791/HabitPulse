@@ -223,7 +223,7 @@ Records every habit completion with timestamp.
 - `com.google.android.material:material` (1.14.0) - Material components for dynamic colors
 - `sh.calvin.reorderable:reorderable` (3.0.0) - Drag-and-drop reordering library
 - `androidx.datastore:datastore-preferences` (1.2.1) - Modern preferences storage
-- `com.mikepenz:aboutlibraries` (14.1.0) - Open source license display
+- `com.mikepenz:aboutlibraries` (14.2.1) - Open source license display
 
 ### Testing
 - `junit` (4.13.2) - Unit testing framework
