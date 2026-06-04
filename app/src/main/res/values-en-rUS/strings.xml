@@ -405,6 +405,8 @@
     <string name="check_in_feedback_success_title">Checked In</string>
     <string name="check_in_feedback_success_message">Keep it up!</string>
     <string name="check_in_feedback_dismiss">Got it</string>
+    <string name="check_in_feedback_not_today_title">No Check-in Today</string>
+    <string name="check_in_feedback_not_today_message">This habit is not scheduled for today</string>
     <string name="entry_zone_about_to_start">About to Start</string>
     <string name="entry_zone_overdue">Overdue</string>
     <string name="entry_zone_stats">Visual Stats</string>

@@ -41,6 +41,7 @@ import androidx.compose.material.icons.outlined.Close
 import androidx.compose.material.icons.outlined.LibraryAdd
 import androidx.compose.material.icons.outlined.Schedule
 import androidx.compose.material.icons.outlined.Warning
+import androidx.compose.material.icons.outlined.EventBusy
 import androidx.compose.material.icons.outlined.Search
 import androidx.compose.material3.*
 import androidx.compose.ui.draw.scale
@@ -385,6 +386,7 @@ internal fun CheckInFeedbackSheet(
         HabitViewModel.CheckInFeedbackType.ALREADY_COMPLETED -> stringResource(R.string.check_in_feedback_already_completed_title)
         HabitViewModel.CheckInFeedbackType.TOO_EARLY -> stringResource(R.string.check_in_feedback_too_early_title)
         HabitViewModel.CheckInFeedbackType.CHECK_IN_SUCCESS -> stringResource(R.string.check_in_feedback_success_title)
+        HabitViewModel.CheckInFeedbackType.NOT_TODAY -> stringResource(R.string.check_in_feedback_not_today_title)
         else -> ""
     }
     val message = when (type) {
@@ -392,6 +394,7 @@ internal fun CheckInFeedbackSheet(
         HabitViewModel.CheckInFeedbackType.ALREADY_COMPLETED -> stringResource(R.string.check_in_feedback_already_completed_message)
         HabitViewModel.CheckInFeedbackType.TOO_EARLY -> stringResource(R.string.check_in_feedback_too_early_message, earliestSlot)
         HabitViewModel.CheckInFeedbackType.CHECK_IN_SUCCESS -> stringResource(R.string.check_in_feedback_success_message)
+        HabitViewModel.CheckInFeedbackType.NOT_TODAY -> stringResource(R.string.check_in_feedback_not_today_message)
         else -> ""
     }
 
@@ -438,6 +441,8 @@ internal fun CheckInFeedbackSheet(
                     Triple(Icons.Outlined.Close, MaterialTheme.colorScheme.onSurfaceVariant, MaterialTheme.colorScheme.surfaceVariant)
                 HabitViewModel.CheckInFeedbackType.TOO_EARLY ->
                     Triple(Icons.Outlined.Schedule, MaterialTheme.colorScheme.tertiary, MaterialTheme.colorScheme.tertiaryContainer)
+                HabitViewModel.CheckInFeedbackType.NOT_TODAY ->
+                    Triple(Icons.Outlined.EventBusy, MaterialTheme.colorScheme.onSurfaceVariant, MaterialTheme.colorScheme.surfaceVariant)
                 else ->
                     Triple(Icons.Outlined.Check, MaterialTheme.colorScheme.onPrimaryContainer, MaterialTheme.colorScheme.primaryContainer)
             }

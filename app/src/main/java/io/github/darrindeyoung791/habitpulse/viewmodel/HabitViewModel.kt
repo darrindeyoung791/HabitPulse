@@ -279,9 +279,10 @@ class HabitViewModel(
         data class Success(val isLate: Boolean, val isAllCompleted: Boolean) : CheckInResult()
         data class AlreadyCompleted(val maxCount: Int) : CheckInResult()
         data class TooEarly(val earliestSlotTime: String) : CheckInResult()
+        data object NotApplicableToday : CheckInResult()
     }
 
-    enum class CheckInFeedbackType { NONE, LATE_CHECK_IN, ALREADY_COMPLETED, TOO_EARLY, CHECK_IN_SUCCESS }
+    enum class CheckInFeedbackType { NONE, LATE_CHECK_IN, ALREADY_COMPLETED, TOO_EARLY, CHECK_IN_SUCCESS, NOT_TODAY }
 
     private val _checkInFeedbackType = MutableStateFlow(CheckInFeedbackType.NONE)
     val checkInFeedbackType: StateFlow<CheckInFeedbackType> = _checkInFeedbackType.asStateFlow()
@@ -315,11 +316,18 @@ class HabitViewModel(
                     _tooEarlyEarliestSlot.value = result.earliestSlotTime
                     _checkInFeedbackType.value = CheckInFeedbackType.TOO_EARLY
                 }
+                is CheckInResult.NotApplicableToday -> {
+                    _checkInFeedbackType.value = CheckInFeedbackType.NOT_TODAY
+                }
             }
         }
     }
 
     private suspend fun executeSlotCheckIn(habit: Habit, todayCompletions: List<HabitCompletion>): CheckInResult {
+        if (!isApplicableToday(habit)) {
+            return CheckInResult.NotApplicableToday
+        }
+
         val allSlots = habit.getReminderTimesList()
         val completedSlotTimes = todayCompletions
             .filter { it.slotTime.isNotEmpty() }
