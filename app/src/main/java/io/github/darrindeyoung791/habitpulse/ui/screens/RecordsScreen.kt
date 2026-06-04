@@ -32,7 +32,7 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.LazyListState
-import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.filled.ArrowDropDown
@@ -88,6 +88,8 @@ import io.github.darrindeyoung791.habitpulse.data.model.HabitCompletion
 import io.github.darrindeyoung791.habitpulse.data.model.RepeatCycle
 import io.github.darrindeyoung791.habitpulse.data.repository.HabitRepository
 import io.github.darrindeyoung791.habitpulse.ui.theme.HabitPulseTheme
+import io.github.darrindeyoung791.habitpulse.ui.utils.rememberAnimationsFrozen
+import io.github.darrindeyoung791.habitpulse.ui.utils.StaggeredListItem
 import io.github.darrindeyoung791.habitpulse.viewmodel.RecordsViewModel
 import java.text.SimpleDateFormat
 import java.time.LocalDate
@@ -239,6 +241,8 @@ fun RecordsScreenContent(
     // Use two-column layout for tablets in landscape (≥840dp), same as HomeScreen
     val useTwoColumnLayout = isLandscape && screenWidthDp >= 840
 
+    val animationsFrozen by rememberAnimationsFrozen(listState)
+
     Column(
         modifier = nestedScrollModifier.fillMaxSize()
     ) {
@@ -294,14 +298,20 @@ fun RecordsScreenContent(
                                         modifier = Modifier.weight(1f),
                                         verticalArrangement = Arrangement.spacedBy(8.dp)
                                     ) {
-                                        column1Records.forEach { record ->
-                                            CompletionRecordCard(
-                                                completion = record.completion,
-                                                habitTitle = record.habit.title,
-                                                timeFormat = timeFormat,
-                                                completionSequence = record.completionSequence,
-                                                modifier = Modifier.fillMaxWidth()
-                                            )
+                                        column1Records.forEachIndexed { colIndex, record ->
+                                            val globalIndex = colIndex * 2
+                                            StaggeredListItem(
+                                                index = globalIndex,
+                                                animationsFrozen = animationsFrozen
+                                            ) {
+                                                CompletionRecordCard(
+                                                    completion = record.completion,
+                                                    habitTitle = record.habit.title,
+                                                    timeFormat = timeFormat,
+                                                    completionSequence = record.completionSequence,
+                                                    modifier = Modifier.fillMaxWidth()
+                                                )
+                                            }
                                         }
                                     }
 
@@ -311,14 +321,20 @@ fun RecordsScreenContent(
                                             modifier = Modifier.weight(1f),
                                             verticalArrangement = Arrangement.spacedBy(8.dp)
                                         ) {
-                                            column2Records.forEach { record ->
-                                                CompletionRecordCard(
-                                                    completion = record.completion,
-                                                    habitTitle = record.habit.title,
-                                                    timeFormat = timeFormat,
-                                                    completionSequence = record.completionSequence,
-                                                    modifier = Modifier.fillMaxWidth()
-                                                )
+                                            column2Records.forEachIndexed { colIndex, record ->
+                                                val globalIndex = colIndex * 2 + 1
+                                                StaggeredListItem(
+                                                    index = globalIndex,
+                                                    animationsFrozen = animationsFrozen
+                                                ) {
+                                                    CompletionRecordCard(
+                                                        completion = record.completion,
+                                                        habitTitle = record.habit.title,
+                                                        timeFormat = timeFormat,
+                                                        completionSequence = record.completionSequence,
+                                                        modifier = Modifier.fillMaxWidth()
+                                                    )
+                                                }
                                             }
                                         }
                                     }
@@ -348,17 +364,22 @@ fun RecordsScreenContent(
                                 )
                             }
 
-                            items(
+                            itemsIndexed(
                                 items = dateGroup.records,
-                                key = { it.completion.id }
-                            ) { record ->
-                                CompletionRecordCard(
-                                    completion = record.completion,
-                                    habitTitle = record.habit.title,
-                                    timeFormat = timeFormat,
-                                    completionSequence = record.completionSequence,
-                                    modifier = Modifier.fillMaxWidth()
-                                )
+                                key = { _, item -> item.completion.id }
+                            ) { index, record ->
+                                StaggeredListItem(
+                                    index = index,
+                                    animationsFrozen = animationsFrozen
+                                ) {
+                                    CompletionRecordCard(
+                                        completion = record.completion,
+                                        habitTitle = record.habit.title,
+                                        timeFormat = timeFormat,
+                                        completionSequence = record.completionSequence,
+                                        modifier = Modifier.fillMaxWidth()
+                                    )
+                                }
                             }
                         }
 
@@ -779,6 +800,12 @@ private class FakeHabitDaoForRecords : io.github.darrindeyoung791.habitpulse.dat
     override suspend fun updateCompletionStatus(id: UUID, completed: Boolean, timestamp: Long) {}
     override suspend fun undoCompletionStatus(id: UUID, timestamp: Long) {}
     override suspend fun incrementCompletionCount(id: UUID, timestamp: Long) {}
+    override suspend fun incrementCompletionCountWithCompleted(id: UUID, completed: Boolean, timestamp: Long) {
+        // No-op for preview/fake
+    }
+    override suspend fun undoSlotCompletion(id: UUID, completed: Boolean, timestamp: Long) {
+        // No-op for preview/fake
+    }
     override suspend fun resetAllCompletionStatus(timestamp: Long) {}
     override fun getHabitCount(): kotlinx.coroutines.flow.Flow<Int> =
         kotlinx.coroutines.flow.flowOf(habits.size)
@@ -913,6 +940,8 @@ private class FakeHabitCompletionDaoForRecords : io.github.darrindeyoung791.habi
 
     override suspend fun getCompletionCountByHabitId(habitId: UUID): Int =
         completions.count { it.habitId == habitId }
+
+    override suspend fun getCompletionByHabitIdDateAndSlot(habitId: UUID, date: String, slotTime: String): HabitCompletion? = null
 }
 
 // ============= Previews =============

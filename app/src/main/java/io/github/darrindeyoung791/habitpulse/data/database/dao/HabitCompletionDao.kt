@@ -47,16 +47,22 @@ interface HabitCompletionDao {
     ): List<HabitCompletion>
 
     /**
-     * 获取所有习惯在指定日期的打卡记录
-     */
-    @Query("SELECT * FROM habit_completions WHERE completedDateLocal = :date ORDER BY completedDate DESC")
-    suspend fun getCompletionsByDate(date: String): List<HabitCompletion>
-
-    /**
      * 获取指定习惯今天的打卡记录数量
      */
     @Query("SELECT COUNT(*) FROM habit_completions WHERE habitId = :habitId AND completedDateLocal = :date")
     suspend fun getTodayCompletionCount(habitId: UUID, date: String): Int
+
+    /**
+     * 获取指定日期所有打卡记录（按完成时间正序，用于 slot 分配）
+     */
+    @Query("SELECT * FROM habit_completions WHERE completedDateLocal = :date ORDER BY completedDate ASC")
+    suspend fun getCompletionsByDate(date: String): List<HabitCompletion>
+
+    /**
+     * 获取指定习惯在指定日期指定时段的打卡记录
+     */
+    @Query("SELECT * FROM habit_completions WHERE habitId = :habitId AND completedDateLocal = :date AND slotTime = :slotTime LIMIT 1")
+    suspend fun getCompletionByHabitIdDateAndSlot(habitId: UUID, date: String, slotTime: String): HabitCompletion?
 
     /**
      * 插入打卡记录

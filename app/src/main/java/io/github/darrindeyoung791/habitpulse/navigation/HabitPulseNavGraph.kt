@@ -22,7 +22,10 @@ import io.github.darrindeyoung791.habitpulse.data.model.Habit
 import io.github.darrindeyoung791.habitpulse.ui.screens.EditMode
 import io.github.darrindeyoung791.habitpulse.ui.screens.HabitCreationScreen
 import io.github.darrindeyoung791.habitpulse.ui.screens.HomeScreen
+import io.github.darrindeyoung791.habitpulse.ui.screens.LanSyncPlaceholderScreen
 import io.github.darrindeyoung791.habitpulse.ui.screens.MultiSelectSortScreen
+import io.github.darrindeyoung791.habitpulse.ui.screens.StatsPlaceholderScreen
+import io.github.darrindeyoung791.habitpulse.ui.screens.TodayHabitsScreen
 import io.github.darrindeyoung791.habitpulse.ui.screens.WebViewScreen
 import io.github.darrindeyoung791.habitpulse.ui.screens.ai.AICreateHabitScreen
 import io.github.darrindeyoung791.habitpulse.AISettingsActivity
@@ -146,6 +149,46 @@ fun HabitPulseNavGraph(
                             }
                         }
                     },
+                    onViewAboutToStart = {
+                        navController.navigate(Route.TodayHabits.createRoute("about_to_start")) {
+                            launchSingleTop = true
+                            popUpTo(Route.Home.route) {
+                                inclusive = false
+                            }
+                        }
+                    },
+                    onViewTodayHabits = {
+                        navController.navigate(Route.TodayHabits.createRoute("today")) {
+                            launchSingleTop = true
+                            popUpTo(Route.Home.route) {
+                                inclusive = false
+                            }
+                        }
+                    },
+                    onViewOverdue = {
+                        navController.navigate(Route.TodayHabits.createRoute("overdue")) {
+                            launchSingleTop = true
+                            popUpTo(Route.Home.route) {
+                                inclusive = false
+                            }
+                        }
+                    },
+                    onViewLanSync = {
+                        navController.navigate(Route.LanSync.route) {
+                            launchSingleTop = true
+                            popUpTo(Route.Home.route) {
+                                inclusive = false
+                            }
+                        }
+                    },
+                    onViewStats = {
+                        navController.navigate(Route.Stats.route) {
+                            launchSingleTop = true
+                            popUpTo(Route.Home.route) {
+                                inclusive = false
+                            }
+                        }
+                    },
                     application = context.applicationContext as HabitPulseApplication,
                     onHomeDataLoaded = onHomeDataLoaded,
                     sharedTransitionScope = sharedTransitionScope,
@@ -160,9 +203,9 @@ fun HabitPulseNavGraph(
                     initialOffsetY = { fullHeight -> fullHeight },
                     animationSpec = spring(
                         dampingRatio = 0.75f,
-                        stiffness = Spring.StiffnessLow
+                        stiffness = Spring.StiffnessMediumLow
                     )
-                ) + fadeIn(animationSpec = tween(durationMillis = 400))
+                ) + fadeIn(animationSpec = tween(durationMillis = 300))
             },
             exitTransition = {
                 slideOutVertically(
@@ -205,9 +248,9 @@ fun HabitPulseNavGraph(
                     initialOffsetY = { fullHeight -> fullHeight },
                     animationSpec = spring(
                         dampingRatio = 0.75f,
-                        stiffness = Spring.StiffnessLow
+                        stiffness = Spring.StiffnessMediumLow
                     )
-                ) + fadeIn(animationSpec = tween(durationMillis = 400))
+                ) + fadeIn(animationSpec = tween(durationMillis = 300))
             },
             exitTransition = {
                 slideOutVertically(
@@ -240,9 +283,9 @@ fun HabitPulseNavGraph(
                     initialOffsetY = { fullHeight -> fullHeight },
                     animationSpec = spring(
                         dampingRatio = 0.75f,
-                        stiffness = Spring.StiffnessLow
+                        stiffness = Spring.StiffnessMediumLow
                     )
-                ) + fadeIn(animationSpec = tween(durationMillis = 400))
+                ) + fadeIn(animationSpec = tween(durationMillis = 300))
             },
             exitTransition = {
                 slideOutVertically(
@@ -285,9 +328,9 @@ fun HabitPulseNavGraph(
                     initialOffsetY = { fullHeight -> fullHeight },
                     animationSpec = spring(
                         dampingRatio = 0.75f,
-                        stiffness = Spring.StiffnessLow
+                        stiffness = Spring.StiffnessMediumLow
                     )
-                ) + fadeIn(animationSpec = tween(durationMillis = 400))
+                ) + fadeIn(animationSpec = tween(durationMillis = 300))
             },
             exitTransition = {
                 slideOutVertically(
@@ -311,15 +354,122 @@ fun HabitPulseNavGraph(
             }
         }
         composable(
+            route = Route.TodayHabits.route,
+            arguments = listOf(
+                navArgument("filter") { type = NavType.StringType }
+            ),
+            enterTransition = {
+                slideInVertically(
+                    initialOffsetY = { fullHeight -> fullHeight },
+                    animationSpec = spring(
+                        dampingRatio = 0.75f,
+                        stiffness = Spring.StiffnessMediumLow
+                    )
+                ) + fadeIn(animationSpec = tween(durationMillis = 300))
+            },
+            exitTransition = {
+                slideOutVertically(
+                    targetOffsetY = { fullHeight -> fullHeight },
+                    animationSpec = tween(durationMillis = 200)
+                ) + fadeOut(animationSpec = tween(durationMillis = 200))
+            }
+        ) { backStackEntry ->
+            Box(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .clip(RoundedCornerShape(cornerRadius))
+            ) {
+                val filter = backStackEntry.arguments?.getString("filter") ?: "today"
+                TodayHabitsScreen(
+                    filter = filter,
+                    onNavigateBack = {
+                        navController.popBackStack()
+                    },
+                    navController = navController,
+                    onEditHabit = { habit ->
+                        navController.navigate(Route.EditHabit.createRoute(habit.id)) {
+                            launchSingleTop = true
+                            popUpTo(Route.Home.route) {
+                                inclusive = false
+                            }
+                        }
+                    },
+                    application = context.applicationContext as HabitPulseApplication
+                )
+            }
+        }
+        composable(
+            route = Route.LanSync.route,
+            enterTransition = {
+                slideInVertically(
+                    initialOffsetY = { fullHeight -> fullHeight },
+                    animationSpec = spring(
+                        dampingRatio = 0.75f,
+                        stiffness = Spring.StiffnessMediumLow
+                    )
+                ) + fadeIn(animationSpec = tween(durationMillis = 300))
+            },
+            exitTransition = {
+                slideOutVertically(
+                    targetOffsetY = { fullHeight -> fullHeight },
+                    animationSpec = tween(durationMillis = 200)
+                ) + fadeOut(animationSpec = tween(durationMillis = 200))
+            }
+        ) {
+            Box(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .clip(RoundedCornerShape(cornerRadius))
+            ) {
+                LanSyncPlaceholderScreen(
+                    onNavigateBack = {
+                        navController.popBackStack()
+                    },
+                    navController = navController
+                )
+            }
+        }
+        composable(
+            route = Route.Stats.route,
+            enterTransition = {
+                slideInVertically(
+                    initialOffsetY = { fullHeight -> fullHeight },
+                    animationSpec = spring(
+                        dampingRatio = 0.75f,
+                        stiffness = Spring.StiffnessMediumLow
+                    )
+                ) + fadeIn(animationSpec = tween(durationMillis = 300))
+            },
+            exitTransition = {
+                slideOutVertically(
+                    targetOffsetY = { fullHeight -> fullHeight },
+                    animationSpec = tween(durationMillis = 200)
+                ) + fadeOut(animationSpec = tween(durationMillis = 200))
+            }
+        ) {
+            Box(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .clip(RoundedCornerShape(cornerRadius))
+            ) {
+                StatsPlaceholderScreen(
+                    onNavigateBack = {
+                        navController.popBackStack()
+                    },
+                    navController = navController
+                )
+            }
+        }
+        composable(
             route = Route.AICreateHabit.route,
             enterTransition = {
                 slideInVertically(
                     initialOffsetY = { fullHeight -> fullHeight },
                     animationSpec = spring(
                         dampingRatio = 0.75f,
-                        stiffness = Spring.StiffnessLow
+                        stiffness = Spring.StiffnessMediumLow
                     )
-                ) + fadeIn(animationSpec = tween(durationMillis = 400))
+                ) + fadeIn(animationSpec = tween(durationMillis = 300))
             },
             exitTransition = {
                 slideOutVertically(

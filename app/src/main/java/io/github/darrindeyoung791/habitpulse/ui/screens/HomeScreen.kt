@@ -78,6 +78,11 @@ fun HomeScreen(
     onEditHabit: (Habit) -> Unit,
     onNavigateToMultiSelect: (habitId: UUID) -> Unit = {},
     onAICreateHabit: () -> Unit = {},
+    onViewAboutToStart: () -> Unit = {},
+    onViewTodayHabits: () -> Unit = {},
+    onViewOverdue: () -> Unit = {},
+    onViewLanSync: () -> Unit = {},
+    onViewStats: () -> Unit = {},
     application: HabitPulseApplication? = null,
     onHomeDataLoaded: () -> Unit = {},
     sharedTransitionScope: SharedTransitionScope? = null,
@@ -89,7 +94,7 @@ fun HomeScreen(
     val scope = rememberCoroutineScope()
 
     // Track which habit is transitioning to MultiSelect (for shared element)
-    var multiSelectTargetHabitId by remember { mutableStateOf<java.util.UUID?>(null) }
+    var multiSelectTargetHabitId by remember { mutableStateOf<UUID?>(null) }
 
     // FAB selection dialog state
     var showCreateHabitDialog by remember { mutableStateOf(false) }
@@ -350,6 +355,11 @@ fun HomeScreen(
                             multiSelectTargetHabitId = habitId
                             onNavigateToMultiSelect(habitId)
                         },
+                        onViewAboutToStart = onViewAboutToStart,
+                        onViewTodayHabits = onViewTodayHabits,
+                        onViewOverdue = onViewOverdue,
+                        onViewLanSync = onViewLanSync,
+                        onViewStats = onViewStats,
                         sharedTransitionScope = sharedTransitionScope,
                         animatedContentScope = animatedContentScope,
                         nestedScrollConnection = habitsScrollBehavior.nestedScrollConnection,

@@ -385,4 +385,34 @@
     <string name="thinking_in_progress">思考中…</string>
     <string name="collapse">折叠</string>
     <string name="expand">展開</string>
+
+    <!-- Entry Zone -->
+    <string name="entry_zone_today_habits">今日習慣</string>
+    <string name="entry_zone_today_habits_badge">%d 項</string>
+    <string name="entry_zone_lan_sync">區域網路同步</string>
+    <string name="entry_zone_lan_sync_badge">未連線</string>
+    <string name="entry_zone_lan_sync_placeholder_title">區域網路同步</string>
+    <string name="entry_zone_lan_sync_placeholder_desc">區域網路同步功能正在開發中，敬請期待！</string>
+    <string name="habit_card_status_about_to_start">即將開始</string>
+    <string name="habit_card_status_overdue">逾期</string>
+    <string name="habit_card_status_completed">已完成</string>
+    <string name="habit_card_progress_format">%1$d/%2$d</string>
+    <string name="check_in_feedback_late_title">打卡提醒</string>
+    <string name="check_in_feedback_late_message">下次記得準時打卡哦</string>
+    <string name="check_in_feedback_already_completed_title">已打卡</string>
+    <string name="check_in_feedback_already_completed_message">今日已經打卡，不能重複打卡</string>
+    <string name="check_in_feedback_too_early_title">時間未到</string>
+    <string name="check_in_feedback_too_early_message">最早 %s 可打卡</string>
+    <string name="check_in_feedback_dismiss">知道了</string>
+    <string name="check_in_feedback_not_today_title">今日無需打卡</string>
+    <string name="check_in_feedback_not_today_message">該習慣不在今日的排程中</string>
+    <string name="entry_zone_about_to_start">即將開始</string>
+    <string name="entry_zone_overdue">逾期</string>
+    <string name="entry_zone_stats">視覺化統計</string>
+    <string name="entry_zone_stats_badge">視覺化</string>
+    <string name="entry_zone_stats_placeholder_title">視覺化統計</string>
+    <string name="entry_zone_stats_placeholder_desc">統計資訊視覺化功能正在開發中，敬請期待！</string>
+    <string name="today_section_soon">即將開始</string>
+    <string name="today_section_later">稍後</string>
+    <string name="today_section_allday">全天</string>
 </resources>

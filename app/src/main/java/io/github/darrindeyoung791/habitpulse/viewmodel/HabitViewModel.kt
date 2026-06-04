@@ -6,9 +6,13 @@ import androidx.lifecycle.viewModelScope
 import io.github.darrindeyoung791.habitpulse.HabitPulseApplication
 import io.github.darrindeyoung791.habitpulse.data.model.Habit
 import io.github.darrindeyoung791.habitpulse.data.model.HabitCompletion
+import io.github.darrindeyoung791.habitpulse.data.model.HabitStatus
+import io.github.darrindeyoung791.habitpulse.data.model.HabitWithStatus
+import io.github.darrindeyoung791.habitpulse.data.model.RepeatCycle
 import io.github.darrindeyoung791.habitpulse.data.repository.HabitRepository
 import io.github.darrindeyoung791.habitpulse.utils.OnboardingPreferences
 import kotlinx.coroutines.FlowPreview
+import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -40,7 +44,117 @@ class HabitViewModel(
      * 收到第一个数据后会自动将 isLoading 设置为 false
      */
     val habitsFlow: Flow<List<Habit>> = repository.habitsBySortOrderFlow
-        .onEach { _isLoading.value = false }
+        .onEach {
+            _isLoading.value = false
+            loadTodayCompletions()
+        }
+
+    // ============= Status & Progress Tracking =============
+
+    private val _todayCompletions = MutableStateFlow<List<HabitCompletion>>(emptyList())
+    val todayCompletionsFlow: StateFlow<List<HabitCompletion>> = _todayCompletions.asStateFlow()
+
+    private var lastCheckedDate = HabitCompletion.getTodayDate()
+
+    init {
+        loadTodayCompletions()
+        viewModelScope.launch {
+            while (true) {
+                delay(60_000)
+                val today = HabitCompletion.getTodayDate()
+                if (lastCheckedDate != today) {
+                    lastCheckedDate = today
+                    loadTodayCompletions()
+                }
+            }
+        }
+    }
+
+    private fun loadTodayCompletions() {
+        viewModelScope.launch {
+            _todayCompletions.value = repository.getTodayCompletions()
+        }
+    }
+
+    val habitsWithStatusFlow: Flow<List<HabitWithStatus>> = combine(
+        repository.habitsBySortOrderFlow,
+        todayCompletionsFlow
+    ) { habits, completions ->
+        habits.map { habit ->
+            HabitWithStatus(
+                habit = habit,
+                todayCompletions = completions.filter { it.habitId == habit.id },
+                status = calculateHabitStatus(habit, completions.filter { it.habitId == habit.id })
+            )
+        }
+    }.onEach { list ->
+        _pendingTodayCount.value = list.count { it.status.contains(HabitStatus.PENDING_TODAY) }
+        _aboutToStartCount.value = list.count { it.status.contains(HabitStatus.ABOUT_TO_START) }
+        _overdueCount.value = list.count { it.status.contains(HabitStatus.OVERDUE) }
+    }
+
+    private val _pendingTodayCount = MutableStateFlow(0)
+    val pendingTodayCount: StateFlow<Int> = _pendingTodayCount.asStateFlow()
+
+    private val _aboutToStartCount = MutableStateFlow(0)
+    val aboutToStartCount: StateFlow<Int> = _aboutToStartCount.asStateFlow()
+
+    private val _overdueCount = MutableStateFlow(0)
+    val overdueCount: StateFlow<Int> = _overdueCount.asStateFlow()
+
+    private fun calculateHabitStatus(habit: Habit, todayCompletions: List<HabitCompletion>): Set<HabitStatus> {
+        val allSlots = habit.getReminderTimesList()
+        val completedSlotTimes = todayCompletions
+            .filter { it.slotTime.isNotEmpty() }
+            .map { it.slotTime }
+            .toSet()
+        val incompleteSlots = allSlots.filter { it !in completedSlotTimes }
+
+        if (incompleteSlots.isEmpty() && allSlots.isNotEmpty()) {
+            return setOf(HabitStatus.COMPLETED_TODAY)
+        }
+
+        if (!isApplicableToday(habit)) {
+            return setOf(HabitStatus.NO_STATUS)
+        }
+
+        val status = mutableSetOf(HabitStatus.PENDING_TODAY)
+        val now = java.util.Calendar.getInstance()
+
+        var hasOverdue = false
+        var hasAboutToStart = false
+
+        for (slot in incompleteSlots) {
+            val parts = slot.split(":")
+            if (parts.size == 2) {
+                val slotCal = java.util.Calendar.getInstance().apply {
+                    set(java.util.Calendar.HOUR_OF_DAY, parts[0].toInt())
+                    set(java.util.Calendar.MINUTE, parts[1].toInt())
+                    set(java.util.Calendar.SECOND, 0)
+                    set(java.util.Calendar.MILLISECOND, 0)
+                }
+                val slotTime = slotCal.timeInMillis
+                val oneHour = 60 * 60 * 1000L
+                if (now.timeInMillis >= slotTime - oneHour && now.timeInMillis <= slotTime + oneHour) {
+                    hasAboutToStart = true
+                }
+                if (now.timeInMillis > slotTime + oneHour) {
+                    hasOverdue = true
+                }
+            }
+        }
+
+        if (hasOverdue) status.add(HabitStatus.OVERDUE)
+        if (hasAboutToStart) status.add(HabitStatus.ABOUT_TO_START)
+
+        return status
+    }
+
+    private fun isApplicableToday(habit: Habit): Boolean {
+        if (habit.repeatCycle == RepeatCycle.DAILY) return true
+        val todayIndex = (java.util.Calendar.getInstance().get(java.util.Calendar.DAY_OF_WEEK) - 2 + 7) % 7
+        return todayIndex in habit.getRepeatDaysList()
+    }
 
     /**
      * 是否需要 Home 列表滚动到顶部（用于多选排序保存后，统一回到顶部）
@@ -139,6 +253,136 @@ class HabitViewModel(
         }
         // 使用 distinctUntilChanged 避免重复发射相同数据
         .distinctUntilChanged()
+
+    val habitsWithStatusForDisplay: StateFlow<List<HabitWithStatus>> = habitsWithStatusFlow
+        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyList())
+
+    val filteredHabitsWithStatus: StateFlow<List<HabitWithStatus>> = combine(
+        habitsWithStatusFlow,
+        debouncedSearchQuery
+    ) { allWithStatus, query ->
+        if (query.isNullOrBlank()) {
+            allWithStatus
+        } else {
+            val searchQuery = query.trim()
+            allWithStatus.filter { ws ->
+                ws.habit.title.contains(searchQuery, ignoreCase = true) ||
+                ws.habit.notes.contains(searchQuery, ignoreCase = true)
+            }
+        }
+    }.distinctUntilChanged()
+        .stateIn(viewModelScope, SharingStarted.WhileSubscribed(5000), emptyList())
+
+    // ============= Slot-based Check-in =============
+
+    sealed class CheckInResult {
+        data class Success(val isLate: Boolean, val isAllCompleted: Boolean) : CheckInResult()
+        data class AlreadyCompleted(val maxCount: Int) : CheckInResult()
+        data class TooEarly(val earliestSlotTime: String) : CheckInResult()
+        data object NotApplicableToday : CheckInResult()
+    }
+
+    enum class CheckInFeedbackType { NONE, LATE_CHECK_IN, ALREADY_COMPLETED, TOO_EARLY, CHECK_IN_SUCCESS, NOT_TODAY }
+
+    private val _checkInFeedbackType = MutableStateFlow(CheckInFeedbackType.NONE)
+    val checkInFeedbackType: StateFlow<CheckInFeedbackType> = _checkInFeedbackType.asStateFlow()
+
+    private val _tooEarlyEarliestSlot = MutableStateFlow("")
+    val tooEarlyEarliestSlot: StateFlow<String> = _tooEarlyEarliestSlot.asStateFlow()
+
+    fun dismissCheckInFeedback() {
+        _checkInFeedbackType.value = CheckInFeedbackType.NONE
+    }
+
+    fun performSlotCheckIn(habit: Habit) {
+        viewModelScope.launch {
+            val todayCompletions = _todayCompletions.value.filter { it.habitId == habit.id }
+            val result = executeSlotCheckIn(habit, todayCompletions)
+            when (result) {
+                is CheckInResult.Success -> {
+                    loadTodayCompletions()
+                    if (result.isLate) {
+                        _checkInFeedbackType.value = CheckInFeedbackType.LATE_CHECK_IN
+                    } else if (result.isAllCompleted) {
+                        showRewardSheet(habit)
+                    } else {
+                        _checkInFeedbackType.value = CheckInFeedbackType.CHECK_IN_SUCCESS
+                    }
+                }
+                is CheckInResult.AlreadyCompleted -> {
+                    _checkInFeedbackType.value = CheckInFeedbackType.ALREADY_COMPLETED
+                }
+                is CheckInResult.TooEarly -> {
+                    _tooEarlyEarliestSlot.value = result.earliestSlotTime
+                    _checkInFeedbackType.value = CheckInFeedbackType.TOO_EARLY
+                }
+                is CheckInResult.NotApplicableToday -> {
+                    _checkInFeedbackType.value = CheckInFeedbackType.NOT_TODAY
+                }
+            }
+        }
+    }
+
+    private suspend fun executeSlotCheckIn(habit: Habit, todayCompletions: List<HabitCompletion>): CheckInResult {
+        if (!isApplicableToday(habit)) {
+            return CheckInResult.NotApplicableToday
+        }
+
+        val allSlots = habit.getReminderTimesList()
+        val completedSlotTimes = todayCompletions
+            .filter { it.slotTime.isNotEmpty() }
+            .map { it.slotTime }
+            .toSet()
+        val incompleteSlots = allSlots.filter { it !in completedSlotTimes }
+
+        if (incompleteSlots.isEmpty()) {
+            return CheckInResult.AlreadyCompleted(maxCount = allSlots.size)
+        }
+
+        if (allSlots.size == 1) {
+            val slotTime = allSlots.first()
+            val now = System.currentTimeMillis()
+            val slotCal = java.util.Calendar.getInstance().apply {
+                val parts = slotTime.split(":")
+                set(java.util.Calendar.HOUR_OF_DAY, parts[0].toInt())
+                set(java.util.Calendar.MINUTE, parts[1].toInt())
+                set(java.util.Calendar.SECOND, 0)
+                set(java.util.Calendar.MILLISECOND, 0)
+            }
+            val isLate = now > slotCal.timeInMillis + 60 * 60 * 1000L
+            val isAllCompleted = true
+            repository.performSlotCheckIn(habit, slotTime, isLate, isAllCompleted)
+            return CheckInResult.Success(isLate = isLate, isAllCompleted = true)
+        }
+
+        val now = java.util.Calendar.getInstance()
+        for (slot in incompleteSlots) {
+            val parts = slot.split(":")
+            val slotCal = java.util.Calendar.getInstance().apply {
+                set(java.util.Calendar.HOUR_OF_DAY, parts[0].toInt())
+                set(java.util.Calendar.MINUTE, parts[1].toInt())
+                set(java.util.Calendar.SECOND, 0)
+                set(java.util.Calendar.MILLISECOND, 0)
+            }
+            val slotTime = slotCal.timeInMillis
+            val oneHour = 60 * 60 * 1000L
+
+            if (now.timeInMillis >= slotTime - oneHour) {
+                val isLate = now.timeInMillis > slotTime + oneHour
+                val remainingAfterThis = incompleteSlots.size - 1
+                val isAllCompleted = remainingAfterThis == 0
+                repository.performSlotCheckIn(habit, slot, isLate, isAllCompleted)
+                return CheckInResult.Success(isLate = isLate, isAllCompleted = isAllCompleted)
+            }
+        }
+
+        val earliestSlot = incompleteSlots.first()
+        val parts = earliestSlot.split(":")
+        val hour = parts[0].toInt()
+        val minute = parts[1].toInt()
+        val earliest = String.format("%02d:%02d", (hour - 1).coerceAtLeast(0), minute)
+        return CheckInResult.TooEarly(earliestSlotTime = earliest)
+    }
 
     // ============= Data Operations =============
 
