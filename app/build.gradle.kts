@@ -9,12 +9,6 @@ plugins {
     id("com.mikepenz.aboutlibraries.plugin.android") version "14.2.1"
 }
 
-aboutLibraries {
-    collect {
-        configPath = file("config")
-    }
-}
-
 android {
     namespace = "io.github.darrindeyoung791.habitpulse"
     compileSdk {
@@ -27,8 +21,8 @@ android {
         applicationId = "io.github.darrindeyoung791.habitpulse"
         minSdk = 26
         targetSdk = 36
-        versionCode = 167
-        versionName = "0.8.19-alpha"
+        versionCode = 168
+        versionName = "0.8.20-alpha"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
     }
