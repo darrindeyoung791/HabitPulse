@@ -5,8 +5,8 @@ import java.util.Locale
 plugins {
     alias(libs.plugins.android.application)
     alias(libs.plugins.kotlin.compose)
-    id("com.google.devtools.ksp") version "2.3.6"
-    id("com.mikepenz.aboutlibraries.plugin.android") version "13.2.1"
+    id("com.google.devtools.ksp") version "2.3.9"
+    id("com.mikepenz.aboutlibraries.plugin.android") version "14.1.0"
 }
 
 aboutLibraries {
@@ -27,8 +27,8 @@ android {
         applicationId = "io.github.darrindeyoung791.habitpulse"
         minSdk = 26
         targetSdk = 36
-        versionCode = 166
-        versionName = "0.8.18-alpha"
+        versionCode = 167
+        versionName = "0.8.19-alpha"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
     }
@@ -115,9 +115,9 @@ dependencies {
     implementation("androidx.compose.material:material-icons-core")
     implementation("androidx.compose.material:material-icons-extended")
     implementation("androidx.compose.material3:material3")
-    implementation("androidx.core:core-splashscreen:1.0.1")
+    implementation("androidx.core:core-splashscreen:1.2.0")
     // Material library required for DynamicColors.applyToActivitiesIfAvailable
-    implementation("com.google.android.material:material:1.10.0")
+    implementation("com.google.android.material:material:1.14.0")
     implementation(libs.androidx.core.ktx)
     implementation(libs.androidx.lifecycle.runtime.ktx)
     implementation(libs.androidx.activity.compose)
@@ -139,7 +139,7 @@ dependencies {
     debugImplementation(libs.androidx.compose.ui.test.manifest)
 
     // AboutLibraries for open source licenses display
-    implementation("com.mikepenz:aboutlibraries-compose-m3:13.2.1")
+    implementation("com.mikepenz:aboutlibraries-compose-m3:14.1.0")
 
     // Reorderable for drag-and-drop sorting
     implementation("sh.calvin.reorderable:reorderable:3.1.0")

@@ -193,8 +193,8 @@ Records every habit completion with timestamp.
 ### Gradle Version
 - **Gradle**: 9.5.1
 - **Android Gradle Plugin**: 9.1.0
-- **Kotlin**: 2.3.20
-- **KSP**: 2.3.6
+- **Kotlin**: 2.4.0
+- **KSP**: 2.3.9
 
 ## Dependencies
 
@@ -219,11 +219,11 @@ Records every habit completion with timestamp.
 - `androidx.compose.material.icons.extended` - Material icons extended
 
 ### Other
-- `androidx.core:core-splashscreen` (1.0.1) - Splash screen compatibility
-- `com.google.android.material:material` (1.10.0) - Material components for dynamic colors
+- `androidx.core:core-splashscreen` (1.2.0) - Splash screen compatibility
+- `com.google.android.material:material` (1.14.0) - Material components for dynamic colors
 - `sh.calvin.reorderable:reorderable` (3.0.0) - Drag-and-drop reordering library
 - `androidx.datastore:datastore-preferences` (1.2.1) - Modern preferences storage
-- `com.mikepenz:aboutlibraries` (13.2.1) - Open source license display
+- `com.mikepenz:aboutlibraries` (14.1.0) - Open source license display
 
 ### Testing
 - `junit` (4.13.2) - Unit testing framework
