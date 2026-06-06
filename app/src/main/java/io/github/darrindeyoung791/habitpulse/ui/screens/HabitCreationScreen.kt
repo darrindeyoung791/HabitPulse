@@ -105,10 +105,32 @@ fun TimePickerDialog(
             )
         }
     ) {
-        if (displayMode == TimePickerDisplayMode.Picker) {
-            TimePicker(state = timePickerState)
-        } else {
-            TimeInput(state = timePickerState)
+        Column(
+            horizontalAlignment = Alignment.CenterHorizontally
+        ) {
+            if (displayMode == TimePickerDisplayMode.Picker) {
+                TimePicker(state = timePickerState)
+                Spacer(modifier = Modifier.height(4.dp))
+                Row(
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Icon(
+                        imageVector = Icons.Outlined.Info,
+                        contentDescription = null,
+                        modifier = Modifier.size(16.dp),
+                        tint = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.6f)
+                    )
+                    Spacer(modifier = Modifier.width(4.dp))
+                    Text(
+                        text = stringResource(R.string.create_habit_time_picker_hint),
+                        style = MaterialTheme.typography.bodySmall,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.6f),
+                        textAlign = TextAlign.Center
+                    )
+                }
+            } else {
+                TimeInput(state = timePickerState)
+            }
         }
     }
 }

@@ -66,6 +66,7 @@
     <string name="create_habit_time_picker_title">選取提醒時間</string>
     <string name="create_habit_time_picker_confirm">確定</string>
     <string name="create_habit_time_picker_dismiss">取消</string>
+    <string name="create_habit_time_picker_hint">若希望設為中午十二點，請選擇下午</string>
     <string name="create_habit_max_length_hint">最多可輸入 100 個字元</string>
     <string name="create_habit_supervision_label">監督方式</string>
     <string name="create_habit_supervision_hint">選取監督方式</string>
@@ -356,6 +357,9 @@
     <string name="ai_day_fri">五</string>
     <string name="ai_day_sat">六</string>
     <string name="ai_day_sun">日</string>
+
+    <!-- AI Disclaimer -->
+    <string name="ai_disclaimer">AI 可能會犯錯，請核對資訊後儲存。</string>
 
     <!-- AI Error Messages -->
     <string name="ai_error_scroll_to_bottom">滾動到底部</string>

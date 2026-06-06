@@ -434,6 +434,17 @@ fun AICreateHabitScreen(
                     )
                 }
             }
+
+            Text(
+                text = stringResource(R.string.ai_disclaimer),
+                style = MaterialTheme.typography.labelSmall,
+                color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.6f),
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(horizontal = 20.dp)
+                    .padding(bottom = 4.dp),
+                textAlign = TextAlign.Center
+            )
         }
     }
 

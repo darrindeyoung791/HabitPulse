@@ -65,6 +65,7 @@
     <string name="create_habit_time_picker_title">Select Reminder Time</string>
     <string name="create_habit_time_picker_confirm">OK</string>
     <string name="create_habit_time_picker_dismiss">Cancel</string>
+    <string name="create_habit_time_picker_hint">Select PM for noon</string>
     <string name="create_habit_max_length_hint">Maximum 100 characters</string>
     <string name="create_habit_supervision_label">Supervision Method</string>
     <string name="create_habit_supervision_hint">Select supervision method</string>
@@ -355,6 +356,9 @@
     <string name="ai_day_fri">Fri</string>
     <string name="ai_day_sat">Sat</string>
     <string name="ai_day_sun">Sun</string>
+
+    <!-- AI Disclaimer -->
+    <string name="ai_disclaimer">AI may make mistakes. Please review before saving.</string>
 
     <!-- AI Error Messages -->
     <string name="ai_error_scroll_to_bottom">Scroll to bottom</string>
