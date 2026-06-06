@@ -53,7 +53,11 @@ HabitPulse/
 │   │   │   │   ├── data/
 │   │   │   │   │   ├── model/
 │   │   │   │   │   │   ├── Habit.kt             # Habit entity with Room annotations
-│   │   │   │   │   │   └── HabitCompletion.kt   # Habit completion record entity
+│   │   │   │   │   │   ├── HabitCompletion.kt   # Habit completion record entity
+│   │   │   │   │   │   ├── HabitStatus.kt       # Habit status enum + HabitWithStatus data class
+│   │   │   │   │   │   ├── SlotCheckInEngine.kt # Pure slot check-in & status calculation logic
+│   │   │   │   │   │   └── CheckInResult.kt     # (defined in SlotCheckInEngine)
+│   │   │   │   │   ├── database/
 │   │   │   │   │   ├── database/
 │   │   │   │   │   │   ├── HabitDatabase.kt     # Room database class (v3)
 │   │   │   │   │   │   ├── dao/
@@ -104,7 +108,14 @@ HabitPulse/
 │   │   │   │   ├── values-zh-rTW/               # Chinese (Traditional, Taiwan)
 │   │   │   │   └── values-night/                # Dark theme overrides
 │   │   │   └── AndroidManifest.xml
-│   │   ├── test/                                # Unit tests
+│   │   ├── test/
+│   │   │   └── java/io/github/darrindeyoung791/habitpulse/
+│   │   │       ├── ExampleUnitTest.kt              # Example test
+│   │   │       └── data/model/
+│   │   │           ├── HabitTest.kt              # Habit JSON parsing helper tests
+│   │   │           ├── HabitCompletionTest.kt    # HabitCompletion unit tests
+│   │   │           ├── HabitStatusTest.kt        # HabitWithStatus property tests
+│   │   │           └── SlotCheckInEngineTest.kt  # Slot check-in & status engine tests
 │   │   └── androidTest/                         # Instrumented tests
 │   ├── build.gradle.kts                         # App-level build config
 │   └── proguard-rules.pro                       # ProGuard rules
@@ -230,6 +241,7 @@ Records every habit completion with timestamp.
 - `androidx.junit` (1.2.1) - Android JUnit extensions
 - `androidx.espresso.core` (3.6.1) - UI testing framework
 - `androidx.compose.ui.test` - Compose testing utilities
+- `org.json:json` (20230227) - JVM JSON implementation for tests (Android mocks org.json)
 
 ## Development Conventions
 
@@ -264,6 +276,8 @@ Records every habit completion with timestamp.
 - Unit tests in `src/test/`
 - Instrumented tests in `src/androidTest/`
 - Compose UI testing with `androidx.compose.ui.test`
+- Pure business logic extracted to testable classes (e.g., `SlotCheckInEngine`) — no Android dependencies
+- Tests use `org.json:json` JVM library because Android's `org.json` is stubbed in unit tests
 
 ### Internationalization (i18n) Guidelines
 - **No hardcoded strings**: All user-visible strings must be stored in `strings.xml` resource files
@@ -352,6 +366,12 @@ The project is in **early development stage** (v0.7.11-alpha):
 - ✅ WebView in Settings - GitHub link opens in WebView instead of external browser
 - ✅ URL Variables - Domain allowlist uses RouteConfig variables for easy renaming
 - ✅ Predictive Back Gesture Fix - 修复返回手势与系统预测性返回动画冲突导致的杀后台问题
+- ✅ **SlotCheckInEngine Extraction** - Pure business logic (`calculateHabitStatus`, `isApplicableToday`, `executeSlotCheckIn`, `CheckInResult`) extracted from HabitViewModel into testable standalone `SlotCheckInEngine` object in `data/model/`
+- ✅ **Unit Test Setup** - 65 unit tests across 4 test classes:
+  - `SlotCheckInEngineTest` (31 tests) - covers status calculation, slot check-in logic, applicable day detection, edge cases (empty slots, midnight, boundary conditions, old-style completions)
+  - `HabitTest` (17 tests) - covers JSON parsing helper methods, `copyWith*` methods, edge cases (all 7 days, duplicates, empty strings)
+  - `HabitStatusTest` (12 tests) - covers `pendingCount`, `isCompletelyOverdue`, negative pendingCount, old-style completion compatibility
+  - `HabitCompletionTest` (5 tests) - covers `getTodayDate()`, `getFormattedDate()`, and default values
 
 ### In Progress
 - 🔄 Count section (track unplanned events, such as game scores)

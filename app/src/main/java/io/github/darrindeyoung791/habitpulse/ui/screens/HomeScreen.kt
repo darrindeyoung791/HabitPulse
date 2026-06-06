@@ -5,6 +5,7 @@ import androidx.compose.animation.AnimatedContent
 import androidx.compose.animation.core.animateDpAsState
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.core.tween
+import androidx.compose.animation.Crossfade
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
 import androidx.compose.animation.scaleIn
@@ -23,6 +24,7 @@ import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.*
 import androidx.compose.material.icons.filled.*
+import androidx.compose.material.icons.outlined.*
 import androidx.compose.material.icons.automirrored.filled.ArrowForward
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
@@ -66,9 +68,38 @@ import java.util.UUID
 enum class HomeSection { Habits, Contacts, Records }
 
 fun HomeSection.iconResource() = when (this) {
-    HomeSection.Habits -> Icons.Filled.List
+    HomeSection.Habits -> Icons.Filled.CheckCircle
     HomeSection.Contacts -> Icons.Filled.People
     HomeSection.Records -> Icons.Filled.Assessment
+}
+
+fun HomeSection.outlinedIconResource() = when (this) {
+    HomeSection.Habits -> Icons.Outlined.CheckCircle
+    HomeSection.Contacts -> Icons.Outlined.People
+    HomeSection.Records -> Icons.Outlined.Assessment
+}
+
+@Composable
+fun AnimatedNavIcon(
+    isSelected: Boolean,
+    section: HomeSection,
+    contentDescription: String?,
+    modifier: Modifier = Modifier,
+    tint: Color = Color.Unspecified
+) {
+    val iconTint = if (tint != Color.Unspecified) tint else LocalContentColor.current
+    Crossfade(
+        targetState = isSelected,
+        animationSpec = tween(durationMillis = 300),
+        label = "navIconAnim"
+    ) { selected ->
+        Icon(
+            imageVector = if (selected) section.iconResource() else section.outlinedIconResource(),
+            contentDescription = contentDescription,
+            modifier = modifier,
+            tint = iconTint
+        )
+    }
 }
 
 @OptIn(ExperimentalMaterial3Api::class, ExperimentalFoundationApi::class)
@@ -665,12 +696,9 @@ fun HomeScreen(
                                     HomeSection.Records -> stringResource(id = R.string.main_tab_records)
                                 }) },
                                 icon = {
-                                    Icon(
-                                        imageVector = when (section) {
-                                            HomeSection.Habits -> Icons.Filled.List
-                                            HomeSection.Contacts -> Icons.Filled.People
-                                            HomeSection.Records -> Icons.Filled.Assessment
-                                        },
+                                    AnimatedNavIcon(
+                                        isSelected = isSelected,
+                                        section = section,
                                         contentDescription = null
                                     )
                                 },
@@ -698,12 +726,9 @@ fun HomeScreen(
                                     .clickable(onClick = { navigateToSection(section) }),
                                 contentAlignment = Alignment.Center
                             ) {
-                                Icon(
-                                    imageVector = when (section) {
-                                        HomeSection.Habits -> Icons.Filled.List
-                                        HomeSection.Contacts -> Icons.Filled.People
-                                        HomeSection.Records -> Icons.Filled.Assessment
-                                    },
+                                AnimatedNavIcon(
+                                    isSelected = isSelected,
+                                    section = section,
                                     contentDescription = when (section) {
                                         HomeSection.Habits -> stringResource(id = R.string.main_tab_habits)
                                         HomeSection.Contacts -> stringResource(id = R.string.main_tab_contacts)
@@ -774,12 +799,9 @@ fun HomeScreen(
                 sectionItems.forEach { section ->
                     NavigationRailItem(
                         icon = {
-                            Icon(
-                                imageVector = when (section) {
-                                    HomeSection.Habits -> Icons.Filled.List
-                                    HomeSection.Contacts -> Icons.Filled.People
-                                    HomeSection.Records -> Icons.Filled.Assessment
-                                },
+                            AnimatedNavIcon(
+                                isSelected = currentSection == section,
+                                section = section,
                                 contentDescription = when (section) {
                                     HomeSection.Habits -> stringResource(id = R.string.main_tab_habits)
                                     HomeSection.Contacts -> stringResource(id = R.string.main_tab_contacts)
@@ -868,12 +890,9 @@ fun HomeScreen(
                         sectionItems.forEach { section ->
                             NavigationBarItem(
                                 icon = {
-                                    Icon(
-                                        imageVector = when (section) {
-                                            HomeSection.Habits -> Icons.Filled.List
-                                            HomeSection.Contacts -> Icons.Filled.People
-                                            HomeSection.Records -> Icons.Filled.Assessment
-                                        },
+                                    AnimatedNavIcon(
+                                        isSelected = currentSection == section,
+                                        section = section,
                                         contentDescription = when (section) {
                                             HomeSection.Habits -> stringResource(id = R.string.main_tab_habits)
                                             HomeSection.Contacts -> stringResource(id = R.string.main_tab_contacts)
@@ -1116,13 +1135,9 @@ fun CollapsedNavigationBar(
                     .clickable(onClick = { onNavigateToSection(section) }),
                 contentAlignment = Alignment.Center
             ) {
-                // Icon with fixed size, centered in the Box
-                Icon(
-                    imageVector = when (section) {
-                        HomeSection.Habits -> Icons.Filled.List
-                        HomeSection.Contacts -> Icons.Filled.People
-                        HomeSection.Records -> Icons.Filled.Assessment
-                    },
+                AnimatedNavIcon(
+                    isSelected = isSelected,
+                    section = section,
                     contentDescription = when (section) {
                         HomeSection.Habits -> habitsContentDescription
                         HomeSection.Contacts -> contactsContentDescription
@@ -1133,7 +1148,6 @@ fun CollapsedNavigationBar(
                     } else {
                         MaterialTheme.colorScheme.onSurfaceVariant
                     }
-                    // No explicit size modifier - Icon uses default 24dp
                 )
             }
         }
