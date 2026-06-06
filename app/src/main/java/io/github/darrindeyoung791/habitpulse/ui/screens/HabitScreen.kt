@@ -1299,7 +1299,7 @@ fun HabitCard(
                             val reminderText = if (reminderTimes.isEmpty()) {
                                 ""
                             } else {
-                                val firstTime = reminderTimes.first()
+                                val firstTime = reminderTimes.sorted().first()
                                 if (reminderTimes.size == 1) {
                                     stringResource(id = R.string.habit_card_reminder_single, firstTime)
                                 } else {
@@ -1608,7 +1608,7 @@ fun ReminderDetailDialog(
                         color = MaterialTheme.colorScheme.primary
                     )
                     Spacer(modifier = Modifier.height(8.dp))
-                    reminderTimes.forEach { time ->
+                    reminderTimes.sorted().forEach { time ->
                         Row(
                             verticalAlignment = Alignment.CenterVertically
                         ) {

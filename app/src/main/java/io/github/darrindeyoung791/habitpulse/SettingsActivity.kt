@@ -53,7 +53,7 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import io.github.darrindeyoung791.habitpulse.data.model.Habit
 import io.github.darrindeyoung791.habitpulse.data.model.HabitCompletion
 import io.github.darrindeyoung791.habitpulse.data.model.RepeatCycle
-import io.github.darrindeyoung791.habitpulse.data.model.SupervisionMethod
+
 import io.github.darrindeyoung791.habitpulse.data.preferences.UserPreferences
 import io.github.darrindeyoung791.habitpulse.data.repository.HabitRepository
 import io.github.darrindeyoung791.habitpulse.navigation.RouteConfig
@@ -1192,7 +1192,8 @@ private fun generateSampleHabits(): Pair<List<Habit>, List<HabitCompletion>> {
         repeatCycle = RepeatCycle.DAILY,
         reminderTimes = JSONArray().apply { put("08:00"); put("12:00"); put("18:00") }.toString(),
         notes = longNote,
-        supervisionMethod = SupervisionMethod.EMAIL,
+
+
         supervisorEmails = JSONArray().apply { put(uniqueEmail1) }.toString(),
         completionCount = 45,
         createdDate = generateTimestamp(30)
@@ -1215,7 +1216,8 @@ private fun generateSampleHabits(): Pair<List<Habit>, List<HabitCompletion>> {
         repeatDays = JSONArray().apply { put(0); put(2); put(4) }.toString(),
         reminderTimes = generateManyReminders(),
         notes = "跑步前记得热身\n跑完后要拉伸\n注意呼吸节奏\n选择合适的跑鞋\n循序渐进增加距离",
-        supervisionMethod = SupervisionMethod.SMS,
+
+
         supervisorPhones = JSONArray().apply { put(uniquePhone1) }.toString(),
         completionCount = 28,
         createdDate = generateTimestamp(30)
@@ -1239,7 +1241,8 @@ private fun generateSampleHabits(): Pair<List<Habit>, List<HabitCompletion>> {
         repeatCycle = RepeatCycle.DAILY,
         reminderTimes = JSONArray().apply { put("21:00") }.toString(),
         notes = "每天至少读 30 分钟\n记录读书笔记\n分享读书心得",
-        supervisionMethod = SupervisionMethod.EMAIL,
+
+
         supervisorEmails = JSONArray().apply { put(uniqueEmail2) }.toString(),
         completionCount = 25,
         createdDate = generateTimestamp(30)
@@ -1260,7 +1263,8 @@ private fun generateSampleHabits(): Pair<List<Habit>, List<HabitCompletion>> {
         repeatCycle = RepeatCycle.DAILY,
         reminderTimes = JSONArray().apply { put("07:00"); put("22:00") }.toString(),
         notes = longNote,
-        supervisionMethod = SupervisionMethod.SMS,
+
+
         supervisorPhones = JSONArray().apply { put(uniquePhone2) }.toString(),
         completionCount = 20,
         createdDate = generateTimestamp(30)
@@ -1282,7 +1286,8 @@ private fun generateSampleHabits(): Pair<List<Habit>, List<HabitCompletion>> {
         repeatDays = JSONArray().apply { put(2); put(4); put(6) }.toString(),
         reminderTimes = generateManyReminders(),
         notes = "完成一个小型项目\n复习基础知识\n练习算法题\n阅读技术文档\n参与开源项目",
-        supervisionMethod = SupervisionMethod.EMAIL,
+
+
         supervisorEmails = JSONArray().apply { put(uniqueEmail3) }.toString(),
         completionCount = 18,
         createdDate = generateTimestamp(30)
@@ -1305,7 +1310,8 @@ private fun generateSampleHabits(): Pair<List<Habit>, List<HabitCompletion>> {
         title = "早睡早起",
         repeatCycle = RepeatCycle.DAILY,
         reminderTimes = JSONArray().apply { put("22:30"); put("06:30") }.toString(),
-        supervisionMethod = SupervisionMethod.SMS,
+
+
         supervisorPhones = JSONArray().apply { put(uniquePhone3) }.toString(),
         completionCount = 22,
         createdDate = generateTimestamp(30)
@@ -1326,7 +1332,8 @@ private fun generateSampleHabits(): Pair<List<Habit>, List<HabitCompletion>> {
         repeatCycle = RepeatCycle.DAILY,
         reminderTimes = JSONArray().apply { put("08:00"); put("12:00"); put("18:00") }.toString(),
         notes = "少油少盐\n多吃蔬菜水果\n控制糖分摄入\n适量蛋白质\n多喝水",
-        supervisionMethod = SupervisionMethod.EMAIL,
+
+
         supervisorEmails = JSONArray().apply { put(uniqueEmail4) }.toString(),
         completionCount = 27,
         createdDate = generateTimestamp(30)
@@ -1347,7 +1354,8 @@ private fun generateSampleHabits(): Pair<List<Habit>, List<HabitCompletion>> {
         repeatCycle = RepeatCycle.WEEKLY,
         repeatDays = JSONArray().apply { put(0); put(2); put(4); put(6) }.toString(),
         reminderTimes = JSONArray().apply { put("20:00") }.toString(),
-        supervisionMethod = SupervisionMethod.SMS,
+
+
         supervisorPhones = JSONArray().apply { put(uniquePhone4) }.toString(),
         completionCount = 15,
         createdDate = generateTimestamp(30)
@@ -1371,7 +1379,8 @@ private fun generateSampleHabits(): Pair<List<Habit>, List<HabitCompletion>> {
         repeatCycle = RepeatCycle.DAILY,
         reminderTimes = JSONArray().apply { put("23:00") }.toString(),
         notes = longNote,
-        supervisionMethod = SupervisionMethod.EMAIL,
+
+
         supervisorEmails = JSONArray().apply { put(uniqueEmail5) }.toString(),
         completionCount = 19,
         createdDate = generateTimestamp(30)
@@ -1392,7 +1401,8 @@ private fun generateSampleHabits(): Pair<List<Habit>, List<HabitCompletion>> {
         repeatCycle = RepeatCycle.DAILY,
         reminderTimes = JSONArray().apply { put("09:00") }.toString(),
         notes = "坚持就是胜利\n想想健康的重要性\n避免诱因\n寻找替代方法",
-        supervisionMethod = SupervisionMethod.SMS,
+
+
         supervisorPhones = JSONArray().apply { put(uniquePhone5) }.toString(),
         completionCount = 30,
         createdDate = generateTimestamp(30)
@@ -1430,7 +1440,8 @@ private fun generateSampleHabits(): Pair<List<Habit>, List<HabitCompletion>> {
                 "Make sure the text is readable and the card expands as needed. " +
                 "Testing edge cases is important for robust application development. " +
                 "This note serves that purpose effectively.",
-        supervisionMethod = SupervisionMethod.EMAIL,
+
+
         supervisorEmails = JSONArray().apply { put(uniqueEmail6) }.toString(),
         completionCount = 26,
         createdDate = generateTimestamp(30)
@@ -1452,7 +1463,8 @@ private fun generateSampleHabits(): Pair<List<Habit>, List<HabitCompletion>> {
         repeatDays = JSONArray().apply { put(0); put(2); put(4) }.toString(),
         reminderTimes = generateManyReminders(),
         notes = "Warm up before running\nStretch after exercise\nWear proper shoes\nStart slow and increase gradually\nTrack your progress",
-        supervisionMethod = SupervisionMethod.SMS,
+
+
         supervisorPhones = JSONArray().apply { put(uniquePhone6) }.toString(),
         completionCount = 20,
         createdDate = generateTimestamp(30)
@@ -1491,7 +1503,8 @@ private fun generateSampleHabits(): Pair<List<Habit>, List<HabitCompletion>> {
                 "The interface should display this content clearly with appropriate formatting. " +
                 "Scrolling should be smooth and the layout should be responsive. " +
                 "Testing with realistic data helps identify potential issues early.",
-        supervisionMethod = SupervisionMethod.EMAIL,
+
+
         supervisorEmails = JSONArray().apply { put(uniqueEmail7) }.toString(),
         completionCount = 24,
         createdDate = generateTimestamp(30)
@@ -1511,7 +1524,8 @@ private fun generateSampleHabits(): Pair<List<Habit>, List<HabitCompletion>> {
         title = "Meditation",
         repeatCycle = RepeatCycle.DAILY,
         reminderTimes = generateManyReminders(),
-        supervisionMethod = SupervisionMethod.SMS,
+
+
         supervisorPhones = JSONArray().apply { put(uniquePhone7) }.toString(),
         completionCount = 18,
         createdDate = generateTimestamp(30)
@@ -1533,7 +1547,8 @@ private fun generateSampleHabits(): Pair<List<Habit>, List<HabitCompletion>> {
         repeatDays = JSONArray().apply { put(2); put(4); put(6) }.toString(),
         reminderTimes = JSONArray().apply { put("18:00") }.toString(),
         notes = "Complete one small project\nReview basic concepts\nPractice algorithms\nRead documentation",
-        supervisionMethod = SupervisionMethod.EMAIL,
+
+
         supervisorEmails = JSONArray().apply { put(uniqueEmail8) }.toString(),
         completionCount = 16,
         createdDate = generateTimestamp(30)
@@ -1557,7 +1572,8 @@ private fun generateSampleHabits(): Pair<List<Habit>, List<HabitCompletion>> {
         repeatCycle = RepeatCycle.DAILY,
         reminderTimes = JSONArray().apply { put("22:00"); put("06:00") }.toString(),
         notes = "Avoid screens before bed\nCreate a bedtime routine\nKeep bedroom cool and dark",
-        supervisionMethod = SupervisionMethod.SMS,
+
+
         supervisorPhones = JSONArray().apply { put(uniquePhone8) }.toString(),
         completionCount = 21,
         createdDate = generateTimestamp(30)
@@ -1578,7 +1594,8 @@ private fun generateSampleHabits(): Pair<List<Habit>, List<HabitCompletion>> {
         repeatCycle = RepeatCycle.DAILY,
         reminderTimes = JSONArray().apply { put("08:00"); put("12:00"); put("18:00") }.toString(),
         notes = "Less oil and salt\nMore vegetables and fruits\nBalanced nutrition\nPortion control",
-        supervisionMethod = SupervisionMethod.EMAIL,
+
+
         supervisorEmails = JSONArray().apply { put(uniqueEmail9) }.toString(),
         completionCount = 28,
         createdDate = generateTimestamp(30)
@@ -1599,7 +1616,8 @@ private fun generateSampleHabits(): Pair<List<Habit>, List<HabitCompletion>> {
         repeatCycle = RepeatCycle.WEEKLY,
         repeatDays = JSONArray().apply { put(0); put(2); put(4); put(6) }.toString(),
         reminderTimes = JSONArray().apply { put("19:00") }.toString(),
-        supervisionMethod = SupervisionMethod.SMS,
+
+
         supervisorPhones = JSONArray().apply { put(frequentPhone1) }.toString(),
         completionCount = 14,
         createdDate = generateTimestamp(30)
@@ -1623,7 +1641,8 @@ private fun generateSampleHabits(): Pair<List<Habit>, List<HabitCompletion>> {
         repeatCycle = RepeatCycle.DAILY,
         reminderTimes = JSONArray().apply { put("22:30") }.toString(),
         notes = "Record today's events\nReflect and improve\nSet goals for tomorrow",
-        supervisionMethod = SupervisionMethod.EMAIL,
+
+
         supervisorEmails = JSONArray().apply { put(uniqueEmail10) }.toString(),
         completionCount = 17,
         createdDate = generateTimestamp(30)
@@ -1644,7 +1663,8 @@ private fun generateSampleHabits(): Pair<List<Habit>, List<HabitCompletion>> {
         repeatCycle = RepeatCycle.DAILY,
         reminderTimes = JSONArray().apply { put("10:00") }.toString(),
         notes = "Avoid sugary drinks\nChoose healthy snacks\nRead food labels carefully",
-        supervisionMethod = SupervisionMethod.SMS,
+
+
         supervisorPhones = JSONArray().apply { put(frequentPhone2) }.toString(),
         completionCount = 25,
         createdDate = generateTimestamp(30)
@@ -1669,7 +1689,8 @@ private fun generateSampleHabits(): Pair<List<Habit>, List<HabitCompletion>> {
         repeatCycle = RepeatCycle.DAILY,
         reminderTimes = JSONArray().apply { put("07:00"); put("21:00") }.toString(),
         notes = "洁面→爽肤水→精华→面霜\n每周去角质 1-2 次\n注意防晒",
-        supervisionMethod = SupervisionMethod.EMAIL,
+
+
         supervisorEmails = JSONArray().apply { put(uniqueEmail11) }.toString(),
         completionCount = 23,
         createdDate = generateTimestamp(30)
@@ -1690,7 +1711,8 @@ private fun generateSampleHabits(): Pair<List<Habit>, List<HabitCompletion>> {
         repeatCycle = RepeatCycle.DAILY,
         reminderTimes = JSONArray().apply { put("22:00") }.toString(),
         notes = longNote,
-        supervisionMethod = SupervisionMethod.EMAIL,
+
+
         supervisorEmails = JSONArray().apply { put(uniqueEmail12) }.toString(),
         completionCount = 19,
         createdDate = generateTimestamp(30)
@@ -1712,7 +1734,8 @@ private fun generateSampleHabits(): Pair<List<Habit>, List<HabitCompletion>> {
         repeatDays = JSONArray().apply { put(0); put(2); put(4) }.toString(),
         reminderTimes = JSONArray().apply { put("19:00") }.toString(),
         notes = "练习音阶\n学习和弦\n弹奏曲目\n节奏训练",
-        supervisionMethod = SupervisionMethod.SMS,
+
+
         supervisorPhones = JSONArray().apply { put(frequentPhone1) }.toString(),
         completionCount = 15,
         createdDate = generateTimestamp(30)
@@ -1736,7 +1759,8 @@ private fun generateSampleHabits(): Pair<List<Habit>, List<HabitCompletion>> {
         repeatCycle = RepeatCycle.DAILY,
         reminderTimes = generateManyReminders(),
         notes = "背单词\n练听力\n口语对话\n阅读理解",
-        supervisionMethod = SupervisionMethod.EMAIL,
+
+
         supervisorEmails = JSONArray().apply { put(frequentEmail1) }.toString(),
         completionCount = 22,
         createdDate = generateTimestamp(30)
@@ -1757,7 +1781,8 @@ private fun generateSampleHabits(): Pair<List<Habit>, List<HabitCompletion>> {
         repeatCycle = RepeatCycle.WEEKLY,
         repeatDays = JSONArray().apply { put(0) }.toString(),
         reminderTimes = JSONArray().apply { put("10:00") }.toString(),
-        supervisionMethod = SupervisionMethod.NONE,
+
+
         completionCount = 12,
         createdDate = generateTimestamp(30)
     )
@@ -1780,7 +1805,8 @@ private fun generateSampleHabits(): Pair<List<Habit>, List<HabitCompletion>> {
         repeatCycle = RepeatCycle.DAILY,
         reminderTimes = JSONArray().apply { put("13:00") }.toString(),
         notes = "午休 20-30 分钟\n不要超过 30 分钟\n避免影响夜间睡眠",
-        supervisionMethod = SupervisionMethod.SMS,
+
+
         supervisorPhones = JSONArray().apply { put(frequentPhone2) }.toString(),
         completionCount = 26,
         createdDate = generateTimestamp(30)
@@ -1800,7 +1826,8 @@ private fun generateSampleHabits(): Pair<List<Habit>, List<HabitCompletion>> {
         title = "补充维生素",
         repeatCycle = RepeatCycle.DAILY,
         reminderTimes = JSONArray().apply { put("08:00") }.toString(),
-        supervisionMethod = SupervisionMethod.EMAIL,
+
+
         supervisorEmails = JSONArray().apply { put(frequentEmail1) }.toString(),
         completionCount = 28,
         createdDate = generateTimestamp(30)
@@ -1821,7 +1848,8 @@ private fun generateSampleHabits(): Pair<List<Habit>, List<HabitCompletion>> {
         repeatCycle = RepeatCycle.DAILY,
         reminderTimes = JSONArray().apply { put("19:30") }.toString(),
         notes = "饭后散步 30 分钟\n呼吸新鲜空气\n放松身心",
-        supervisionMethod = SupervisionMethod.SMS,
+
+
         supervisorPhones = JSONArray().apply { put(frequentPhone1) }.toString(),
         completionCount = 24,
         createdDate = generateTimestamp(30)
@@ -1843,7 +1871,8 @@ private fun generateSampleHabits(): Pair<List<Habit>, List<HabitCompletion>> {
         repeatDays = JSONArray().apply { put(2); put(6) }.toString(),
         reminderTimes = JSONArray().apply { put("15:00") }.toString(),
         notes = longNote,
-        supervisionMethod = SupervisionMethod.EMAIL,
+
+
         supervisorEmails = JSONArray().apply { put(frequentEmail2) }.toString(),
         completionCount = 14,
         createdDate = generateTimestamp(30)
@@ -1867,7 +1896,8 @@ private fun generateSampleHabits(): Pair<List<Habit>, List<HabitCompletion>> {
         repeatCycle = RepeatCycle.WEEKLY,
         repeatDays = JSONArray().apply { put(6) }.toString(),
         reminderTimes = JSONArray().apply { put("09:00") }.toString(),
-        supervisionMethod = SupervisionMethod.NONE,
+
+
         completionCount = 11,
         createdDate = generateTimestamp(30)
     )
@@ -1891,7 +1921,8 @@ private fun generateSampleHabits(): Pair<List<Habit>, List<HabitCompletion>> {
         repeatCycle = RepeatCycle.DAILY,
         reminderTimes = JSONArray().apply { put("07:30"); put("21:30") }.toString(),
         notes = "Cleanse → Tone → Serum → Moisturize\nExfoliate 1-2 times per week\nApply sunscreen daily",
-        supervisionMethod = SupervisionMethod.EMAIL,
+
+
         supervisorEmails = JSONArray().apply { put(frequentEmail1) }.toString(),
         completionCount = 21,
         createdDate = generateTimestamp(30)
@@ -1912,7 +1943,8 @@ private fun generateSampleHabits(): Pair<List<Habit>, List<HabitCompletion>> {
         repeatCycle = RepeatCycle.DAILY,
         reminderTimes = JSONArray().apply { put("23:00") }.toString(),
         notes = "Record all daily expenses\nReview weekly budget\nCategorize spending\nSet savings goals",
-        supervisionMethod = SupervisionMethod.EMAIL,
+
+
         supervisorEmails = JSONArray().apply { put(frequentEmail1) }.toString(),
         completionCount = 18,
         createdDate = generateTimestamp(30)
@@ -1934,7 +1966,8 @@ private fun generateSampleHabits(): Pair<List<Habit>, List<HabitCompletion>> {
         repeatDays = JSONArray().apply { put(2); put(4); put(6) }.toString(),
         reminderTimes = JSONArray().apply { put("20:00") }.toString(),
         notes = "Practice scales\nLearn new chords\nPlay songs\nWork on rhythm",
-        supervisionMethod = SupervisionMethod.SMS,
+
+
         supervisorPhones = JSONArray().apply { put(frequentPhone2) }.toString(),
         completionCount = 16,
         createdDate = generateTimestamp(30)
@@ -1958,7 +1991,8 @@ private fun generateSampleHabits(): Pair<List<Habit>, List<HabitCompletion>> {
         repeatCycle = RepeatCycle.DAILY,
         reminderTimes = generateManyReminders(),
         notes = "Vocabulary practice\nListening exercises\nSpeaking practice\nReading comprehension",
-        supervisionMethod = SupervisionMethod.EMAIL,
+
+
         supervisorEmails = JSONArray().apply { put(frequentEmail2); put(frequentEmail1) }.toString(),
         completionCount = 20,
         createdDate = generateTimestamp(30)
@@ -1979,7 +2013,8 @@ private fun generateSampleHabits(): Pair<List<Habit>, List<HabitCompletion>> {
         repeatCycle = RepeatCycle.WEEKLY,
         repeatDays = JSONArray().apply { put(0) }.toString(),
         reminderTimes = JSONArray().apply { put("11:00") }.toString(),
-        supervisionMethod = SupervisionMethod.NONE,
+
+
         completionCount = 13,
         createdDate = generateTimestamp(30)
     )
@@ -2002,7 +2037,8 @@ private fun generateSampleHabits(): Pair<List<Habit>, List<HabitCompletion>> {
         repeatCycle = RepeatCycle.DAILY,
         reminderTimes = JSONArray().apply { put("15:00") }.toString(),
         notes = "Take a 15-minute break\nStretch and move around\nRest your eyes from screens",
-        supervisionMethod = SupervisionMethod.SMS,
+
+
         supervisorPhones = JSONArray().apply { put(frequentPhone1) }.toString(),
         completionCount = 25,
         createdDate = generateTimestamp(30)
@@ -2022,7 +2058,8 @@ private fun generateSampleHabits(): Pair<List<Habit>, List<HabitCompletion>> {
         title = "Take Vitamins",
         repeatCycle = RepeatCycle.DAILY,
         reminderTimes = JSONArray().apply { put("09:00") }.toString(),
-        supervisionMethod = SupervisionMethod.EMAIL,
+
+
         supervisorEmails = JSONArray().apply { put(frequentEmail1) }.toString(),
         completionCount = 27,
         createdDate = generateTimestamp(30)
@@ -2043,7 +2080,8 @@ private fun generateSampleHabits(): Pair<List<Habit>, List<HabitCompletion>> {
         repeatCycle = RepeatCycle.DAILY,
         reminderTimes = JSONArray().apply { put("18:30") }.toString(),
         notes = "Walk for 30 minutes\nBreathe fresh air\nRelax and unwind",
-        supervisionMethod = SupervisionMethod.SMS,
+
+
         supervisorPhones = JSONArray().apply { put(frequentPhone2) }.toString(),
         completionCount = 23,
         createdDate = generateTimestamp(30)
@@ -2065,7 +2103,8 @@ private fun generateSampleHabits(): Pair<List<Habit>, List<HabitCompletion>> {
         repeatDays = JSONArray().apply { put(1); put(5) }.toString(),
         reminderTimes = JSONArray().apply { put("16:00") }.toString(),
         notes = "Practice basic strokes\nCopy master works\nFocus on form and rhythm\nEnjoy the process",
-        supervisionMethod = SupervisionMethod.EMAIL,
+
+
         supervisorEmails = JSONArray().apply { put(frequentEmail2) }.toString(),
         completionCount = 15,
         createdDate = generateTimestamp(30)
@@ -2089,7 +2128,8 @@ private fun generateSampleHabits(): Pair<List<Habit>, List<HabitCompletion>> {
         repeatCycle = RepeatCycle.WEEKLY,
         repeatDays = JSONArray().apply { put(0) }.toString(),
         reminderTimes = JSONArray().apply { put("10:00") }.toString(),
-        supervisionMethod = SupervisionMethod.NONE,
+
+
         completionCount = 10,
         createdDate = generateTimestamp(30)
     )

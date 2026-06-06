@@ -43,7 +43,6 @@ import io.github.darrindeyoung791.habitpulse.HabitPulseApplication
 import io.github.darrindeyoung791.habitpulse.R
 import io.github.darrindeyoung791.habitpulse.data.model.Habit
 import io.github.darrindeyoung791.habitpulse.data.model.RepeatCycle
-import io.github.darrindeyoung791.habitpulse.data.model.SupervisionMethod
 import io.github.darrindeyoung791.habitpulse.ui.theme.HabitPulseTheme
 import io.github.darrindeyoung791.habitpulse.ui.utils.rememberDebounceClickHandler
 import io.github.darrindeyoung791.habitpulse.ui.utils.rememberHideKeyboardAndNavigateBack
@@ -151,12 +150,6 @@ enum class RepeatCycle {
     WEEKLY   // 每周
 }
 
-enum class SupervisionMethod {
-    NONE,      // 不监督，仅本地联系
-    EMAIL,     // 邮件汇报
-    SMS        // 短信汇报
-}
-
 @OptIn(ExperimentalMaterial3Api::class, ExperimentalLayoutApi::class)
 @Composable
 fun HabitCreationScreen(
@@ -224,10 +217,9 @@ fun HabitCreationScreen(
     var isReminderExpanded by remember { mutableStateOf(false) }
     var showMaxLengthToast by remember { mutableStateOf(false) }
 
-    // Supervision method state
-    var supervisionMethod by remember { mutableStateOf(SupervisionMethod.NONE) }
-    var supervisorEmails by remember { mutableStateOf<List<String>>(emptyList()) }
-    var supervisorPhones by remember { mutableStateOf<List<String>>(emptyList()) }
+    // Supervision contact state
+    var supervisorEmails by remember(prefillHabit) { mutableStateOf<List<String>>(emptyList()) }
+    var supervisorPhones by remember(prefillHabit) { mutableStateOf<List<String>>(emptyList()) }
     var emailInput by remember { mutableStateOf("") }
     var phoneInput by remember { mutableStateOf("") }
     var showEmailMaxToast by remember { mutableStateOf(false) }
@@ -238,6 +230,8 @@ fun HabitCreationScreen(
     var showInvalidPhoneToast by remember { mutableStateOf(false) }
     var isEmailListExpanded by remember { mutableStateOf(false) }
     var isPhoneListExpanded by remember { mutableStateOf(false) }
+    var isEmailSectionExpanded by remember { mutableStateOf(false) }
+    var isPhoneSectionExpanded by remember { mutableStateOf(false) }
 
     // Repeat days state (for weekly cycle)
     var selectedRepeatDays by remember(prefillHabit) { mutableStateOf<Set<Int>>(prefillHabit?.repeatDays?.toSet() ?: setOf()) }
@@ -264,11 +258,12 @@ fun HabitCreationScreen(
                 habitName = it.title
                 repeatCycle = it.repeatCycle
                 selectedRepeatDays = it.getRepeatDaysList().toSet()
-                reminderTimes = it.getReminderTimesList()
+                reminderTimes = it.getReminderTimesList().sorted()
                 notes = it.notes
-                supervisionMethod = it.supervisionMethod
                 supervisorEmails = it.getSupervisorEmailsList()
                 supervisorPhones = it.getSupervisorPhonesList()
+                isEmailSectionExpanded = it.getSupervisorEmailsList().isNotEmpty()
+                isPhoneSectionExpanded = it.getSupervisorPhonesList().isNotEmpty()
             }
         }
     }
@@ -416,18 +411,6 @@ fun HabitCreationScreen(
             isValid = false
         }
 
-        // 选择邮件监督时，至少添加一个邮箱
-        if (supervisionMethod == SupervisionMethod.EMAIL && supervisorEmails.isEmpty()) {
-            showSupervisorEmailError = true
-            isValid = false
-        }
-
-        // 选择短信监督时，至少添加一个电话号码
-        if (supervisionMethod == SupervisionMethod.SMS && supervisorPhones.isEmpty()) {
-            showSupervisorPhoneError = true
-            isValid = false
-        }
-
         if (!isValid) {
             showValidationFailedToast = true
         }
@@ -487,8 +470,7 @@ fun HabitCreationScreen(
                                             viewModel.getHabitById(habitId)?.copy(
                                                 title = habitName,
                                                 repeatCycle = repeatCycle,
-                                                notes = notes,
-                                                supervisionMethod = supervisionMethod
+                                                notes = notes
                                             )?.copyWithRepeatDays(selectedRepeatDays.toList())
                                             ?.copyWithReminderTimes(reminderTimes)
                                             ?.copyWithSupervisorEmails(supervisorEmails)
@@ -498,8 +480,7 @@ fun HabitCreationScreen(
                                             Habit(
                                                 title = habitName,
                                                 repeatCycle = repeatCycle,
-                                                notes = notes,
-                                                supervisionMethod = supervisionMethod
+                                                notes = notes
                                             )
                                             .copyWithRepeatDays(selectedRepeatDays.toList())
                                             .copyWithReminderTimes(reminderTimes)
@@ -863,7 +844,7 @@ fun HabitCreationScreen(
                                     ) {
                                         Icon(
                                             imageVector = Icons.Outlined.Delete,
-                                            contentDescription = "删除提醒",
+                                            contentDescription = stringResource(R.string.accessibility_delete_reminder_time, time),
                                             tint = MaterialTheme.colorScheme.error
                                         )
                                     }
@@ -886,7 +867,7 @@ fun HabitCreationScreen(
                             hapticFeedback.performHapticFeedback(HapticFeedbackType.TextHandleMove)
                             android.widget.Toast.makeText(context, context.getString(R.string.create_habit_duplicate_time), android.widget.Toast.LENGTH_SHORT).show()
                         } else {
-                            reminderTimes = reminderTimes + timeString
+                            reminderTimes = (reminderTimes + timeString).sorted()
                             // 添加提醒时间后清除错误状态
                             showReminderTimeError = false
                         }
@@ -895,7 +876,7 @@ fun HabitCreationScreen(
                 )
             }
 
-            // 5. Supervision method section
+            // 5. Supervision contacts section
             AnimatedCreationItem(
                 index = 4,
                 initialAnimationComplete = initialAnimationComplete
@@ -903,13 +884,7 @@ fun HabitCreationScreen(
                 Card(
                     modifier = Modifier.fillMaxWidth(),
                     colors = CardDefaults.cardColors(
-                        containerColor = if (supervisionMethod == SupervisionMethod.EMAIL && showSupervisorEmailError) {
-                            MaterialTheme.colorScheme.errorContainer.copy(alpha = 0.3f)
-                        } else if (supervisionMethod == SupervisionMethod.SMS && showSupervisorPhoneError) {
-                            MaterialTheme.colorScheme.errorContainer.copy(alpha = 0.3f)
-                        } else {
-                            androidx.compose.ui.graphics.Color.Transparent
-                        }
+                        containerColor = androidx.compose.ui.graphics.Color.Transparent
                     ),
                     shape = RoundedCornerShape(0.dp)
                 ) {
@@ -919,348 +894,91 @@ fun HabitCreationScreen(
                     Text(
                         text = stringResource(id = R.string.create_habit_supervision_label),
                         style = MaterialTheme.typography.bodyLarge,
-                        color = if (supervisionMethod == SupervisionMethod.EMAIL && showSupervisorEmailError) {
-                            MaterialTheme.colorScheme.error
-                        } else if (supervisionMethod == SupervisionMethod.SMS && showSupervisorPhoneError) {
-                            MaterialTheme.colorScheme.error
-                        } else {
-                            MaterialTheme.colorScheme.onSurface
-                        }
+                        color = MaterialTheme.colorScheme.onSurface
                     )
                     
                     Spacer(modifier = Modifier.height(8.dp))
                     
-                    // Supervision method dropdown
-                    var expanded by remember { mutableStateOf(false) }
-                    val supervisionOptions = listOf(
-                        stringResource(id = R.string.create_habit_supervision_none),
-                        stringResource(id = R.string.create_habit_supervision_email),
-                        stringResource(id = R.string.create_habit_supervision_sms)
+                    // Email section - independently expandable
+                    SupervisionContactSection(
+                        title = stringResource(id = R.string.create_habit_supervisor_email_label),
+                        inputValue = emailInput,
+                        onInputChange = { newValue ->
+                            if (newValue.length <= 100) {
+                                emailInput = newValue
+                            } else {
+                                showEmailMaxToast = true
+                            }
+                        },
+                        onAdd = {
+                            if (isValidEmail(emailInput)) {
+                                if (!supervisorEmails.contains(emailInput)) {
+                                    supervisorEmails = supervisorEmails + emailInput
+                                    emailInput = ""
+                                } else {
+                                    showDuplicateEmailToast = true
+                                }
+                            } else {
+                                showInvalidEmailToast = true
+                            }
+                        },
+                        isValid = { isValidEmail(it) },
+                        contacts = supervisorEmails,
+                        onDelete = { index ->
+                            supervisorEmails = supervisorEmails.filterIndexed { i, _ -> i != index }
+                        },
+                        isSectionExpanded = isEmailSectionExpanded,
+                        onSectionExpandedChange = { isEmailSectionExpanded = it },
+                        isListExpanded = isEmailListExpanded,
+                        onListExpandedChange = { isEmailListExpanded = it },
+                        keyboardType = KeyboardType.Email,
+                        hintRes = R.string.create_habit_supervisor_email_hint,
+                        addRes = R.string.create_habit_supervisor_email_add,
+                        emptyList = supervisorEmails.isEmpty()
                     )
                     
-                    ExposedDropdownMenuBox(
-                        expanded = expanded,
-                        onExpandedChange = { expanded = !expanded }
-                    ) {
-                        OutlinedTextField(
-                            value = when (supervisionMethod) {
-                                SupervisionMethod.NONE -> supervisionOptions[0]
-                                SupervisionMethod.EMAIL -> supervisionOptions[1]
-                                SupervisionMethod.SMS -> supervisionOptions[2]
-                            },
-                            onValueChange = {},
-                            readOnly = true,
-                            label = {
-                                Text(text = stringResource(id = R.string.create_habit_supervision_hint))
-                            },
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .menuAnchor(),
-                            trailingIcon = {
-                                ExposedDropdownMenuDefaults.TrailingIcon(expanded = expanded)
-                            },
-                            colors = ExposedDropdownMenuDefaults.outlinedTextFieldColors()
-                        )
-                        
-                        ExposedDropdownMenu(
-                            expanded = expanded,
-                            onDismissRequest = { expanded = false }
-                        ) {
-                            supervisionOptions.forEachIndexed { index, option ->
-                                DropdownMenuItem(
-                                    text = { Text(option) },
-                                    onClick = {
-                                        supervisionMethod = when (index) {
-                                            0 -> SupervisionMethod.NONE
-                                            1 -> SupervisionMethod.EMAIL
-                                            2 -> SupervisionMethod.SMS
-                                            else -> SupervisionMethod.NONE
-                                        }
-                                        expanded = false
-                                    }
-                                )
-                            }
-                        }
-                    }
+                    Spacer(modifier = Modifier.height(12.dp))
                     
-                    // Email input section
-                    AnimatedVisibility(
-                        visible = supervisionMethod == SupervisionMethod.EMAIL,
-                        enter = expandVertically() + fadeIn(),
-                        exit = shrinkVertically() + fadeOut()
-                    ) {
-                        Column(
-                            modifier = Modifier.fillMaxWidth()
-                        ) {
-                            Spacer(modifier = Modifier.height(16.dp))
-                            
-                            Text(
-                                text = stringResource(id = R.string.create_habit_supervisor_email_label),
-                                style = MaterialTheme.typography.bodyMedium,
-                                color = MaterialTheme.colorScheme.onSurfaceVariant
-                            )
-                            
-                            Spacer(modifier = Modifier.height(8.dp))
-                            
-                            // Email input row
-                            OutlinedTextField(
-                                value = emailInput,
-                                onValueChange = {
-                                    if (it.length <= 100) {
-                                        emailInput = it
-                                    } else {
-                                        showEmailMaxToast = true
-                                    }
-                                },
-                                label = {
-                                    Text(text = stringResource(id = R.string.create_habit_supervisor_email_hint))
-                                },
-                                modifier = Modifier.fillMaxWidth(),
-                                singleLine = true,
-                                keyboardOptions = KeyboardOptions(
-                                    keyboardType = KeyboardType.Email
-                                ),
-                                trailingIcon = {
-                                    IconButton(
-                                        onClick = {
-                                            if (isValidEmail(emailInput)) {
-                                                if (!supervisorEmails.contains(emailInput)) {
-                                                    supervisorEmails = supervisorEmails + emailInput
-                                                    emailInput = ""
-                                                    showSupervisorEmailError = false
-                                                } else {
-                                                    showDuplicateEmailToast = true
-                                                }
-                                            } else {
-                                                showInvalidEmailToast = true
-                                            }
-                                        },
-                                        enabled = emailInput.isNotBlank()
-                                    ) {
-                                        Icon(
-                                            imageVector = Icons.Outlined.Add,
-                                            contentDescription = stringResource(id = R.string.create_habit_supervisor_email_add),
-                                            tint = if (emailInput.isNotBlank()) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurfaceVariant
-                                        )
-                                    }
-                                },
-                                colors = ExposedDropdownMenuDefaults.outlinedTextFieldColors()
-                            )
-                            
-                            // Email list
-                            if (supervisorEmails.isNotEmpty()) {
-                                Spacer(modifier = Modifier.height(8.dp))
-                                
-                                // Email list header
-                                Row(
-                                    modifier = Modifier.fillMaxWidth(),
-                                    horizontalArrangement = Arrangement.SpaceBetween,
-                                    verticalAlignment = Alignment.CenterVertically
-                                ) {
-                                    Text(
-                                        text = stringResource(id = R.string.create_habit_supervisor_count, supervisorEmails.size),
-                                        style = MaterialTheme.typography.bodyMedium,
-                                        color = MaterialTheme.colorScheme.onSurfaceVariant
-                                    )
-                                    
-                                    TextButton(
-                                        onClick = { isEmailListExpanded = !isEmailListExpanded }
-                                    ) {
-                                        Text(
-                                                text = if (isEmailListExpanded) {
-                                                    stringResource(id = R.string.create_habit_collapse_button)
-                                                } else {
-                                                    stringResource(id = R.string.create_habit_expand_button)
-                                                }
-                                            )
-                                        Icon(
-                                            imageVector = if (isEmailListExpanded) Icons.Outlined.KeyboardArrowUp else Icons.Outlined.KeyboardArrowDown,
-                                            contentDescription = if (isEmailListExpanded) "收起" else "展开",
-                                            modifier = Modifier.size(18.dp)
-                                        )
-                                    }
-                                }
-                                
-                                // Expandable email list
-                                AnimatedVisibility(
-                                    visible = isEmailListExpanded,
-                                    enter = expandVertically(),
-                                    exit = shrinkVertically()
-                                ) {
-                                    Column(
-                                        modifier = Modifier.padding(top = 8.dp),
-                                        verticalArrangement = Arrangement.spacedBy(4.dp)
-                                    ) {
-                                        supervisorEmails.forEachIndexed { index, email ->
-                                            Row(
-                                                modifier = Modifier.fillMaxWidth(),
-                                                horizontalArrangement = Arrangement.SpaceBetween,
-                                                verticalAlignment = Alignment.CenterVertically
-                                            ) {
-                                                Text(
-                                                    text = email,
-                                                    style = MaterialTheme.typography.bodyMedium,
-                                                    color = MaterialTheme.colorScheme.onSurfaceVariant
-                                                )
-                                                IconButton(
-                                                    onClick = {
-                                                        supervisorEmails = supervisorEmails.filterIndexed { i, _ -> i != index }
-                                                    }
-                                                ) {
-                                                    Icon(
-                                                        imageVector = Icons.Outlined.Delete,
-                                                        contentDescription = "删除邮箱",
-                                                        tint = MaterialTheme.colorScheme.error
-                                                    )
-                                                }
-                                            }
-                                        }
-                                    }
-                                }
+                    // Phone section - independently expandable
+                    SupervisionContactSection(
+                        title = stringResource(id = R.string.create_habit_supervisor_phone_label),
+                        inputValue = phoneInput,
+                        onInputChange = { newValue ->
+                            if (newValue.length <= 20) {
+                                phoneInput = newValue
+                            } else {
+                                showPhoneMaxToast = true
                             }
-                        }
-                    }
-                    
-                    // Phone input section
-                    AnimatedVisibility(
-                        visible = supervisionMethod == SupervisionMethod.SMS,
-                        enter = expandVertically() + fadeIn(),
-                        exit = shrinkVertically() + fadeOut()
-                    ) {
-                        Column(
-                            modifier = Modifier.fillMaxWidth()
-                        ) {
-                            Spacer(modifier = Modifier.height(16.dp))
-                            
-                            Text(
-                                text = stringResource(id = R.string.create_habit_supervisor_phone_label),
-                                style = MaterialTheme.typography.bodyMedium,
-                                color = MaterialTheme.colorScheme.onSurfaceVariant
-                            )
-                            
-                            Spacer(modifier = Modifier.height(8.dp))
-                            
-                            // Phone input row
-                            OutlinedTextField(
-                                value = phoneInput,
-                                onValueChange = {
-                                    if (it.length <= 20) {
-                                        phoneInput = it
-                                    } else {
-                                        showPhoneMaxToast = true
-                                    }
-                                },
-                                label = {
-                                    Text(text = stringResource(id = R.string.create_habit_supervisor_phone_hint))
-                                },
-                                modifier = Modifier.fillMaxWidth(),
-                                singleLine = true,
-                                keyboardOptions = KeyboardOptions(
-                                    keyboardType = KeyboardType.Phone
-                                ),
-                                trailingIcon = {
-                                    IconButton(
-                                        onClick = {
-                                            if (isValidPhone(phoneInput)) {
-                                                if (!supervisorPhones.contains(phoneInput)) {
-                                                    supervisorPhones = supervisorPhones + phoneInput
-                                                    phoneInput = ""
-                                                    showSupervisorPhoneError = false
-                                                } else {
-                                                    showDuplicatePhoneToast = true
-                                                }
-                                            } else {
-                                                showInvalidPhoneToast = true
-                                            }
-                                        },
-                                        enabled = phoneInput.isNotBlank()
-                                    ) {
-                                        Icon(
-                                            imageVector = Icons.Outlined.Add,
-                                            contentDescription = stringResource(id = R.string.create_habit_supervisor_phone_add),
-                                            tint = if (phoneInput.isNotBlank()) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurfaceVariant
-                                        )
-                                    }
-                                },
-                                colors = ExposedDropdownMenuDefaults.outlinedTextFieldColors()
-                            )
-                            
-                            // Phone list
-                            if (supervisorPhones.isNotEmpty()) {
-                                Spacer(modifier = Modifier.height(8.dp))
-                                
-                                // Phone list header
-                                Row(
-                                    modifier = Modifier.fillMaxWidth(),
-                                    horizontalArrangement = Arrangement.SpaceBetween,
-                                    verticalAlignment = Alignment.CenterVertically
-                                ) {
-                                    Text(
-                                        text = stringResource(id = R.string.create_habit_supervisor_count, supervisorPhones.size),
-                                        style = MaterialTheme.typography.bodyMedium,
-                                        color = MaterialTheme.colorScheme.onSurfaceVariant
-                                    )
-                                    
-                                    TextButton(
-                                        onClick = { isPhoneListExpanded = !isPhoneListExpanded }
-                                    ) {
-                                        Text(
-                                                text = if (isPhoneListExpanded) {
-                                                    stringResource(id = R.string.create_habit_collapse_button)
-                                                } else {
-                                                    stringResource(id = R.string.create_habit_expand_button)
-                                                }
-                                            )
-                                        Icon(
-                                            imageVector = if (isPhoneListExpanded) Icons.Outlined.KeyboardArrowUp else Icons.Outlined.KeyboardArrowDown,
-                                            contentDescription = if (isPhoneListExpanded) "收起" else "展开",
-                                            modifier = Modifier.size(18.dp)
-                                        )
-                                    }
+                        },
+                        onAdd = {
+                            if (isValidPhone(phoneInput)) {
+                                if (!supervisorPhones.contains(phoneInput)) {
+                                    supervisorPhones = supervisorPhones + phoneInput
+                                    phoneInput = ""
+                                } else {
+                                    showDuplicatePhoneToast = true
                                 }
-                                
-                                // Expandable phone list
-                                AnimatedVisibility(
-                                    visible = isPhoneListExpanded,
-                                    enter = expandVertically(),
-                                    exit = shrinkVertically()
-                                ) {
-                                    Column(
-                                        modifier = Modifier.padding(top = 8.dp),
-                                        verticalArrangement = Arrangement.spacedBy(4.dp)
-                                    ) {
-                                        supervisorPhones.forEachIndexed { index, phone ->
-                                            Row(
-                                                modifier = Modifier.fillMaxWidth(),
-                                                horizontalArrangement = Arrangement.SpaceBetween,
-                                                verticalAlignment = Alignment.CenterVertically
-                                            ) {
-                                                Text(
-                                                    text = phone,
-                                                    style = MaterialTheme.typography.bodyMedium,
-                                                    color = MaterialTheme.colorScheme.onSurfaceVariant
-                                                )
-                                                IconButton(
-                                                    onClick = {
-                                                        supervisorPhones = supervisorPhones.filterIndexed { i, _ -> i != index }
-                                                    }
-                                                ) {
-                                                    Icon(
-                                                        imageVector = Icons.Outlined.Delete,
-                                                        contentDescription = "删除号码",
-                                                        tint = MaterialTheme.colorScheme.error
-                                                    )
-                                                }
-                                            }
-                                        }
-                                    }
-                                }
+                            } else {
+                                showInvalidPhoneToast = true
                             }
-                        }
-                    }
+                        },
+                        isValid = { isValidPhone(it) },
+                        contacts = supervisorPhones,
+                        onDelete = { index ->
+                            supervisorPhones = supervisorPhones.filterIndexed { i, _ -> i != index }
+                        },
+                        isSectionExpanded = isPhoneSectionExpanded,
+                        onSectionExpandedChange = { isPhoneSectionExpanded = it },
+                        isListExpanded = isPhoneListExpanded,
+                        onListExpandedChange = { isPhoneListExpanded = it },
+                        keyboardType = KeyboardType.Phone,
+                        hintRes = R.string.create_habit_supervisor_phone_hint,
+                        addRes = R.string.create_habit_supervisor_phone_add,
+                        emptyList = supervisorPhones.isEmpty()
+                    )
                 }
             }
-            } // Close AnimatedCreationItem for supervision method
+            } // Close AnimatedCreationItem for supervision contacts
 
             // 6. Notes section
             AnimatedCreationItem(
@@ -1332,6 +1050,183 @@ fun HabitCreationScreenDarkPreview() {
             onNavigateBack = {},
             application = null  // Use preview mode with fake data
         )
+    }
+}
+
+/**
+ * 监督联系人输入区 - 可独立展开/收起
+ */
+@Composable
+private fun SupervisionContactSection(
+    title: String,
+    inputValue: String,
+    onInputChange: (String) -> Unit,
+    onAdd: () -> Unit,
+    isValid: (String) -> Boolean,
+    contacts: List<String>,
+    onDelete: (Int) -> Unit,
+    isSectionExpanded: Boolean,
+    onSectionExpandedChange: (Boolean) -> Unit,
+    isListExpanded: Boolean,
+    onListExpandedChange: (Boolean) -> Unit,
+    keyboardType: KeyboardType,
+    hintRes: Int,
+    addRes: Int,
+    emptyList: Boolean
+) {
+    val hasContacts = contacts.isNotEmpty()
+    val bgColor = if (hasContacts) {
+        MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.3f)
+    } else {
+        MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f)
+    }
+
+    // Surface wraps header + content so the background is continuous
+    Surface(
+        modifier = Modifier.fillMaxWidth(),
+        shape = RoundedCornerShape(8.dp),
+        color = bgColor
+    ) {
+        Column(
+            modifier = Modifier.fillMaxWidth()
+        ) {
+            // Section header - clickable to expand/collapse
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .clickable { onSectionExpandedChange(!isSectionExpanded) }
+                    .padding(horizontal = 12.dp, vertical = 10.dp),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Row(
+                    verticalAlignment = Alignment.CenterVertically,
+                    horizontalArrangement = Arrangement.spacedBy(8.dp)
+                ) {
+                    Icon(
+                        imageVector = if (isSectionExpanded) Icons.Outlined.ExpandLess else Icons.Outlined.ExpandMore,
+                        contentDescription = null,
+                        modifier = Modifier.size(20.dp),
+                        tint = MaterialTheme.colorScheme.onSurfaceVariant
+                    )
+                    Text(
+                        text = title,
+                        style = MaterialTheme.typography.bodyMedium,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                    )
+                }
+                if (hasContacts) {
+                    Text(
+                        text = stringResource(id = R.string.create_habit_contacts_count, contacts.size),
+                        style = MaterialTheme.typography.bodySmall,
+                        color = MaterialTheme.colorScheme.primary
+                    )
+                }
+            }
+
+            // Expandable content
+            AnimatedVisibility(
+                visible = isSectionExpanded,
+                enter = expandVertically() + fadeIn(),
+                exit = shrinkVertically() + fadeOut()
+            ) {
+                Column(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(start = 12.dp, end = 12.dp, bottom = 12.dp)
+                ) {
+                    // Input row
+                    OutlinedTextField(
+                        value = inputValue,
+                        onValueChange = onInputChange,
+                        label = { Text(text = stringResource(id = hintRes)) },
+                        modifier = Modifier.fillMaxWidth(),
+                        singleLine = true,
+                        keyboardOptions = KeyboardOptions(keyboardType = keyboardType),
+                        trailingIcon = {
+                            IconButton(
+                                onClick = onAdd,
+                                enabled = inputValue.isNotBlank()
+                            ) {
+                                Icon(
+                                    imageVector = Icons.Outlined.Add,
+                                    contentDescription = stringResource(id = addRes),
+                                    tint = if (inputValue.isNotBlank()) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurfaceVariant
+                                )
+                            }
+                        }
+                    )
+
+                    // Contact list
+                    if (hasContacts) {
+                        Spacer(modifier = Modifier.height(8.dp))
+
+                        Row(
+                            modifier = Modifier.fillMaxWidth(),
+                            horizontalArrangement = Arrangement.SpaceBetween,
+                            verticalAlignment = Alignment.CenterVertically
+                        ) {
+                            Text(
+                                text = stringResource(id = R.string.create_habit_supervisor_count, contacts.size),
+                                style = MaterialTheme.typography.bodyMedium,
+                                color = MaterialTheme.colorScheme.onSurfaceVariant
+                            )
+
+                            TextButton(
+                                onClick = { onListExpandedChange(!isListExpanded) }
+                            ) {
+                                Text(
+                                    text = if (isListExpanded) {
+                                        stringResource(id = R.string.create_habit_collapse_button)
+                                    } else {
+                                        stringResource(id = R.string.create_habit_expand_button)
+                                    }
+                                )
+                                Icon(
+                                    imageVector = if (isListExpanded) Icons.Outlined.KeyboardArrowUp else Icons.Outlined.KeyboardArrowDown,
+                                    contentDescription = if (isListExpanded) "收起" else "展开",
+                                    modifier = Modifier.size(18.dp)
+                                )
+                            }
+                        }
+
+                        AnimatedVisibility(
+                            visible = isListExpanded,
+                            enter = expandVertically(),
+                            exit = shrinkVertically()
+                        ) {
+                            Column(
+                                modifier = Modifier.padding(top = 8.dp),
+                                verticalArrangement = Arrangement.spacedBy(4.dp)
+                            ) {
+                                contacts.forEachIndexed { index, contact ->
+                                    Row(
+                                        modifier = Modifier.fillMaxWidth(),
+                                        horizontalArrangement = Arrangement.SpaceBetween,
+                                        verticalAlignment = Alignment.CenterVertically
+                                    ) {
+                                        Text(
+                                            text = contact,
+                                            style = MaterialTheme.typography.bodyMedium,
+                                            color = MaterialTheme.colorScheme.onSurfaceVariant
+                                        )
+                                        IconButton(
+                                            onClick = { onDelete(index) }
+                                        ) {
+                                            Icon(
+                                                imageVector = Icons.Outlined.Delete,
+                                                contentDescription = stringResource(R.string.accessibility_delete_contact, contact),
+                                                tint = MaterialTheme.colorScheme.error
+                                            )
+                                        }
+                                    }
+                                }
+                            }
+                        }
+                    }
+                }
+            }
+        }
     }
 }
 

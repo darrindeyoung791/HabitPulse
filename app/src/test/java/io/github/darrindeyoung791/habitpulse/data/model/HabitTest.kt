@@ -119,6 +119,33 @@ class HabitTest {
         assertEquals(listOf("+861234567890"), updated.getSupervisorPhonesList())
     }
 
+    // ─── hasSupervision ───────────────────────────────────
+
+    @Test
+    fun `hasSupervision returns false when both lists empty`() {
+        assertFalse(habit().hasSupervision)
+    }
+
+    @Test
+    fun `hasSupervision returns true when emails non-empty`() {
+        assertTrue(habit(supervisorEmails = "[\"a@b.com\"]").hasSupervision)
+    }
+
+    @Test
+    fun `hasSupervision returns true when phones non-empty`() {
+        assertTrue(habit(supervisorPhones = "[\"+8613800000000\"]").hasSupervision)
+    }
+
+    @Test
+    fun `hasSupervision returns true when both lists non-empty`() {
+        assertTrue(
+            habit(
+                supervisorEmails = "[\"a@b.com\"]",
+                supervisorPhones = "[\"+8613800000000\"]"
+            ).hasSupervision
+        )
+    }
+
     // ─── Edge cases ───────────────────────────────────────
 
     @Test
