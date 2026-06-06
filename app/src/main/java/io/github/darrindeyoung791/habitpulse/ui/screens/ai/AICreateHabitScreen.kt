@@ -51,6 +51,7 @@ import androidx.compose.animation.core.spring
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.focus.FocusRequester
 import androidx.compose.ui.focus.focusRequester
+import androidx.compose.ui.graphics.SolidColor
 import androidx.compose.ui.platform.LocalSoftwareKeyboardController
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.delay
@@ -435,16 +436,18 @@ fun AICreateHabitScreen(
                 }
             }
 
-            Text(
-                text = stringResource(R.string.ai_disclaimer),
-                style = MaterialTheme.typography.labelSmall,
-                color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.6f),
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(horizontal = 20.dp)
-                    .padding(bottom = 4.dp),
-                textAlign = TextAlign.Center
-            )
+            if (!(isLandscape && imeVisible)) {
+                Text(
+                    text = stringResource(R.string.ai_disclaimer),
+                    style = MaterialTheme.typography.labelSmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.6f),
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(horizontal = 20.dp)
+                        .padding(bottom = 4.dp),
+                    textAlign = TextAlign.Center
+                )
+            }
         }
     }
 
@@ -692,79 +695,69 @@ fun AIChatInputBox(
         color = MaterialTheme.colorScheme.surfaceContainerHigh,
         border = BorderStroke(1.dp, MaterialTheme.colorScheme.outline.copy(alpha = 0.5f))
     ) {
-        Column(
+        Row(
             modifier = Modifier
                 .fillMaxWidth()
-                .padding(start = 4.dp, end = 4.dp, top = 4.dp, bottom = 4.dp)
+                .padding(start = 4.dp, end = 4.dp, top = 4.dp, bottom = 4.dp),
+            verticalAlignment = Alignment.CenterVertically
         ) {
-            Box(
+            BasicTextField(
+                value = inputText,
+                onValueChange = onTextChange,
+                maxLines = if (isLandscape) 2 else Int.MAX_VALUE,
                 modifier = Modifier
-                    .weight(1f, fill = false)
-                    .fillMaxWidth()
-            ) {
-                BasicTextField(
-                    value = inputText,
-                    onValueChange = onTextChange,
-                    maxLines = if (isLandscape) 2 else Int.MAX_VALUE,
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .defaultMinSize(minHeight = if (isLandscape) 56.dp else 72.dp)
-                        .padding(horizontal = 12.dp, vertical = 8.dp)
-                        .heightIn(max = if (isLandscape) 80.dp else 168.dp)
-                        .focusRequester(focusRequester),
-                    textStyle = MaterialTheme.typography.bodyLarge.copy(
-                        color = MaterialTheme.colorScheme.onSurface
-                    ),
-                    enabled = !isLoading,
-                    decorationBox = { innerTextField ->
-                        Box {
-                            if (inputText.isEmpty()) {
-                                Text(
-                                    text = stringResource(R.string.ai_input_placeholder),
-                                    style = MaterialTheme.typography.bodyLarge,
-                                    color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.6f)
-                                )
-                            }
-                            innerTextField()
+                    .weight(1f)
+                    .defaultMinSize(minHeight = if (isLandscape) 64.dp else 72.dp)
+                    .padding(horizontal = 12.dp, vertical = 8.dp)
+                    .focusRequester(focusRequester),
+                cursorBrush = SolidColor(MaterialTheme.colorScheme.onSurface),
+                textStyle = MaterialTheme.typography.bodyLarge.copy(
+                    color = MaterialTheme.colorScheme.onSurface
+                ),
+                enabled = !isLoading,
+                decorationBox = { innerTextField ->
+                    Box {
+                        if (inputText.isEmpty()) {
+                            Text(
+                                text = stringResource(R.string.ai_input_placeholder),
+                                style = MaterialTheme.typography.bodyLarge,
+                                color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.6f)
+                            )
                         }
+                        innerTextField()
                     }
-                )
-            }
+                }
+            )
 
-            Box(
-                modifier = Modifier.fillMaxWidth(),
-                contentAlignment = Alignment.CenterEnd
-            ) {
-                if (isLoading) {
-                    IconButton(
-                        onClick = onStopClick,
-                        modifier = Modifier.size(48.dp)
-                    ) {
-                        Icon(
-                            imageVector = Icons.Default.Stop,
-                            contentDescription = stringResource(R.string.ai_stop_button),
-                            tint = MaterialTheme.colorScheme.error
-                        )
-                    }
-                } else {
-                    IconButton(
-                        onClick = {
-                            if (inputText.isNotBlank()) {
-                                onSendClick()
-                            }
-                        },
-                        modifier = Modifier.size(48.dp)
-                    ) {
-                        Icon(
-                            imageVector = Icons.AutoMirrored.Filled.Send,
-                            contentDescription = stringResource(R.string.ai_send_button),
-                            tint = if (inputText.isNotBlank()) {
-                                MaterialTheme.colorScheme.primary
-                            } else {
-                                MaterialTheme.colorScheme.onSurfaceVariant
-                            }
-                        )
-                    }
+            if (isLoading) {
+                IconButton(
+                    onClick = onStopClick,
+                    modifier = Modifier.size(48.dp)
+                ) {
+                    Icon(
+                        imageVector = Icons.Default.Stop,
+                        contentDescription = stringResource(R.string.ai_stop_button),
+                        tint = MaterialTheme.colorScheme.error
+                    )
+                }
+            } else {
+                IconButton(
+                    onClick = {
+                        if (inputText.isNotBlank()) {
+                            onSendClick()
+                        }
+                    },
+                    modifier = Modifier.size(48.dp)
+                ) {
+                    Icon(
+                        imageVector = Icons.AutoMirrored.Filled.Send,
+                        contentDescription = stringResource(R.string.ai_send_button),
+                        tint = if (inputText.isNotBlank()) {
+                            MaterialTheme.colorScheme.primary
+                        } else {
+                            MaterialTheme.colorScheme.onSurfaceVariant
+                        }
+                    )
                 }
             }
         }
