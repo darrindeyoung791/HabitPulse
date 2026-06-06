@@ -10,7 +10,7 @@
 - **Habit Tracking**: Create, manage, and track daily habits with custom repeat cycles
 - **Completion History**: Track every check-in with timestamps, local dates, and timezone support
 - **Records & Analytics**: View completion history with date filtering and habit-specific filtering
-- **Social Supervision**: Link supervisor contacts (email/phone) to habits for accountability
+- **Social Supervision**: Link supervisor contacts (email/phone) to habits for accountability; supports mixed email + phone contacts per habit
 - **Multi-Select & Reorder**: Drag-and-drop reordering with batch delete functionality
 - **Smart Search**: Search habits with instant filtering
 - **Foreground Service**: Keep-alive service with boot auto-restart for reliability
@@ -25,7 +25,7 @@
 - **Language**: Kotlin
 - **UI Framework**: Jetpack Compose with Material Design 3
 - **Navigation**: Navigation Compose with custom animations and shared transitions
-- **Database**: Room 2.8.4 (v3 schema)
+- **Database**: Room 2.8.4 (v5 schema)
 - **Preferences**: DataStore for user settings, SharedPreferences for onboarding state
 - **Foreground Service**: Android foreground service for keep-alive
 - **Scheduling**: AlarmManager (planned)
@@ -142,8 +142,7 @@ HabitPulse/
 | repeatDays | TEXT | Days to repeat (JSON format, e.g., [1,3,5]) |
 | reminderTimes | TEXT | Reminder times (JSON format, e.g., ["08:00","20:00"]) |
 | notes | TEXT | Habit notes |
-| supervisionMethod | TEXT | NONE, EMAIL, or SMS |
-| supervisorEmails | TEXT | Supervisor emails (JSON format) |
+| supervisorEmails | TEXT | Supervisor emails (JSON format); supports mixed email + phone per habit |
 | supervisorPhones | TEXT | Supervisor phones (JSON format) |
 | completedToday | INTEGER (BOOLEAN) | Today's completion status (0/1) |
 | completionCount | INTEGER | Total completion count |
@@ -384,9 +383,10 @@ The project is in **early development stage** (v0.5.19-alpha):
 - ✅ `filteredHabitsWithStatus` StateFlow for search with status data
 - ✅ TodayHabitsScreen migrated to `habitsWithStatusForDisplay`
 - ✅ **SlotCheckInEngine Extraction** - Pure business logic (`calculateHabitStatus`, `isApplicableToday`, `executeSlotCheckIn`, `CheckInResult`) extracted from HabitViewModel into testable standalone `SlotCheckInEngine` object in `data/model/`
+- ✅ **Mixed Contact Supervision** - Removed `SupervisionMethod` enum, DB v5 migration (DROP COLUMN), independent email/phone input sections in creation UI, unified contact aggregation
 - ✅ **Unit Test Setup** - 65 unit tests across 4 test classes:
   - `SlotCheckInEngineTest` (31 tests) - covers status calculation, slot check-in logic, applicable day detection, edge cases (empty slots, midnight, boundary conditions, old-style completions)
-  - `HabitTest` (17 tests) - covers JSON parsing helper methods, `copyWith*` methods, edge cases (all 7 days, duplicates, empty strings)
+  - `HabitTest` (21 tests) - covers JSON parsing helper methods, `copyWith*` methods, `hasSupervision`, edge cases (all 7 days, duplicates, empty strings)
   - `HabitStatusTest` (12 tests) - covers `pendingCount`, `isCompletelyOverdue`, negative pendingCount, old-style completion compatibility
   - `HabitCompletionTest` (5 tests) - covers `getTodayDate()`, `getFormattedDate()`, and default values
 
@@ -404,8 +404,8 @@ The project is in **early development stage** (v0.5.19-alpha):
 
 - **Namespace**: `io.github.darrindeyoung791.habitpulse`
 - **Application ID**: `io.github.darrindeyoung791.habitpulse`
-- **Version Code**: 160
-- **Version Name**: 0.8.12-alpha
+- **Version Code**: 161
+- **Version Name**: 0.8.13-alpha
 
 ## Screen Flow
 

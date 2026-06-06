@@ -68,12 +68,9 @@
     <string name="create_habit_time_picker_dismiss">取消</string>
     <string name="create_habit_time_picker_hint">若希望设为中午十二点，请选择下午</string>
     <string name="create_habit_max_length_hint">最多可输入 100 个字符</string>
-    <string name="create_habit_supervision_label">监督方式</string>
-    <string name="create_habit_supervision_hint">选择监督方式</string>
-    <string name="create_habit_supervision_none">不监督，仅本地提醒我</string>
-    <string name="create_habit_supervision_email">邮件汇报</string>
-    <string name="create_habit_supervision_sms">短信汇报</string>
+    <string name="create_habit_supervision_label">监督人</string>
     <string name="create_habit_supervisor_email_label">监督人邮箱</string>
+    <string name="create_habit_contacts_count">%d 个</string>
     <string name="create_habit_supervisor_email_hint">输入邮箱地址</string>
     <string name="create_habit_supervisor_email_add">添加邮箱</string>
     <string name="create_habit_supervisor_email_invalid">请输入有效的邮箱地址</string>
@@ -130,6 +127,8 @@
     <string name="accessibility_search_habits">搜索习惯</string>
     <string name="accessibility_search_contacts">搜索联系人</string>
     <string name="accessibility_clear_search">清除搜索</string>
+    <string name="accessibility_delete_reminder_time">删除提醒 %s</string>
+    <string name="accessibility_delete_contact">删除 %s</string>
 
     <!-- Search -->
     <string name="search_habits_hint">搜索习惯…</string>

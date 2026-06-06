@@ -67,12 +67,9 @@
     <string name="create_habit_time_picker_dismiss">Cancel</string>
     <string name="create_habit_time_picker_hint">Select PM for noon</string>
     <string name="create_habit_max_length_hint">Maximum 100 characters</string>
-    <string name="create_habit_supervision_label">Supervision Method</string>
-    <string name="create_habit_supervision_hint">Select supervision method</string>
-    <string name="create_habit_supervision_none">No supervisor, local notification only</string>
-    <string name="create_habit_supervision_email">Email reporting</string>
-    <string name="create_habit_supervision_sms">SMS reporting</string>
+    <string name="create_habit_supervision_label">Supervisor</string>
     <string name="create_habit_supervisor_email_label">Supervisor Email</string>
+    <string name="create_habit_contacts_count">%d</string>
     <string name="create_habit_supervisor_email_hint">Enter email address</string>
     <string name="create_habit_supervisor_email_add">Add Email</string>
     <string name="create_habit_supervisor_email_invalid">Please enter a valid email address</string>
@@ -129,6 +126,8 @@
     <string name="accessibility_search_habits">Search habits</string>
     <string name="accessibility_search_contacts">Search contacts</string>
     <string name="accessibility_clear_search">Clear search</string>
+    <string name="accessibility_delete_reminder_time">Delete reminder %s</string>
+    <string name="accessibility_delete_contact">Delete %s</string>
 
     <!-- Search -->
     <string name="search_habits_hint">Search habits…</string>

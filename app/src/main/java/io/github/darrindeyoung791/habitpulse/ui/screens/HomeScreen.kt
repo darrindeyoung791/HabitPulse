@@ -557,7 +557,7 @@ fun HomeScreen(
                         }
                         // Subtitle - only show for Contacts section when expanded
                         if (currentSection == HomeSection.Contacts && collapsedFraction < 0.5f) {
-                            val reminderHabitsCount = habits.count { it.supervisionMethod != io.github.darrindeyoung791.habitpulse.data.model.SupervisionMethod.NONE }
+                            val reminderHabitsCount = habits.count { it.hasSupervision }
                             Text(
                                 text = stringResource(id = R.string.main_subtitle_contact_count, allContacts.size, reminderHabitsCount),
                                 style = MaterialTheme.typography.bodyMedium,

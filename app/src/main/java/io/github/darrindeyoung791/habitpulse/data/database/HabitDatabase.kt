@@ -15,7 +15,7 @@ import io.github.darrindeyoung791.habitpulse.data.model.HabitCompletion
 /**
  * HabitPulse Room 数据库
  *
- * 数据库版本：4
+ * 数据库版本：5
  * 包含：habits 表、habit_completions 表
  * 
  * Version history:
@@ -23,10 +23,11 @@ import io.github.darrindeyoung791.habitpulse.data.model.HabitCompletion
  * - v2: Added habit_completions table
  * - v3: Added sortOrder and timeZone columns to habits table
  * - v4: Added slotTime and isLate columns to habit_completions table for slot-based check-in
+ * - v5: Removed supervisionMethod column from habits table for mixed contact support
  */
 @Database(
     entities = [Habit::class, HabitCompletion::class],
-    version = 4,
+    version = 5,
     exportSchema = true
 )
 @TypeConverters(
@@ -65,6 +66,12 @@ abstract class HabitDatabase : RoomDatabase() {
             override fun migrate(database: SupportSQLiteDatabase) {
                 database.execSQL("ALTER TABLE habit_completions ADD COLUMN slotTime TEXT NOT NULL DEFAULT ''")
                 database.execSQL("ALTER TABLE habit_completions ADD COLUMN isLate INTEGER NOT NULL DEFAULT 0")
+            }
+        }
+
+        val MIGRATION_4_5 = object : Migration(4, 5) {
+            override fun migrate(database: SupportSQLiteDatabase) {
+                database.execSQL("ALTER TABLE habits DROP COLUMN supervisionMethod")
             }
         }
     }

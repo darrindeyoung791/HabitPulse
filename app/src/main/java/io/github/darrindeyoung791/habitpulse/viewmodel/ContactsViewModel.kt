@@ -5,7 +5,6 @@ import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.viewModelScope
 import io.github.darrindeyoung791.habitpulse.HabitPulseApplication
 import io.github.darrindeyoung791.habitpulse.data.model.Habit
-import io.github.darrindeyoung791.habitpulse.data.model.SupervisionMethod
 import io.github.darrindeyoung791.habitpulse.data.repository.HabitRepository
 import kotlinx.coroutines.FlowPreview
 import kotlinx.coroutines.flow.MutableStateFlow
@@ -118,37 +117,33 @@ class ContactsViewModel(
                 val contactMap = mutableMapOf<String, ContactInfo>()
 
                 habits.forEach { habit ->
-                    // 收集邮箱
-                    if (habit.supervisionMethod == SupervisionMethod.EMAIL) {
-                        habit.getSupervisorEmailsList().forEach { email ->
-                            val key = "email:$email"
-                            if (contactMap.containsKey(key)) {
-                                val existing = contactMap[key]!!
-                                contactMap[key] = existing.copy(habitIds = existing.habitIds + habit.id)
-                            } else {
-                                contactMap[key] = ContactInfo(
-                                    type = ContactType.EMAIL,
-                                    value = email,
-                                    habitIds = listOf(habit.id)
-                                )
-                            }
+                    // 收集邮箱（所有习惯都提取，不再依赖 supervisionMethod）
+                    habit.getSupervisorEmailsList().forEach { email ->
+                        val key = "email:$email"
+                        if (contactMap.containsKey(key)) {
+                            val existing = contactMap[key]!!
+                            contactMap[key] = existing.copy(habitIds = existing.habitIds + habit.id)
+                        } else {
+                            contactMap[key] = ContactInfo(
+                                type = ContactType.EMAIL,
+                                value = email,
+                                habitIds = listOf(habit.id)
+                            )
                         }
                     }
 
-                    // 收集电话
-                    if (habit.supervisionMethod == SupervisionMethod.SMS) {
-                        habit.getSupervisorPhonesList().forEach { phone ->
-                            val key = "phone:$phone"
-                            if (contactMap.containsKey(key)) {
-                                val existing = contactMap[key]!!
-                                contactMap[key] = existing.copy(habitIds = existing.habitIds + habit.id)
-                            } else {
-                                contactMap[key] = ContactInfo(
-                                    type = ContactType.PHONE,
-                                    value = phone,
-                                    habitIds = listOf(habit.id)
-                                )
-                            }
+                    // 收集电话（所有习惯都提取，不再依赖 supervisionMethod）
+                    habit.getSupervisorPhonesList().forEach { phone ->
+                        val key = "phone:$phone"
+                        if (contactMap.containsKey(key)) {
+                            val existing = contactMap[key]!!
+                            contactMap[key] = existing.copy(habitIds = existing.habitIds + habit.id)
+                        } else {
+                            contactMap[key] = ContactInfo(
+                                type = ContactType.PHONE,
+                                value = phone,
+                                habitIds = listOf(habit.id)
+                            )
                         }
                     }
                 }
@@ -266,25 +261,7 @@ class ContactsViewModel(
                     }
                 }
 
-                // 如果删除后没有联系人了，将监督方式设为 NONE
-                val hasOtherContacts = when (contactToDelete.type) {
-                    ContactType.EMAIL -> {
-                        updatedHabit.getSupervisorEmailsList().isNotEmpty() ||
-                            updatedHabit.getSupervisorPhonesList().isNotEmpty()
-                    }
-                    ContactType.PHONE -> {
-                        updatedHabit.getSupervisorPhonesList().isNotEmpty() ||
-                            updatedHabit.getSupervisorEmailsList().isNotEmpty()
-                    }
-                }
-
-                val finalHabit = if (!hasOtherContacts) {
-                    updatedHabit.copy(supervisionMethod = SupervisionMethod.NONE)
-                } else {
-                    updatedHabit
-                }
-
-                repository.updateHabit(finalHabit)
+                repository.updateHabit(updatedHabit)
 
                 // 更新选中的联系人信息
                 if (_selectedContact.value != null) {
@@ -322,8 +299,7 @@ class ContactsViewModel(
                         }
                     }
 
-                    val finalHabit = updatedHabit.copy(supervisionMethod = SupervisionMethod.NONE)
-                    repository.updateHabit(finalHabit)
+                    repository.updateHabit(updatedHabit)
                 }
             }
 

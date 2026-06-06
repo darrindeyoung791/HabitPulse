@@ -10,7 +10,7 @@
 - **Habit Tracking**: Create, manage, and track daily habits with custom repeat cycles
 - **Completion History**: Track every check-in with timestamps, local dates, and timezone support
 - **Records & Analytics**: View completion history with date filtering and habit-specific filtering
-- **Social Supervision**: Link supervisor contacts (email/phone) to habits for accountability
+- **Social Supervision**: Link supervisor contacts (email/phone) to habits for accountability; supports mixed email + phone contacts per habit
 - **Multi-Select & Reorder**: Drag-and-drop reordering with batch delete functionality
 - **Smart Search**: Search habits with instant filtering
 - **Foreground Service**: Keep-alive service with boot auto-restart for reliability
@@ -25,7 +25,7 @@
 - **Language**: Kotlin
 - **UI Framework**: Jetpack Compose with Material Design 3
 - **Navigation**: Navigation Compose with custom animations and shared transitions
-- **Database**: Room 2.8.4 (v3 schema)
+- **Database**: Room 2.8.4 (v5 schema)
 - **Preferences**: DataStore for user settings, SharedPreferences for onboarding state
 - **Foreground Service**: Android foreground service for keep-alive
 - **Scheduling**: AlarmManager (planned)

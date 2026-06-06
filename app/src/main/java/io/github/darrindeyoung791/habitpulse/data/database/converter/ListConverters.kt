@@ -1,8 +1,6 @@
 package io.github.darrindeyoung791.habitpulse.data.database.converter
 
 import androidx.room.TypeConverter
-import io.github.darrindeyoung791.habitpulse.data.model.RepeatCycle
-import io.github.darrindeyoung791.habitpulse.data.model.SupervisionMethod
 import org.json.JSONArray
 
 /**

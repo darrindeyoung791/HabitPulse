@@ -14,15 +14,6 @@ enum class RepeatCycle {
 }
 
 /**
- * 监督方式
- */
-enum class SupervisionMethod {
-    NONE,      // 不监督，仅本地提醒
-    EMAIL,     // 邮件汇报
-    SMS        // 短信汇报
-}
-
-/**
  * 习惯实体类
  *
  * @property id 习惯唯一标识符 (UUID)
@@ -31,7 +22,6 @@ enum class SupervisionMethod {
  * @property repeatDays 重复日期 (JSON 格式，如 [0,2,4] 表示周一、三、五)
  * @property reminderTimes 提醒时间列表 (JSON 格式，如 ["08:00","20:00"])
  * @property notes 备注信息
- * @property supervisionMethod 监督方式
  * @property supervisorEmails 监督人邮箱列表 (JSON 格式)
  * @property supervisorPhones 监督人电话列表 (JSON 格式)
  * @property completedToday 今日是否已完成
@@ -57,8 +47,6 @@ data class Habit(
 
     val notes: String = "",
 
-    val supervisionMethod: SupervisionMethod = SupervisionMethod.NONE,
-
     val supervisorEmails: String = "[]",  // JSON format: ["email1@example.com"]
 
     val supervisorPhones: String = "[]",  // JSON format: ["+1234567890"]
@@ -77,6 +65,12 @@ data class Habit(
 
     val timeZone: String = java.util.TimeZone.getDefault().id
 ) {
+    
+    /**
+     * 是否有监督人（邮箱或电话至少有一个非空）
+     */
+    val hasSupervision: Boolean
+        get() = getSupervisorEmailsList().isNotEmpty() || getSupervisorPhonesList().isNotEmpty()
     
     // ============ Helper methods for list properties ============
     

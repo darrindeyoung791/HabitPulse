@@ -92,7 +92,6 @@ import io.github.darrindeyoung791.habitpulse.R
 import io.github.darrindeyoung791.habitpulse.data.model.Habit
 import io.github.darrindeyoung791.habitpulse.data.model.HabitCompletion
 import io.github.darrindeyoung791.habitpulse.data.model.RepeatCycle
-import io.github.darrindeyoung791.habitpulse.data.model.SupervisionMethod
 import io.github.darrindeyoung791.habitpulse.data.repository.HabitRepository
 import io.github.darrindeyoung791.habitpulse.ui.theme.HabitPulseTheme
 import io.github.darrindeyoung791.habitpulse.ui.utils.rememberAnimationsFrozen
@@ -523,13 +522,20 @@ fun ContactsScreenContent(
                     if (!isFromAllHabits && habitId != null && contactForDeletion != null) {
                         val habit = habits.find { it.id == habitId }
                         val isLastContact = habit?.let { h ->
-                            val contactsInHabit = when (contactForDeletion.type) {
+                            // 删除后，该类型只剩 0 个，且另一类型也为空
+                            val remainingOfType = when (contactForDeletion.type) {
                                 ContactsViewModel.ContactType.EMAIL ->
-                                    h.getSupervisorEmailsList().size
+                                    h.getSupervisorEmailsList().size - 1
                                 ContactsViewModel.ContactType.PHONE ->
-                                    h.getSupervisorPhonesList().size
+                                    h.getSupervisorPhonesList().size - 1
                             }
-                            contactsInHabit == 1
+                            val otherTypeCount = when (contactForDeletion.type) {
+                                ContactsViewModel.ContactType.EMAIL ->
+                                    h.getSupervisorPhonesList().size
+                                ContactsViewModel.ContactType.PHONE ->
+                                    h.getSupervisorEmailsList().size
+                            }
+                            remainingOfType == 0 && otherTypeCount == 0
                         } == true
 
                         if (isLastContact) {
@@ -892,7 +898,6 @@ private class FakeHabitDaoForContacts : io.github.darrindeyoung791.habitpulse.da
             id = UUID.fromString("00000000-0000-0000-0000-000000000001"),
             title = "每天喝水",
             repeatCycle = RepeatCycle.DAILY,
-            supervisionMethod = SupervisionMethod.EMAIL,
             supervisorEmails = """["supervisor@example.com","manager@example.com"]""",
             completionCount = 15,
             createdDate = System.currentTimeMillis() - 30 * 24 * 60 * 60 * 1000L
@@ -901,7 +906,6 @@ private class FakeHabitDaoForContacts : io.github.darrindeyoung791.habitpulse.da
             id = UUID.fromString("00000000-0000-0000-0000-000000000002"),
             title = "晨跑锻炼",
             repeatCycle = RepeatCycle.WEEKLY,
-            supervisionMethod = SupervisionMethod.SMS,
             supervisorPhones = """["+8613800138000","+8613900139000"]""",
             completionCount = 8,
             createdDate = System.currentTimeMillis() - 30 * 24 * 60 * 60 * 1000L
@@ -910,7 +914,6 @@ private class FakeHabitDaoForContacts : io.github.darrindeyoung791.habitpulse.da
             id = UUID.fromString("00000000-0000-0000-0000-000000000003"),
             title = "阅读书籍",
             repeatCycle = RepeatCycle.DAILY,
-            supervisionMethod = SupervisionMethod.EMAIL,
             supervisorEmails = """["supervisor@example.com"]""",
             completionCount = 20,
             createdDate = System.currentTimeMillis() - 30 * 24 * 60 * 60 * 1000L

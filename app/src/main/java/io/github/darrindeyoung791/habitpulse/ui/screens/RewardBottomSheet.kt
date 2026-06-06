@@ -55,7 +55,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import io.github.darrindeyoung791.habitpulse.R
 import io.github.darrindeyoung791.habitpulse.data.model.Habit
-import io.github.darrindeyoung791.habitpulse.data.model.SupervisionMethod
+
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.outlined.Check
 import androidx.compose.ui.graphics.Color
@@ -100,8 +100,7 @@ fun RewardBottomSheet(
     val isPhoneLandscape = !isTabletDevice && isLandscape  // 手机横屏模式
     
     // Check if habit has supervisors
-    val hasSupervisors = habit.supervisionMethod != SupervisionMethod.NONE &&
-        (habit.getSupervisorEmailsList().isNotEmpty() || habit.getSupervisorPhonesList().isNotEmpty())
+    val hasSupervisors = habit.hasSupervision
     
     // 动画状态
     var animationStarted by remember { mutableStateOf(false) }
