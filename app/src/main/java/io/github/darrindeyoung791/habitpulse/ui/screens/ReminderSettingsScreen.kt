@@ -7,11 +7,11 @@ import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
+import androidx.compose.material.icons.automirrored.outlined.Send
 import androidx.compose.material.icons.outlined.Alarm
 import androidx.compose.material.icons.outlined.Bedtime
 import androidx.compose.material.icons.outlined.Notifications
 import androidx.compose.material.icons.outlined.Schedule
-import androidx.compose.material.icons.automirrored.outlined.Send
 import androidx.compose.material.icons.outlined.Shield
 import androidx.compose.material.icons.outlined.Today
 import androidx.compose.material3.*
@@ -72,9 +72,7 @@ fun ReminderSettingsScreen(
         LazyColumn(
             modifier = Modifier
                 .fillMaxSize()
-                .padding(paddingValues),
-            contentPadding = PaddingValues(horizontal = 16.dp, vertical = 8.dp),
-            verticalArrangement = Arrangement.spacedBy(12.dp)
+                .padding(paddingValues)
         ) {
 
             // Reminder master switch
@@ -104,141 +102,104 @@ fun ReminderSettingsScreen(
             }
 
             if (reminderEnabled) {
-                // DND section card
+                // DND toggle
                 item {
-                    ElevatedCard(
-                        modifier = Modifier.fillMaxWidth(),
-                        colors = CardDefaults.elevatedCardColors(
-                            containerColor = MaterialTheme.colorScheme.surfaceContainerLow
-                        )
-                    ) {
-                        Column(modifier = Modifier.padding(start = 16.dp, end = 4.dp, top = 4.dp, bottom = 8.dp)) {
-                            Row(
-                                modifier = Modifier
-                                    .fillMaxWidth()
-                                    .padding(end = 12.dp),
-                                verticalAlignment = Alignment.CenterVertically
-                            ) {
-                                Icon(
-                                    imageVector = Icons.Outlined.Bedtime,
-                                    contentDescription = null,
-                                    tint = MaterialTheme.colorScheme.onSurfaceVariant
-                                )
-                                Spacer(modifier = Modifier.width(16.dp))
-                                Column(modifier = Modifier.weight(1f)) {
-                                    Text(
-                                        text = stringResource(id = R.string.settings_reminder_dnd),
-                                        style = MaterialTheme.typography.bodyLarge,
-                                        color = MaterialTheme.colorScheme.onSurface
-                                    )
-                                    Spacer(modifier = Modifier.height(2.dp))
-                                    Text(
-                                        text = stringResource(id = R.string.settings_reminder_dnd_description),
-                                        style = MaterialTheme.typography.bodyMedium,
-                                        color = MaterialTheme.colorScheme.onSurfaceVariant
-                                    )
-                                }
-                                Switch(
-                                    checked = dndEnabled,
-                                    onCheckedChange = { isChecked ->
-                                        scope.launch { userPreferences.setDndEnabled(isChecked) }
-                                    }
-                                )
-                            }
-
-                            if (dndEnabled) {
-                                HorizontalDivider(
-                                    modifier = Modifier.padding(end = 12.dp, bottom = 8.dp),
-                                    color = MaterialTheme.colorScheme.outlineVariant
-                                )
-                                DndRangeSlider(
-                                    startTime = dndStartTime,
-                                    endTime = dndEndTime,
-                                    onStartTimeChange = { time ->
-                                        scope.launch { userPreferences.setDndStartTime(time) }
-                                    },
-                                    onEndTimeChange = { time ->
-                                        scope.launch { userPreferences.setDndEndTime(time) }
-                                    }
-                                )
-                            }
+                    SettingsSwitchItem(
+                        headline = stringResource(id = R.string.settings_reminder_dnd),
+                        supportingText = stringResource(id = R.string.settings_reminder_dnd_description),
+                        checked = dndEnabled,
+                        onCheckedChange = { isChecked ->
+                            scope.launch { userPreferences.setDndEnabled(isChecked) }
+                        },
+                        leadingIcon = {
+                            Icon(
+                                imageVector = Icons.Outlined.Bedtime,
+                                contentDescription = null
+                            )
                         }
+                    )
+                }
+
+                // DND range slider
+                if (dndEnabled) {
+                    item {
+                        HorizontalDivider(modifier = Modifier.padding(start = 72.dp))
+                        DndRangeSlider(
+                            startTime = dndStartTime,
+                            endTime = dndEndTime,
+                            onStartTimeChange = { time ->
+                                scope.launch { userPreferences.setDndStartTime(time) }
+                            },
+                            onEndTimeChange = { time ->
+                                scope.launch { userPreferences.setDndEndTime(time) }
+                            }
+                        )
                     }
                 }
 
-                // Status section card
+                // Section header: status
                 item {
-                    ElevatedCard(
-                        modifier = Modifier.fillMaxWidth(),
-                        colors = CardDefaults.elevatedCardColors(
-                            containerColor = MaterialTheme.colorScheme.surfaceContainerLow
+                    SectionHeader(text = stringResource(id = R.string.reminder_settings_keepalive_status))
+                }
+
+                item {
+                    StatusRow(
+                        icon = Icons.Outlined.Shield,
+                        label = stringResource(id = R.string.reminder_settings_keepalive_status),
+                        value = if (isServiceRunning)
+                            stringResource(id = R.string.reminder_settings_service_running)
+                        else
+                            stringResource(id = R.string.reminder_settings_service_stopped),
+                        isPositive = isServiceRunning
+                    )
+                }
+
+                if (isServiceRunning) {
+                    item {
+                        HorizontalDivider(modifier = Modifier.padding(start = 72.dp))
+                        StatusRow(
+                            icon = Icons.Outlined.Today,
+                            label = stringResource(id = R.string.reminder_settings_today_count),
+                            value = "${reminderSentData.second}",
+                            isPositive = true
                         )
-                    ) {
-                        Column(
-                            modifier = Modifier.padding(horizontal = 12.dp, vertical = 4.dp)
-                        ) {
-                            StatusRow(
-                                icon = Icons.Outlined.Shield,
-                                label = stringResource(id = R.string.reminder_settings_keepalive_status),
-                                value = if (isServiceRunning)
-                                    stringResource(id = R.string.reminder_settings_service_running)
-                                else
-                                    stringResource(id = R.string.reminder_settings_service_stopped),
-                                isPositive = isServiceRunning
-                            )
-                            if (reminderSentData.second > 0) {
-                                HorizontalDivider(
-                                    color = MaterialTheme.colorScheme.outlineVariant
-                                )
-                                StatusRow(
-                                    icon = Icons.Outlined.Today,
-                                    label = stringResource(id = R.string.reminder_settings_today_count),
-                                    value = "${reminderSentData.second}",
-                                    isPositive = true
-                                )
-                            }
-                        }
                     }
                 }
 
-                // Next alarm & permission inline card
+                // Section header: schedule
                 item {
-                    ElevatedCard(
-                        modifier = Modifier.fillMaxWidth(),
-                        colors = CardDefaults.elevatedCardColors(
-                            containerColor = MaterialTheme.colorScheme.surfaceContainerLow
-                        )
-                    ) {
-                        Column(
-                            modifier = Modifier.padding(horizontal = 12.dp, vertical = 4.dp)
-                        ) {
-                            StatusRow(
-                                icon = Icons.Outlined.Schedule,
-                                label = stringResource(id = R.string.reminder_settings_next_alarm),
-                                value = if (nextAlarmTime != null) {
-                                    SimpleDateFormat("HH:mm", Locale.getDefault()).format(Date(nextAlarmTime!!))
-                                } else {
-                                    stringResource(id = R.string.reminder_settings_no_alarm_scheduled)
-                                },
-                                isPositive = nextAlarmTime != null
-                            )
-                            HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant)
-                            StatusRow(
-                                icon = Icons.Outlined.Notifications,
-                                label = stringResource(id = R.string.reminder_settings_notification_permission),
-                                value = if (hasNotificationPermission)
-                                    stringResource(id = R.string.reminder_settings_permission_granted)
-                                else
-                                    stringResource(id = R.string.reminder_settings_permission_denied),
-                                isPositive = hasNotificationPermission
-                            )
-                        }
-                    }
+                    SectionHeader(text = stringResource(id = R.string.settings_notifications))
                 }
 
-                // Test notification button
                 item {
-                    Spacer(modifier = Modifier.height(4.dp))
+                    StatusRow(
+                        icon = Icons.Outlined.Schedule,
+                        label = stringResource(id = R.string.reminder_settings_next_alarm),
+                        value = if (nextAlarmTime != null) {
+                            SimpleDateFormat("HH:mm", Locale.getDefault()).format(Date(nextAlarmTime!!))
+                        } else {
+                            stringResource(id = R.string.reminder_settings_no_alarm_scheduled)
+                        },
+                        isPositive = nextAlarmTime != null
+                    )
+                }
+
+                item {
+                    HorizontalDivider(modifier = Modifier.padding(start = 72.dp))
+                    StatusRow(
+                        icon = Icons.Outlined.Notifications,
+                        label = stringResource(id = R.string.reminder_settings_notification_permission),
+                        value = if (hasNotificationPermission)
+                            stringResource(id = R.string.reminder_settings_permission_granted)
+                        else
+                            stringResource(id = R.string.reminder_settings_permission_denied),
+                        isPositive = hasNotificationPermission
+                    )
+                }
+
+                // Test notification
+                item {
+                    Spacer(modifier = Modifier.height(8.dp))
                     FilledTonalButton(
                         onClick = {
                             scope.launch {
@@ -260,7 +221,9 @@ fun ReminderSettingsScreen(
                                 ).show()
                             }
                         },
-                        modifier = Modifier.fillMaxWidth(),
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(horizontal = 16.dp),
                         enabled = hasNotificationPermission
                     ) {
                         Icon(
@@ -309,7 +272,7 @@ private fun DndRangeSlider(
     Column(
         modifier = Modifier
             .fillMaxWidth()
-            .padding(end = 12.dp)
+            .padding(start = 72.dp, end = 16.dp, top = 8.dp, bottom = 12.dp)
     ) {
         Row(
             modifier = Modifier.fillMaxWidth(),
@@ -368,37 +331,52 @@ private fun DndRangeSlider(
 }
 
 @Composable
+private fun SectionHeader(text: String) {
+    Text(
+        text = text,
+        style = MaterialTheme.typography.labelMedium,
+        color = MaterialTheme.colorScheme.primary,
+        modifier = Modifier.padding(start = 16.dp, end = 16.dp, top = 24.dp, bottom = 8.dp)
+    )
+}
+
+@Composable
 private fun StatusRow(
     icon: ImageVector,
     label: String,
     value: String,
     isPositive: Boolean
 ) {
-    Row(
-        modifier = Modifier
-            .fillMaxWidth()
-            .padding(vertical = 12.dp),
-        verticalAlignment = Alignment.CenterVertically
+    Surface(
+        modifier = Modifier.fillMaxWidth(),
+        color = MaterialTheme.colorScheme.surface
     ) {
-        Icon(
-            imageVector = icon,
-            contentDescription = null,
-            tint = if (isPositive) MaterialTheme.colorScheme.primary
-                   else MaterialTheme.colorScheme.onSurfaceVariant,
-            modifier = Modifier.padding(start = 4.dp, end = 16.dp)
-        )
-        Text(
-            text = label,
-            style = MaterialTheme.typography.bodyMedium,
-            color = MaterialTheme.colorScheme.onSurfaceVariant,
-            modifier = Modifier.weight(1f)
-        )
-        Text(
-            text = value,
-            style = MaterialTheme.typography.bodyMedium,
-            color = if (isPositive) MaterialTheme.colorScheme.primary
-                    else MaterialTheme.colorScheme.onSurface
-        )
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(horizontal = 16.dp, vertical = 12.dp),
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            Icon(
+                imageVector = icon,
+                contentDescription = null,
+                tint = if (isPositive) MaterialTheme.colorScheme.primary
+                       else MaterialTheme.colorScheme.onSurfaceVariant,
+                modifier = Modifier.padding(end = 16.dp)
+            )
+            Text(
+                text = label,
+                style = MaterialTheme.typography.bodyLarge,
+                color = MaterialTheme.colorScheme.onSurface,
+                modifier = Modifier.weight(1f)
+            )
+            Text(
+                text = value,
+                style = MaterialTheme.typography.bodyMedium,
+                color = if (isPositive) MaterialTheme.colorScheme.primary
+                        else MaterialTheme.colorScheme.onSurface
+            )
+        }
     }
 }
 
