@@ -281,6 +281,7 @@
     <string name="settings_reminder_dnd_description">Suppress notifications during set hours</string>
     <string name="settings_reminder_dnd_start">Start</string>
     <string name="settings_reminder_dnd_end">End</string>
+    <string name="settings_reminder_dnd_to">to</string>
     <string name="settings_reminder_settings">Reminder Settings</string>
     <string name="settings_reminder_settings_description">Check keep-alive status and send test notification</string>
 

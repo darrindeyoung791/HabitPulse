@@ -282,6 +282,7 @@
     <string name="settings_reminder_dnd_description">在設定的時段內不發送提醒通知</string>
     <string name="settings_reminder_dnd_start">開始</string>
     <string name="settings_reminder_dnd_end">結束</string>
+    <string name="settings_reminder_dnd_to">至</string>
     <string name="settings_reminder_settings">提醒設定</string>
     <string name="settings_reminder_settings_description">查看保活狀態和發送測試通知</string>
 

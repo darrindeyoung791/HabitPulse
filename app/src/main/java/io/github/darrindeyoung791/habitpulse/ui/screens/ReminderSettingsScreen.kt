@@ -5,21 +5,22 @@ import android.content.Context
 import android.widget.Toast
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
-import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
+import androidx.compose.material.icons.outlined.Alarm
+import androidx.compose.material.icons.outlined.Bedtime
 import androidx.compose.material.icons.outlined.Notifications
 import androidx.compose.material.icons.outlined.Schedule
+import androidx.compose.material.icons.automirrored.outlined.Send
 import androidx.compose.material.icons.outlined.Shield
-import androidx.compose.material.icons.outlined.DarkMode
-import androidx.compose.material.icons.outlined.Alarm
+import androidx.compose.material.icons.outlined.Today
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
-import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import io.github.darrindeyoung791.habitpulse.R
@@ -72,8 +73,8 @@ fun ReminderSettingsScreen(
             modifier = Modifier
                 .fillMaxSize()
                 .padding(paddingValues),
-            contentPadding = PaddingValues(16.dp),
-            verticalArrangement = Arrangement.spacedBy(4.dp)
+            contentPadding = PaddingValues(horizontal = 16.dp, vertical = 8.dp),
+            verticalArrangement = Arrangement.spacedBy(12.dp)
         ) {
 
             // Reminder master switch
@@ -103,107 +104,171 @@ fun ReminderSettingsScreen(
             }
 
             if (reminderEnabled) {
-                // DND toggle
+                // DND section card
                 item {
-                    SettingsSwitchItem(
-                        headline = stringResource(id = R.string.settings_reminder_dnd),
-                        supportingText = stringResource(id = R.string.settings_reminder_dnd_description),
-                        checked = dndEnabled,
-                        onCheckedChange = { isChecked ->
-                            scope.launch {
-                                userPreferences.setDndEnabled(isChecked)
-                            }
-                        },
-                        leadingIcon = {
-                            Icon(
-                                imageVector = Icons.Outlined.DarkMode,
-                                contentDescription = null
-                            )
-                        }
-                    )
-                }
-
-                // DND range slider
-                if (dndEnabled) {
-                    item {
-                        DndRangeSlider(
-                            startTime = dndStartTime,
-                            endTime = dndEndTime,
-                            onStartTimeChange = { time ->
-                                scope.launch { userPreferences.setDndStartTime(time) }
-                            },
-                            onEndTimeChange = { time ->
-                                scope.launch { userPreferences.setDndEndTime(time) }
-                            }
+                    ElevatedCard(
+                        modifier = Modifier.fillMaxWidth(),
+                        colors = CardDefaults.elevatedCardColors(
+                            containerColor = MaterialTheme.colorScheme.surfaceContainerLow
                         )
+                    ) {
+                        Column(modifier = Modifier.padding(start = 16.dp, end = 4.dp, top = 4.dp, bottom = 8.dp)) {
+                            Row(
+                                modifier = Modifier
+                                    .fillMaxWidth()
+                                    .padding(end = 12.dp),
+                                verticalAlignment = Alignment.CenterVertically
+                            ) {
+                                Icon(
+                                    imageVector = Icons.Outlined.Bedtime,
+                                    contentDescription = null,
+                                    tint = MaterialTheme.colorScheme.onSurfaceVariant
+                                )
+                                Spacer(modifier = Modifier.width(16.dp))
+                                Column(modifier = Modifier.weight(1f)) {
+                                    Text(
+                                        text = stringResource(id = R.string.settings_reminder_dnd),
+                                        style = MaterialTheme.typography.bodyLarge,
+                                        color = MaterialTheme.colorScheme.onSurface
+                                    )
+                                    Spacer(modifier = Modifier.height(2.dp))
+                                    Text(
+                                        text = stringResource(id = R.string.settings_reminder_dnd_description),
+                                        style = MaterialTheme.typography.bodyMedium,
+                                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                                    )
+                                }
+                                Switch(
+                                    checked = dndEnabled,
+                                    onCheckedChange = { isChecked ->
+                                        scope.launch { userPreferences.setDndEnabled(isChecked) }
+                                    }
+                                )
+                            }
+
+                            if (dndEnabled) {
+                                HorizontalDivider(
+                                    modifier = Modifier.padding(end = 12.dp, bottom = 8.dp),
+                                    color = MaterialTheme.colorScheme.outlineVariant
+                                )
+                                DndRangeSlider(
+                                    startTime = dndStartTime,
+                                    endTime = dndEndTime,
+                                    onStartTimeChange = { time ->
+                                        scope.launch { userPreferences.setDndStartTime(time) }
+                                    },
+                                    onEndTimeChange = { time ->
+                                        scope.launch { userPreferences.setDndEndTime(time) }
+                                    }
+                                )
+                            }
+                        }
                     }
                 }
 
-                // Status section (compact)
+                // Status section card
                 item {
-                    Column(
-                        modifier = Modifier.padding(vertical = 8.dp),
-                        verticalArrangement = Arrangement.spacedBy(4.dp)
+                    ElevatedCard(
+                        modifier = Modifier.fillMaxWidth(),
+                        colors = CardDefaults.elevatedCardColors(
+                            containerColor = MaterialTheme.colorScheme.surfaceContainerLow
+                        )
                     ) {
-                        StatusRow(
-                            icon = Icons.Outlined.Shield,
-                            label = stringResource(id = R.string.reminder_settings_keepalive_status),
-                            value = if (isServiceRunning)
-                                stringResource(id = R.string.reminder_settings_service_running)
-                            else
-                                stringResource(id = R.string.reminder_settings_service_stopped),
-                            isPositive = isServiceRunning
+                        Column(
+                            modifier = Modifier.padding(horizontal = 12.dp, vertical = 4.dp)
+                        ) {
+                            StatusRow(
+                                icon = Icons.Outlined.Shield,
+                                label = stringResource(id = R.string.reminder_settings_keepalive_status),
+                                value = if (isServiceRunning)
+                                    stringResource(id = R.string.reminder_settings_service_running)
+                                else
+                                    stringResource(id = R.string.reminder_settings_service_stopped),
+                                isPositive = isServiceRunning
+                            )
+                            if (reminderSentData.second > 0) {
+                                HorizontalDivider(
+                                    color = MaterialTheme.colorScheme.outlineVariant
+                                )
+                                StatusRow(
+                                    icon = Icons.Outlined.Today,
+                                    label = stringResource(id = R.string.reminder_settings_today_count),
+                                    value = "${reminderSentData.second}",
+                                    isPositive = true
+                                )
+                            }
+                        }
+                    }
+                }
+
+                // Next alarm & permission inline card
+                item {
+                    ElevatedCard(
+                        modifier = Modifier.fillMaxWidth(),
+                        colors = CardDefaults.elevatedCardColors(
+                            containerColor = MaterialTheme.colorScheme.surfaceContainerLow
                         )
-                        HorizontalDivider()
-                        StatusRow(
-                            icon = Icons.Outlined.Schedule,
-                            label = stringResource(id = R.string.reminder_settings_next_alarm),
-                            value = if (nextAlarmTime != null) {
-                                SimpleDateFormat("HH:mm", Locale.getDefault()).format(Date(nextAlarmTime!!))
-                            } else {
-                                stringResource(id = R.string.reminder_settings_no_alarm_scheduled)
-                            },
-                            isPositive = nextAlarmTime != null
-                        )
-                        HorizontalDivider()
-                        StatusRow(
-                            icon = Icons.Outlined.Notifications,
-                            label = stringResource(id = R.string.reminder_settings_notification_permission),
-                            value = if (hasNotificationPermission)
-                                stringResource(id = R.string.reminder_settings_permission_granted)
-                            else
-                                stringResource(id = R.string.reminder_settings_permission_denied),
-                            isPositive = hasNotificationPermission
-                        )
-                        HorizontalDivider()
-                        StatusRow(
-                            icon = Icons.Outlined.Notifications,
-                            label = stringResource(id = R.string.reminder_settings_today_count),
-                            value = "${reminderSentData.second}",
-                            isPositive = reminderSentData.second > 0
-                        )
+                    ) {
+                        Column(
+                            modifier = Modifier.padding(horizontal = 12.dp, vertical = 4.dp)
+                        ) {
+                            StatusRow(
+                                icon = Icons.Outlined.Schedule,
+                                label = stringResource(id = R.string.reminder_settings_next_alarm),
+                                value = if (nextAlarmTime != null) {
+                                    SimpleDateFormat("HH:mm", Locale.getDefault()).format(Date(nextAlarmTime!!))
+                                } else {
+                                    stringResource(id = R.string.reminder_settings_no_alarm_scheduled)
+                                },
+                                isPositive = nextAlarmTime != null
+                            )
+                            HorizontalDivider(color = MaterialTheme.colorScheme.outlineVariant)
+                            StatusRow(
+                                icon = Icons.Outlined.Notifications,
+                                label = stringResource(id = R.string.reminder_settings_notification_permission),
+                                value = if (hasNotificationPermission)
+                                    stringResource(id = R.string.reminder_settings_permission_granted)
+                                else
+                                    stringResource(id = R.string.reminder_settings_permission_denied),
+                                isPositive = hasNotificationPermission
+                            )
+                        }
                     }
                 }
 
                 // Test notification button
                 item {
-                    Spacer(modifier = Modifier.height(8.dp))
-                    Button(
+                    Spacer(modifier = Modifier.height(4.dp))
+                    FilledTonalButton(
                         onClick = {
                             scope.launch {
                                 if (!hasNotificationPermission) {
-                                    Toast.makeText(context, context.getString(R.string.reminder_settings_permission_denied), Toast.LENGTH_SHORT).show()
+                                    Toast.makeText(
+                                        context,
+                                        context.getString(R.string.reminder_settings_permission_denied),
+                                        Toast.LENGTH_SHORT
+                                    ).show()
                                     return@launch
                                 }
                                 ReminderNotificationBuilder.createNotificationChannel(context)
                                 val notif = ReminderNotificationBuilder.buildTestNotification(context)
                                 ReminderNotificationBuilder.sendNotification(context, notif)
-                                Toast.makeText(context, context.getString(R.string.reminder_settings_test_notification_sent), Toast.LENGTH_SHORT).show()
+                                Toast.makeText(
+                                    context,
+                                    context.getString(R.string.reminder_settings_test_notification_sent),
+                                    Toast.LENGTH_SHORT
+                                ).show()
                             }
                         },
                         modifier = Modifier.fillMaxWidth(),
                         enabled = hasNotificationPermission
                     ) {
+                        Icon(
+                            imageVector = Icons.AutoMirrored.Outlined.Send,
+                            contentDescription = null,
+                            modifier = Modifier.size(18.dp)
+                        )
+                        Spacer(modifier = Modifier.width(8.dp))
                         Text(text = stringResource(id = R.string.reminder_settings_test_notification))
                     }
                 }
@@ -234,63 +299,77 @@ private fun DndRangeSlider(
         String.format("%02d:%02d", h, m)
     }
 
-    val rangeStart = 1260f // 21:00
-    val rangeEnd = 1920f   // 08:00 next day
+    val rangeStart = 1260f
+    val rangeEnd = 1920f
     val stepCount = ((rangeEnd - rangeStart) / 30f).toInt() - 1
 
     var curStart by remember(startTime) { mutableFloatStateOf(toLinear(startTime)) }
     var curEnd by remember(endTime) { mutableFloatStateOf(toLinear(endTime)) }
 
-    Surface(
-        tonalElevation = 1.dp,
-        shape = MaterialTheme.shapes.small,
-        modifier = Modifier.fillMaxWidth()
+    Column(
+        modifier = Modifier
+            .fillMaxWidth()
+            .padding(end = 12.dp)
     ) {
-        Column(
-            modifier = Modifier.padding(horizontal = 16.dp, vertical = 12.dp)
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.SpaceBetween,
+            verticalAlignment = Alignment.Bottom
         ) {
-            Text(
-                text = stringResource(id = R.string.settings_reminder_dnd),
-                style = MaterialTheme.typography.titleSmall,
-                color = MaterialTheme.colorScheme.onSurface
-            )
-            Spacer(modifier = Modifier.height(8.dp))
-            RangeSlider(
-                value = curStart..curEnd,
-                onValueChange = { range ->
-                    curStart = range.start
-                    curEnd = range.endInclusive
-                },
-                onValueChangeFinished = {
-                    onStartTimeChange(fromLinear(curStart))
-                    onEndTimeChange(fromLinear(curEnd))
-                },
-                valueRange = rangeStart..rangeEnd,
-                steps = stepCount,
-                modifier = Modifier.fillMaxWidth()
-            )
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.SpaceBetween
-            ) {
+            Column(horizontalAlignment = Alignment.Start) {
                 Text(
                     text = fromLinear(curStart),
-                    style = MaterialTheme.typography.labelSmall,
+                    style = MaterialTheme.typography.titleLarge,
                     color = MaterialTheme.colorScheme.primary
                 )
                 Text(
-                    text = fromLinear(curEnd),
+                    text = stringResource(id = R.string.settings_reminder_dnd_start),
                     style = MaterialTheme.typography.labelSmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                )
+            }
+            Text(
+                text = stringResource(id = R.string.settings_reminder_dnd_to),
+                style = MaterialTheme.typography.bodyMedium,
+                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                modifier = Modifier.padding(bottom = 4.dp)
+            )
+            Column(horizontalAlignment = Alignment.End) {
+                Text(
+                    text = fromLinear(curEnd),
+                    style = MaterialTheme.typography.titleLarge,
                     color = MaterialTheme.colorScheme.primary
+                )
+                Text(
+                    text = stringResource(id = R.string.settings_reminder_dnd_end),
+                    style = MaterialTheme.typography.labelSmall,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
                 )
             }
         }
+
+        Spacer(modifier = Modifier.height(4.dp))
+
+        RangeSlider(
+            value = curStart..curEnd,
+            onValueChange = { range ->
+                curStart = range.start
+                curEnd = range.endInclusive
+            },
+            onValueChangeFinished = {
+                onStartTimeChange(fromLinear(curStart))
+                onEndTimeChange(fromLinear(curEnd))
+            },
+            valueRange = rangeStart..rangeEnd,
+            steps = stepCount,
+            modifier = Modifier.fillMaxWidth()
+        )
     }
 }
 
 @Composable
 private fun StatusRow(
-    icon: androidx.compose.ui.graphics.vector.ImageVector,
+    icon: ImageVector,
     label: String,
     value: String,
     isPositive: Boolean
@@ -298,7 +377,7 @@ private fun StatusRow(
     Row(
         modifier = Modifier
             .fillMaxWidth()
-            .padding(vertical = 8.dp, horizontal = 4.dp),
+            .padding(vertical = 12.dp),
         verticalAlignment = Alignment.CenterVertically
     ) {
         Icon(
@@ -306,7 +385,7 @@ private fun StatusRow(
             contentDescription = null,
             tint = if (isPositive) MaterialTheme.colorScheme.primary
                    else MaterialTheme.colorScheme.onSurfaceVariant,
-            modifier = Modifier.padding(end = 12.dp)
+            modifier = Modifier.padding(start = 4.dp, end = 16.dp)
         )
         Text(
             text = label,
