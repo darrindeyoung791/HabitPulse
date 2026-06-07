@@ -1,6 +1,8 @@
 package io.github.darrindeyoung791.habitpulse.ui.screens
 
 import android.app.ActivityManager
+import android.app.AlarmManager
+import android.app.PendingIntent
 import android.content.Context
 import android.content.Intent
 import android.net.Uri
@@ -31,6 +33,7 @@ import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import io.github.darrindeyoung791.habitpulse.R
 import io.github.darrindeyoung791.habitpulse.data.preferences.UserPreferences
+import io.github.darrindeyoung791.habitpulse.receiver.ReminderReceiver
 import io.github.darrindeyoung791.habitpulse.service.ForegroundNotificationService
 import io.github.darrindeyoung791.habitpulse.utils.NotificationHelper
 import io.github.darrindeyoung791.habitpulse.utils.ReminderManager
@@ -209,7 +212,7 @@ fun ReminderSettingsScreen(
                     )
                 }
 
-                // Test notification
+                // Test notification - immediate
                 item {
                     Spacer(modifier = Modifier.height(8.dp))
                     FilledTonalButton(
@@ -248,7 +251,58 @@ fun ReminderSettingsScreen(
                     }
                 }
 
-                // System notification settings - left-aligned text button with ellipsis
+                // Test notification - delayed 1 minute via AlarmManager
+                item {
+                    Spacer(modifier = Modifier.height(8.dp))
+                    OutlinedButton(
+                        onClick = {
+                            scope.launch {
+                                if (!hasNotificationPermission) {
+                                    Toast.makeText(
+                                        context,
+                                        context.getString(R.string.reminder_settings_permission_denied),
+                                        Toast.LENGTH_SHORT
+                                    ).show()
+                                    return@launch
+                                }
+                                val alarmManager = context.getSystemService(Context.ALARM_SERVICE) as AlarmManager
+                                val intent = Intent("io.github.darrindeyoung791.habitpulse.action.REMINDER_ALARM").apply {
+                                    setClass(context, ReminderReceiver::class.java)
+                                }
+                                val pendingIntent = PendingIntent.getBroadcast(
+                                    context,
+                                    2002,
+                                    intent,
+                                    PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
+                                )
+                                alarmManager.setExact(
+                                    AlarmManager.RTC_WAKEUP,
+                                    System.currentTimeMillis() + 60_000L,
+                                    pendingIntent
+                                )
+                                Toast.makeText(
+                                    context,
+                                    context.getString(R.string.reminder_settings_test_notification_scheduled),
+                                    Toast.LENGTH_SHORT
+                                ).show()
+                            }
+                        },
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(horizontal = 16.dp),
+                        enabled = hasNotificationPermission
+                    ) {
+                        Icon(
+                            imageVector = Icons.AutoMirrored.Outlined.Send,
+                            contentDescription = null,
+                            modifier = Modifier.size(18.dp)
+                        )
+                        Spacer(modifier = Modifier.width(8.dp))
+                        Text(text = stringResource(id = R.string.reminder_settings_test_notification_delayed))
+                    }
+                }
+
+                // System notification settings - left-aligned text button
                 item {
                     TextButton(
                         onClick = {
@@ -257,9 +311,7 @@ fun ReminderSettingsScreen(
                             }
                             context.startActivity(intent)
                         },
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .padding(horizontal = 16.dp),
+                        modifier = Modifier.padding(horizontal = 16.dp),
                         shape = androidx.compose.foundation.shape.RoundedCornerShape(0.dp),
                         contentPadding = PaddingValues(0.dp)
                     ) {

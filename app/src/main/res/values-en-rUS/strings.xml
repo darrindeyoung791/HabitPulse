@@ -290,9 +290,11 @@
     <string name="reminder_settings_keepalive_status">Keep-Alive Status</string>
     <string name="reminder_settings_next_alarm">Next Reminder</string>
     <string name="reminder_settings_notification_permission">Notification Permission</string>
-    <string name="reminder_settings_system_settings">System notification settings…</string>
+    <string name="reminder_settings_system_settings">Open notification settings</string>
     <string name="reminder_settings_test_notification">Send Test Notification</string>
     <string name="reminder_settings_test_notification_sent">Test notification sent</string>
+    <string name="reminder_settings_test_notification_scheduled">Test notification will be sent in 1 minute</string>
+    <string name="reminder_settings_test_notification_delayed">Send test notification in 1 minute</string>
     <string name="reminder_settings_reminder_disabled">Reminders disabled</string>
     <string name="reminder_settings_service_running">Running</string>
     <string name="reminder_settings_service_stopped">Stopped</string>
