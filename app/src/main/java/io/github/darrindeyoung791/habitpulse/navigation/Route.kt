@@ -4,6 +4,7 @@ import java.util.UUID
 
 object RouteConfig {
     const val HELP_URL = "https://darrindeyoung791.github.io/HabitPulse/tutorial/help-and-feedback"
+    const val REMINDER_HELP_URL = "https://darrindeyoung791.github.io/HabitPulse/advanced/stayin-alive"
     const val GITHUB_URL = "https://github.com/darrindeyoung791/HabitPulse"
 }
 

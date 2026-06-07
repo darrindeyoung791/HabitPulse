@@ -21,10 +21,13 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.Preview
+import androidx.lifecycle.Lifecycle
+import androidx.lifecycle.lifecycleScope
+import androidx.lifecycle.repeatOnLifecycle
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.navigation.compose.rememberNavController
 import androidx.core.splashscreen.SplashScreen.Companion.installSplashScreen
 import androidx.navigation.NavHostController
-import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import io.github.darrindeyoung791.habitpulse.data.preferences.UserPreferences
 import io.github.darrindeyoung791.habitpulse.navigation.HabitPulseNavGraph
 import io.github.darrindeyoung791.habitpulse.navigation.Route
@@ -61,9 +64,21 @@ class MainActivity : ComponentActivity() {
         // Ensure status bar/navigation bar icon appearance is set early
         // This prevents a transient incorrect icon color after splash -> main content
         val isNight = (resources.configuration.uiMode and Configuration.UI_MODE_NIGHT_MASK) == Configuration.UI_MODE_NIGHT_YES
-        WindowCompat.getInsetsController(window, window.decorView)?.apply {
+        WindowCompat.getInsetsController(window, window.decorView).apply {
             isAppearanceLightStatusBars = !isNight
             isAppearanceLightNavigationBars = !isNight
+        }
+
+        // Start foreground service once the activity is in the foreground (not during BOOT_COMPLETED)
+        lifecycleScope.launch {
+            repeatOnLifecycle(Lifecycle.State.STARTED) {
+                val userPrefs = UserPreferences.getInstance(applicationContext)
+                val enabled = userPrefs.persistentNotificationFlow.first()
+                if (enabled && NotificationHelper.hasNotificationPermission(this@MainActivity)) {
+                    NotificationHelper.createNotificationChannel(applicationContext)
+                    ForegroundNotificationService.toggleService(applicationContext, true)
+                }
+            }
         }
 
         setContent {
@@ -105,13 +120,12 @@ class MainActivity : ComponentActivity() {
                 }
 
                 // Manage foreground service based on user preference
+                // Cold-start FGS is handled in onCreate() via lifecycleScope.repeatOnLifecycle
                 val context = LocalContext.current
                 LaunchedEffect(persistentNotification) {
                     if (persistentNotification && NotificationHelper.hasNotificationPermission(context)) {
                         NotificationHelper.createNotificationChannel(context)
                         ForegroundNotificationService.toggleService(context, true)
-                    } else {
-                        ForegroundNotificationService.toggleService(context, false)
                     }
                 }
 

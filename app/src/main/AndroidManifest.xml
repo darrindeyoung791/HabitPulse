@@ -97,6 +97,7 @@
             android:configChanges="uiMode|orientation|screenSize|screenLayout|smallestScreenSize" />
 
         <!-- Foreground notification service for keep-alive -->
+        <!-- dataSync type: keep app alive for reliable reminder scheduling and habit data sync -->
         <service
             android:name=".service.ForegroundNotificationService"
             android:enabled="true"

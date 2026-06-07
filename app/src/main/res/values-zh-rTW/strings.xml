@@ -291,7 +291,8 @@
     <string name="reminder_settings_keepalive_status">保活狀態</string>
     <string name="reminder_settings_next_alarm">下次提醒</string>
     <string name="reminder_settings_notification_permission">通知權限</string>
-    <string name="reminder_settings_system_settings">去「設定」查看系統通知</string>
+    <string name="reminder_settings_system_settings">去「設定」自訂通知…</string>
+    <string name="reminder_settings_background_keepalive">保持 HabitPulse 後台運行…</string>
     <string name="reminder_settings_test_notification">發送測試通知</string>
     <string name="reminder_settings_test_notification_sent">測試通知已發送</string>
     <string name="reminder_settings_test_notification_scheduled">1 分鐘後將發送測試通知</string>

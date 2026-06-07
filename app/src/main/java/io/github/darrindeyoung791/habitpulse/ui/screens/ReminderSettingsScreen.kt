@@ -5,7 +5,6 @@ import android.app.AlarmManager
 import android.app.PendingIntent
 import android.content.Context
 import android.content.Intent
-import android.net.Uri
 import android.os.Build
 import android.provider.Settings
 import android.widget.Toast
@@ -23,6 +22,7 @@ import androidx.compose.material.icons.outlined.Notifications
 import androidx.compose.material.icons.outlined.Schedule
 import androidx.compose.material.icons.outlined.Shield
 import androidx.compose.material.icons.outlined.Today
+import androidx.compose.material.icons.automirrored.outlined.HelpOutline
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
@@ -35,6 +35,8 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import io.github.darrindeyoung791.habitpulse.R
 import io.github.darrindeyoung791.habitpulse.data.preferences.UserPreferences
 import io.github.darrindeyoung791.habitpulse.receiver.ReminderReceiver
+import io.github.darrindeyoung791.habitpulse.WebViewActivity
+import io.github.darrindeyoung791.habitpulse.navigation.RouteConfig
 import io.github.darrindeyoung791.habitpulse.service.ForegroundNotificationService
 import io.github.darrindeyoung791.habitpulse.utils.NotificationHelper
 import io.github.darrindeyoung791.habitpulse.utils.ReminderManager
@@ -73,6 +75,19 @@ fun ReminderSettingsScreen(
                         Icon(
                             imageVector = Icons.AutoMirrored.Filled.ArrowBack,
                             contentDescription = stringResource(id = R.string.settings_back)
+                        )
+                    }
+                },
+                actions = {
+                    IconButton(onClick = {
+                        val intent = Intent(context, WebViewActivity::class.java).apply {
+                            putExtra(WebViewActivity.EXTRA_INITIAL_URL, RouteConfig.REMINDER_HELP_URL)
+                        }
+                        context.startActivity(intent)
+                    }) {
+                        Icon(
+                            imageVector = Icons.AutoMirrored.Outlined.HelpOutline,
+                            contentDescription = stringResource(id = R.string.webview_help)
                         )
                     }
                 }
@@ -312,8 +327,8 @@ fun ReminderSettingsScreen(
                 item {
                     TextButton(
                         onClick = {
-                            val intent = Intent(Settings.ACTION_APPLICATION_DETAILS_SETTINGS).apply {
-                                data = Uri.fromParts("package", context.packageName, null)
+                            val intent = Intent(Settings.ACTION_APP_NOTIFICATION_SETTINGS).apply {
+                                putExtra(Settings.EXTRA_APP_PACKAGE, context.packageName)
                             }
                             context.startActivity(intent)
                         },
@@ -323,6 +338,26 @@ fun ReminderSettingsScreen(
                     ) {
                         Text(
                             text = stringResource(id = R.string.reminder_settings_system_settings),
+                            style = MaterialTheme.typography.bodyMedium
+                        )
+                    }
+                }
+
+                // Background keep-alive help - same style, opens help page
+                item {
+                    TextButton(
+                        onClick = {
+                            val intent = Intent(context, WebViewActivity::class.java).apply {
+                                putExtra(WebViewActivity.EXTRA_INITIAL_URL, RouteConfig.REMINDER_HELP_URL)
+                            }
+                            context.startActivity(intent)
+                        },
+                        modifier = Modifier.padding(horizontal = 16.dp),
+                        shape = androidx.compose.foundation.shape.RoundedCornerShape(0.dp),
+                        contentPadding = PaddingValues(0.dp)
+                    ) {
+                        Text(
+                            text = stringResource(id = R.string.reminder_settings_background_keepalive),
                             style = MaterialTheme.typography.bodyMedium
                         )
                     }
