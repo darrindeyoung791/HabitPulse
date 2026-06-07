@@ -265,6 +265,40 @@
     <string name="notification_title">%1$s is running</string>
     <string name="notification_content">Keeping your habit reminders and background sync active</string>
 
+    <!-- Reminder Notification Channel -->
+    <string name="reminder_channel_name">Habit Reminders</string>
+    <string name="reminder_channel_description">Used for 30-minute habit reminders</string>
+    <string name="reminder_notification_title">%d habits to check in</string>
+    <string name="reminder_notification_more">and %d more…</string>
+    <string name="reminder_test_notification_title">Test Reminder</string>
+    <string name="reminder_test_habit_a">Test Habit A</string>
+    <string name="reminder_test_habit_b">Test Habit B</string>
+
+    <!-- Reminder Settings -->
+    <string name="settings_reminder">Habit Reminders</string>
+    <string name="settings_reminder_description">Remind every 30 minutes of upcoming habits</string>
+    <string name="settings_reminder_dnd">Do Not Disturb</string>
+    <string name="settings_reminder_dnd_description">Suppress notifications during set hours</string>
+    <string name="settings_reminder_dnd_start">Start</string>
+    <string name="settings_reminder_dnd_end">End</string>
+    <string name="settings_reminder_settings">Reminder Settings</string>
+    <string name="settings_reminder_settings_description">Check keep-alive status and send test notification</string>
+
+    <!-- Reminder Settings Screen -->
+    <string name="reminder_settings_title">Reminder Settings</string>
+    <string name="reminder_settings_keepalive_status">Keep-Alive Status</string>
+    <string name="reminder_settings_next_alarm">Next Reminder</string>
+    <string name="reminder_settings_notification_permission">Notification Permission</string>
+    <string name="reminder_settings_test_notification">Send Test Notification</string>
+    <string name="reminder_settings_test_notification_sent">Test notification sent</string>
+    <string name="reminder_settings_reminder_disabled">Reminders disabled</string>
+    <string name="reminder_settings_service_running">Running</string>
+    <string name="reminder_settings_service_stopped">Stopped</string>
+    <string name="reminder_settings_today_count">Today\'s reminders</string>
+    <string name="reminder_settings_no_alarm_scheduled">Not scheduled</string>
+    <string name="reminder_settings_permission_granted">Granted</string>
+    <string name="reminder_settings_permission_denied">Denied</string>
+
     <!-- Reward Bottom Sheet -->
     <string name="reward_title">You have completed %2$s %1$d time(s)</string>
     <string name="reward_subtitle">Keep it up</string>

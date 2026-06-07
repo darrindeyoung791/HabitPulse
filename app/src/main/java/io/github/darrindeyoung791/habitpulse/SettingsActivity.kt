@@ -63,6 +63,8 @@ import io.github.darrindeyoung791.habitpulse.ui.theme.HabitPulseTheme
 import io.github.darrindeyoung791.habitpulse.utils.AccessibilityUtils
 import io.github.darrindeyoung791.habitpulse.utils.NotificationHelper
 import io.github.darrindeyoung791.habitpulse.utils.NotificationPermissionHelper
+import io.github.darrindeyoung791.habitpulse.utils.ReminderManager
+import io.github.darrindeyoung791.habitpulse.utils.ReminderNotificationBuilder
 import kotlinx.coroutines.launch
 import org.json.JSONArray
 import java.io.File
@@ -102,6 +104,11 @@ fun SettingsScreen() {
     val forceTabletLandscape by userPreferences.forceTabletLandscapeFlow.collectAsStateWithLifecycle(initialValue = false)
     // 收集持久通知设置状态
     val persistentNotification by userPreferences.persistentNotificationFlow.collectAsStateWithLifecycle(initialValue = false)
+    // 收集习惯提醒设置状态
+    val reminderEnabled by userPreferences.reminderEnabledFlow.collectAsStateWithLifecycle(initialValue = true)
+    val dndEnabled by userPreferences.dndEnabledFlow.collectAsStateWithLifecycle(initialValue = true)
+    val dndStartTime by userPreferences.dndStartTimeFlow.collectAsStateWithLifecycle(initialValue = "22:00")
+    val dndEndTime by userPreferences.dndEndTimeFlow.collectAsStateWithLifecycle(initialValue = "07:00")
 
     // Use smallestScreenWidthDp to detect device type (independent of orientation)
     // Tablet: smallestScreenWidthDp >= 600dp
@@ -675,6 +682,88 @@ fun SettingsScreen() {
                 }
             }
 
+            // 习惯提醒部分（仅在已授予通知权限时完整显示）
+            if (hasNotificationPermission) {
+                item {
+                    SettingsSwitchItem(
+                        headline = stringResource(id = R.string.settings_reminder),
+                        supportingText = stringResource(id = R.string.settings_reminder_description),
+                        checked = reminderEnabled,
+                        onCheckedChange = { isChecked ->
+                            scope.launch {
+                                userPreferences.setReminderEnabled(isChecked)
+                                if (isChecked) {
+                                    ReminderNotificationBuilder.createNotificationChannel(context)
+                                    ReminderManager.scheduleNextAlarm(context)
+                                } else {
+                                    ReminderManager.cancelAlarm(context)
+                                }
+                            }
+                        },
+                        leadingIcon = {
+                            Icon(
+                                imageVector = Icons.Outlined.Notifications,
+                                contentDescription = null
+                            )
+                        }
+                    )
+
+                    if (reminderEnabled) {
+                        // DND toggle
+                        SettingsSwitchItem(
+                            headline = stringResource(id = R.string.settings_reminder_dnd),
+                            supportingText = stringResource(id = R.string.settings_reminder_dnd_description),
+                            checked = dndEnabled,
+                            onCheckedChange = { isChecked ->
+                                scope.launch {
+                                    userPreferences.setDndEnabled(isChecked)
+                                }
+                            },
+                            leadingIcon = {
+                                Icon(
+                                    imageVector = Icons.Outlined.Notifications,
+                                    contentDescription = null
+                                )
+                            }
+                        )
+
+                        if (dndEnabled) {
+                            // DND time sliders
+                            DndTimeSliderSection(
+                                dndStartTime = dndStartTime,
+                                dndEndTime = dndEndTime,
+                                onStartTimeChange = { time ->
+                                    scope.launch {
+                                        userPreferences.setDndStartTime(time)
+                                    }
+                                },
+                                onEndTimeChange = { time ->
+                                    scope.launch {
+                                        userPreferences.setDndEndTime(time)
+                                    }
+                                }
+                            )
+                        }
+
+                        // Reminder settings sub-page link
+                        SettingsListItem(
+                            headline = stringResource(id = R.string.settings_reminder_settings),
+                            supportingText = stringResource(id = R.string.settings_reminder_settings_description),
+                            leadingIcon = {
+                                Icon(
+                                    imageVector = Icons.Outlined.Notifications,
+                                    contentDescription = null
+                                )
+                            },
+                            onClick = {
+                                val intent = Intent(context, ReminderSettingsActivity::class.java)
+                                context.startActivity(intent)
+                            }
+                        )
+                    }
+                }
+            }
+
             // 存储部分
             item {
                 // Section header
@@ -1080,6 +1169,93 @@ fun SettingsListItem(
                     )
                 }
             }
+        }
+    }
+}
+
+@Composable
+private fun DndTimeSliderSection(
+    dndStartTime: String,
+    dndEndTime: String,
+    onStartTimeChange: (String) -> Unit,
+    onEndTimeChange: (String) -> Unit
+) {
+    val timeToMinutes: (String) -> Float = { time ->
+        val parts = time.split(":")
+        parts[0].toInt() * 60f + parts[1].toInt()
+    }
+    val minutesToTime: (Float) -> String = { mins ->
+        val h = (mins.toInt() / 60).coerceIn(20, 32) // 20:00 to 08:00 next day (32 = 8+24)
+        val m = ((mins.toInt() % 60) / 30) * 30 // Quantize to 30 min
+        val adjustedH = if (h >= 24) (h - 24) else h
+        String.format("%02d:%02d", adjustedH, m)
+    }
+
+    // Map times to a continuous scale: 20:00 = 1200 min, 08:00 next day = 1920 min
+    val toLinearScale: (String) -> Float = { time ->
+        val parts = time.split(":")
+        var h = parts[0].toInt()
+        val m = parts[1].toInt()
+        if (h < 12) h += 24 // Next day
+        (h * 60 + m).toFloat()
+    }
+    val fromLinearScale: (Float) -> String = { value ->
+        var totalMin = value.toInt()
+        var h = totalMin / 60
+        val m = ((totalMin % 60) / 30) * 30
+        if (h >= 24) h -= 24
+        String.format("%02d:%02d", h, m)
+    }
+
+    val startValue = remember(dndStartTime) { toLinearScale(dndStartTime) }
+    val endValue = remember(dndEndTime) { toLinearScale(dndEndTime) }
+
+    Surface(
+        modifier = Modifier.fillMaxWidth(),
+        color = MaterialTheme.colorScheme.surface
+    ) {
+        Column(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(horizontal = 16.dp, vertical = 8.dp)
+        ) {
+            Text(
+                text = stringResource(id = R.string.settings_reminder_dnd_start),
+                style = MaterialTheme.typography.bodyMedium,
+                color = MaterialTheme.colorScheme.onSurfaceVariant
+            )
+            Slider(
+                value = startValue,
+                onValueChange = { onStartTimeChange(fromLinearScale(it)) },
+                valueRange = 1200f..1920f, // 20:00 to 08:00
+                steps = ((1920 - 1200) / 30) - 1, // 30-min steps
+                modifier = Modifier.fillMaxWidth()
+            )
+            Text(
+                text = dndStartTime,
+                style = MaterialTheme.typography.bodySmall,
+                color = MaterialTheme.colorScheme.primary
+            )
+
+            Spacer(modifier = Modifier.height(8.dp))
+
+            Text(
+                text = stringResource(id = R.string.settings_reminder_dnd_end),
+                style = MaterialTheme.typography.bodyMedium,
+                color = MaterialTheme.colorScheme.onSurfaceVariant
+            )
+            Slider(
+                value = endValue,
+                onValueChange = { onEndTimeChange(fromLinearScale(it)) },
+                valueRange = 1200f..1920f,
+                steps = ((1920 - 1200) / 30) - 1,
+                modifier = Modifier.fillMaxWidth()
+            )
+            Text(
+                text = dndEndTime,
+                style = MaterialTheme.typography.bodySmall,
+                color = MaterialTheme.colorScheme.primary
+            )
         }
     }
 }

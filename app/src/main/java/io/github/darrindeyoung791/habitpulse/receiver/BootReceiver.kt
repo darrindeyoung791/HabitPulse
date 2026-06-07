@@ -6,6 +6,7 @@ import android.content.Intent
 import io.github.darrindeyoung791.habitpulse.data.preferences.UserPreferences
 import io.github.darrindeyoung791.habitpulse.service.ForegroundNotificationService
 import io.github.darrindeyoung791.habitpulse.utils.NotificationHelper
+import io.github.darrindeyoung791.habitpulse.utils.ReminderManager
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
@@ -17,6 +18,7 @@ import kotlinx.coroutines.launch
  *
  * 当设备启动完成后，如果用户之前开启了持久通知设置，
  * 则自动启动前台通知服务以保持应用在后台运行。
+ * 同时恢复习惯提醒的闹钟调度。
  */
 class BootReceiver : BroadcastReceiver() {
 
@@ -35,6 +37,12 @@ class BootReceiver : BroadcastReceiver() {
                     if (isPersistentNotificationEnabled && NotificationHelper.hasNotificationPermission(context)) {
                         NotificationHelper.createNotificationChannel(context)
                         ForegroundNotificationService.toggleService(context, enable = true)
+                    }
+
+                    // Restore reminder alarm scheduling
+                    val isReminderEnabled = userPreferences.reminderEnabledFlow.first()
+                    if (isReminderEnabled && NotificationHelper.hasNotificationPermission(context)) {
+                        ReminderManager.scheduleNextAlarm(context)
                     }
                 } catch (e: Exception) {
                     // Log error but don't crash the receiver

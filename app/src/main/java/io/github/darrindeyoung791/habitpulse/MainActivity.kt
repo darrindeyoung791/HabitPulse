@@ -1,5 +1,6 @@
 package io.github.darrindeyoung791.habitpulse
 
+import android.content.Intent
 import android.os.Bundle
 import android.content.res.Configuration
 import androidx.core.view.WindowCompat
@@ -26,16 +27,29 @@ import androidx.navigation.NavHostController
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import io.github.darrindeyoung791.habitpulse.data.preferences.UserPreferences
 import io.github.darrindeyoung791.habitpulse.navigation.HabitPulseNavGraph
+import io.github.darrindeyoung791.habitpulse.navigation.Route
 import io.github.darrindeyoung791.habitpulse.service.ForegroundNotificationService
 import io.github.darrindeyoung791.habitpulse.ui.screens.AdScreen
 import io.github.darrindeyoung791.habitpulse.ui.screens.HomeScreen
 import io.github.darrindeyoung791.habitpulse.ui.theme.HabitPulseTheme
 import io.github.darrindeyoung791.habitpulse.utils.NotificationHelper
 import io.github.darrindeyoung791.habitpulse.utils.NotificationPermissionHelper
+import io.github.darrindeyoung791.habitpulse.utils.ReminderNotificationBuilder
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
 
 class MainActivity : ComponentActivity() {
+
+    companion object {
+        const val EXTRA_NAVIGATE_TO = ReminderNotificationBuilder.EXTRA_NAVIGATE_TO
+        private const val EXTRA_VALUE_ABOUT_TO_START = ReminderNotificationBuilder.EXTRA_VALUE_ABOUT_TO_START
+    }
+
+    override fun onNewIntent(intent: Intent) {
+        super.onNewIntent(intent)
+        setIntent(intent)
+    }
+
     override fun onCreate(savedInstanceState: Bundle?) {
         // Install splash screen
         val splashScreen = installSplashScreen()
@@ -154,6 +168,19 @@ class MainActivity : ComponentActivity() {
                             navController = navController,
                             onHomeDataLoaded = { homeDataLoaded = true }
                         )
+                    }
+
+                    // Handle deep link from notification
+                    val intentForNav = activity.intent
+                    LaunchedEffect(intentForNav) {
+                        val navigateTo = intentForNav.getStringExtra(EXTRA_NAVIGATE_TO)
+                        if (navigateTo == EXTRA_VALUE_ABOUT_TO_START) {
+                            navController.navigate(Route.TodayHabits.createRoute("about_to_start")) {
+                                launchSingleTop = true
+                            }
+                            // Clear the extra to prevent re-navigation
+                            intentForNav.removeExtra(EXTRA_NAVIGATE_TO)
+                        }
                     }
                 }
 

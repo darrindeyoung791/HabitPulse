@@ -10,6 +10,8 @@ import io.github.darrindeyoung791.habitpulse.data.repository.HabitRepository
 import io.github.darrindeyoung791.habitpulse.service.ForegroundNotificationService
 import io.github.darrindeyoung791.habitpulse.utils.NotificationHelper
 import io.github.darrindeyoung791.habitpulse.utils.OnboardingPreferences
+import io.github.darrindeyoung791.habitpulse.utils.ReminderManager
+import io.github.darrindeyoung791.habitpulse.utils.ReminderNotificationBuilder
 import io.github.darrindeyoung791.habitpulse.viewmodel.ContactsViewModel
 import io.github.darrindeyoung791.habitpulse.viewmodel.HabitViewModel
 import io.github.darrindeyoung791.habitpulse.viewmodel.RecordsViewModel
@@ -101,6 +103,16 @@ class HabitPulseApplication : Application() {
                 if (isPersistentNotificationEnabled && NotificationHelper.hasNotificationPermission(applicationContext)) {
                     NotificationHelper.createNotificationChannel(applicationContext)
                     ForegroundNotificationService.toggleService(applicationContext, enable = true)
+                }
+
+                // Initialize reminder notification channel and schedule first alarm
+                val isReminderEnabled = userPreferences.reminderEnabledFlow.first()
+                if (isReminderEnabled && NotificationHelper.hasNotificationPermission(applicationContext)) {
+                    ReminderNotificationBuilder.createNotificationChannel(applicationContext)
+                    ReminderManager.scheduleNextAlarm(applicationContext)
+                } else {
+                    // Still create the channel so it shows in system settings
+                    ReminderNotificationBuilder.createNotificationChannel(applicationContext)
                 }
             } catch (e: Exception) {
                 // Log error but don't crash the application
