@@ -6,9 +6,11 @@ import androidx.datastore.core.DataStore
 import androidx.datastore.preferences.core.Preferences
 import androidx.datastore.preferences.core.booleanPreferencesKey
 import androidx.datastore.preferences.core.edit
+import androidx.datastore.preferences.core.longPreferencesKey
 import androidx.datastore.preferences.core.stringPreferencesKey
 import androidx.datastore.preferences.preferencesDataStore
 import kotlinx.coroutines.flow.Flow
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.map
 
 /**
@@ -58,6 +60,41 @@ object PreferencesKeys {
      * LLM 流式输出
      */
     val LLM_STREAMING_RESPONSE = booleanPreferencesKey("llm_streaming_response")
+
+    /**
+     * 是否开启习惯提醒通知（每30分钟）
+     */
+    val REMINDER_ENABLED = booleanPreferencesKey("reminder_enabled")
+
+    /**
+     * 是否开启免打扰模式
+     */
+    val DND_ENABLED = booleanPreferencesKey("dnd_enabled")
+
+    /**
+     * 免打扰开始时间（HH:mm 格式）
+     */
+    val DND_START_TIME = stringPreferencesKey("dnd_start_time")
+
+    /**
+     * 免打扰结束时间（HH:mm 格式）
+     */
+    val DND_END_TIME = stringPreferencesKey("dnd_end_time")
+
+    /**
+     * 下次提醒闹钟时间（epoch millis），用于子页面显示
+     */
+    val NEXT_ALARM_TIME = longPreferencesKey("next_alarm_time")
+
+    /**
+     * 上次发送提醒的日期（yyyy-MM-dd），用于每日计数
+     */
+    val REMINDER_SENT_DATE = stringPreferencesKey("reminder_sent_date")
+
+    /**
+     * 今日已发送提醒次数
+     */
+    val REMINDER_SENT_COUNT = longPreferencesKey("reminder_sent_count")
 }
 
 /**
@@ -240,5 +277,132 @@ class UserPreferences(private val context: Context) {
         context.dataStore.edit { preferences ->
             preferences[PreferencesKeys.LLM_STREAMING_RESPONSE] = enabled
         }
+    }
+
+    /**
+     * 是否开启习惯提醒的 Flow
+     * 默认值为 true（开启）
+     */
+    val reminderEnabledFlow: Flow<Boolean> = context.dataStore.data.map { preferences ->
+        preferences[PreferencesKeys.REMINDER_ENABLED] ?: true
+    }
+
+    /**
+     * 设置是否开启习惯提醒
+     */
+    suspend fun setReminderEnabled(enabled: Boolean) {
+        context.dataStore.edit { preferences ->
+            preferences[PreferencesKeys.REMINDER_ENABLED] = enabled
+        }
+    }
+
+    /**
+     * 是否开启免打扰的 Flow
+     * 默认值为 true（开启）
+     */
+    val dndEnabledFlow: Flow<Boolean> = context.dataStore.data.map { preferences ->
+        preferences[PreferencesKeys.DND_ENABLED] ?: true
+    }
+
+    /**
+     * 设置是否开启免打扰
+     */
+    suspend fun setDndEnabled(enabled: Boolean) {
+        context.dataStore.edit { preferences ->
+            preferences[PreferencesKeys.DND_ENABLED] = enabled
+        }
+    }
+
+    /**
+     * 免打扰开始时间的 Flow
+     * 默认值为 "22:00"
+     */
+    val dndStartTimeFlow: Flow<String> = context.dataStore.data.map { preferences ->
+        preferences[PreferencesKeys.DND_START_TIME] ?: "22:00"
+    }
+
+    /**
+     * 设置免打扰开始时间
+     */
+    suspend fun setDndStartTime(time: String) {
+        context.dataStore.edit { preferences ->
+            preferences[PreferencesKeys.DND_START_TIME] = time
+        }
+    }
+
+    /**
+     * 免打扰结束时间的 Flow
+     * 默认值为 "07:00"
+     */
+    val dndEndTimeFlow: Flow<String> = context.dataStore.data.map { preferences ->
+        preferences[PreferencesKeys.DND_END_TIME] ?: "07:00"
+    }
+
+    /**
+     * 设置免打扰结束时间
+     */
+    suspend fun setDndEndTime(time: String) {
+        context.dataStore.edit { preferences ->
+            preferences[PreferencesKeys.DND_END_TIME] = time
+        }
+    }
+
+    /**
+     * 下次提醒闹钟时间的 Flow（用于子页面显示）
+     */
+    val nextAlarmTimeFlow: Flow<Long?> = context.dataStore.data.map { preferences ->
+        preferences[PreferencesKeys.NEXT_ALARM_TIME]
+    }
+
+    /**
+     * 设置下次提醒闹钟时间
+     */
+    suspend fun setNextAlarmTime(millis: Long?) {
+        context.dataStore.edit { preferences ->
+            if (millis != null) {
+                preferences[PreferencesKeys.NEXT_ALARM_TIME] = millis
+            } else {
+                preferences.remove(PreferencesKeys.NEXT_ALARM_TIME)
+            }
+        }
+    }
+
+    /**
+     * 今日已发送提醒次数的 Flow
+     */
+    val reminderSentCountFlow: Flow<Pair<String, Long>> = context.dataStore.data.map { preferences ->
+        val date = preferences[PreferencesKeys.REMINDER_SENT_DATE] ?: ""
+        val count = preferences[PreferencesKeys.REMINDER_SENT_COUNT] ?: 0L
+        Pair(date, count)
+    }
+
+    /**
+     * 增加今日提醒发送计数（若日期不同则重置）
+     */
+    suspend fun incrementReminderSentCount(todayDate: String) {
+        context.dataStore.edit { preferences ->
+            val storedDate = preferences[PreferencesKeys.REMINDER_SENT_DATE]
+            if (storedDate != todayDate) {
+                preferences[PreferencesKeys.REMINDER_SENT_DATE] = todayDate
+                preferences[PreferencesKeys.REMINDER_SENT_COUNT] = 1L
+            } else {
+                val current = preferences[PreferencesKeys.REMINDER_SENT_COUNT] ?: 0L
+                preferences[PreferencesKeys.REMINDER_SENT_COUNT] = current + 1L
+            }
+        }
+    }
+
+    /**
+     * 获取今日已发送提醒次数（同步读取）
+     */
+    suspend fun getTodayReminderSentCount(todayDate: String): Long {
+        return context.dataStore.data.map { preferences ->
+            val storedDate = preferences[PreferencesKeys.REMINDER_SENT_DATE]
+            if (storedDate == todayDate) {
+                preferences[PreferencesKeys.REMINDER_SENT_COUNT] ?: 0L
+            } else {
+                0L
+            }
+        }.first()
     }
 }

@@ -33,6 +33,7 @@ import androidx.compose.material.icons.outlined.DeleteForever
 import androidx.compose.material.icons.outlined.FavoriteBorder
 import androidx.compose.material.icons.outlined.HelpOutline
 import androidx.compose.material.icons.outlined.Info
+import androidx.compose.material.icons.outlined.Alarm
 import androidx.compose.material.icons.outlined.Notifications
 import androidx.compose.material.icons.outlined.Person
 import androidx.compose.material.icons.outlined.Settings
@@ -63,6 +64,7 @@ import io.github.darrindeyoung791.habitpulse.ui.theme.HabitPulseTheme
 import io.github.darrindeyoung791.habitpulse.utils.AccessibilityUtils
 import io.github.darrindeyoung791.habitpulse.utils.NotificationHelper
 import io.github.darrindeyoung791.habitpulse.utils.NotificationPermissionHelper
+
 import kotlinx.coroutines.launch
 import org.json.JSONArray
 import java.io.File
@@ -102,6 +104,7 @@ fun SettingsScreen() {
     val forceTabletLandscape by userPreferences.forceTabletLandscapeFlow.collectAsStateWithLifecycle(initialValue = false)
     // 收集持久通知设置状态
     val persistentNotification by userPreferences.persistentNotificationFlow.collectAsStateWithLifecycle(initialValue = false)
+
 
     // Use smallestScreenWidthDp to detect device type (independent of orientation)
     // Tablet: smallestScreenWidthDp >= 600dp
@@ -670,6 +673,26 @@ fun SettingsScreen() {
                                 imageVector = Icons.Outlined.Notifications,
                                 contentDescription = null
                             )
+                        }
+                    )
+                }
+            }
+
+            // 提醒设置入口（仅在已授予通知权限时显示）
+            if (hasNotificationPermission) {
+                item {
+                    SettingsListItem(
+                        headline = stringResource(id = R.string.settings_reminder),
+                        supportingText = stringResource(id = R.string.settings_reminder_description),
+                        leadingIcon = {
+                            Icon(
+                                imageVector = Icons.Outlined.Alarm,
+                                contentDescription = null
+                            )
+                        },
+                        onClick = {
+                            val intent = Intent(context, ReminderSettingsActivity::class.java)
+                            context.startActivity(intent)
                         }
                     )
                 }

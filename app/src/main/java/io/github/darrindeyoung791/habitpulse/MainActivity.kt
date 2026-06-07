@@ -1,5 +1,6 @@
 package io.github.darrindeyoung791.habitpulse
 
+import android.content.Intent
 import android.os.Bundle
 import android.content.res.Configuration
 import androidx.core.view.WindowCompat
@@ -20,22 +21,38 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.Preview
+import androidx.lifecycle.Lifecycle
+import androidx.lifecycle.lifecycleScope
+import androidx.lifecycle.repeatOnLifecycle
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.navigation.compose.rememberNavController
 import androidx.core.splashscreen.SplashScreen.Companion.installSplashScreen
 import androidx.navigation.NavHostController
-import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import io.github.darrindeyoung791.habitpulse.data.preferences.UserPreferences
 import io.github.darrindeyoung791.habitpulse.navigation.HabitPulseNavGraph
+import io.github.darrindeyoung791.habitpulse.navigation.Route
 import io.github.darrindeyoung791.habitpulse.service.ForegroundNotificationService
 import io.github.darrindeyoung791.habitpulse.ui.screens.AdScreen
 import io.github.darrindeyoung791.habitpulse.ui.screens.HomeScreen
 import io.github.darrindeyoung791.habitpulse.ui.theme.HabitPulseTheme
 import io.github.darrindeyoung791.habitpulse.utils.NotificationHelper
 import io.github.darrindeyoung791.habitpulse.utils.NotificationPermissionHelper
+import io.github.darrindeyoung791.habitpulse.utils.ReminderNotificationBuilder
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
 
 class MainActivity : ComponentActivity() {
+
+    companion object {
+        const val EXTRA_NAVIGATE_TO = ReminderNotificationBuilder.EXTRA_NAVIGATE_TO
+        private const val EXTRA_VALUE_ABOUT_TO_START = ReminderNotificationBuilder.EXTRA_VALUE_ABOUT_TO_START
+    }
+
+    override fun onNewIntent(intent: Intent) {
+        super.onNewIntent(intent)
+        setIntent(intent)
+    }
+
     override fun onCreate(savedInstanceState: Bundle?) {
         // Install splash screen
         val splashScreen = installSplashScreen()
@@ -47,9 +64,21 @@ class MainActivity : ComponentActivity() {
         // Ensure status bar/navigation bar icon appearance is set early
         // This prevents a transient incorrect icon color after splash -> main content
         val isNight = (resources.configuration.uiMode and Configuration.UI_MODE_NIGHT_MASK) == Configuration.UI_MODE_NIGHT_YES
-        WindowCompat.getInsetsController(window, window.decorView)?.apply {
+        WindowCompat.getInsetsController(window, window.decorView).apply {
             isAppearanceLightStatusBars = !isNight
             isAppearanceLightNavigationBars = !isNight
+        }
+
+        // Start foreground service once the activity is in the foreground (not during BOOT_COMPLETED)
+        lifecycleScope.launch {
+            repeatOnLifecycle(Lifecycle.State.STARTED) {
+                val userPrefs = UserPreferences.getInstance(applicationContext)
+                val enabled = userPrefs.persistentNotificationFlow.first()
+                if (enabled && NotificationHelper.hasNotificationPermission(this@MainActivity)) {
+                    NotificationHelper.createNotificationChannel(applicationContext)
+                    ForegroundNotificationService.toggleService(applicationContext, true)
+                }
+            }
         }
 
         setContent {
@@ -91,13 +120,12 @@ class MainActivity : ComponentActivity() {
                 }
 
                 // Manage foreground service based on user preference
+                // Cold-start FGS is handled in onCreate() via lifecycleScope.repeatOnLifecycle
                 val context = LocalContext.current
                 LaunchedEffect(persistentNotification) {
                     if (persistentNotification && NotificationHelper.hasNotificationPermission(context)) {
                         NotificationHelper.createNotificationChannel(context)
                         ForegroundNotificationService.toggleService(context, true)
-                    } else {
-                        ForegroundNotificationService.toggleService(context, false)
                     }
                 }
 
@@ -154,6 +182,19 @@ class MainActivity : ComponentActivity() {
                             navController = navController,
                             onHomeDataLoaded = { homeDataLoaded = true }
                         )
+                    }
+
+                    // Handle deep link from notification
+                    val intentForNav = activity.intent
+                    LaunchedEffect(intentForNav) {
+                        val navigateTo = intentForNav.getStringExtra(EXTRA_NAVIGATE_TO)
+                        if (navigateTo == EXTRA_VALUE_ABOUT_TO_START) {
+                            navController.navigate(Route.TodayHabits.createRoute("about_to_start")) {
+                                launchSingleTop = true
+                            }
+                            // Clear the extra to prevent re-navigation
+                            intentForNav.removeExtra(EXTRA_NAVIGATE_TO)
+                        }
                     }
                 }
 

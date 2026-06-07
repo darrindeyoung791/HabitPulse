@@ -266,6 +266,45 @@
     <string name="notification_title">%1$s 正在运行</string>
     <string name="notification_content">保持习惯提醒和后台同步</string>
 
+    <!-- Reminder Notification Channel -->
+    <string name="reminder_channel_name">习惯提醒</string>
+    <string name="reminder_channel_description">用于每30分钟提醒即将开始的习惯</string>
+    <string name="reminder_notification_title">%d个习惯即将打卡</string>
+    <string name="reminder_notification_more">还有%d个…</string>
+    <string name="reminder_test_notification_title">测试提醒</string>
+    <string name="reminder_test_habit_a">测试习惯A</string>
+    <string name="reminder_test_habit_b">测试习惯B</string>
+
+    <!-- Reminder Settings -->
+    <string name="settings_reminder">习惯提醒</string>
+    <string name="settings_reminder_description">每30分钟提醒即将开始的习惯</string>
+    <string name="settings_reminder_dnd">免打扰时段</string>
+    <string name="settings_reminder_dnd_description">在设定的时段内不发送提醒通知</string>
+    <string name="settings_reminder_dnd_start">开始</string>
+    <string name="settings_reminder_dnd_end">结束</string>
+    <string name="settings_reminder_dnd_to">至</string>
+    <string name="settings_reminder_settings">提醒设置</string>
+    <string name="settings_reminder_settings_description">查看保活状态和发送测试通知</string>
+
+    <!-- Reminder Settings Screen -->
+    <string name="reminder_settings_title">提醒设置</string>
+    <string name="reminder_settings_keepalive_status">保活状态</string>
+    <string name="reminder_settings_next_alarm">下次提醒</string>
+    <string name="reminder_settings_notification_permission">通知权限</string>
+    <string name="reminder_settings_system_settings">去「设置」自定义通知…</string>
+    <string name="reminder_settings_background_keepalive">保持 HabitPulse 后台运行…</string>
+    <string name="reminder_settings_test_notification">发送测试通知</string>
+    <string name="reminder_settings_test_notification_sent">测试通知已发送</string>
+    <string name="reminder_settings_test_notification_scheduled">1 分钟后将发送测试通知</string>
+    <string name="reminder_settings_test_notification_delayed">一分钟后发送测试通知</string>
+    <string name="reminder_settings_reminder_disabled">提醒已关闭</string>
+    <string name="reminder_settings_service_running">运行中</string>
+    <string name="reminder_settings_service_stopped">未运行</string>
+    <string name="reminder_settings_today_count">今日已提醒</string>
+    <string name="reminder_settings_no_alarm_scheduled">未安排</string>
+    <string name="reminder_settings_permission_granted">已授权</string>
+    <string name="reminder_settings_permission_denied">未授权</string>
+
     <!-- Reward Bottom Sheet -->
     <string name="reward_title">这是你第 %1$d 次完成 %2$s</string>
     <string name="reward_subtitle">继续坚持</string>
@@ -420,4 +459,5 @@
     <string name="today_section_soon">即将开始</string>
     <string name="today_section_later">稍后</string>
     <string name="today_section_allday">全天</string>
+    <string name="reminder_settings_dnd_same_time">免打扰的开始和结束时间不能相同</string>
 </resources>

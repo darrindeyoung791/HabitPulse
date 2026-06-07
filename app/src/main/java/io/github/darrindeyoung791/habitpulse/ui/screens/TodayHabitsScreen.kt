@@ -83,6 +83,20 @@ fun TodayHabitsScreen(
         }
     }
 
+    val aboutToStartHabits = remember(todayHabitsWithStatus, filter) {
+        when (filter) {
+            "about_to_start" -> todayHabitsWithStatus.filter { it.status.contains(HabitStatus.ABOUT_TO_START) }
+            else -> emptyList()
+        }
+    }
+
+    val overdueHabits = remember(todayHabitsWithStatus, filter) {
+        when (filter) {
+            "about_to_start" -> todayHabitsWithStatus.filter { it.isCompletelyOverdue && !it.status.contains(HabitStatus.ABOUT_TO_START) }
+            else -> emptyList()
+        }
+    }
+
     val filteredHabits = remember(todayHabitsWithStatus, filter) {
         when (filter) {
             "about_to_start" -> todayHabitsWithStatus.filter { it.status.contains(HabitStatus.ABOUT_TO_START) }
@@ -102,6 +116,27 @@ fun TodayHabitsScreen(
                 val reminderTime = LocalTime.of(parts[0].toInt(), parts[1].toInt())
                 if (reminderTime <= now || Duration.between(now, reminderTime).toMinutes() < 60) 0 else 1
             }
+        }
+    }
+
+    val sortedAboutToStart = remember(aboutToStartHabits, now) {
+        aboutToStartHabits.sortedBy { ws ->
+            val times = ws.habit.getReminderTimesList()
+            if (times.isEmpty()) "99:99" else times.min()
+        }.sortedBy { ws ->
+            val times = ws.habit.getReminderTimesList()
+            if (times.isEmpty()) 2 else {
+                val parts = times.min().split(":")
+                val reminderTime = LocalTime.of(parts[0].toInt(), parts[1].toInt())
+                if (reminderTime <= now || Duration.between(now, reminderTime).toMinutes() < 60) 0 else 1
+            }
+        }
+    }
+
+    val sortedOverdue = remember(overdueHabits, now) {
+        overdueHabits.sortedBy { ws ->
+            val times = ws.habit.getReminderTimesList()
+            if (times.isEmpty()) "99:99" else times.min()
         }
     }
 
@@ -140,13 +175,13 @@ fun TodayHabitsScreen(
                 )
             )
         }
-    ) { paddingValues ->
+        ) { paddingValues ->
         Box(
             modifier = Modifier
                 .fillMaxSize()
                 .padding(paddingValues)
         ) {
-            if (flatSortedList.isEmpty()) {
+            if (flatSortedList.isEmpty() && sortedAboutToStart.isEmpty() && sortedOverdue.isEmpty()) {
                 Box(
                     modifier = Modifier.fillMaxSize(),
                     contentAlignment = androidx.compose.ui.Alignment.Center
@@ -164,30 +199,92 @@ fun TodayHabitsScreen(
                     contentPadding = PaddingValues(start = 16.dp, top = 8.dp, end = 16.dp, bottom = 16.dp),
                     verticalArrangement = Arrangement.spacedBy(8.dp)
                 ) {
-                    itemsIndexed(
-                        items = flatSortedList,
-                        key = { _, item -> item.habit.id.toString() }
-                    ) { index, ws ->
-                        StaggeredListItem(
-                            index = index,
-                            animationsFrozen = animationsFrozen
-                        ) {
-                            HabitCard(
-                                habitWithStatus = ws,
-                                onClick = { onEditHabit(ws.habit) },
-                                onCheckIn = {
-                                    viewModel.performSlotCheckIn(ws.habit)
-                                },
-                                onUndoCompletion = { viewModel.undoHabitCompletion(ws.habit) },
-                                onEditHabit = { onEditHabit(ws.habit) },
-                                onDeleteHabit = {
-                                    viewModel.deleteHabit(ws.habit)
-                                    application?.recordsViewModel?.refreshRecords()
-                                },
-                                onNavigateToMultiSelect = {},
-                                modifier = Modifier.fillMaxWidth(),
-                                showMultiSelectMenuItem = false
-                            )
+                    if (filter == "about_to_start") {
+                        if (sortedAboutToStart.isNotEmpty()) {
+                            item(key = "header_about_to_start") {
+                                Text(
+                                    text = stringResource(id = R.string.entry_zone_about_to_start),
+                                    style = MaterialTheme.typography.titleSmall,
+                                    fontWeight = FontWeight.SemiBold,
+                                    color = MaterialTheme.colorScheme.primary,
+                                    modifier = Modifier.padding(vertical = 12.dp)
+                                )
+                            }
+                            itemsIndexed(
+                                items = sortedAboutToStart,
+                                key = { _, item -> "ats_${item.habit.id}" }
+                            ) { index, ws ->
+                                StaggeredListItem(index = index, animationsFrozen = animationsFrozen) {
+                                    HabitCard(
+                                        habitWithStatus = ws,
+                                        onClick = { onEditHabit(ws.habit) },
+                                        onCheckIn = { viewModel.performSlotCheckIn(ws.habit) },
+                                        onUndoCompletion = { viewModel.undoHabitCompletion(ws.habit) },
+                                        onEditHabit = { onEditHabit(ws.habit) },
+                                        onDeleteHabit = {
+                                            viewModel.deleteHabit(ws.habit)
+                                            application?.recordsViewModel?.refreshRecords()
+                                        },
+                                        onNavigateToMultiSelect = {},
+                                        modifier = Modifier.fillMaxWidth(),
+                                        showMultiSelectMenuItem = false
+                                    )
+                                }
+                            }
+                        }
+                        if (sortedOverdue.isNotEmpty()) {
+                            item(key = "header_overdue") {
+                                Text(
+                                    text = stringResource(id = R.string.entry_zone_overdue),
+                                    style = MaterialTheme.typography.titleSmall,
+                                    fontWeight = FontWeight.SemiBold,
+                                    color = MaterialTheme.colorScheme.error,
+                                    modifier = Modifier.padding(vertical = 12.dp)
+                                )
+                            }
+                            itemsIndexed(
+                                items = sortedOverdue,
+                                key = { _, item -> "ovd_${item.habit.id}" }
+                            ) { index, ws ->
+                                StaggeredListItem(index = index, animationsFrozen = animationsFrozen) {
+                                    HabitCard(
+                                        habitWithStatus = ws,
+                                        onClick = { onEditHabit(ws.habit) },
+                                        onCheckIn = { viewModel.performSlotCheckIn(ws.habit) },
+                                        onUndoCompletion = { viewModel.undoHabitCompletion(ws.habit) },
+                                        onEditHabit = { onEditHabit(ws.habit) },
+                                        onDeleteHabit = {
+                                            viewModel.deleteHabit(ws.habit)
+                                            application?.recordsViewModel?.refreshRecords()
+                                        },
+                                        onNavigateToMultiSelect = {},
+                                        modifier = Modifier.fillMaxWidth(),
+                                        showMultiSelectMenuItem = false
+                                    )
+                                }
+                            }
+                        }
+                    } else {
+                        itemsIndexed(
+                            items = flatSortedList,
+                            key = { _, item -> item.habit.id.toString() }
+                        ) { index, ws ->
+                            StaggeredListItem(index = index, animationsFrozen = animationsFrozen) {
+                                HabitCard(
+                                    habitWithStatus = ws,
+                                    onClick = { onEditHabit(ws.habit) },
+                                    onCheckIn = { viewModel.performSlotCheckIn(ws.habit) },
+                                    onUndoCompletion = { viewModel.undoHabitCompletion(ws.habit) },
+                                    onEditHabit = { onEditHabit(ws.habit) },
+                                    onDeleteHabit = {
+                                        viewModel.deleteHabit(ws.habit)
+                                        application?.recordsViewModel?.refreshRecords()
+                                    },
+                                    onNavigateToMultiSelect = {},
+                                    modifier = Modifier.fillMaxWidth(),
+                                    showMultiSelectMenuItem = false
+                                )
+                            }
                         }
                     }
                     item {

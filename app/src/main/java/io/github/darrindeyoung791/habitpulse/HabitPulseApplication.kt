@@ -7,9 +7,10 @@ import com.google.android.material.color.DynamicColors
 import io.github.darrindeyoung791.habitpulse.data.database.HabitDatabase
 import io.github.darrindeyoung791.habitpulse.data.preferences.UserPreferences
 import io.github.darrindeyoung791.habitpulse.data.repository.HabitRepository
-import io.github.darrindeyoung791.habitpulse.service.ForegroundNotificationService
 import io.github.darrindeyoung791.habitpulse.utils.NotificationHelper
 import io.github.darrindeyoung791.habitpulse.utils.OnboardingPreferences
+import io.github.darrindeyoung791.habitpulse.utils.ReminderManager
+import io.github.darrindeyoung791.habitpulse.utils.ReminderNotificationBuilder
 import io.github.darrindeyoung791.habitpulse.viewmodel.ContactsViewModel
 import io.github.darrindeyoung791.habitpulse.viewmodel.HabitViewModel
 import io.github.darrindeyoung791.habitpulse.viewmodel.RecordsViewModel
@@ -79,32 +80,33 @@ class HabitPulseApplication : Application() {
         // Apply Material Dynamic Colors (Monet) to activities when available (Android 12+)
         DynamicColors.applyToActivitiesIfAvailable(this)
 
-        // Start foreground service on cold start if user had enabled it
-        startForegroundServiceIfEnabled()
+        // Initialize reminder notification channel and schedule first alarm on cold start
+        initializeReminderOnColdStart()
     }
 
     /**
-     * 在冷启动时尝试启动前台通知服务
+     * 在冷启动时恢复提醒闹钟调度
      *
-     * 读取用户偏好设置，如果之前开启了持久通知且拥有通知权限，
-     * 则自动启动前台服务以保持应用在后台运行。
+     * 无论应用是被用户主动打开还是被 BOOT_COMPLETED 拉起，
+     * 都确保提醒通道已创建、闹钟已恢复。
+     * 前台通知服务（保活）由用户打开 Activity 时初始化。
      */
-    private fun startForegroundServiceIfEnabled() {
-        // Use a coroutine scope to read preferences asynchronously
+    private fun initializeReminderOnColdStart() {
         val scope = CoroutineScope(Dispatchers.IO + SupervisorJob())
         scope.launch {
             try {
                 val userPreferences = UserPreferences.getInstance(applicationContext)
-                val isPersistentNotificationEnabled = userPreferences.persistentNotificationFlow.first()
+                val isReminderEnabled = userPreferences.reminderEnabledFlow.first()
+                val hasPermission = NotificationHelper.hasNotificationPermission(applicationContext)
 
-                // Only start service if user had enabled it AND has permission
-                if (isPersistentNotificationEnabled && NotificationHelper.hasNotificationPermission(applicationContext)) {
-                    NotificationHelper.createNotificationChannel(applicationContext)
-                    ForegroundNotificationService.toggleService(applicationContext, enable = true)
+                if (isReminderEnabled && hasPermission) {
+                    ReminderNotificationBuilder.createNotificationChannel(applicationContext)
+                    ReminderManager.scheduleNextAlarm(applicationContext)
+                } else {
+                    ReminderNotificationBuilder.createNotificationChannel(applicationContext)
                 }
             } catch (e: Exception) {
-                // Log error but don't crash the application
-                android.util.Log.e("HabitPulseApplication", "Failed to start foreground service on cold start", e)
+                android.util.Log.e("HabitPulseApplication", "Failed to initialize reminder on cold start", e)
             }
         }
     }
