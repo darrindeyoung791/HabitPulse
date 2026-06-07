@@ -291,6 +291,7 @@
     <string name="reminder_settings_keepalive_status">保活状态</string>
     <string name="reminder_settings_next_alarm">下次提醒</string>
     <string name="reminder_settings_notification_permission">通知权限</string>
+    <string name="reminder_settings_system_settings">系统通知设置</string>
     <string name="reminder_settings_test_notification">发送测试通知</string>
     <string name="reminder_settings_test_notification_sent">测试通知已发送</string>
     <string name="reminder_settings_reminder_disabled">提醒已关闭</string>
