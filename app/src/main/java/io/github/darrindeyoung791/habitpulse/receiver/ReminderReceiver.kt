@@ -53,7 +53,7 @@ class ReminderReceiver : BroadcastReceiver() {
         val allHabits = repository.getAllHabits()
         val now = System.currentTimeMillis()
 
-        val aboutToStartTitles = allHabits.mapNotNull { habit ->
+        val aboutToStartLines = allHabits.mapNotNull { habit ->
             if (!SlotCheckInEngine.isApplicableToday(habit, now)) return@mapNotNull null
 
             val habitCompletions = todayCompletions.filter { it.habitId == habit.id }
@@ -65,9 +65,9 @@ class ReminderReceiver : BroadcastReceiver() {
             val incompleteSlots = allSlots.filter { it !in completedSlots }
             if (incompleteSlots.isEmpty()) return@mapNotNull null
 
-            val hasFutureSlot = incompleteSlots.any { slot ->
+            val nextSlot = incompleteSlots.firstOrNull { slot ->
                 val parts = slot.split(":")
-                if (parts.size != 2) return@any false
+                if (parts.size != 2) return@firstOrNull false
                 val slotCal = Calendar.getInstance().apply {
                     timeInMillis = now
                     set(Calendar.HOUR_OF_DAY, parts[0].toInt())
@@ -79,12 +79,12 @@ class ReminderReceiver : BroadcastReceiver() {
                 slotTime > now && slotTime <= now + 3_600_000L
             }
 
-            if (hasFutureSlot) habit.title else null
+            if (nextSlot != null) "${nextSlot}  ${habit.title}" else null
         }
 
-        if (aboutToStartTitles.isNotEmpty()) {
+        if (aboutToStartLines.isNotEmpty()) {
             val notification = ReminderNotificationBuilder.buildReminderNotification(
-                context, aboutToStartTitles
+                context, aboutToStartLines
             )
             if (notification != null) {
                 ReminderNotificationBuilder.sendNotification(context, notification)
