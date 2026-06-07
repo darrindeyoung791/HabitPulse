@@ -457,4 +457,5 @@
     <string name="today_section_soon">About to Start</string>
     <string name="today_section_later">Later</string>
     <string name="today_section_allday">All Day</string>
+    <string name="reminder_settings_dnd_same_time">Do Not Disturb start and end time cannot be the same</string>
 </resources>

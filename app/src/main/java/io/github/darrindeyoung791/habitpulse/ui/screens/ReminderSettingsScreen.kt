@@ -339,27 +339,13 @@ private fun DndRangeSlider(
     onStartTimeChange: (String) -> Unit,
     onEndTimeChange: (String) -> Unit
 ) {
-    val toLinear: (String) -> Float = { time ->
-        val parts = time.split(":")
-        var h = parts[0].toInt()
-        val m = parts[1].toInt()
-        if (h < 12) h += 24
-        (h * 60 + m).toFloat()
-    }
-    val fromLinear: (Float) -> String = { value ->
-        var totalMin = value.toInt().coerceIn(1260, 1920)
-        var h = totalMin / 60
-        val m = ((totalMin % 60) / 30) * 30
-        if (h >= 24) h -= 24
-        String.format("%02d:%02d", h, m)
-    }
-
+    val context = LocalContext.current
     val rangeStart = 1260f
     val rangeEnd = 1920f
-    val stepCount = ((rangeEnd - rangeStart) / 30f).toInt() - 1
+    val stepCount = 21
 
-    var curStart by remember(startTime) { mutableFloatStateOf(toLinear(startTime)) }
-    var curEnd by remember(endTime) { mutableFloatStateOf(toLinear(endTime)) }
+    var curStart by remember(startTime) { mutableFloatStateOf(snapToStep(toLinear(startTime))) }
+    var curEnd by remember(endTime) { mutableFloatStateOf(snapToStep(toLinear(endTime))) }
 
     Column(
         modifier = Modifier
@@ -373,7 +359,7 @@ private fun DndRangeSlider(
         ) {
             Column(horizontalAlignment = Alignment.Start) {
                 Text(
-                    text = fromLinear(curStart),
+                    text = stepToTime(curStart),
                     style = MaterialTheme.typography.titleLarge,
                     color = MaterialTheme.colorScheme.primary
                 )
@@ -391,7 +377,7 @@ private fun DndRangeSlider(
             )
             Column(horizontalAlignment = Alignment.End) {
                 Text(
-                    text = fromLinear(curEnd),
+                    text = stepToTime(curEnd),
                     style = MaterialTheme.typography.titleLarge,
                     color = MaterialTheme.colorScheme.primary
                 )
@@ -412,14 +398,44 @@ private fun DndRangeSlider(
                 curEnd = range.endInclusive
             },
             onValueChangeFinished = {
-                onStartTimeChange(fromLinear(curStart))
-                onEndTimeChange(fromLinear(curEnd))
+                val snappedStart = snapToStep(curStart)
+                val snappedEnd = snapToStep(curEnd)
+                if (snappedStart == snappedEnd) {
+                    android.widget.Toast.makeText(
+                        context,
+                        context.getString(R.string.reminder_settings_dnd_same_time),
+                        android.widget.Toast.LENGTH_SHORT
+                    ).show()
+                }
+                onStartTimeChange(stepToTime(snappedStart))
+                onEndTimeChange(stepToTime(snappedEnd))
             },
             valueRange = rangeStart..rangeEnd,
             steps = stepCount,
             modifier = Modifier.fillMaxWidth()
         )
     }
+}
+
+private fun toLinear(time: String): Float {
+    val parts = time.split(":")
+    var h = parts[0].toInt()
+    val m = parts[1].toInt()
+    if (h < 12) h += 24
+    return (h * 60 + m).toFloat()
+}
+
+private fun snapToStep(value: Float): Float {
+    val pos = kotlin.math.round((value - 1260f) / 30f).toInt().coerceIn(0, 22)
+    return 1260f + pos * 30f
+}
+
+private fun stepToTime(value: Float): String {
+    var totalMin = value.toInt()
+    var h = totalMin / 60
+    val m = totalMin % 60
+    if (h >= 24) h -= 24
+    return String.format("%02d:%02d", h, m)
 }
 
 @Composable

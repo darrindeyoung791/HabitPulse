@@ -456,4 +456,5 @@
     <string name="today_section_soon">即將開始</string>
     <string name="today_section_later">稍後</string>
     <string name="today_section_allday">全天</string>
+    <string name="reminder_settings_dnd_same_time">免打擾的開始和結束時間不能相同</string>
 </resources>
