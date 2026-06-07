@@ -290,7 +290,7 @@
     <string name="reminder_settings_keepalive_status">保活狀態</string>
     <string name="reminder_settings_next_alarm">下次提醒</string>
     <string name="reminder_settings_notification_permission">通知權限</string>
-    <string name="reminder_settings_system_settings">系統通知設定</string>
+    <string name="reminder_settings_system_settings">去系統通知設定…</string>
     <string name="reminder_settings_test_notification">發送測試通知</string>
     <string name="reminder_settings_test_notification_sent">測試通知已發送</string>
     <string name="reminder_settings_reminder_disabled">提醒已關閉</string>

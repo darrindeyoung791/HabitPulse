@@ -33,6 +33,7 @@ import androidx.compose.material.icons.outlined.DeleteForever
 import androidx.compose.material.icons.outlined.FavoriteBorder
 import androidx.compose.material.icons.outlined.HelpOutline
 import androidx.compose.material.icons.outlined.Info
+import androidx.compose.material.icons.outlined.Alarm
 import androidx.compose.material.icons.outlined.Notifications
 import androidx.compose.material.icons.outlined.Person
 import androidx.compose.material.icons.outlined.Settings
@@ -685,7 +686,7 @@ fun SettingsScreen() {
                         supportingText = stringResource(id = R.string.settings_reminder_description),
                         leadingIcon = {
                             Icon(
-                                imageVector = Icons.Outlined.Notifications,
+                                imageVector = Icons.Outlined.Alarm,
                                 contentDescription = null
                             )
                         },

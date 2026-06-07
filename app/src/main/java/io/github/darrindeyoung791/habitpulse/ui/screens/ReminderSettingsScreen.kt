@@ -2,8 +2,13 @@ package io.github.darrindeyoung791.habitpulse.ui.screens
 
 import android.app.ActivityManager
 import android.content.Context
+import android.content.Intent
+import android.net.Uri
 import android.provider.Settings
 import android.widget.Toast
+import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.expandVertically
+import androidx.compose.animation.shrinkVertically
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.material.icons.Icons
@@ -121,20 +126,26 @@ fun ReminderSettingsScreen(
                     )
                 }
 
-                // DND range slider
-                if (dndEnabled) {
-                    item {
-                        HorizontalDivider(modifier = Modifier.padding(start = 72.dp))
-                        DndRangeSlider(
-                            startTime = dndStartTime,
-                            endTime = dndEndTime,
-                            onStartTimeChange = { time ->
-                                scope.launch { userPreferences.setDndStartTime(time) }
-                            },
-                            onEndTimeChange = { time ->
-                                scope.launch { userPreferences.setDndEndTime(time) }
-                            }
-                        )
+                // DND range slider with animation
+                item {
+                    AnimatedVisibility(
+                        visible = dndEnabled,
+                        enter = expandVertically(expandFrom = Alignment.Top),
+                        exit = shrinkVertically(shrinkTowards = Alignment.Top)
+                    ) {
+                        Column {
+                            HorizontalDivider(modifier = Modifier.padding(start = 72.dp))
+                            DndRangeSlider(
+                                startTime = dndStartTime,
+                                endTime = dndEndTime,
+                                onStartTimeChange = { time ->
+                                    scope.launch { userPreferences.setDndStartTime(time) }
+                                },
+                                onEndTimeChange = { time ->
+                                    scope.launch { userPreferences.setDndEndTime(time) }
+                                }
+                            )
+                        }
                     }
                 }
 
@@ -198,23 +209,6 @@ fun ReminderSettingsScreen(
                     )
                 }
 
-                item {
-                    HorizontalDivider(modifier = Modifier.padding(start = 72.dp))
-                    ClickableStatusRow(
-                        icon = Icons.Outlined.Notifications,
-                        label = stringResource(id = R.string.reminder_settings_system_settings),
-                        onClick = {
-                            val intent = android.content.Intent(
-                                Settings.ACTION_APPLICATION_DETAILS_SETTINGS
-                            ).apply {
-                                data = android.net.Uri.fromParts("package", context.packageName, null)
-                                addFlags(android.content.Intent.FLAG_ACTIVITY_NEW_TASK)
-                            }
-                            context.startActivity(intent)
-                        }
-                    )
-                }
-
                 // Test notification
                 item {
                     Spacer(modifier = Modifier.height(8.dp))
@@ -251,6 +245,28 @@ fun ReminderSettingsScreen(
                         )
                         Spacer(modifier = Modifier.width(8.dp))
                         Text(text = stringResource(id = R.string.reminder_settings_test_notification))
+                    }
+                }
+
+                // System notification settings - left-aligned text button with ellipsis
+                item {
+                    TextButton(
+                        onClick = {
+                            val intent = Intent(Settings.ACTION_APPLICATION_DETAILS_SETTINGS).apply {
+                                data = Uri.fromParts("package", context.packageName, null)
+                            }
+                            context.startActivity(intent)
+                        },
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(horizontal = 16.dp),
+                        shape = androidx.compose.foundation.shape.RoundedCornerShape(0.dp),
+                        contentPadding = PaddingValues(0.dp)
+                    ) {
+                        Text(
+                            text = stringResource(id = R.string.reminder_settings_system_settings),
+                            style = MaterialTheme.typography.bodyMedium
+                        )
                     }
                 }
             }
@@ -393,39 +409,6 @@ private fun StatusRow(
                 style = MaterialTheme.typography.bodyMedium,
                 color = if (isPositive) MaterialTheme.colorScheme.primary
                         else MaterialTheme.colorScheme.onSurface
-            )
-        }
-    }
-}
-
-@Composable
-private fun ClickableStatusRow(
-    icon: ImageVector,
-    label: String,
-    onClick: () -> Unit
-) {
-    Surface(
-        modifier = Modifier.fillMaxWidth(),
-        onClick = onClick,
-        color = MaterialTheme.colorScheme.surface
-    ) {
-        Row(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(horizontal = 16.dp, vertical = 12.dp),
-            verticalAlignment = Alignment.CenterVertically
-        ) {
-            Icon(
-                imageVector = icon,
-                contentDescription = null,
-                tint = MaterialTheme.colorScheme.primary,
-                modifier = Modifier.padding(end = 16.dp)
-            )
-            Text(
-                text = label,
-                style = MaterialTheme.typography.bodyLarge,
-                color = MaterialTheme.colorScheme.onSurface,
-                modifier = Modifier.weight(1f)
             )
         }
     }
