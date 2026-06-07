@@ -265,6 +265,7 @@ fun ReminderSettingsScreen(
                                     ).show()
                                     return@launch
                                 }
+                                ReminderNotificationBuilder.createNotificationChannel(context)
                                 val alarmManager = context.getSystemService(Context.ALARM_SERVICE) as AlarmManager
                                 val intent = Intent("io.github.darrindeyoung791.habitpulse.action.REMINDER_ALARM").apply {
                                     setClass(context, ReminderReceiver::class.java)
@@ -275,9 +276,11 @@ fun ReminderSettingsScreen(
                                     intent,
                                     PendingIntent.FLAG_UPDATE_CURRENT or PendingIntent.FLAG_IMMUTABLE
                                 )
-                                alarmManager.setExact(
-                                    AlarmManager.RTC_WAKEUP,
-                                    System.currentTimeMillis() + 60_000L,
+                                alarmManager.setAlarmClock(
+                                    AlarmManager.AlarmClockInfo(
+                                        System.currentTimeMillis() + 60_000L,
+                                        pendingIntent
+                                    ),
                                     pendingIntent
                                 )
                                 Toast.makeText(
