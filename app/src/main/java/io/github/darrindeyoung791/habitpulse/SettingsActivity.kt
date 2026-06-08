@@ -27,6 +27,7 @@ import androidx.compose.foundation.lazy.LazyListState
 import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
+import androidx.compose.material.icons.automirrored.filled.KeyboardArrowRight
 import androidx.compose.material.icons.automirrored.outlined.Article
 import androidx.compose.material.icons.filled.AutoAwesome
 import androidx.compose.material.icons.outlined.Delete
@@ -459,6 +460,13 @@ fun SettingsScreen() {
                     onClick = {
                         val intent = Intent(context, AISettingsActivity::class.java)
                         context.startActivity(intent)
+                    },
+                    trailingIcon = {
+                        Icon(
+                            imageVector = Icons.AutoMirrored.Filled.KeyboardArrowRight,
+                            contentDescription = null,
+                            tint = MaterialTheme.colorScheme.onSurfaceVariant
+                        )
                     }
                 )
             }
@@ -660,6 +668,13 @@ fun SettingsScreen() {
                         onClick = {
                             val intent = Intent(context, ReminderSettingsActivity::class.java)
                             context.startActivity(intent)
+                        },
+                        trailingIcon = {
+                            Icon(
+                                imageVector = Icons.AutoMirrored.Filled.KeyboardArrowRight,
+                                contentDescription = null,
+                                tint = MaterialTheme.colorScheme.onSurfaceVariant
+                            )
                         }
                     )
                 }
@@ -808,6 +823,13 @@ fun SettingsScreen() {
                             putExtra(WebViewActivity.EXTRA_INITIAL_URL, "https://darrindeyoung791.github.io/HabitPulse/team")
                         }
                         context.startActivity(intent)
+                    },
+                    trailingIcon = {
+                        Icon(
+                            imageVector = Icons.AutoMirrored.Filled.KeyboardArrowRight,
+                            contentDescription = null,
+                            tint = MaterialTheme.colorScheme.onSurfaceVariant
+                        )
                     }
                 )
 
@@ -823,6 +845,13 @@ fun SettingsScreen() {
                     onClick = {
                         val intent = Intent(context, OpenSourceLicensesActivity::class.java)
                         context.startActivity(intent)
+                    },
+                    trailingIcon = {
+                        Icon(
+                            imageVector = Icons.AutoMirrored.Filled.KeyboardArrowRight,
+                            contentDescription = null,
+                            tint = MaterialTheme.colorScheme.onSurfaceVariant
+                        )
                     }
                 )
 
@@ -999,7 +1028,8 @@ fun SettingsListItem(
     headline: String,
     supportingText: String,
     leadingIcon: @Composable () -> Unit,
-    onClick: () -> Unit = {}
+    onClick: () -> Unit = {},
+    trailingIcon: @Composable () -> Unit = {}
 ) {
     Surface(
         modifier = Modifier.fillMaxWidth(),
@@ -1037,6 +1067,7 @@ fun SettingsListItem(
                     )
                 }
             }
+            trailingIcon()
         }
     }
 }
