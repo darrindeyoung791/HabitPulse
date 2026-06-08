@@ -12,7 +12,8 @@ import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.expandVertically
 import androidx.compose.animation.shrinkVertically
 import androidx.compose.foundation.layout.*
-import androidx.compose.foundation.lazy.LazyColumn
+import androidx.compose.foundation.lazy.LazyListState
+import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.automirrored.outlined.Send
@@ -53,6 +54,7 @@ fun ReminderSettingsScreen(
 ) {
     val context = LocalContext.current
     val scope = rememberCoroutineScope()
+    val listState = rememberLazyListState()
     val userPreferences = remember { UserPreferences.getInstance(context) }
 
     val reminderEnabled by userPreferences.reminderEnabledFlow.collectAsStateWithLifecycle(initialValue = true)
@@ -94,10 +96,11 @@ fun ReminderSettingsScreen(
             )
         }
     ) { paddingValues ->
-        LazyColumn(
+        Md3ScrollableColumn(
             modifier = Modifier
                 .fillMaxSize()
-                .padding(paddingValues)
+                .padding(paddingValues),
+            listState = listState
         ) {
 
             // Reminder master switch

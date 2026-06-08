@@ -262,7 +262,7 @@ fun RecordsScreenContent(
                 if (useTwoColumnLayout) {
                     // Two-column layout for tablet landscape
                     // Date headers span full width, records are split into two columns
-                    ScrollableLazyColumnWithScrollbar(
+                    Md3ScrollableColumn(
                         modifier = Modifier.fillMaxSize(),
                         listState = listState,
                         contentPadding = PaddingValues(horizontal = 16.dp, vertical = 16.dp),
@@ -349,7 +349,7 @@ fun RecordsScreenContent(
                     }
                 } else {
                     // Single column layout for phones and portrait mode
-                    ScrollableLazyColumnWithScrollbar(
+                    Md3ScrollableColumn(
                         modifier = Modifier.fillMaxSize(),
                         listState = listState,
                         contentPadding = PaddingValues(horizontal = 16.dp, vertical = 8.dp),

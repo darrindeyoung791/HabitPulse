@@ -4,6 +4,7 @@ import android.widget.Toast
 import androidx.activity.ComponentActivity
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
+import io.github.darrindeyoung791.habitpulse.ui.screens.Md3ScrollableColumn
 import androidx.compose.foundation.lazy.LazyListState
 import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.text.KeyboardOptions
@@ -95,11 +96,11 @@ fun AISettingsScreen(
             )
         }
     ) { innerPadding ->
-        LazyColumn(
+        Md3ScrollableColumn(
             modifier = Modifier
                 .fillMaxSize()
                 .padding(innerPadding),
-            state = listState,
+            listState = listState,
             contentPadding = PaddingValues(16.dp),
             verticalArrangement = Arrangement.spacedBy(16.dp)
         ) {

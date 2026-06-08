@@ -193,7 +193,7 @@ fun TodayHabitsScreen(
                     )
                 }
             } else {
-                ScrollableLazyColumnWithScrollbar(
+                Md3ScrollableColumn(
                     modifier = Modifier.fillMaxSize(),
                     listState = listState,
                     contentPadding = PaddingValues(start = 16.dp, top = 8.dp, end = 16.dp, bottom = 16.dp),

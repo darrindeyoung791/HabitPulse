@@ -241,7 +241,7 @@ fun ContactsScreenContent(
                     )
                 } else if (useTwoColumnLayout) {
                     // Two-column layout for tablet landscape
-                    ScrollableLazyColumnWithScrollbar(
+                    Md3ScrollableColumn(
                         modifier = Modifier.fillMaxSize(),
                         listState = listState,
                         contentPadding = PaddingValues(horizontal = 16.dp, vertical = 16.dp),
@@ -309,7 +309,7 @@ fun ContactsScreenContent(
                     }
                 } else {
                     // 显示搜索结果 - single column
-                    ScrollableLazyColumnWithScrollbar(
+                    Md3ScrollableColumn(
                         modifier = Modifier.fillMaxSize(),
                         listState = listState,
                         contentPadding = PaddingValues(horizontal = 16.dp, vertical = 8.dp),
@@ -353,7 +353,7 @@ fun ContactsScreenContent(
             else -> {
                 if (useTwoColumnLayout) {
                     // Two-column layout for tablet landscape
-                    ScrollableLazyColumnWithScrollbar(
+                    Md3ScrollableColumn(
                         modifier = Modifier.fillMaxSize(),
                         listState = listState,
                         contentPadding = PaddingValues(horizontal = 16.dp, vertical = 16.dp),
@@ -421,7 +421,7 @@ fun ContactsScreenContent(
                     }
                 } else {
                     // Single column layout for phones and portrait mode
-                    ScrollableLazyColumnWithScrollbar(
+                    Md3ScrollableColumn(
                         modifier = Modifier.fillMaxSize(),
                         listState = listState,
                         contentPadding = PaddingValues(horizontal = 16.dp, vertical = 8.dp),

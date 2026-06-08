@@ -6,6 +6,7 @@ import androidx.compose.animation.AnimatedContent
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.animateContentSize
 import androidx.compose.animation.core.FastOutSlowInEasing
+import androidx.compose.animation.core.animateDpAsState
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.core.spring
 import androidx.compose.animation.core.tween
@@ -17,8 +18,8 @@ import androidx.compose.animation.slideInVertically
 import androidx.compose.animation.slideOutVertically
 import androidx.compose.animation.togetherWith
 import androidx.compose.foundation.ExperimentalFoundationApi
-import androidx.compose.foundation.ScrollState
 import androidx.compose.foundation.background
+import androidx.compose.foundation.gestures.detectDragGestures
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.combinedClickable
 import androidx.compose.foundation.layout.*
@@ -561,7 +562,7 @@ fun HabitListContent(
     if (useStaggeredGrid) {
         val gridModifier = if (nestedScrollConnection != null) modifier.nestedScroll(nestedScrollConnection) else modifier
 
-        ScrollableStaggeredGridWithScrollbar(
+        Md3ScrollableStaggeredGrid(
             modifier = gridModifier,
             gridState = waterfallScrollState,
             contentPadding = PaddingValues(start = horizontalPadding, top = 0.dp, end = horizontalPadding, bottom = 16.dp)
@@ -615,7 +616,7 @@ fun HabitListContent(
         }
     } else {
         val listModifier = if (nestedScrollConnection != null) modifier.nestedScroll(nestedScrollConnection) else modifier
-        ScrollableLazyColumnWithScrollbar(
+        Md3ScrollableColumn(
             modifier = listModifier,
             listState = listState,
             contentPadding = PaddingValues(start = horizontalPadding, top = 8.dp, end = horizontalPadding, bottom = 16.dp),
@@ -657,30 +658,228 @@ fun HabitListContent(
 }
 
 @Composable
-fun ScrollableLazyColumnWithScrollbar(
+fun Md3ScrollableColumn(
     modifier: Modifier = Modifier,
     listState: LazyListState,
     contentPadding: PaddingValues = PaddingValues(0.dp),
     verticalArrangement: Arrangement.Vertical = Arrangement.Top,
     content: LazyListScope.() -> Unit
 ) {
+    Box(modifier = modifier.fillMaxSize()) {
+        LazyColumn(
+            modifier = Modifier.fillMaxSize(),
+            state = listState,
+            contentPadding = contentPadding,
+            verticalArrangement = verticalArrangement,
+        ) {
+            content()
+        }
+
+        Md3ScrollbarOverlay(
+            listState = listState,
+            modifier = Modifier.matchParentSize()
+        )
+    }
+}
+
+@OptIn(ExperimentalFoundationApi::class)
+@Composable
+fun Md3ScrollableStaggeredGrid(
+    modifier: Modifier = Modifier,
+    gridState: LazyStaggeredGridState,
+    columns: StaggeredGridCells = StaggeredGridCells.Fixed(2),
+    contentPadding: PaddingValues = PaddingValues(0.dp),
+    horizontalArrangement: Arrangement.Horizontal = Arrangement.spacedBy(16.dp),
+    verticalItemSpacing: Dp = 8.dp,
+    content: LazyStaggeredGridScope.() -> Unit
+) {
     val isScrollbarVisible = remember { mutableStateOf(true) }
     val scrollbarAlpha by animateFloatAsState(
         targetValue = if (isScrollbarVisible.value) 1f else 0f,
         animationSpec = tween(durationMillis = 300)
     )
+    val coroutineScope = rememberCoroutineScope()
 
     val isAtTop = remember { mutableStateOf(true) }
     val isAtBottom = remember { mutableStateOf(false) }
+    val isDragging = remember { mutableStateOf(false) }
+
+    LaunchedEffect(gridState) {
+        snapshotFlow { gridState.isScrollInProgress }
+            .collect { scrolling ->
+                isScrollbarVisible.value = true
+                if (!scrolling && !isDragging.value) {
+                    delay(1200)
+                    if (!gridState.isScrollInProgress && !isDragging.value) {
+                        isScrollbarVisible.value = false
+                    }
+                }
+            }
+    }
+
+    LaunchedEffect(gridState.firstVisibleItemIndex, gridState.firstVisibleItemScrollOffset) {
+        val layoutInfo = gridState.layoutInfo
+        val totalCount = layoutInfo.totalItemsCount
+        val visibleItems = layoutInfo.visibleItemsInfo
+
+        isAtTop.value = gridState.firstVisibleItemIndex == 0 && gridState.firstVisibleItemScrollOffset == 0
+
+        if (totalCount > 0 && visibleItems.isNotEmpty()) {
+            val lastIndex = layoutInfo.visibleItemsInfo.maxOf { info -> info.index }
+            isAtBottom.value = lastIndex >= totalCount - 1
+        } else {
+            isAtBottom.value = true
+        }
+    }
+
+    val topGradientAlpha by animateFloatAsState(
+        targetValue = if (isAtTop.value) 0f else 1f,
+        animationSpec = tween(durationMillis = 200),
+        label = "gridTopGradientAlpha"
+    )
+    val bottomGradientAlpha by animateFloatAsState(
+        targetValue = if (isAtBottom.value) 0f else 1f,
+        animationSpec = tween(durationMillis = 200),
+        label = "gridBottomGradientAlpha"
+    )
+
+    Box(modifier = modifier.fillMaxSize()) {
+        LazyVerticalStaggeredGrid(
+            columns = columns,
+            modifier = Modifier.fillMaxSize(),
+            state = gridState,
+            contentPadding = contentPadding,
+            horizontalArrangement = horizontalArrangement,
+            verticalItemSpacing = verticalItemSpacing
+        ) {
+            content()
+        }
+
+        Box(
+            modifier = Modifier
+                .fillMaxWidth()
+                .height(16.dp)
+                .align(Alignment.TopCenter)
+                .alpha(topGradientAlpha)
+                .background(
+                    Brush.verticalGradient(
+                        colors = listOf(MaterialTheme.colorScheme.background, Color.Transparent)
+                    )
+                )
+        )
+
+        Box(
+            modifier = Modifier
+                .fillMaxWidth()
+                .height(16.dp)
+                .align(Alignment.BottomCenter)
+                .alpha(bottomGradientAlpha)
+                .background(
+                    Brush.verticalGradient(
+                        colors = listOf(Color.Transparent, MaterialTheme.colorScheme.background)
+                    )
+                )
+        )
+
+        val layoutInfo = gridState.layoutInfo
+        val totalCount = layoutInfo.totalItemsCount
+        val visibleItems = layoutInfo.visibleItemsInfo
+        val visibleCount = visibleItems.size
+
+        if (totalCount > 0 && visibleCount > 0) {
+            val density = LocalDensity.current
+            val viewportHeightPx = layoutInfo.viewportSize.height.toFloat()
+            val sumHeights = visibleItems.sumOf { info -> info.size.height }.toFloat()
+            val averageItemHeightPx = (sumHeights / visibleCount).coerceAtLeast(1f)
+            val gridColumnCount = 2
+            val itemsPerColumn = (totalCount / gridColumnCount.toFloat()).coerceAtLeast(1f)
+            val estimatedTotalContentHeightPx = itemsPerColumn * averageItemHeightPx
+            val itemsAbove = gridState.firstVisibleItemIndex.toFloat() / gridColumnCount
+            val currentScrollPx = itemsAbove * averageItemHeightPx + gridState.firstVisibleItemScrollOffset.toFloat()
+            val totalScrollablePx = (estimatedTotalContentHeightPx - viewportHeightPx).coerceAtLeast(1f)
+            val scrollFraction = (currentScrollPx / totalScrollablePx).coerceIn(0f, 1f)
+
+            val indicatorHeightFraction = (viewportHeightPx / estimatedTotalContentHeightPx).coerceIn(0.03f, 1f)
+            val thumbHeightPx = viewportHeightPx * indicatorHeightFraction
+            val offsetYPx = (viewportHeightPx - thumbHeightPx) * scrollFraction
+
+            val animThumbHeightPx by animateFloatAsState(targetValue = thumbHeightPx, animationSpec = tween(durationMillis = 80))
+            val animOffsetYPx by animateFloatAsState(targetValue = offsetYPx, animationSpec = tween(durationMillis = 80))
+
+            val scrollbarTrackPx = (viewportHeightPx - animThumbHeightPx).coerceAtLeast(1f)
+            val dragRatio = totalScrollablePx / scrollbarTrackPx
+            val dragRatioState = remember { mutableFloatStateOf(dragRatio) }
+            dragRatioState.floatValue = dragRatio
+
+            val scrollbarModifier = if (isScrollbarVisible.value) {
+                Modifier.pointerInput(dragRatioState) {
+                    detectDragGestures(
+                        onDragStart = { isDragging.value = true },
+                        onDragEnd = { isDragging.value = false },
+                        onDragCancel = { isDragging.value = false },
+                    ) { change, dragAmount ->
+                        change.consume()
+                        coroutineScope.launch {
+                            gridState.scroll { scrollBy(dragAmount.y * dragRatioState.floatValue) }
+                        }
+                    }
+                }
+            } else {
+                Modifier
+            }
+
+            Box(
+                modifier = Modifier
+                    .fillMaxHeight()
+                    .width(8.dp)
+                    .align(Alignment.CenterEnd)
+                    .alpha(scrollbarAlpha)
+                    .then(scrollbarModifier)
+            ) {
+                val thumbHeightDp = with(density) { animThumbHeightPx.toDp() }
+                val offsetYDp = with(density) { animOffsetYPx.toDp() }
+                val thumbWidth by animateDpAsState(
+                    targetValue = if (isDragging.value) 6.dp else 4.dp,
+                    animationSpec = tween(durationMillis = 100)
+                )
+
+                Box(
+                    modifier = Modifier
+                        .width(thumbWidth)
+                        .height(thumbHeightDp)
+                        .align(Alignment.TopEnd)
+                        .offset(y = offsetYDp)
+                        .background(
+                            color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.38f)
+                        )
+                )
+            }
+        }
+    }
+}
+
+@Composable
+fun Md3ScrollbarOverlay(
+    listState: LazyListState,
+    modifier: Modifier = Modifier,
+) {
+    val isScrollbarVisible = remember { mutableStateOf(true) }
+    val scrollbarAlpha by animateFloatAsState(
+        targetValue = if (isScrollbarVisible.value) 1f else 0f,
+        animationSpec = tween(durationMillis = 300)
+    )
+    val coroutineScope = rememberCoroutineScope()
+
+    val isAtTop = remember { mutableStateOf(true) }
+    val isAtBottom = remember { mutableStateOf(false) }
+    val isDragging = remember { mutableStateOf(false) }
 
     LaunchedEffect(listState) {
-        snapshotFlow {
-            listState.isScrollInProgress
-        }.collect { scrolling ->
+        snapshotFlow { listState.isScrollInProgress }.collect { scrolling ->
             isScrollbarVisible.value = true
-            if (!scrolling) {
+            if (!scrolling && !isDragging.value) {
                 delay(1200)
-                if (!listState.isScrollInProgress) {
+                if (!listState.isScrollInProgress && !isDragging.value) {
                     isScrollbarVisible.value = false
                 }
             }
@@ -716,16 +915,7 @@ fun ScrollableLazyColumnWithScrollbar(
         label = "bottomGradientAlpha"
     )
 
-    Box(modifier = modifier.fillMaxSize()) {
-        LazyColumn(
-            modifier = Modifier.fillMaxSize(),
-            state = listState,
-            contentPadding = contentPadding,
-            verticalArrangement = verticalArrangement,
-        ) {
-            content()
-        }
-
+    Box(modifier = modifier) {
         Box(
             modifier = Modifier
                 .fillMaxWidth()
@@ -734,10 +924,7 @@ fun ScrollableLazyColumnWithScrollbar(
                 .alpha(topGradientAlpha)
                 .background(
                     Brush.verticalGradient(
-                        colors = listOf(
-                            MaterialTheme.colorScheme.background,
-                            Color.Transparent
-                        )
+                        colors = listOf(MaterialTheme.colorScheme.background, Color.Transparent)
                     )
                 )
         )
@@ -750,337 +937,80 @@ fun ScrollableLazyColumnWithScrollbar(
                 .alpha(bottomGradientAlpha)
                 .background(
                     Brush.verticalGradient(
-                        colors = listOf(
-                            Color.Transparent,
-                            MaterialTheme.colorScheme.background
-                        )
+                        colors = listOf(Color.Transparent, MaterialTheme.colorScheme.background)
                     )
                 )
         )
 
-        Box(
-            modifier = Modifier
-                .fillMaxHeight()
-                .width(4.dp)
-                .align(Alignment.CenterEnd)
-                .padding(end = 2.dp)
-                .alpha(scrollbarAlpha)
-        ) {
-            val layoutInfo = listState.layoutInfo
-            val totalCount = layoutInfo.totalItemsCount
-            val visibleItems = layoutInfo.visibleItemsInfo
-            val visibleCount = visibleItems.size
-
-            if (totalCount > 0 && visibleCount > 0) {
-                val density = LocalDensity.current
-
-                val viewportHeightPx = layoutInfo.viewportSize.height.toFloat()
-                val sumVisibleHeights = visibleItems.sumOf { it.size }.toFloat()
-                val averageItemHeightPx = (sumVisibleHeights / visibleCount).coerceAtLeast(1f)
-                val remainingItems = (totalCount - visibleCount).coerceAtLeast(0)
-                val estimatedTotalContentHeightPx = (sumVisibleHeights + remainingItems * averageItemHeightPx).coerceAtLeast(viewportHeightPx)
-
-                val currentScrollPx = listState.firstVisibleItemIndex * averageItemHeightPx + listState.firstVisibleItemScrollOffset.toFloat()
-                val totalScrollablePx = (estimatedTotalContentHeightPx - viewportHeightPx).coerceAtLeast(1f)
-                val scrollFraction = (currentScrollPx / totalScrollablePx).coerceIn(0f, 1f)
-
-                val indicatorHeightFraction = (viewportHeightPx / estimatedTotalContentHeightPx).coerceIn(0.03f, 1f)
-                val indicatorHeightPx = viewportHeightPx * indicatorHeightFraction
-                val offsetYPx = (viewportHeightPx - indicatorHeightPx) * scrollFraction
-
-                val animIndicatorHeightPx by animateFloatAsState(targetValue = indicatorHeightPx, animationSpec = tween(durationMillis = 80))
-                val animOffsetYPx by animateFloatAsState(targetValue = offsetYPx, animationSpec = tween(durationMillis = 80))
-
-                BoxWithConstraints(modifier = Modifier.fillMaxSize()) {
-                    val indicatorHeight = with(density) { animIndicatorHeightPx.toDp() }
-                    val offsetY = with(density) { animOffsetYPx.toDp() }
-
-                    Box(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .height(indicatorHeight)
-                            .offset(y = offsetY)
-                            .background(
-                                color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f),
-                                shape = RoundedCornerShape(2.dp)
-                            )
-                    )
-                }
-            }
-        }
-    }
-}
-
-@OptIn(ExperimentalFoundationApi::class)
-@Composable
-fun ScrollableStaggeredGridWithScrollbar(
-    modifier: Modifier = Modifier,
-    gridState: LazyStaggeredGridState,
-    contentPadding: PaddingValues = PaddingValues(0.dp),
-    content: LazyStaggeredGridScope.() -> Unit
-) {
-    val isScrollbarVisible = remember { mutableStateOf(true) }
-    val scrollbarAlpha by animateFloatAsState(
-        targetValue = if (isScrollbarVisible.value) 1f else 0f,
-        animationSpec = tween(durationMillis = 300)
-    )
-
-    val isAtTop = remember { mutableStateOf(true) }
-    val isAtBottom = remember { mutableStateOf(false) }
-
-    LaunchedEffect(gridState) {
-        snapshotFlow { gridState.isScrollInProgress }
-            .collect { scrolling ->
-                isScrollbarVisible.value = true
-                if (!scrolling) {
-                    delay(1200)
-                    if (!gridState.isScrollInProgress) {
-                        isScrollbarVisible.value = false
-                    }
-                }
-            }
-    }
-
-    LaunchedEffect(gridState.firstVisibleItemIndex, gridState.firstVisibleItemScrollOffset) {
-        val layoutInfo = gridState.layoutInfo
+        val layoutInfo = listState.layoutInfo
         val totalCount = layoutInfo.totalItemsCount
         val visibleItems = layoutInfo.visibleItemsInfo
+        val visibleCount = visibleItems.size
 
-        isAtTop.value = gridState.firstVisibleItemIndex == 0 && gridState.firstVisibleItemScrollOffset == 0
-
-        if (totalCount > 0 && visibleItems.isNotEmpty()) {
-            val lastIndex = layoutInfo.visibleItemsInfo.maxOf { info -> info.index }
-            isAtBottom.value = lastIndex >= totalCount - 1
-        } else {
-            isAtBottom.value = true
-        }
-    }
-
-    val topGradientAlpha by animateFloatAsState(
-        targetValue = if (isAtTop.value) 0f else 1f,
-        animationSpec = tween(durationMillis = 200),
-        label = "gridTopGradientAlpha"
-    )
-    val bottomGradientAlpha by animateFloatAsState(
-        targetValue = if (isAtBottom.value) 0f else 1f,
-        animationSpec = tween(durationMillis = 200),
-        label = "gridBottomGradientAlpha"
-    )
-
-    Box(modifier = modifier.fillMaxSize()) {
-        LazyVerticalStaggeredGrid(
-            columns = StaggeredGridCells.Fixed(2),
-            modifier = Modifier.fillMaxSize(),
-            state = gridState,
-            contentPadding = contentPadding,
-            horizontalArrangement = Arrangement.spacedBy(16.dp),
-            verticalItemSpacing = 8.dp
-        ) {
-            content()
-        }
-
-        Box(
-            modifier = Modifier
-                .fillMaxWidth()
-                .height(16.dp)
-                .align(Alignment.TopCenter)
-                .alpha(topGradientAlpha)
-                .background(
-                    Brush.verticalGradient(
-                        colors = listOf(
-                            MaterialTheme.colorScheme.background,
-                            Color.Transparent
-                        )
-                    )
-                )
-        )
-
-        Box(
-            modifier = Modifier
-                .fillMaxWidth()
-                .height(16.dp)
-                .align(Alignment.BottomCenter)
-                .alpha(bottomGradientAlpha)
-                .background(
-                    Brush.verticalGradient(
-                        colors = listOf(
-                            Color.Transparent,
-                            MaterialTheme.colorScheme.background
-                        )
-                    )
-                )
-        )
-
-        Box(
-            modifier = Modifier
-                .fillMaxHeight()
-                .width(4.dp)
-                .align(Alignment.CenterEnd)
-                .padding(end = 2.dp)
-                .alpha(scrollbarAlpha)
-        ) {
+        if (totalCount > 0 && visibleCount > 0) {
             val density = LocalDensity.current
-            val layoutInfo = gridState.layoutInfo
-            val totalCount = layoutInfo.totalItemsCount
-            val visibleItems = layoutInfo.visibleItemsInfo
-            val visibleCount = visibleItems.size
+            val viewportHeightPx = layoutInfo.viewportSize.height.toFloat()
+            val sumVisibleHeights = visibleItems.sumOf { it.size }.toFloat()
+            val averageItemHeightPx = (sumVisibleHeights / visibleCount).coerceAtLeast(1f)
+            val remainingItems = (totalCount - visibleCount).coerceAtLeast(0)
+            val estimatedTotalContentHeightPx = (sumVisibleHeights + remainingItems * averageItemHeightPx).coerceAtLeast(viewportHeightPx)
 
-            if (totalCount > 0 && visibleCount > 0) {
-                val viewportHeightPx = layoutInfo.viewportSize.height.toFloat()
-                val sumHeights = visibleItems.sumOf { info -> info.size.height }.toFloat()
-                val averageItemHeightPx = (sumHeights / visibleCount).coerceAtLeast(1f)
-                val columns = 2
-                val itemsPerColumn = (totalCount / columns.toFloat()).coerceAtLeast(1f)
-                val estimatedTotalContentHeightPx = itemsPerColumn * averageItemHeightPx
-                val itemsAbove = gridState.firstVisibleItemIndex.toFloat() / columns
-                val currentScrollPx = itemsAbove * averageItemHeightPx + gridState.firstVisibleItemScrollOffset.toFloat()
-                val totalScrollablePx = (estimatedTotalContentHeightPx - viewportHeightPx).coerceAtLeast(1f)
-                val scrollFraction = (currentScrollPx / totalScrollablePx).coerceIn(0f, 1f)
+            val currentScrollPx = listState.firstVisibleItemIndex * averageItemHeightPx + listState.firstVisibleItemScrollOffset.toFloat()
+            val totalScrollablePx = (estimatedTotalContentHeightPx - viewportHeightPx).coerceAtLeast(1f)
+            val scrollFraction = (currentScrollPx / totalScrollablePx).coerceIn(0f, 1f)
 
-                val indicatorHeightFraction = (viewportHeightPx / estimatedTotalContentHeightPx).coerceIn(0.03f, 1f)
-                val indicatorHeightPx = viewportHeightPx * indicatorHeightFraction
-                val offsetYPx = (viewportHeightPx - indicatorHeightPx) * scrollFraction
+            val indicatorHeightFraction = (viewportHeightPx / estimatedTotalContentHeightPx).coerceIn(0.03f, 1f)
+            val thumbHeightPx = viewportHeightPx * indicatorHeightFraction
+            val offsetYPx = (viewportHeightPx - thumbHeightPx) * scrollFraction
 
-                val animIndicatorHeightPx by animateFloatAsState(targetValue = indicatorHeightPx, animationSpec = tween(durationMillis = 80))
-                val animOffsetYPx by animateFloatAsState(targetValue = offsetYPx, animationSpec = tween(durationMillis = 80))
+            val animThumbHeightPx by animateFloatAsState(targetValue = thumbHeightPx, animationSpec = tween(durationMillis = 80))
+            val animOffsetYPx by animateFloatAsState(targetValue = offsetYPx, animationSpec = tween(durationMillis = 80))
 
-                BoxWithConstraints(modifier = Modifier.fillMaxSize()) {
-                    val indicatorHeight = with(density) { animIndicatorHeightPx.toDp() }
-                    val offsetY = with(density) { animOffsetYPx.toDp() }
+            val scrollbarTrackPx = (viewportHeightPx - animThumbHeightPx).coerceAtLeast(1f)
+            val dragRatio = totalScrollablePx / scrollbarTrackPx
+            val dragRatioState = remember { mutableFloatStateOf(dragRatio) }
+            dragRatioState.floatValue = dragRatio
 
-                    Box(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .height(indicatorHeight)
-                            .offset(y = offsetY)
-                            .background(
-                                color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f),
-                                shape = RoundedCornerShape(2.dp)
-                            )
-                    )
+            val scrollbarModifier = if (isScrollbarVisible.value) {
+                Modifier.pointerInput(dragRatioState) {
+                    detectDragGestures(
+                        onDragStart = { isDragging.value = true },
+                        onDragEnd = { isDragging.value = false },
+                        onDragCancel = { isDragging.value = false },
+                    ) { change, dragAmount ->
+                        change.consume()
+                        coroutineScope.launch {
+                            listState.scroll { scrollBy(dragAmount.y * dragRatioState.floatValue) }
+                        }
+                    }
                 }
+            } else {
+                Modifier
             }
-        }
-    }
-}
 
-@Composable
-fun ScrollableWaterfallWithScrollbar(
-    modifier: Modifier = Modifier,
-    scrollState: ScrollState,
-    content: @Composable ColumnScope.() -> Unit
-) {
-    val isScrollbarVisible = remember { mutableStateOf(true) }
-    val scrollbarAlpha by animateFloatAsState(
-        targetValue = if (isScrollbarVisible.value) 1f else 0f,
-        animationSpec = tween(durationMillis = 300)
-    )
-
-    val isAtTop = remember { mutableStateOf(true) }
-    val isAtBottom = remember { mutableStateOf(false) }
-
-    LaunchedEffect(scrollState.isScrollInProgress) {
-        isScrollbarVisible.value = true
-        if (!scrollState.isScrollInProgress) {
-            delay(1200)
-            if (!scrollState.isScrollInProgress) {
-                isScrollbarVisible.value = false
-            }
-        }
-    }
-
-    LaunchedEffect(scrollState.value) {
-        isAtTop.value = scrollState.value == 0
-        isAtBottom.value = scrollState.value == scrollState.maxValue
-    }
-
-    val topGradientAlpha by animateFloatAsState(
-        targetValue = if (isAtTop.value) 0f else 1f,
-        animationSpec = tween(durationMillis = 200),
-        label = "waterfallTopGradientAlpha"
-    )
-    val bottomGradientAlpha by animateFloatAsState(
-        targetValue = if (isAtBottom.value) 0f else 1f,
-        animationSpec = tween(durationMillis = 200),
-        label = "waterfallBottomGradientAlpha"
-    )
-
-    Box(modifier = modifier.fillMaxSize()) {
-        Column(
-            modifier = Modifier
-                .fillMaxSize()
-                .verticalScroll(scrollState)
-        ) {
-            content()
-        }
-
-        Box(
-            modifier = Modifier
-                .fillMaxWidth()
-                .height(16.dp)
-                .align(Alignment.TopCenter)
-                .alpha(topGradientAlpha)
-                .background(
-                    Brush.verticalGradient(
-                        colors = listOf(
-                            MaterialTheme.colorScheme.background,
-                            Color.Transparent
-                        )
-                    )
+            Box(
+                modifier = Modifier
+                    .fillMaxHeight()
+                    .width(8.dp)
+                    .align(Alignment.CenterEnd)
+                    .alpha(scrollbarAlpha)
+                    .then(scrollbarModifier)
+            ) {
+                val thumbHeightDp = with(density) { animThumbHeightPx.toDp() }
+                val offsetYDp = with(density) { animOffsetYPx.toDp() }
+                val thumbWidth by animateDpAsState(
+                    targetValue = if (isDragging.value) 6.dp else 4.dp,
+                    animationSpec = tween(durationMillis = 100)
                 )
-        )
-
-        Box(
-            modifier = Modifier
-                .fillMaxWidth()
-                .height(16.dp)
-                .align(Alignment.BottomCenter)
-                .alpha(bottomGradientAlpha)
-                .background(
-                    Brush.verticalGradient(
-                        colors = listOf(
-                            Color.Transparent,
-                            MaterialTheme.colorScheme.background
-                        )
-                    )
-                )
-        )
-
-        Box(
-            modifier = Modifier
-                .fillMaxHeight()
-                .width(4.dp)
-                .align(Alignment.CenterEnd)
-                .padding(end = 2.dp)
-                .alpha(scrollbarAlpha)
-        ) {
-            BoxWithConstraints(modifier = Modifier.fillMaxSize()) {
-                val density = LocalDensity.current
-                val maxH = maxHeight
-                val maxHPx = with(density) { maxH.toPx() }
-                val totalScroll = scrollState.maxValue.toFloat().coerceAtLeast(1f)
-                val totalContentHeightPx = (maxHPx + totalScroll).coerceAtLeast(maxHPx)
-
-                val viewportHeightPx = maxHPx
-                val indicatorHeightFraction = (viewportHeightPx / totalContentHeightPx).coerceIn(0.03f, 1f)
-                val indicatorHeightPx = viewportHeightPx * indicatorHeightFraction
-                val scrollFraction = (scrollState.value.toFloat() / totalScroll).coerceIn(0f, 1f)
-                val offsetYPx = (viewportHeightPx - indicatorHeightPx) * scrollFraction
-
-                val animIndicatorHeightPx by animateFloatAsState(targetValue = indicatorHeightPx, animationSpec = tween(durationMillis = 80))
-                val animOffsetYPx by animateFloatAsState(targetValue = offsetYPx, animationSpec = tween(durationMillis = 80))
-
-                val indicatorHeight = with(density) { animIndicatorHeightPx.toDp() }
-                val offsetY = with(density) { animOffsetYPx.toDp() }
 
                 Box(
                     modifier = Modifier
-                        .fillMaxWidth()
-                        .height(indicatorHeight)
-                        .offset(y = offsetY)
+                        .width(thumbWidth)
+                        .height(thumbHeightDp)
+                        .align(Alignment.TopEnd)
+                        .offset(y = offsetYDp)
                         .background(
-                            color = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f),
-                            shape = RoundedCornerShape(2.dp)
+                            color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.38f)
                         )
                 )
             }
