@@ -1064,6 +1064,7 @@ fun HabitCard(
     var isVisible by remember { mutableStateOf(true) }
     val scope = rememberCoroutineScope()
     var isInitiallyVisible by remember { mutableStateOf(!isNewlyAdded) }
+    var isCheckInDebouncing by remember { mutableStateOf(false) }
 
     LaunchedEffect(isNewlyAdded) {
         if (isNewlyAdded) {
@@ -1279,8 +1280,18 @@ fun HabitCard(
                         }
                     }
 
+                    val debouncedCheckIn = {
+                        if (!isCheckInDebouncing) {
+                            isCheckInDebouncing = true
+                            onCheckIn()
+                            scope.launch {
+                                delay(300)
+                                isCheckInDebouncing = false
+                            }
+                        }
+                    }
                     CheckInButton(
-                        onClick = onCheckIn,
+                        onClick = debouncedCheckIn,
                         contentDescription = stringResource(id = R.string.accessibility_habit_checkin, habit.title)
                     )
                 }
