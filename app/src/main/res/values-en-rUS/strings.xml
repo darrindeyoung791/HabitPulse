@@ -86,7 +86,10 @@
     <string name="habit_card_menu_undo">Undo check-in</string>
     <string name="habit_card_menu_edit">Edit</string>
     <string name="habit_card_menu_delete">Delete</string>
+    <string name="habit_card_menu_undo_create">Undo Create</string>
+    <string name="habit_card_menu_confirm_create">Confirm Create</string>
     <string name="habit_card_menu_complete">Done</string>
+    <string name="habit_card_more_times">%1$s and %2$d more</string>
     <string name="habit_card_delete_confirm_title">Confirm Delete</string>
     <string name="habit_card_delete_confirm_message">Are you sure you want to delete the habit \"%1$s\"? This action cannot be undone.</string>
     <string name="habit_card_delete_confirm">Delete</string>
@@ -377,6 +380,9 @@
     <string name="ai_clear_conversation">Clear conversation</string>
     <string name="ai_exit_title">Confirm exit?</string>
     <string name="ai_exit_message">After leaving, the conversation will not be saved.</string>
+    <string name="ai_exit_unsaved_message">After leaving, the conversation will not be saved. There are unsaved habits.</string>
+    <string name="ai_retry_confirm_title">Confirm retry?</string>
+    <string name="ai_retry_confirm_message">Retry will delete the currently created habits. Continue?</string>
     <string name="ai_clear_title">Clear conversation?</string>
     <string name="ai_clear_message">This will clear all messages.</string>
     <string name="ai_confirm_title">Confirm creation</string>

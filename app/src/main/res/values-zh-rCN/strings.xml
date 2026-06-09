@@ -87,7 +87,10 @@
     <string name="habit_card_menu_undo">撤销打卡</string>
     <string name="habit_card_menu_edit">编辑</string>
     <string name="habit_card_menu_delete">删除</string>
+    <string name="habit_card_menu_undo_create">撤销创建</string>
+    <string name="habit_card_menu_confirm_create">确认创建</string>
     <string name="habit_card_menu_complete">完成</string>
+    <string name="habit_card_more_times">%1$s 等%2$d项</string>
     <string name="habit_card_delete_confirm_title">确认删除</string>
     <string name="habit_card_delete_confirm_message">确定要删除习惯「%1$s」吗？此操作无法撤销。</string>
     <string name="habit_card_delete_confirm">删除</string>
@@ -344,6 +347,9 @@
     <string name="ai_clear_conversation">清除对话</string>
     <string name="ai_exit_title">确认离开？</string>
     <string name="ai_exit_message">离开后对话将不保留。</string>
+    <string name="ai_exit_unsaved_message">离开后对话将不保留，仍有习惯尚未保存。</string>
+    <string name="ai_retry_confirm_title">确认重试？</string>
+    <string name="ai_retry_confirm_message">重试将删除当前已创建的习惯，是否继续？</string>
     <string name="ai_clear_title">清除对话？</string>
     <string name="ai_clear_message">这将清除所有消息。</string>
     <string name="ai_confirm_title">确认创建</string>

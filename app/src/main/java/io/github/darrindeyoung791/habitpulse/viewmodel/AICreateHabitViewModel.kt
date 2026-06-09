@@ -58,6 +58,15 @@ class AICreateHabitViewModel(application: Application) : AndroidViewModel(applic
     private val _confirmedTempIds = MutableStateFlow<Set<UUID>>(emptySet())
     val confirmedTempIds: StateFlow<Set<UUID>> = _confirmedTempIds.asStateFlow()
 
+    private val _completedTempIds = MutableStateFlow<Set<UUID>>(emptySet())
+    val completedTempIds: StateFlow<Set<UUID>> = _completedTempIds.asStateFlow()
+
+    private val _retrySignal = MutableStateFlow(0)
+    val retrySignal: StateFlow<Int> = _retrySignal.asStateFlow()
+
+    private val _showRetryConfirmation = MutableStateFlow(false)
+    val showRetryConfirmation: StateFlow<Boolean> = _showRetryConfirmation.asStateFlow()
+
     private fun observeConversation() {
         viewModelScope.launch {
             conversationManager?.events?.collect { event ->
@@ -113,6 +122,17 @@ class AICreateHabitViewModel(application: Application) : AndroidViewModel(applic
                             isLoading = false,
                             isStopped = true
                         )
+                    }
+                    ConversationManager.ConversationEvent.Stopped -> {
+                        _uiState.value = _uiState.value.copy(isLoading = false)
+                        val msgs = _messages.value.toMutableList()
+                        if (msgs.isNotEmpty()) {
+                            val lastIndex = msgs.lastIndex
+                            if (msgs[lastIndex].type == ChatMessageType.AI && msgs[lastIndex].isStreaming) {
+                                msgs[lastIndex] = msgs[lastIndex].copy(isStreaming = false)
+                                _messages.value = msgs
+                            }
+                        }
                     }
                     is ConversationManager.ConversationEvent.ThinkingStarted -> {}
                     is ConversationManager.ConversationEvent.ThinkingUpdated -> {
@@ -186,30 +206,58 @@ class AICreateHabitViewModel(application: Application) : AndroidViewModel(applic
     }
 
     fun retryLastTurn() {
+        if (_completedTempIds.value.isNotEmpty() || _collectedHabits.value.isNotEmpty()) {
+            _showRetryConfirmation.value = true
+        } else {
+            executeRetry()
+        }
+    }
+
+    fun dismissRetryConfirmation() {
+        _showRetryConfirmation.value = false
+    }
+
+    fun confirmRetry() {
+        _showRetryConfirmation.value = false
+        executeRetry()
+    }
+
+    private fun executeRetry() {
         viewModelScope.launch {
-            conversationManager?.retry()
-
             val msgs = _messages.value.toMutableList()
-            val lastAI = msgs.indexOfLast { it.type == ChatMessageType.AI }
-            if (lastAI >= 0) {
-                val removedTempIds = msgs.drop(lastAI)
-                    .filter { it.type == ChatMessageType.HABIT && it.habit != null }
-                    .map { it.habit!!.tempId }
-                    .toSet()
+            val lastUser = msgs.indexOfLast { it.type == ChatMessageType.USER }
+            if (lastUser < 0) return@launch
 
-                while (msgs.size > lastAI) {
-                    msgs.removeAt(msgs.lastIndex)
-                }
-                _messages.value = msgs
+            val prefillText = msgs[lastUser].text
 
-                if (removedTempIds.isNotEmpty()) {
-                    _collectedHabits.value = _collectedHabits.value.filter { it.tempId !in removedTempIds }
-                    removedTempIds.forEach { savedPartialToDbId.remove(it) }
+            val removedTempIds = msgs.drop(lastUser)
+                .filter { it.type == ChatMessageType.HABIT && it.habit != null }
+                .map { it.habit!!.tempId }
+                .toSet()
+
+            for (tid in removedTempIds) {
+                savedPartialToDbId[tid]?.let { dbId ->
+                    repository.getHabitById(dbId)?.let { repository.deleteHabit(it) }
                 }
+                savedPartialToDbId.remove(tid)
             }
 
+            // Remove all messages from the user's message onwards (including it)
+            while (msgs.isNotEmpty() && msgs.lastIndex >= lastUser) {
+                msgs.removeAt(msgs.lastIndex)
+            }
+            _messages.value = msgs
+
+            if (removedTempIds.isNotEmpty()) {
+                _collectedHabits.value = _collectedHabits.value.filter { it.tempId !in removedTempIds }
+            }
+
+            _completedTempIds.value = _completedTempIds.value - removedTempIds
+            _confirmedTempIds.value = _confirmedTempIds.value - removedTempIds
+            conversationManager?.removeLastAssistantTurn()
             _pendingQuestion.value = null
-            _uiState.value = _uiState.value.copy(isLoading = true)
+            _retrySignal.value = _retrySignal.value + 1
+            _uiState.value = _uiState.value.copy(isLoading = false, inputText = prefillText)
         }
     }
 
@@ -222,6 +270,9 @@ class AICreateHabitViewModel(application: Application) : AndroidViewModel(applic
         savedPartialToDbId.clear()
         _pendingQuestion.value = null
         _confirmedTempIds.value = emptySet()
+        _completedTempIds.value = emptySet()
+        _showRetryConfirmation.value = false
+        _retrySignal.value = 0
         _uiState.value = _uiState.value.copy(
             isLoading = false,
             showClearButton = false,
@@ -283,6 +334,28 @@ class AICreateHabitViewModel(application: Application) : AndroidViewModel(applic
         }
     }
 
+    fun toggleHabitCompleted(tempId: UUID) {
+        viewModelScope.launch {
+            val current = _completedTempIds.value
+            if (tempId in current) {
+                val dbId = savedPartialToDbId[tempId] ?: return@launch
+                repository.getHabitById(dbId)?.let { repository.deleteHabit(it) }
+                savedPartialToDbId.remove(tempId)
+                _completedTempIds.value = current - tempId
+                _confirmedTempIds.value = _confirmedTempIds.value - tempId
+            } else {
+                saveHabitIfNeeded(tempId)
+                _completedTempIds.value = current + tempId
+                _confirmedTempIds.value = _confirmedTempIds.value + tempId
+                if (_completedTempIds.value.size >= _collectedHabits.value.size && _collectedHabits.value.isNotEmpty()) {
+                    _uiState.value = _uiState.value.copy(isLoading = true)
+                    conversationManager?.resume()
+                    conversationManager?.continueConversation("如有剩余习惯等待建立，请继续。若无，与用户道别")
+                }
+            }
+        }
+    }
+
     fun getDbIdForTempId(tempId: UUID): UUID? = savedPartialToDbId[tempId]
 
     fun deleteHabitByTempId(tempId: UUID) {
@@ -295,7 +368,13 @@ class AICreateHabitViewModel(application: Application) : AndroidViewModel(applic
 
     fun saveHabitAndGetId(tempId: UUID, onComplete: (UUID?) -> Unit) {
         viewModelScope.launch {
-            saveHabitIfNeeded(tempId)
+            if (tempId !in savedPartialToDbId) {
+                val habit = _collectedHabits.value.find { it.tempId == tempId }
+                if (habit != null) {
+                    val dbId = repository.insertHabit(toHabitEntity(habit))
+                    savedPartialToDbId[tempId] = dbId
+                }
+            }
             onComplete(savedPartialToDbId[tempId])
         }
     }
@@ -315,6 +394,8 @@ class AICreateHabitViewModel(application: Application) : AndroidViewModel(applic
         val habit = _collectedHabits.value.find { it.tempId == tempId } ?: return
         val dbId = repository.insertHabit(toHabitEntity(habit))
         savedPartialToDbId[tempId] = dbId
+        _completedTempIds.value = _completedTempIds.value + tempId
+        _confirmedTempIds.value = _confirmedTempIds.value + tempId
     }
 
     private fun toHabitEntity(partial: PartialHabit): Habit {

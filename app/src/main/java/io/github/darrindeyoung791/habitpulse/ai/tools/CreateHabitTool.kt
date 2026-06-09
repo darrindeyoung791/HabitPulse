@@ -23,8 +23,15 @@ class CreateHabitTool : Tool {
         val reminderTimes = parseStringList(arguments["reminder_times"])
         val repeatDays = parseIntList(arguments["repeat_days"])
 
+        val missingFields = mutableListOf<String>()
+        if (reminderTimes.isEmpty()) {
+            missingFields.add("提醒时间(reminder_times)")
+        }
         if (repeatCycle == "WEEKLY" && repeatDays.isEmpty()) {
-            return ToolResult.Error("每周习惯必须指定重复日期")
+            missingFields.add("重复日期(repeat_days)")
+        }
+        if (missingFields.isNotEmpty()) {
+            return ToolResult.Error("缺少必填字段：${missingFields.joinToString("、")}，请先询问用户获取完整信息")
         }
 
         val habit = PartialHabit(
