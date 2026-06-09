@@ -87,7 +87,10 @@
     <string name="habit_card_menu_undo">撤销打卡</string>
     <string name="habit_card_menu_edit">编辑</string>
     <string name="habit_card_menu_delete">删除</string>
+    <string name="habit_card_menu_undo_create">撤销创建</string>
+    <string name="habit_card_menu_confirm_create">确认创建</string>
     <string name="habit_card_menu_complete">完成</string>
+    <string name="habit_card_more_times">%1$s 等%2$d项</string>
     <string name="habit_card_delete_confirm_title">确认删除</string>
     <string name="habit_card_delete_confirm_message">确定要删除习惯「%1$s」吗？此操作无法撤销。</string>
     <string name="habit_card_delete_confirm">删除</string>
@@ -344,6 +347,9 @@
     <string name="ai_clear_conversation">清除对话</string>
     <string name="ai_exit_title">确认离开？</string>
     <string name="ai_exit_message">离开后对话将不保留。</string>
+    <string name="ai_exit_unsaved_message">离开后对话将不保留，仍有习惯尚未保存。</string>
+    <string name="ai_retry_confirm_title">确认重试？</string>
+    <string name="ai_retry_confirm_message">重试将删除当前已创建的习惯，是否继续？</string>
     <string name="ai_clear_title">清除对话？</string>
     <string name="ai_clear_message">这将清除所有消息。</string>
     <string name="ai_confirm_title">确认创建</string>
@@ -418,4 +424,86 @@
     <string name="today_section_soon">即将开始</string>
     <string name="today_section_later">稍后</string>
     <string name="today_section_allday">全天</string>
+
+    <!-- Notification Confirm Dialog -->
+    <string name="notification_confirm_title">通知监督人</string>
+    <string name="notification_confirm_send_email">发送邮件</string>
+    <string name="notification_confirm_send_sms">发短信给 %s</string>
+    <string name="notification_confirm_cancel">取消</string>
+    <string name="notification_confirm_no_email_app">未找到邮件应用</string>
+    <string name="notification_confirm_no_sms_app">未找到短信应用</string>
+    <string name="notification_confirm_dismiss_toast">记得手动通知监督人哦</string>
+    <string name="notification_confirm_no_contacts">暂无监督人可通知</string>
+
+    <!-- Notification Template -->
+    <string name="notification_template_settings_title">通知模板</string>
+    <string name="notification_template_settings_desc">自定义通知监督人的内容</string>
+    <string name="notification_template_label">通知内容模板</string>
+    <string name="notification_template_variable_hint">可用变量：{habit_name} 习惯名称，{checkin_time} 打卡时间，{habit_notes} 习惯备注</string>
+    <string name="notification_template_save_success">模板已保存</string>
+    <string name="notification_template_reset">重置为默认</string>
+
+    <!-- Notification Email -->
+    <string name="notification_email_subject">关于 %s 的打卡通知</string>
+
+    <!-- Default notification template (used when no custom template is saved) -->
+    <string name="notification_default_template">已完成 {habit_name} 打卡（{checkin_time}），特此通知。</string>
+
+    <!-- Country code selector -->
+    <string name="country_code_label">区号</string>
+    <string name="contacts_edit_button">编辑</string>
+    <string name="contacts_edit_email_title">编辑邮箱</string>
+    <string name="contacts_edit_phone_title">编辑电话</string>
+    <string name="contacts_edit_email_description">将更新该联系人在所有关联习惯中的邮箱地址</string>
+    <string name="contacts_edit_phone_description">将更新该联系人在所有关联习惯中的电话号码</string>
+    <string name="contacts_edit_email_label">邮箱地址</string>
+    <string name="contacts_edit_phone_label">电话号码</string>
+    <string name="contacts_edit_email_invalid">邮箱格式无效</string>
+    <string name="contacts_edit_phone_invalid">电话号码格式无效</string>
+    <string name="create_habit_supervisor_phone_sms_cost_warning">短信提醒可能会产生费用</string>
+    <string name="country_code_selector">国家与地区电话区号</string>
+
+    <!-- Country code names -->
+    <string name="country_cn">中国大陆</string>
+    <string name="country_us_ca">美国/加拿大</string>
+    <string name="country_uk">英国</string>
+    <string name="country_jp">日本</string>
+    <string name="country_kr">韩国</string>
+    <string name="country_au">澳大利亚</string>
+    <string name="country_hk">香港</string>
+    <string name="country_tw">台湾</string>
+    <string name="country_sg">新加坡</string>
+    <string name="country_de">德国</string>
+    <string name="country_fr">法国</string>
+    <string name="country_in">印度</string>
+    <string name="country_it">意大利</string>
+    <string name="country_br">巴西</string>
+    <string name="country_ru">俄罗斯</string>
+    <string name="country_es">西班牙</string>
+    <string name="country_nl">荷兰</string>
+    <string name="country_se">瑞典</string>
+    <string name="country_ch">瑞士</string>
+    <string name="country_no">挪威</string>
+    <string name="country_dk">丹麦</string>
+    <string name="country_fi">芬兰</string>
+    <string name="country_pl">波兰</string>
+    <string name="country_gr">希腊</string>
+    <string name="country_my">马来西亚</string>
+    <string name="country_ph">菲律宾</string>
+    <string name="country_id">印尼</string>
+    <string name="country_th">泰国</string>
+    <string name="country_vn">越南</string>
+    <string name="country_np">尼泊尔</string>
+    <string name="country_lk">斯里兰卡</string>
+    <string name="country_ae">阿联酋</string>
+    <string name="country_sa">沙特</string>
+    <string name="country_il">以色列</string>
+    <string name="country_za">南非</string>
+    <string name="country_eg">埃及</string>
+    <string name="country_ng">尼日利亚</string>
+    <string name="country_ar">阿根廷</string>
+    <string name="country_cl">智利</string>
+    <string name="country_co">哥伦比亚</string>
+    <string name="country_mx">墨西哥</string>
+    <string name="country_nz">新西兰</string>
 </resources>

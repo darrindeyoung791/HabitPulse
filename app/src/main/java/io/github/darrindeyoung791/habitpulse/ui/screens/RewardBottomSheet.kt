@@ -36,6 +36,7 @@ import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -55,7 +56,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import io.github.darrindeyoung791.habitpulse.R
 import io.github.darrindeyoung791.habitpulse.data.model.Habit
-
+import kotlinx.coroutines.launch
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.outlined.Check
 import androidx.compose.ui.graphics.Color
@@ -89,6 +90,7 @@ fun RewardBottomSheet(
         skipPartiallyExpanded = true
     )
     
+    val scope = rememberCoroutineScope()
     val context = LocalContext.current
     val view = LocalView.current
     val configuration = LocalConfiguration.current
@@ -180,14 +182,29 @@ fun RewardBottomSheet(
                 Spacer(modifier = Modifier.height(32.dp))
             }
             
-            // 操作按钮区域
+            // 操作按钮区域，带平滑收起动画
             ActionButtons(
                 habit = habit,
                 completionCount = completionCount,
                 hasSupervisors = hasSupervisors,
-                onComplete = onComplete,
-                onNotifySupervisor = onNotifySupervisor,
-                onSkipNotification = onSkipNotification
+                onComplete = {
+                    scope.launch {
+                        sheetState.hide()
+                        onComplete()
+                    }
+                },
+                onNotifySupervisor = {
+                    scope.launch {
+                        sheetState.hide()
+                        onNotifySupervisor()
+                    }
+                },
+                onSkipNotification = {
+                    scope.launch {
+                        sheetState.hide()
+                        onSkipNotification()
+                    }
+                }
             )
         }
     }

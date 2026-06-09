@@ -13,6 +13,7 @@ import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.Clear
 import androidx.compose.material.icons.filled.Visibility
 import androidx.compose.material.icons.filled.VisibilityOff
+import androidx.compose.material.icons.automirrored.outlined.Send
 import androidx.compose.material.icons.outlined.SwapHoriz
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
@@ -254,7 +255,7 @@ fun AISettingsScreen(
             }
 
             item {
-                Button(
+                FilledTonalButton(
                     onClick = {
                         isTesting = true
                         testResult = null
@@ -266,17 +267,24 @@ fun AISettingsScreen(
                     },
                     modifier = Modifier.fillMaxWidth(),
                     enabled = endpointInput.isNotBlank() && apiKeyInput.isNotBlank() && !isTesting
-                ) {
-                    if (isTesting) {
-                        CircularProgressIndicator(
-                            modifier = Modifier.size(20.dp),
-                            color = MaterialTheme.colorScheme.onPrimary,
-                            strokeWidth = 2.dp
-                        )
-                        Spacer(modifier = Modifier.width(8.dp))
+                    ) {
+                        if (isTesting) {
+                            CircularProgressIndicator(
+                                modifier = Modifier.size(20.dp),
+                                color = MaterialTheme.colorScheme.onPrimary,
+                                strokeWidth = 2.dp
+                            )
+                            Spacer(modifier = Modifier.width(8.dp))
+                        } else {
+                            Icon(
+                                imageVector = Icons.AutoMirrored.Outlined.Send,
+                                contentDescription = null,
+                                modifier = Modifier.size(18.dp)
+                            )
+                            Spacer(modifier = Modifier.width(8.dp))
+                        }
+                        Text(stringResource(id = R.string.ai_settings_test_connection))
                     }
-                    Text(stringResource(id = R.string.ai_settings_test_connection))
-                }
             }
 
             testResult?.let { result ->

@@ -27,6 +27,7 @@ import androidx.compose.foundation.lazy.LazyListState
 import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
+import androidx.compose.material.icons.automirrored.filled.KeyboardArrowRight
 import androidx.compose.material.icons.automirrored.outlined.Article
 import androidx.compose.material.icons.filled.AutoAwesome
 import androidx.compose.material.icons.outlined.Delete
@@ -171,6 +172,12 @@ fun SettingsScreen() {
     // Dialog for clear WebView cache
     var showClearCacheDialog by remember { mutableStateOf(false) }
     var showClearCookiesDialog by remember { mutableStateOf(false) }
+
+    // Dialog for notification template settings
+    var showTemplateDialog by remember { mutableStateOf(false) }
+    val templateValue by userPreferences.notificationTemplateFlow
+        .collectAsStateWithLifecycle(initialValue = null)
+    var editedTemplate by remember { mutableStateOf("") }
 
     val TAP_TIME_WINDOW = 10_000L // 10 seconds
     val TAP_COUNT_THRESHOLD = 5
@@ -389,6 +396,69 @@ fun SettingsScreen() {
         )
     }
 
+    // Dialog for notification template editing
+    if (showTemplateDialog) {
+        AlertDialog(
+            onDismissRequest = { showTemplateDialog = false },
+            title = {
+                Text(text = stringResource(id = R.string.notification_template_settings_title))
+            },
+            text = {
+                Column {
+                    OutlinedTextField(
+                        value = editedTemplate,
+                        onValueChange = { editedTemplate = it },
+                        modifier = Modifier.fillMaxWidth(),
+                        minLines = 4,
+                        maxLines = 8,
+                        shape = RoundedCornerShape(12.dp),
+                        label = { Text(stringResource(id = R.string.notification_template_label)) }
+                    )
+                    Spacer(modifier = Modifier.height(8.dp))
+                    Text(
+                        text = stringResource(id = R.string.notification_template_variable_hint),
+                        style = MaterialTheme.typography.bodySmall,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                    )
+                }
+            },
+            confirmButton = {
+                TextButton(
+                    onClick = {
+                        showTemplateDialog = false
+                        scope.launch {
+                            userPreferences.setNotificationTemplate(editedTemplate)
+                            Toast.makeText(
+                                context,
+                                context.getString(R.string.notification_template_save_success),
+                                Toast.LENGTH_SHORT
+                            ).show()
+                        }
+                    }
+                ) {
+                    Text(text = stringResource(id = R.string.dialog_confirm))
+                }
+            },
+            dismissButton = {
+                Row {
+                    TextButton(onClick = {
+                        scope.launch {
+                            userPreferences.resetNotificationTemplate()
+                            editedTemplate = context.getString(R.string.notification_default_template)
+                        }
+                    }) {
+                        Text(
+                            text = stringResource(id = R.string.notification_template_reset)
+                        )
+                    }
+                    TextButton(onClick = { showTemplateDialog = false }) {
+                        Text(text = stringResource(id = R.string.settings_cancel))
+                    }
+                }
+            }
+        )
+    }
+
     Scaffold(
         modifier = Modifier.fillMaxSize(),
         topBar = {
@@ -459,6 +529,13 @@ fun SettingsScreen() {
                     onClick = {
                         val intent = Intent(context, AISettingsActivity::class.java)
                         context.startActivity(intent)
+                    },
+                    trailingIcon = {
+                        Icon(
+                            imageVector = Icons.AutoMirrored.Filled.KeyboardArrowRight,
+                            contentDescription = null,
+                            tint = MaterialTheme.colorScheme.onSurfaceVariant
+                        )
                     }
                 )
             }
@@ -660,9 +737,41 @@ fun SettingsScreen() {
                         onClick = {
                             val intent = Intent(context, ReminderSettingsActivity::class.java)
                             context.startActivity(intent)
+                        },
+                        trailingIcon = {
+                            Icon(
+                                imageVector = Icons.AutoMirrored.Filled.KeyboardArrowRight,
+                                contentDescription = null,
+                                tint = MaterialTheme.colorScheme.onSurfaceVariant
+                            )
                         }
                     )
                 }
+            }
+
+            // 通知模板设置入口
+            item {
+                SettingsListItem(
+                    headline = stringResource(id = R.string.notification_template_settings_title),
+                    supportingText = stringResource(id = R.string.notification_template_settings_desc),
+                    leadingIcon = {
+                        Icon(
+                            imageVector = Icons.AutoMirrored.Outlined.Article,
+                            contentDescription = null
+                        )
+                    },
+                    onClick = {
+                        editedTemplate = templateValue ?: context.getString(R.string.notification_default_template)
+                        showTemplateDialog = true
+                    },
+                    trailingIcon = {
+                        Icon(
+                            imageVector = Icons.AutoMirrored.Filled.KeyboardArrowRight,
+                            contentDescription = null,
+                            tint = MaterialTheme.colorScheme.onSurfaceVariant
+                        )
+                    }
+                )
             }
 
             // 存储部分
@@ -808,6 +917,13 @@ fun SettingsScreen() {
                             putExtra(WebViewActivity.EXTRA_INITIAL_URL, "https://darrindeyoung791.github.io/HabitPulse/team")
                         }
                         context.startActivity(intent)
+                    },
+                    trailingIcon = {
+                        Icon(
+                            imageVector = Icons.AutoMirrored.Filled.KeyboardArrowRight,
+                            contentDescription = null,
+                            tint = MaterialTheme.colorScheme.onSurfaceVariant
+                        )
                     }
                 )
 
@@ -823,6 +939,13 @@ fun SettingsScreen() {
                     onClick = {
                         val intent = Intent(context, OpenSourceLicensesActivity::class.java)
                         context.startActivity(intent)
+                    },
+                    trailingIcon = {
+                        Icon(
+                            imageVector = Icons.AutoMirrored.Filled.KeyboardArrowRight,
+                            contentDescription = null,
+                            tint = MaterialTheme.colorScheme.onSurfaceVariant
+                        )
                     }
                 )
 
@@ -999,7 +1122,8 @@ fun SettingsListItem(
     headline: String,
     supportingText: String,
     leadingIcon: @Composable () -> Unit,
-    onClick: () -> Unit = {}
+    onClick: () -> Unit = {},
+    trailingIcon: @Composable () -> Unit = {}
 ) {
     Surface(
         modifier = Modifier.fillMaxWidth(),
@@ -1037,6 +1161,7 @@ fun SettingsListItem(
                     )
                 }
             }
+            trailingIcon()
         }
     }
 }

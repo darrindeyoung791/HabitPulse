@@ -10,6 +10,7 @@ import io.github.darrindeyoung791.habitpulse.data.model.CheckInResult
 import io.github.darrindeyoung791.habitpulse.data.model.HabitStatus
 import io.github.darrindeyoung791.habitpulse.data.model.HabitWithStatus
 import io.github.darrindeyoung791.habitpulse.data.model.SlotCheckInEngine
+import io.github.darrindeyoung791.habitpulse.data.preferences.UserPreferences
 import io.github.darrindeyoung791.habitpulse.data.repository.HabitRepository
 import io.github.darrindeyoung791.habitpulse.utils.OnboardingPreferences
 import kotlinx.coroutines.FlowPreview
@@ -35,7 +36,8 @@ import java.util.UUID
  */
 class HabitViewModel(
     private val repository: HabitRepository,
-    private val onboardingPreferences: OnboardingPreferences
+    private val onboardingPreferences: OnboardingPreferences,
+    private val userPreferences: UserPreferences
 ) : ViewModel() {
 
     // ============= UI State Flows =============
@@ -588,6 +590,38 @@ class HabitViewModel(
         _rewardSheetHabit.value = null
     }
 
+    // ============= Notification Confirm Dialog =============
+
+    /**
+     * 当前显示通知确认弹窗的习惯
+     */
+    private val _notificationConfirmHabit = MutableStateFlow<Habit?>(null)
+    val notificationConfirmHabit: StateFlow<Habit?> = _notificationConfirmHabit.asStateFlow()
+
+    /**
+     * 是否显示通知确认弹窗
+     */
+    private val _showNotificationConfirm = MutableStateFlow(false)
+    val showNotificationConfirm: StateFlow<Boolean> = _showNotificationConfirm.asStateFlow()
+
+    /**
+     * 显示通知确认弹窗
+     * 先关闭奖励弹窗，再打开确认弹窗
+     */
+    fun showNotificationConfirm(habit: Habit) {
+        dismissRewardSheet()
+        _notificationConfirmHabit.value = habit
+        _showNotificationConfirm.value = true
+    }
+
+    /**
+     * 关闭通知确认弹窗
+     */
+    fun dismissNotificationConfirm() {
+        _showNotificationConfirm.value = false
+        _notificationConfirmHabit.value = null
+    }
+
     /**
      * 标记用户已完成引导（同意协议）
      */
@@ -615,7 +649,11 @@ class HabitViewModel(
         @Suppress("UNCHECKED_CAST")
         override fun <T : ViewModel> create(modelClass: Class<T>): T {
             if (modelClass.isAssignableFrom(HabitViewModel::class.java)) {
-                return HabitViewModel(application.repository, application.onboardingPreferences) as T
+                return HabitViewModel(
+                    application.repository,
+                    application.onboardingPreferences,
+                    UserPreferences.getInstance(application)
+                ) as T
             }
             throw IllegalArgumentException("Unknown ViewModel class")
         }

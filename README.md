@@ -85,7 +85,7 @@
 - **JDK**：17 或更高版本
 - **Android SDK**：
   - 最低 SDK：26 (Android 8.0)
-  - 目标 SDK：36 (Android 16)
+  - 目标 SDK：37 (Android 17)
 
 ### 克隆项目
 ```bash

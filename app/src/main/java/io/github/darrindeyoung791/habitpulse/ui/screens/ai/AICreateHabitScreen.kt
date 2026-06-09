@@ -7,6 +7,8 @@ import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.material.icons.filled.CheckCircle
 import androidx.compose.material.icons.filled.Edit
+import androidx.compose.material.icons.filled.RadioButtonUnchecked
+import androidx.compose.material.icons.filled.Schedule
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.lazy.rememberLazyListState
@@ -140,6 +142,9 @@ fun AICreateHabitScreen(
     val collectedHabits by viewModel.collectedHabits.collectAsStateWithLifecycle()
     val pendingQuestion by viewModel.pendingQuestion.collectAsStateWithLifecycle()
     val confirmedTempIds by viewModel.confirmedTempIds.collectAsStateWithLifecycle()
+    val completedTempIds by viewModel.completedTempIds.collectAsStateWithLifecycle()
+    val retrySignal by viewModel.retrySignal.collectAsStateWithLifecycle()
+    val showRetryConfirmation by viewModel.showRetryConfirmation.collectAsStateWithLifecycle()
 
     val listState = rememberLazyListState()
     val hasMessages = messages.isNotEmpty()
@@ -197,8 +202,18 @@ fun AICreateHabitScreen(
     val keyboardController = LocalSoftwareKeyboardController.current
 
     LaunchedEffect(Unit) {
-        focusRequester.requestFocus()
-        keyboardController?.show()
+        if (!hasMessages) {
+            focusRequester.requestFocus()
+            keyboardController?.show()
+        }
+    }
+
+    LaunchedEffect(retrySignal) {
+        if (retrySignal > 0) {
+            delay(300)
+            focusRequester.requestFocus()
+            keyboardController?.show()
+        }
     }
 
     Scaffold(
@@ -279,39 +294,11 @@ fun AICreateHabitScreen(
                                         .padding(horizontal = 16.dp, vertical = 8.dp)
                                 )
                                 ChatMessageType.AI -> {
-                                    val isLastMessage = index == messages.lastIndex
-                                    val showRetry = isLastMessage && !message.isStreaming && !uiState.isLoading && pendingQuestion == null
-                                    Column {
-                                        AIChatBubble(
-                                            text = message.text,
-                                            thoughts = message.thoughts,
-                                            isStreaming = message.isStreaming
-                                        )
-                                        if (showRetry) {
-                                            Row(
-                                                modifier = Modifier
-                                                    .fillMaxWidth()
-                                                    .padding(start = 16.dp, top = 4.dp),
-                                                horizontalArrangement = Arrangement.Start
-                                            ) {
-                                                OutlinedButton(
-                                                    onClick = { viewModel.retryLastTurn() },
-                                                    contentPadding = PaddingValues(horizontal = 12.dp, vertical = 4.dp)
-                                                ) {
-                                                    Icon(
-                                                        imageVector = Icons.Default.Refresh,
-                                                        contentDescription = null,
-                                                        modifier = Modifier.size(14.dp)
-                                                    )
-                                                    Spacer(modifier = Modifier.width(4.dp))
-                                                    Text(
-                                                        stringResource(R.string.webview_retry),
-                                                        style = MaterialTheme.typography.labelSmall
-                                                    )
-                                                }
-                                            }
-                                        }
-                                    }
+                                    AIChatBubble(
+                                        text = message.text,
+                                        thoughts = message.thoughts,
+                                        isStreaming = message.isStreaming
+                                    )
                                 }
                                 ChatMessageType.QUESTION -> {
                                     AnsweredQuestionCard(
@@ -327,7 +314,8 @@ fun AICreateHabitScreen(
                                         HabitCreatedCard(
                                             habit = habit,
                                             isConfirmed = habit.tempId in confirmedTempIds,
-                                            onConfirmClick = { viewModel.confirmHabit(habit.tempId) },
+                                            isCompleted = habit.tempId in completedTempIds,
+                                            onConfirmClick = { viewModel.toggleHabitCompleted(habit.tempId) },
                                             onEditClick = {
                                                 scope.launch {
                                                     viewModel.saveHabitAndGetId(habit.tempId) { dbId ->
@@ -357,6 +345,34 @@ fun AICreateHabitScreen(
                                         .fillMaxWidth()
                                         .padding(horizontal = 16.dp, vertical = 8.dp)
                                 )
+                            }
+                        }
+
+                        val hasAIMessage = messages.any { it.type == ChatMessageType.AI }
+                        if (hasAIMessage && !uiState.isLoading && pendingQuestion == null) {
+                            item {
+                                Row(
+                                    modifier = Modifier
+                                        .fillMaxWidth()
+                                        .padding(start = 16.dp, top = 4.dp),
+                                    horizontalArrangement = Arrangement.Start
+                                ) {
+                                    OutlinedButton(
+                                        onClick = { viewModel.retryLastTurn() },
+                                        contentPadding = PaddingValues(horizontal = 12.dp, vertical = 4.dp)
+                                    ) {
+                                        Icon(
+                                            imageVector = Icons.Default.Refresh,
+                                            contentDescription = null,
+                                            modifier = Modifier.size(14.dp)
+                                        )
+                                        Spacer(modifier = Modifier.width(4.dp))
+                                        Text(
+                                            stringResource(R.string.webview_retry),
+                                            style = MaterialTheme.typography.labelSmall
+                                        )
+                                    }
+                                }
                             }
                         }
                     }
@@ -452,10 +468,16 @@ fun AICreateHabitScreen(
     }
 
     if (uiState.showExitConfirmation) {
+        val hasUnsavedHabits = collectedHabits.any { it.tempId !in completedTempIds }
         AlertDialog(
             onDismissRequest = { viewModel.dismissExitConfirmation() },
             title = { Text(stringResource(R.string.ai_exit_title)) },
-            text = { Text(stringResource(R.string.ai_exit_message)) },
+            text = {
+                Text(
+                    if (hasUnsavedHabits) stringResource(R.string.ai_exit_unsaved_message)
+                    else stringResource(R.string.ai_exit_message)
+                )
+            },
             confirmButton = {
                 TextButton(onClick = {
                     viewModel.cleanupUnconfirmedHabits()
@@ -495,10 +517,16 @@ fun AICreateHabitScreen(
     }
 
     if (uiState.showSettingsConfirmation) {
+        val hasUnsavedHabits = collectedHabits.any { it.tempId !in completedTempIds }
         AlertDialog(
             onDismissRequest = { viewModel.dismissSettingsConfirmation() },
             title = { Text(stringResource(R.string.ai_exit_title)) },
-            text = { Text(stringResource(R.string.ai_exit_message)) },
+            text = {
+                Text(
+                    if (hasUnsavedHabits) stringResource(R.string.ai_exit_unsaved_message)
+                    else stringResource(R.string.ai_exit_message)
+                )
+            },
             confirmButton = {
                 TextButton(onClick = {
                     viewModel.dismissSettingsConfirmation()
@@ -520,6 +548,24 @@ fun AICreateHabitScreen(
             habits = collectedHabits,
             onConfirm = { viewModel.confirmAndSaveHabits() },
             onDismiss = { viewModel.dismissConfirmDialog() }
+        )
+    }
+
+    if (showRetryConfirmation) {
+        AlertDialog(
+            onDismissRequest = { viewModel.dismissRetryConfirmation() },
+            title = { Text(stringResource(R.string.ai_retry_confirm_title)) },
+            text = { Text(stringResource(R.string.ai_retry_confirm_message)) },
+            confirmButton = {
+                TextButton(onClick = { viewModel.confirmRetry() }) {
+                    Text(stringResource(R.string.confirm))
+                }
+            },
+            dismissButton = {
+                TextButton(onClick = { viewModel.dismissRetryConfirmation() }) {
+                    Text(stringResource(R.string.cancel))
+                }
+            }
         )
     }
 
@@ -1063,38 +1109,42 @@ fun AnsweredQuestionCard(
 fun HabitCreatedCard(
     habit: PartialHabit,
     isConfirmed: Boolean,
+    isCompleted: Boolean = false,
     onConfirmClick: () -> Unit,
     onEditClick: () -> Unit,
     modifier: Modifier = Modifier
 ) {
+    val isActive = isCompleted || isConfirmed
+
     Card(
         modifier = modifier,
         colors = CardDefaults.cardColors(
-            containerColor = if (isConfirmed)
-                MaterialTheme.colorScheme.surfaceContainerHigh
-            else
-                MaterialTheme.colorScheme.secondaryContainer
+            containerColor = when {
+                isCompleted -> MaterialTheme.colorScheme.primaryContainer
+                isConfirmed -> MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.8f)
+                else -> MaterialTheme.colorScheme.surfaceContainerHigh
+            }
         )
     ) {
         Column(modifier = Modifier.padding(16.dp)) {
             Row(verticalAlignment = Alignment.CenterVertically) {
                 Icon(
-                    imageVector = Icons.Default.CheckCircle,
+                    imageVector = if (isActive) Icons.Default.CheckCircle
+                                  else Icons.Default.RadioButtonUnchecked,
                     contentDescription = null,
-                    tint = if (isConfirmed)
-                        MaterialTheme.colorScheme.tertiary
-                    else
-                        MaterialTheme.colorScheme.primary,
+                    tint = when {
+                        isCompleted -> MaterialTheme.colorScheme.onPrimaryContainer
+                        isConfirmed -> MaterialTheme.colorScheme.onPrimaryContainer.copy(alpha = 0.8f)
+                        else -> MaterialTheme.colorScheme.onSurfaceVariant
+                    },
                     modifier = Modifier.size(24.dp)
                 )
                 Spacer(modifier = Modifier.width(8.dp))
                 Text(
                     text = habit.title,
                     style = MaterialTheme.typography.titleMedium,
-                    color = if (isConfirmed)
-                        MaterialTheme.colorScheme.onSurface
-                    else
-                        MaterialTheme.colorScheme.onSecondaryContainer
+                    color = if (isActive) MaterialTheme.colorScheme.onPrimaryContainer
+                            else MaterialTheme.colorScheme.onSurface
                 )
             }
 
@@ -1103,22 +1153,32 @@ fun HabitCreatedCard(
             Text(
                 text = habit.toSummaryString(),
                 style = MaterialTheme.typography.bodyMedium,
-                color = if (isConfirmed)
-                    MaterialTheme.colorScheme.onSurface.copy(alpha = 0.6f)
-                else
-                    MaterialTheme.colorScheme.onSecondaryContainer.copy(alpha = 0.8f)
+                color = if (isActive) MaterialTheme.colorScheme.onPrimaryContainer.copy(alpha = 0.8f)
+                        else MaterialTheme.colorScheme.onSurfaceVariant
             )
 
             if (habit.reminderTimes.isNotEmpty()) {
                 Spacer(modifier = Modifier.height(4.dp))
-                Text(
-                    text = "⏰ ${habit.reminderTimes.joinToString(", ")}",
-                    style = MaterialTheme.typography.bodySmall,
-                    color = if (isConfirmed)
-                        MaterialTheme.colorScheme.onSurface.copy(alpha = 0.5f)
-                    else
-                        MaterialTheme.colorScheme.onSecondaryContainer.copy(alpha = 0.7f)
-                )
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    Icon(
+                        imageVector = Icons.Default.Schedule,
+                        contentDescription = null,
+                        modifier = Modifier.size(14.dp),
+                        tint = if (isActive) MaterialTheme.colorScheme.onPrimaryContainer.copy(alpha = 0.7f)
+                               else MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.7f)
+                    )
+                    Spacer(modifier = Modifier.width(4.dp))
+                    Text(
+                        text = if (habit.reminderTimes.size > 1) {
+                            stringResource(R.string.habit_card_more_times, habit.reminderTimes.first(), habit.reminderTimes.size - 1)
+                        } else {
+                            habit.reminderTimes.first()
+                        },
+                        style = MaterialTheme.typography.bodySmall,
+                        color = if (isActive) MaterialTheme.colorScheme.onPrimaryContainer.copy(alpha = 0.7f)
+                                else MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.7f)
+                    )
+                }
             }
 
             Spacer(modifier = Modifier.height(12.dp))
@@ -1130,16 +1190,18 @@ fun HabitCreatedCard(
             ) {
                 OutlinedButton(
                     onClick = onConfirmClick,
-                    enabled = !isConfirmed,
-                    colors = if (isConfirmed) {
+                    colors = if (isCompleted) {
                         ButtonDefaults.outlinedButtonColors(
-                            contentColor = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.38f)
+                            contentColor = MaterialTheme.colorScheme.error
                         )
                     } else {
                         ButtonDefaults.outlinedButtonColors()
                     }
                 ) {
-                    Text(stringResource(R.string.habit_card_menu_complete))
+                    Text(
+                        if (isCompleted) stringResource(R.string.habit_card_menu_undo_create)
+                        else stringResource(R.string.habit_card_menu_confirm_create)
+                    )
                 }
                 Spacer(modifier = Modifier.width(8.dp))
                 OutlinedButton(

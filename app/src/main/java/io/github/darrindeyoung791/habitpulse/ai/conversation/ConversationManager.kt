@@ -57,6 +57,7 @@ class ConversationManager(
         data class ThinkingStarted(val messageId: String) : ConversationEvent()
         data class ThinkingUpdated(val messageId: String, val thoughts: String) : ConversationEvent()
         data class ThinkingEnded(val messageId: String) : ConversationEvent()
+        object Stopped : ConversationEvent()
     }
 
     suspend fun startConversation(userInput: String) {
@@ -81,10 +82,7 @@ class ConversationManager(
         needsAutoContinue = false
         _state.value = _state.value.copy(isStopped = true)
 
-        val currentHabits = _collectedHabits.value
-        if (currentHabits.isNotEmpty()) {
-            _events.value = ConversationEvent.ConfirmationRequested(currentHabits)
-        }
+        _events.value = ConversationEvent.Stopped
     }
 
     private suspend fun sendToLLM() {
@@ -251,6 +249,15 @@ class ConversationManager(
             gson.fromJson(json, Map::class.java) as? Map<String, Any?> ?: emptyMap()
         } catch (e: Exception) {
             emptyMap()
+        }
+    }
+
+    fun removeLastAssistantTurn() {
+        val lastAssistant = messages.indexOfLast { it.role == "assistant" }
+        if (lastAssistant >= 0) {
+            while (messages.size > lastAssistant) {
+                messages.removeAt(messages.lastIndex)
+            }
         }
     }
 

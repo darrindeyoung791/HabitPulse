@@ -95,6 +95,11 @@ object PreferencesKeys {
      * 今日已发送提醒次数
      */
     val REMINDER_SENT_COUNT = longPreferencesKey("reminder_sent_count")
+
+    /**
+     * 通知监督人内容模板
+     */
+    val NOTIFICATION_TEMPLATE = stringPreferencesKey("notification_template")
 }
 
 /**
@@ -404,5 +409,33 @@ class UserPreferences(private val context: Context) {
                 0L
             }
         }.first()
+    }
+
+    /**
+     * 通知内容模板的 Flow
+     * 返回存储的自定义模板，如果未设置则返回 null
+     */
+    val notificationTemplateFlow: Flow<String?> = context.dataStore.data.map { preferences ->
+        preferences[PreferencesKeys.NOTIFICATION_TEMPLATE]
+    }
+
+    /**
+     * 设置通知内容模板
+     *
+     * @param template 模板文本，包含 {habit_name}、{checkin_time}、{habit_notes} 占位符
+     */
+    suspend fun setNotificationTemplate(template: String) {
+        context.dataStore.edit { preferences ->
+            preferences[PreferencesKeys.NOTIFICATION_TEMPLATE] = template
+        }
+    }
+
+    /**
+     * 重置通知内容模板为默认值（清除存储）
+     */
+    suspend fun resetNotificationTemplate() {
+        context.dataStore.edit { preferences ->
+            preferences.remove(PreferencesKeys.NOTIFICATION_TEMPLATE)
+        }
     }
 }
