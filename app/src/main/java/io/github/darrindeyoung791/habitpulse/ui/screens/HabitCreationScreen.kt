@@ -15,6 +15,7 @@ import androidx.compose.foundation.clickable
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.interaction.collectIsPressedAsState
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.background
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.text.KeyboardActions
@@ -29,11 +30,14 @@ import androidx.compose.material.icons.outlined.*
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.*
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.hapticfeedback.HapticFeedbackType
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalHapticFeedback
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.semantics.contentDescription
+import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.KeyboardCapitalization
 import androidx.compose.ui.tooling.preview.Preview
@@ -175,7 +179,8 @@ fun HabitCreationScreen(
             val fakeCompletionDao = FakeHabitCompletionDaoForCreation()
             val fakeRepository = io.github.darrindeyoung791.habitpulse.data.repository.HabitRepository(fakeHabitDao, fakeCompletionDao)
             val fakeOnboardingPreferences = io.github.darrindeyoung791.habitpulse.utils.OnboardingPreferences(context.applicationContext)
-            HabitViewModel(fakeRepository, fakeOnboardingPreferences)
+            val fakeUserPreferences = io.github.darrindeyoung791.habitpulse.data.preferences.UserPreferences.getInstance(context)
+            HabitViewModel(fakeRepository, fakeOnboardingPreferences, fakeUserPreferences)
         }
     }
 
@@ -222,6 +227,7 @@ fun HabitCreationScreen(
     var supervisorPhones by remember(prefillHabit) { mutableStateOf<List<String>>(emptyList()) }
     var emailInput by remember { mutableStateOf("") }
     var phoneInput by remember { mutableStateOf("") }
+    var countryCode by remember { mutableStateOf("+86") }
     var showEmailMaxToast by remember { mutableStateOf(false) }
     var showPhoneMaxToast by remember { mutableStateOf(false) }
     var showDuplicateEmailToast by remember { mutableStateOf(false) }
@@ -939,7 +945,7 @@ fun HabitCreationScreen(
                     
                     Spacer(modifier = Modifier.height(12.dp))
                     
-                    // Phone section - independently expandable
+                    // Phone section - independently expandable with country code
                     SupervisionContactSection(
                         title = stringResource(id = R.string.create_habit_supervisor_phone_label),
                         inputValue = phoneInput,
@@ -951,9 +957,10 @@ fun HabitCreationScreen(
                             }
                         },
                         onAdd = {
-                            if (isValidPhone(phoneInput)) {
-                                if (!supervisorPhones.contains(phoneInput)) {
-                                    supervisorPhones = supervisorPhones + phoneInput
+                            val fullPhone = "${countryCode.substringBefore(" ")}$phoneInput"
+                            if (isValidPhone(fullPhone)) {
+                                if (!supervisorPhones.contains(fullPhone)) {
+                                    supervisorPhones = supervisorPhones + fullPhone
                                     phoneInput = ""
                                 } else {
                                     showDuplicatePhoneToast = true
@@ -962,7 +969,7 @@ fun HabitCreationScreen(
                                 showInvalidPhoneToast = true
                             }
                         },
-                        isValid = { isValidPhone(it) },
+                        isValid = { isValidPhone("${countryCode.substringBefore(" ")}$it") },
                         contacts = supervisorPhones,
                         onDelete = { index ->
                             supervisorPhones = supervisorPhones.filterIndexed { i, _ -> i != index }
@@ -974,7 +981,10 @@ fun HabitCreationScreen(
                         keyboardType = KeyboardType.Phone,
                         hintRes = R.string.create_habit_supervisor_phone_hint,
                         addRes = R.string.create_habit_supervisor_phone_add,
-                        emptyList = supervisorPhones.isEmpty()
+                        emptyList = supervisorPhones.isEmpty(),
+                        prefixValue = countryCode,
+                        onPrefixChange = { countryCode = it },
+                        prefixOptions = COUNTRY_CODES
                     )
                 }
             }
@@ -1053,6 +1063,54 @@ fun HabitCreationScreenDarkPreview() {
     }
 }
 
+data class CountryCodeOption(val prefix: String, val displayNameRes: Int)
+
+@Suppress("unused")
+val COUNTRY_CODES = listOf(
+    CountryCodeOption("+86", R.string.country_cn),
+    CountryCodeOption("+1", R.string.country_us_ca),
+    CountryCodeOption("+44", R.string.country_uk),
+    CountryCodeOption("+81", R.string.country_jp),
+    CountryCodeOption("+82", R.string.country_kr),
+    CountryCodeOption("+61", R.string.country_au),
+    CountryCodeOption("+852", R.string.country_hk),
+    CountryCodeOption("+886", R.string.country_tw),
+    CountryCodeOption("+65", R.string.country_sg),
+    CountryCodeOption("+49", R.string.country_de),
+    CountryCodeOption("+33", R.string.country_fr),
+    CountryCodeOption("+91", R.string.country_in),
+    CountryCodeOption("+39", R.string.country_it),
+    CountryCodeOption("+55", R.string.country_br),
+    CountryCodeOption("+7", R.string.country_ru),
+    CountryCodeOption("+34", R.string.country_es),
+    CountryCodeOption("+31", R.string.country_nl),
+    CountryCodeOption("+46", R.string.country_se),
+    CountryCodeOption("+41", R.string.country_ch),
+    CountryCodeOption("+47", R.string.country_no),
+    CountryCodeOption("+45", R.string.country_dk),
+    CountryCodeOption("+358", R.string.country_fi),
+    CountryCodeOption("+48", R.string.country_pl),
+    CountryCodeOption("+30", R.string.country_gr),
+    CountryCodeOption("+60", R.string.country_my),
+    CountryCodeOption("+63", R.string.country_ph),
+    CountryCodeOption("+62", R.string.country_id),
+    CountryCodeOption("+66", R.string.country_th),
+    CountryCodeOption("+84", R.string.country_vn),
+    CountryCodeOption("+977", R.string.country_np),
+    CountryCodeOption("+94", R.string.country_lk),
+    CountryCodeOption("+971", R.string.country_ae),
+    CountryCodeOption("+966", R.string.country_sa),
+    CountryCodeOption("+972", R.string.country_il),
+    CountryCodeOption("+27", R.string.country_za),
+    CountryCodeOption("+20", R.string.country_eg),
+    CountryCodeOption("+234", R.string.country_ng),
+    CountryCodeOption("+54", R.string.country_ar),
+    CountryCodeOption("+56", R.string.country_cl),
+    CountryCodeOption("+57", R.string.country_co),
+    CountryCodeOption("+52", R.string.country_mx),
+    CountryCodeOption("+64", R.string.country_nz),
+)
+
 /**
  * 监督联系人输入区 - 可独立展开/收起
  */
@@ -1072,7 +1130,10 @@ private fun SupervisionContactSection(
     keyboardType: KeyboardType,
     hintRes: Int,
     addRes: Int,
-    emptyList: Boolean
+    emptyList: Boolean,
+    prefixValue: String? = null,
+    onPrefixChange: ((String) -> Unit)? = null,
+    prefixOptions: List<CountryCodeOption>? = null
 ) {
     val hasContacts = contacts.isNotEmpty()
     val bgColor = if (hasContacts) {
@@ -1136,26 +1197,133 @@ private fun SupervisionContactSection(
                         .padding(start = 12.dp, end = 12.dp, bottom = 12.dp)
                 ) {
                     // Input row
-                    OutlinedTextField(
-                        value = inputValue,
-                        onValueChange = onInputChange,
-                        label = { Text(text = stringResource(id = hintRes)) },
-                        modifier = Modifier.fillMaxWidth(),
-                        singleLine = true,
-                        keyboardOptions = KeyboardOptions(keyboardType = keyboardType),
-                        trailingIcon = {
-                            IconButton(
-                                onClick = onAdd,
-                                enabled = inputValue.isNotBlank()
-                            ) {
-                                Icon(
-                                    imageVector = Icons.Outlined.Add,
-                                    contentDescription = stringResource(id = addRes),
-                                    tint = if (inputValue.isNotBlank()) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurfaceVariant
-                                )
-                            }
+                    if (prefixValue != null && onPrefixChange != null && prefixOptions != null) {
+                        // Phone input with country code prefix
+                        var prefixExpanded by remember { mutableStateOf(false) }
+                        val countryCodeSelector = stringResource(R.string.country_code_selector)
+                        val smsWarningColor = Color(0xFFFFF3CD)
+                        val smsWarningTextColor = Color(0xFF664D00)
+                        Row(
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .background(smsWarningColor, RoundedCornerShape(4.dp))
+                                .padding(horizontal = 8.dp, vertical = 6.dp),
+                            verticalAlignment = Alignment.CenterVertically,
+                            horizontalArrangement = Arrangement.spacedBy(6.dp)
+                        ) {
+                            Icon(
+                                imageVector = Icons.Outlined.Warning,
+                                contentDescription = null,
+                                modifier = Modifier.size(16.dp),
+                                tint = smsWarningTextColor
+                            )
+                            Text(
+                                text = stringResource(R.string.create_habit_supervisor_phone_sms_cost_warning),
+                                style = MaterialTheme.typography.bodySmall,
+                                color = smsWarningTextColor
+                            )
                         }
-                    )
+                        Spacer(modifier = Modifier.height(8.dp))
+                        Row(
+                            modifier = Modifier.fillMaxWidth(),
+                            verticalAlignment = Alignment.CenterVertically,
+                            horizontalArrangement = Arrangement.spacedBy(8.dp)
+                        ) {
+                            Box {
+                                OutlinedTextField(
+                                    value = prefixValue,
+                                    onValueChange = {},
+                                    modifier = Modifier.width(100.dp).semantics {
+                                        contentDescription = "$prefixValue $countryCodeSelector"
+                                    },
+                                    readOnly = true,
+                                    singleLine = true,
+                                    textStyle = MaterialTheme.typography.bodyLarge,
+                                    label = { Text(stringResource(R.string.country_code_label)) },
+                                    colors = OutlinedTextFieldDefaults.colors(
+                                        unfocusedBorderColor = MaterialTheme.colorScheme.outline,
+                                        focusedBorderColor = MaterialTheme.colorScheme.primary
+                                    ),
+                                    trailingIcon = {
+                                        Icon(
+                                            imageVector = Icons.Outlined.KeyboardArrowDown,
+                                            contentDescription = null,
+                                            modifier = Modifier.size(20.dp)
+                                        )
+                                    }
+                                )
+                                Box(
+                                    modifier = Modifier
+                                        .matchParentSize()
+                                        .clickable(
+                                            interactionSource = remember { MutableInteractionSource() },
+                                            indication = null
+                                        ) { prefixExpanded = true }
+                                )
+                                DropdownMenu(
+                                    expanded = prefixExpanded,
+                                    onDismissRequest = { prefixExpanded = false }
+                                ) {
+                                    prefixOptions.forEach { option ->
+                                        DropdownMenuItem(
+                                            text = {
+                                                Text(
+                                                    text = "${option.prefix} ${stringResource(option.displayNameRes)}",
+                                                    style = MaterialTheme.typography.bodyMedium
+                                                )
+                                            },
+                                            onClick = {
+                                                onPrefixChange(option.prefix)
+                                                prefixExpanded = false
+                                            }
+                                        )
+                                    }
+                                }
+                            }
+
+                            OutlinedTextField(
+                                value = inputValue,
+                                onValueChange = onInputChange,
+                                label = { Text(text = stringResource(id = hintRes)) },
+                                modifier = Modifier.weight(1f),
+                                singleLine = true,
+                                keyboardOptions = KeyboardOptions(keyboardType = keyboardType),
+                                trailingIcon = {
+                                    IconButton(
+                                        onClick = onAdd,
+                                        enabled = inputValue.isNotBlank()
+                                    ) {
+                                        Icon(
+                                            imageVector = Icons.Outlined.Add,
+                                            contentDescription = stringResource(id = addRes),
+                                            tint = if (inputValue.isNotBlank()) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurfaceVariant
+                                        )
+                                    }
+                                }
+                            )
+                        }
+                    } else {
+                        OutlinedTextField(
+                            value = inputValue,
+                            onValueChange = onInputChange,
+                            label = { Text(text = stringResource(id = hintRes)) },
+                            modifier = Modifier.fillMaxWidth(),
+                            singleLine = true,
+                            keyboardOptions = KeyboardOptions(keyboardType = keyboardType),
+                            trailingIcon = {
+                                IconButton(
+                                    onClick = onAdd,
+                                    enabled = inputValue.isNotBlank()
+                                ) {
+                                    Icon(
+                                        imageVector = Icons.Outlined.Add,
+                                        contentDescription = stringResource(id = addRes),
+                                        tint = if (inputValue.isNotBlank()) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurfaceVariant
+                                    )
+                                }
+                            }
+                        )
+                    }
 
                     // Contact list
                     if (hasContacts) {

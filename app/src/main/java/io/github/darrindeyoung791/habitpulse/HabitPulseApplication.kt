@@ -60,9 +60,14 @@ class HabitPulseApplication : Application() {
         OnboardingPreferences(applicationContext)
     }
 
+    // 用户偏好设置（延迟初始化）
+    val userPreferences: UserPreferences by lazy {
+        UserPreferences.getInstance(this)
+    }
+
     // HabitViewModel 单例（延迟初始化）
     val habitViewModel: HabitViewModel by lazy {
-        HabitViewModel(repository, onboardingPreferences)
+        HabitViewModel(repository, onboardingPreferences, userPreferences)
     }
 
     // RecordsViewModel 单例（延迟初始化）

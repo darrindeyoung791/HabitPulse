@@ -146,7 +146,8 @@ fun HomeScreen(
             val fakeCompletionDao = FakeHabitCompletionDao()
             val fakeRepository = io.github.darrindeyoung791.habitpulse.data.repository.HabitRepository(fakeHabitDao, fakeCompletionDao)
             val fakeOnboardingPreferences = io.github.darrindeyoung791.habitpulse.utils.OnboardingPreferences(context.applicationContext)
-            HabitViewModel(fakeRepository, fakeOnboardingPreferences)
+            val fakeUserPreferences = io.github.darrindeyoung791.habitpulse.data.preferences.UserPreferences.getInstance(context)
+            HabitViewModel(fakeRepository, fakeOnboardingPreferences, fakeUserPreferences)
         }
     }
     val habits by viewModel.habitsFlow.collectAsStateWithLifecycle(initialValue = emptyList())

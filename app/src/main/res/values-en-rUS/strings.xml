@@ -465,4 +465,86 @@
     <string name="today_section_later">Later</string>
     <string name="today_section_allday">All Day</string>
     <string name="reminder_settings_dnd_same_time">Do Not Disturb start and end time cannot be the same</string>
+
+    <!-- Notification Confirm Dialog -->
+    <string name="notification_confirm_title">Notify Supervisors</string>
+    <string name="notification_confirm_send_email">Send Email</string>
+    <string name="notification_confirm_send_sms">Send SMS to %s</string>
+    <string name="notification_confirm_cancel">Cancel</string>
+    <string name="notification_confirm_no_email_app">No email app found</string>
+    <string name="notification_confirm_no_sms_app">No SMS app found</string>
+    <string name="notification_confirm_dismiss_toast">Remember to notify your supervisors</string>
+    <string name="notification_confirm_no_contacts">No supervisors to notify</string>
+
+    <!-- Notification Template -->
+    <string name="notification_template_settings_title">Notification Template</string>
+    <string name="notification_template_settings_desc">Customize supervisor notification message</string>
+    <string name="notification_template_label">Message Template</string>
+    <string name="notification_template_variable_hint">Available variables: {habit_name} habit name, {checkin_time} check-in time, {habit_notes} habit notes</string>
+    <string name="notification_template_save_success">Template saved</string>
+    <string name="notification_template_reset">Reset to Default</string>
+
+    <!-- Notification Email -->
+    <string name="notification_email_subject">Check-in notification for %s</string>
+
+    <!-- Default notification template (used when no custom template is saved) -->
+    <string name="notification_default_template">Completed {habit_name} check-in ({checkin_time}), just so you know.</string>
+
+    <!-- Country code selector -->
+    <string name="country_code_label">Code</string>
+    <string name="contacts_edit_button">Edit</string>
+    <string name="contacts_edit_email_title">Edit Email</string>
+    <string name="contacts_edit_phone_title">Edit Phone</string>
+    <string name="contacts_edit_email_description">Update this contact\'s email across all associated habits</string>
+    <string name="contacts_edit_phone_description">Update this contact\'s phone across all associated habits</string>
+    <string name="contacts_edit_email_label">Email address</string>
+    <string name="contacts_edit_phone_label">Phone number</string>
+    <string name="contacts_edit_email_invalid">Invalid email format</string>
+    <string name="contacts_edit_phone_invalid">Invalid phone number format</string>
+    <string name="create_habit_supervisor_phone_sms_cost_warning">SMS reminders may incur charges</string>
+    <string name="country_code_selector">Country/region phone code</string>
+
+    <!-- Country code names -->
+    <string name="country_cn">Chinese mainland</string>
+    <string name="country_us_ca">USA/Canada</string>
+    <string name="country_uk">UK</string>
+    <string name="country_jp">Japan</string>
+    <string name="country_kr">South Korea</string>
+    <string name="country_au">Australia</string>
+    <string name="country_hk">Hong Kong</string>
+    <string name="country_tw">Taiwan</string>
+    <string name="country_sg">Singapore</string>
+    <string name="country_de">Germany</string>
+    <string name="country_fr">France</string>
+    <string name="country_in">India</string>
+    <string name="country_it">Italy</string>
+    <string name="country_br">Brazil</string>
+    <string name="country_ru">Russia</string>
+    <string name="country_es">Spain</string>
+    <string name="country_nl">Netherlands</string>
+    <string name="country_se">Sweden</string>
+    <string name="country_ch">Switzerland</string>
+    <string name="country_no">Norway</string>
+    <string name="country_dk">Denmark</string>
+    <string name="country_fi">Finland</string>
+    <string name="country_pl">Poland</string>
+    <string name="country_gr">Greece</string>
+    <string name="country_my">Malaysia</string>
+    <string name="country_ph">Philippines</string>
+    <string name="country_id">Indonesia</string>
+    <string name="country_th">Thailand</string>
+    <string name="country_vn">Vietnam</string>
+    <string name="country_np">Nepal</string>
+    <string name="country_lk">Sri Lanka</string>
+    <string name="country_ae">UAE</string>
+    <string name="country_sa">Saudi Arabia</string>
+    <string name="country_il">Israel</string>
+    <string name="country_za">South Africa</string>
+    <string name="country_eg">Egypt</string>
+    <string name="country_ng">Nigeria</string>
+    <string name="country_ar">Argentina</string>
+    <string name="country_cl">Chile</string>
+    <string name="country_co">Colombia</string>
+    <string name="country_mx">Mexico</string>
+    <string name="country_nz">New Zealand</string>
 </resources>

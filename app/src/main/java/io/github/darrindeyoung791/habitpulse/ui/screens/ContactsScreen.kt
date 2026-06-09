@@ -11,6 +11,7 @@ import androidx.compose.animation.slideOutVertically
 import androidx.compose.foundation.LocalIndication
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.combinedClickable
+import androidx.compose.foundation.background
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -38,10 +39,16 @@ import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.filled.Clear
 import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.MoreVert
+import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.material.icons.outlined.Delete
+import androidx.compose.material.icons.outlined.Edit
 import androidx.compose.material.icons.outlined.Email
+import androidx.compose.material.icons.outlined.KeyboardArrowDown
 import androidx.compose.material.icons.outlined.Person
 import androidx.compose.material.icons.outlined.Phone
+import androidx.compose.material3.OutlinedTextField
+import androidx.compose.material3.OutlinedTextFieldDefaults
+import androidx.compose.ui.text.input.KeyboardType
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Card
@@ -490,6 +497,16 @@ fun ContactsScreenContent(
                             contact = selectedContact
                         )
                     }
+                },
+                onEditContact = { newValue ->
+                    scope.launch {
+                        sheetState.hide()
+                        viewModel.updateContactValue(
+                            oldValue = selectedContact!!.value,
+                            newValue = newValue,
+                            type = selectedContact!!.type
+                        )
+                    }
                 }
             )
         }
@@ -709,6 +726,9 @@ fun ContactCard(
     }
 }
 
+private val VALID_EMAIL = Regex("^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\\.[a-zA-Z]{2,}$")
+private val VALID_PHONE = Regex("^[+]?[0-9\\s-]{7,20}$")
+
 /**
  * 联系人 Bottom Sheet 内容
  */
@@ -717,8 +737,178 @@ fun ContactBottomSheetContent(
     contact: ContactsViewModel.ContactInfo,
     habits: List<Habit>,
     onDeleteFromHabit: (UUID) -> Unit,
-    onDeleteFromAll: () -> Unit
+    onDeleteFromAll: () -> Unit,
+    onEditContact: ((String) -> Unit)? = null
 ) {
+    var showEditDialog by remember { mutableStateOf(false) }
+    var editError by remember { mutableStateOf(false) }
+
+    // Country code state for phone editing (parse from existing value)
+    val isPhoneContact = contact.type == ContactsViewModel.ContactType.PHONE
+    val defaultCountryCode = remember(contact.value) {
+        COUNTRY_CODES.sortedByDescending { it.prefix.length }
+            .firstOrNull { contact.value.startsWith(it.prefix) }
+            ?.prefix ?: "+86"
+    }
+    var editCountryCode by remember(contact.value) { mutableStateOf(defaultCountryCode) }
+    var editPrefixExpanded by remember { mutableStateOf(false) }
+
+    // The phone number without country code prefix
+    val initialEditValue = remember(contact.value) {
+        if (isPhoneContact) contact.value.removePrefix(defaultCountryCode) else contact.value
+    }
+    var editInput by remember(initialEditValue) { mutableStateOf(initialEditValue) }
+
+    // Edit dialog
+    if (showEditDialog) {
+        val isEmail = contact.type == ContactsViewModel.ContactType.EMAIL
+        val dialogTitle = if (isEmail) {
+            stringResource(R.string.contacts_edit_email_title)
+        } else {
+            stringResource(R.string.contacts_edit_phone_title)
+        }
+        AlertDialog(
+            onDismissRequest = { showEditDialog = false },
+            title = { Text(dialogTitle) },
+            text = {
+                Column {
+                    Text(
+                        text = if (isEmail) {
+                            stringResource(R.string.contacts_edit_email_description)
+                        } else {
+                            stringResource(R.string.contacts_edit_phone_description)
+                        },
+                        style = MaterialTheme.typography.bodyMedium,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                    )
+                    Spacer(modifier = Modifier.height(16.dp))
+                    if (isPhoneContact) {
+                        Row(
+                            verticalAlignment = Alignment.CenterVertically,
+                            horizontalArrangement = Arrangement.spacedBy(8.dp)
+                        ) {
+                            Box {
+                                OutlinedTextField(
+                                    value = editCountryCode,
+                                    onValueChange = {},
+                                    modifier = Modifier.width(100.dp),
+                                    readOnly = true,
+                                    singleLine = true,
+                                    textStyle = MaterialTheme.typography.bodyLarge,
+                                    label = { Text(stringResource(R.string.country_code_label)) },
+                                    colors = OutlinedTextFieldDefaults.colors(
+                                        unfocusedBorderColor = MaterialTheme.colorScheme.outline,
+                                        focusedBorderColor = MaterialTheme.colorScheme.primary
+                                    ),
+                                    trailingIcon = {
+                                        Icon(
+                                            imageVector = Icons.Outlined.KeyboardArrowDown,
+                                            contentDescription = null,
+                                            modifier = Modifier.size(20.dp)
+                                        )
+                                    }
+                                )
+                                Box(
+                                    modifier = Modifier
+                                        .matchParentSize()
+                                        .clickable(
+                                            interactionSource = remember { MutableInteractionSource() },
+                                            indication = null
+                                        ) { editPrefixExpanded = true }
+                                )
+                                DropdownMenu(
+                                    expanded = editPrefixExpanded,
+                                    onDismissRequest = { editPrefixExpanded = false }
+                                ) {
+                                    COUNTRY_CODES.forEach { option ->
+                                        DropdownMenuItem(
+                                            text = {
+                                                Text(
+                                                    text = "${option.prefix} ${stringResource(option.displayNameRes)}",
+                                                    style = MaterialTheme.typography.bodyMedium
+                                                )
+                                            },
+                                            onClick = {
+                                                editCountryCode = option.prefix
+                                                editPrefixExpanded = false
+                                            }
+                                        )
+                                    }
+                                }
+                            }
+                            OutlinedTextField(
+                                value = editInput,
+                                onValueChange = {
+                                    editInput = it
+                                    editError = false
+                                },
+                                label = { Text(stringResource(R.string.contacts_edit_phone_label)) },
+                                modifier = Modifier.weight(1f),
+                                singleLine = true,
+                                isError = editError,
+                                supportingText = if (editError) {
+                                    { Text(stringResource(R.string.contacts_edit_phone_invalid)) }
+                                } else null,
+                                keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Phone)
+                            )
+                        }
+                    } else {
+                        OutlinedTextField(
+                            value = editInput,
+                            onValueChange = {
+                                editInput = it
+                                editError = false
+                            },
+                            label = { Text(stringResource(R.string.contacts_edit_email_label)) },
+                            singleLine = true,
+                            isError = editError,
+                            supportingText = if (editError) {
+                                { Text(stringResource(R.string.contacts_edit_email_invalid)) }
+                            } else null,
+                            keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Email),
+                            modifier = Modifier.fillMaxWidth()
+                        )
+                    }
+                }
+            },
+            confirmButton = {
+                TextButton(
+                    onClick = {
+                        if (isEmail) {
+                            if (VALID_EMAIL.matches(editInput)) {
+                                onEditContact?.invoke(editInput)
+                                showEditDialog = false
+                            } else {
+                                editError = true
+                            }
+                        } else {
+                            val fullPhone = "$editCountryCode$editInput"
+                            if (VALID_PHONE.matches(fullPhone)) {
+                                onEditContact?.invoke(fullPhone)
+                                showEditDialog = false
+                            } else {
+                                editError = true
+                            }
+                        }
+                    },
+                    enabled = editInput.isNotBlank() && (
+                        if (isEmail) editInput != contact.value
+                        else "$editCountryCode$editInput" != contact.value
+                    )
+                ) {
+                    Text(stringResource(R.string.create_habit_save_button))
+                }
+            },
+            dismissButton = {
+                TextButton(
+                    onClick = { showEditDialog = false }
+                ) {
+                    Text(stringResource(R.string.dialog_cancel))
+                }
+            }
+        )
+    }
+
     Column(
         modifier = Modifier
             .fillMaxWidth()
@@ -726,7 +916,7 @@ fun ContactBottomSheetContent(
             .windowInsetsPadding(WindowInsets.navigationBars),
         verticalArrangement = Arrangement.spacedBy(16.dp)
     ) {
-        // Header
+        // Header with edit button
         Column(
             verticalArrangement = Arrangement.spacedBy(4.dp)
         ) {
@@ -735,11 +925,35 @@ fun ContactBottomSheetContent(
                 style = MaterialTheme.typography.titleLarge,
                 fontWeight = FontWeight.Bold
             )
-            Text(
-                text = contact.value,
-                style = MaterialTheme.typography.bodyLarge,
-                color = MaterialTheme.colorScheme.onSurface
-            )
+            Row(
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.spacedBy(8.dp)
+            ) {
+                Text(
+                    text = contact.value,
+                    style = MaterialTheme.typography.bodyLarge,
+                    color = MaterialTheme.colorScheme.onSurface,
+                    modifier = Modifier.weight(1f)
+                )
+                IconButton(
+                    onClick = {
+                        if (isPhoneContact) {
+                            editCountryCode = defaultCountryCode
+                            editInput = contact.value.removePrefix(defaultCountryCode)
+                        } else {
+                            editInput = contact.value
+                        }
+                        editError = false
+                        showEditDialog = true
+                    }
+                ) {
+                    Icon(
+                        imageVector = Icons.Outlined.Edit,
+                        contentDescription = stringResource(R.string.contacts_edit_button),
+                        tint = MaterialTheme.colorScheme.primary
+                    )
+                }
+            }
         }
 
         // Habits list - scrollable when there are many habits

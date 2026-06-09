@@ -94,6 +94,7 @@ import io.github.darrindeyoung791.habitpulse.data.model.Habit
 import io.github.darrindeyoung791.habitpulse.data.model.HabitStatus
 import io.github.darrindeyoung791.habitpulse.data.model.HabitWithStatus
 import io.github.darrindeyoung791.habitpulse.data.model.RepeatCycle
+import io.github.darrindeyoung791.habitpulse.data.preferences.UserPreferences
 import io.github.darrindeyoung791.habitpulse.data.repository.HabitRepository
 import io.github.darrindeyoung791.habitpulse.ui.theme.HabitPulseTheme
 import io.github.darrindeyoung791.habitpulse.ui.utils.rememberAnimationsFrozen
@@ -144,7 +145,8 @@ fun HabitScreenContent(
             val fakeCompletionDao = FakeHabitCompletionDao()
             val fakeRepository = HabitRepository(fakeHabitDao, fakeCompletionDao)
             val fakeOnboardingPreferences = OnboardingPreferences(context.applicationContext)
-            HabitViewModel(fakeRepository, fakeOnboardingPreferences)
+            val fakeUserPreferences = UserPreferences.getInstance(context)
+            HabitViewModel(fakeRepository, fakeOnboardingPreferences, fakeUserPreferences)
         }
     }
 
@@ -364,9 +366,34 @@ fun HabitScreenContent(
             completionCount = displayCompletionCount,
             onDismiss = { viewModel.dismissRewardSheet() },
             onComplete = { viewModel.dismissRewardSheet() },
-            onNotifySupervisor = { viewModel.dismissRewardSheet() },
+            onNotifySupervisor = { viewModel.showNotificationConfirm(currentHabit) },
             onSkipNotification = { viewModel.dismissRewardSheet() }
         )
+    }
+
+    val notificationConfirm by viewModel.showNotificationConfirm.collectAsStateWithLifecycle()
+    val notificationConfirmHabit by viewModel.notificationConfirmHabit.collectAsStateWithLifecycle()
+    val userPreferences = remember { UserPreferences.getInstance(context) }
+    val savedTemplate by userPreferences.notificationTemplateFlow
+        .collectAsStateWithLifecycle(initialValue = null)
+    val defaultTemplate = stringResource(R.string.notification_default_template)
+    val notificationTemplate = savedTemplate ?: defaultTemplate
+    if (notificationConfirm && notificationConfirmHabit != null) {
+        val currentNotificationHabit = notificationConfirmHabit!!
+        key(currentNotificationHabit.id) {
+            NotificationConfirmDialog(
+                habit = currentNotificationHabit,
+                template = notificationTemplate,
+                onDismiss = {
+                    viewModel.dismissNotificationConfirm()
+                    android.widget.Toast.makeText(
+                        context,
+                        context.getString(R.string.notification_confirm_dismiss_toast),
+                        android.widget.Toast.LENGTH_SHORT
+                    ).show()
+                }
+            )
+        }
     }
 
     val checkInFeedbackType by viewModel.checkInFeedbackType.collectAsStateWithLifecycle()
