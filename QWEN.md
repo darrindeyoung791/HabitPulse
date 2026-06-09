@@ -31,7 +31,7 @@
 - **Scheduling**: AlarmManager (planned)
 - **Build System**: Gradle (Kotlin DSL)
 - **Minimum SDK**: 26 (Android 8.0)
-- **Target SDK**: 36
+- **Target SDK**: 37
 
 ## Project Structure
 
@@ -174,7 +174,7 @@ Records every habit completion with timestamp.
 ### Prerequisites
 - Android Studio (latest version recommended)
 - JDK 17 or higher
-- Android SDK with API level 36
+- Android SDK with API level 37
 
 ### Commands
 

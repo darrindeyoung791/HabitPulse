@@ -11,18 +11,14 @@ plugins {
 
 android {
     namespace = "io.github.darrindeyoung791.habitpulse"
-    compileSdk {
-        version = release(36) {
-            minorApiLevel = 1
-        }
-    }
+    compileSdk = 37
 
     defaultConfig {
         applicationId = "io.github.darrindeyoung791.habitpulse"
         minSdk = 26
-        targetSdk = 36
-        versionCode = 175
-        versionName = "0.8.27-alpha"
+        targetSdk = 37
+        versionCode = 176
+        versionName = "0.8.28-alpha"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
     }

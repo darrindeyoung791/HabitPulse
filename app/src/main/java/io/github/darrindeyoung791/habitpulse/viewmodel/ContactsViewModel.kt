@@ -308,6 +308,40 @@ class ContactsViewModel(
     }
 
     /**
+     * 更新联系人的值（批量修改所有关联习惯）
+     */
+    fun updateContactValue(oldValue: String, newValue: String, type: ContactType) {
+        if (oldValue == newValue) return
+        viewModelScope.launch {
+            val targetHabits = habitsFlow.value.filter { habit ->
+                when (type) {
+                    ContactType.EMAIL -> habit.getSupervisorEmailsList().contains(oldValue)
+                    ContactType.PHONE -> habit.getSupervisorPhonesList().contains(oldValue)
+                }
+            }
+            targetHabits.forEach { habit ->
+                val updatedHabit = when (type) {
+                    ContactType.EMAIL -> {
+                        val emails = habit.getSupervisorEmailsList().map {
+                            if (it == oldValue) newValue else it
+                        }
+                        habit.copyWithSupervisorEmails(emails)
+                    }
+                    ContactType.PHONE -> {
+                        val phones = habit.getSupervisorPhonesList().map {
+                            if (it == oldValue) newValue else it
+                        }
+                        habit.copyWithSupervisorPhones(phones)
+                    }
+                }
+                repository.updateHabit(updatedHabit)
+            }
+            // 更新选中的联系人信息
+            _selectedContact.value = _selectedContact.value?.copy(value = newValue)
+        }
+    }
+
+    /**
      * 设置搜索关键词
      */
     fun setSearchQuery(query: String) {
