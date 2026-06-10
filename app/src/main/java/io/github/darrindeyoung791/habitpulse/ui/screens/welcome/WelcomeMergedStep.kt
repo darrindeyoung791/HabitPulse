@@ -14,6 +14,7 @@ import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.outlined.Send
+import androidx.compose.material.icons.filled.Check
 import androidx.compose.material.icons.filled.Clear
 import androidx.compose.material.icons.filled.Visibility
 import androidx.compose.material.icons.filled.VisibilityOff
@@ -624,10 +625,9 @@ fun WelcomeMergedStep(
                     },
                     modifier = Modifier.weight(1f)
                 ) {
-                    Text(
-                        text = stringResource(R.string.onboarding_step_complete),
-                        style = MaterialTheme.typography.titleMedium,
-                        fontWeight = FontWeight.SemiBold
+                    Icon(
+                        imageVector = Icons.Default.Check,
+                        contentDescription = stringResource(R.string.onboarding_step_complete)
                     )
                 }
             }

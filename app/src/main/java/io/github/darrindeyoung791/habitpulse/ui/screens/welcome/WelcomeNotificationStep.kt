@@ -11,6 +11,7 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.ArrowForward
 import androidx.compose.material.icons.outlined.Alarm
 import androidx.compose.material.icons.outlined.Bedtime
 import androidx.compose.material.icons.outlined.Notifications
@@ -309,10 +310,9 @@ fun WelcomeNotificationStep(
                     onClick = { onNext(reminderEnabled, dndEnabled, dndStart, dndEnd, persistentEnabled) },
                     modifier = Modifier.weight(1f)
                 ) {
-                    Text(
-                        text = stringResource(R.string.onboarding_step_next),
-                        style = MaterialTheme.typography.titleMedium,
-                        fontWeight = FontWeight.SemiBold
+                    Icon(
+                        imageVector = Icons.AutoMirrored.Filled.ArrowForward,
+                        contentDescription = stringResource(R.string.onboarding_step_next)
                     )
                 }
             }
