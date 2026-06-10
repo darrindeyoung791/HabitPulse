@@ -1609,7 +1609,7 @@ fun ReminderDetailDialog(
 
                     if (supervisorEmails.isNotEmpty()) {
                         Text(
-                            text = stringResource(id = R.string.create_habit_supervisor_email_label),
+                            text = stringResource(id = R.string.create_habit_tab_email),
                             style = MaterialTheme.typography.labelMedium,
                             color = MaterialTheme.colorScheme.primary
                         )
@@ -1638,7 +1638,7 @@ fun ReminderDetailDialog(
                     if (supervisorPhones.isNotEmpty()) {
                         Spacer(modifier = Modifier.height(8.dp))
                         Text(
-                            text = stringResource(id = R.string.create_habit_supervisor_phone_label),
+                            text = stringResource(id = R.string.create_habit_tab_phone),
                             style = MaterialTheme.typography.labelMedium,
                             color = MaterialTheme.colorScheme.primary
                         )

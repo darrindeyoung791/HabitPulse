@@ -31,6 +31,7 @@ import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.*
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.hapticfeedback.HapticFeedbackType
 import androidx.compose.ui.platform.LocalContext
@@ -38,6 +39,7 @@ import androidx.compose.ui.platform.LocalHapticFeedback
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.semantics
+import androidx.compose.ui.window.DialogProperties
 import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.input.KeyboardCapitalization
 import androidx.compose.ui.tooling.preview.Preview
@@ -138,6 +140,218 @@ fun TimePickerDialog(
     }
 }
 
+private val VALID_EMAIL = Regex("^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\\.[a-zA-Z]{2,}$")
+private val VALID_PHONE = Regex("^[+]?[0-9\\s-]{7,20}$")
+
+/**
+ * 添加监督人对话框 - 带 Tab 切换（邮箱/电话），防止误切换和误触关闭
+ */
+@OptIn(ExperimentalMaterial3Api::class)
+@Composable
+private fun AddSupervisorDialog(
+    initialCountryCode: String,
+    hasAddedEmail: Boolean,
+    hasAddedPhone: Boolean,
+    onDismiss: () -> Unit,
+    onAddEmail: (String) -> Unit,
+    onAddPhone: (String) -> Unit
+) {
+    var selectedTab by remember { mutableIntStateOf(0) }
+    var emailInput by remember { mutableStateOf("") }
+    var emailError by remember { mutableStateOf(false) }
+    var phoneInput by remember { mutableStateOf("") }
+    var phoneError by remember { mutableStateOf(false) }
+    var currentCountryCode by remember { mutableStateOf(initialCountryCode) }
+    var prefixExpanded by remember { mutableStateOf(false) }
+    val emailFocusRequester = remember { FocusRequester() }
+    val phoneFocusRequester = remember { FocusRequester() }
+    val smsWarningColor = Color(0xFFFFF3CD)
+    val smsWarningTextColor = Color(0xFF664D00)
+    val context = LocalContext.current
+
+    val canSwitchToEmail = phoneInput.isBlank()
+    val canSwitchToPhone = emailInput.isBlank()
+
+    LaunchedEffect(selectedTab) {
+        if (selectedTab == 0) {
+            emailFocusRequester.requestFocus()
+        } else {
+            phoneFocusRequester.requestFocus()
+        }
+    }
+
+    AlertDialog(
+        onDismissRequest = onDismiss,
+        confirmButton = {
+            TextButton(
+                onClick = {
+                    if (selectedTab == 0) {
+                        if (VALID_EMAIL.matches(emailInput)) {
+                            onAddEmail(emailInput)
+                        } else {
+                            emailError = true
+                        }
+                    } else {
+                        val fullPhone = "${currentCountryCode.substringBefore(" ")}$phoneInput"
+                        if (VALID_PHONE.matches(fullPhone)) {
+                            onAddPhone(fullPhone)
+                        } else {
+                            phoneError = true
+                        }
+                    }
+                },
+                enabled = if (selectedTab == 0) emailInput.isNotBlank() else phoneInput.isNotBlank()
+            ) {
+                Text(stringResource(R.string.create_habit_time_picker_confirm))
+            }
+        },
+        dismissButton = {
+            val showDone = hasAddedEmail && hasAddedPhone
+            TextButton(onClick = onDismiss) {
+                Text(stringResource(if (showDone) R.string.create_habit_add_supervisor_done else R.string.create_habit_time_picker_dismiss))
+            }
+        },
+        properties = DialogProperties(
+            usePlatformDefaultWidth = false,
+            dismissOnBackPress = true,
+            dismissOnClickOutside = false
+        ),
+        title = { Text(stringResource(R.string.create_habit_add_supervisor_title)) },
+        text = {
+            Column {
+                PrimaryTabRow(
+                    selectedTabIndex = selectedTab,
+                    containerColor = Color.Transparent,
+                    divider = {}
+                ) {
+                    Tab(
+                        selected = selectedTab == 0,
+                        onClick = {
+                            if (canSwitchToEmail) {
+                                selectedTab = 0
+                            } else {
+                                android.widget.Toast.makeText(
+                                    context,
+                                    R.string.create_habit_tab_switch_blocked,
+                                    android.widget.Toast.LENGTH_SHORT
+                                ).show()
+                            }
+                        },
+                        text = { Text(stringResource(R.string.create_habit_tab_email)) },
+                        modifier = if (!canSwitchToEmail) Modifier.alpha(0.38f) else Modifier
+                    )
+                    Tab(
+                        selected = selectedTab == 1,
+                        onClick = {
+                            if (canSwitchToPhone) {
+                                selectedTab = 1
+                            } else {
+                                android.widget.Toast.makeText(
+                                    context,
+                                    R.string.create_habit_tab_switch_blocked,
+                                    android.widget.Toast.LENGTH_SHORT
+                                ).show()
+                            }
+                        },
+                        text = { Text(stringResource(R.string.create_habit_tab_phone)) },
+                        modifier = if (!canSwitchToPhone) Modifier.alpha(0.38f) else Modifier
+                    )
+                }
+                Spacer(modifier = Modifier.height(16.dp))
+                when (selectedTab) {
+                    0 -> {
+                        Text(
+                            text = stringResource(R.string.create_habit_add_email_dialog_description),
+                            style = MaterialTheme.typography.bodyMedium,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant
+                        )
+                        Spacer(modifier = Modifier.height(16.dp))
+                        OutlinedTextField(
+                            value = emailInput,
+                            onValueChange = { emailInput = it; emailError = false },
+                            label = { Text(stringResource(R.string.create_habit_supervisor_email_hint)) },
+                            singleLine = true,
+                            isError = emailError,
+                            supportingText = if (emailError) {
+                                { Text(stringResource(R.string.create_habit_supervisor_email_invalid)) }
+                            } else null,
+                            keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Email),
+                            modifier = Modifier.fillMaxWidth().focusRequester(emailFocusRequester)
+                        )
+                    }
+                    1 -> {
+                        Text(
+                            text = stringResource(R.string.create_habit_add_phone_dialog_description),
+                            style = MaterialTheme.typography.bodyMedium,
+                            color = MaterialTheme.colorScheme.onSurfaceVariant
+                        )
+                        Spacer(modifier = Modifier.height(16.dp))
+                        Row(
+                            modifier = Modifier.fillMaxWidth()
+                                .background(smsWarningColor, RoundedCornerShape(4.dp))
+                                .padding(horizontal = 8.dp, vertical = 6.dp),
+                            verticalAlignment = Alignment.CenterVertically,
+                            horizontalArrangement = Arrangement.spacedBy(6.dp)
+                        ) {
+                            Icon(Icons.Outlined.Warning, contentDescription = null, modifier = Modifier.size(16.dp), tint = smsWarningTextColor)
+                            Text(stringResource(R.string.create_habit_supervisor_phone_sms_cost_warning), style = MaterialTheme.typography.bodySmall, color = smsWarningTextColor)
+                        }
+                        Spacer(modifier = Modifier.height(12.dp))
+                        Row(
+                            modifier = Modifier.fillMaxWidth(),
+                            verticalAlignment = Alignment.CenterVertically,
+                            horizontalArrangement = Arrangement.spacedBy(8.dp)
+                        ) {
+                            val countryCodeSelector = stringResource(R.string.country_code_selector)
+                            Box {
+                                OutlinedTextField(
+                                    value = currentCountryCode,
+                                    onValueChange = {},
+                                    modifier = Modifier.width(120.dp).semantics { contentDescription = "$currentCountryCode $countryCodeSelector" },
+                                    readOnly = true,
+                                    singleLine = true,
+                                    textStyle = MaterialTheme.typography.bodyLarge,
+                                    label = { Text(stringResource(R.string.country_code_label)) },
+                                    colors = OutlinedTextFieldDefaults.colors(
+                                        unfocusedBorderColor = MaterialTheme.colorScheme.outline,
+                                        focusedBorderColor = MaterialTheme.colorScheme.primary
+                                    ),
+                                    trailingIcon = { Icon(Icons.Outlined.KeyboardArrowDown, contentDescription = null, modifier = Modifier.size(20.dp)) }
+                                )
+                                Box(
+                                    modifier = Modifier.matchParentSize().clickable(
+                                        interactionSource = remember { MutableInteractionSource() },
+                                        indication = null
+                                    ) { prefixExpanded = true }
+                                )
+                                DropdownMenu(expanded = prefixExpanded, onDismissRequest = { prefixExpanded = false }) {
+                                    COUNTRY_CODES.forEach { option ->
+                                        DropdownMenuItem(
+                                            text = { Text("${option.prefix} ${stringResource(option.displayNameRes)}", style = MaterialTheme.typography.bodyMedium) },
+                                            onClick = { currentCountryCode = option.prefix; prefixExpanded = false }
+                                        )
+                                    }
+                                }
+                            }
+                            OutlinedTextField(
+                                value = phoneInput,
+                                onValueChange = { phoneInput = it; phoneError = false },
+                                label = { Text(stringResource(R.string.create_habit_supervisor_phone_hint)) },
+                                modifier = Modifier.weight(1f).focusRequester(phoneFocusRequester),
+                                singleLine = true,
+                                textStyle = MaterialTheme.typography.bodyLarge,
+                                isError = phoneError,
+                                supportingText = if (phoneError) { { Text(stringResource(R.string.create_habit_supervisor_phone_invalid)) } } else null,
+                                keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Phone)
+                            )
+                        }
+                    }
+                }
+            }
+        }
+    )
+}
+
 /**
  * 习惯编辑模式
  */
@@ -199,7 +413,7 @@ fun HabitCreationScreen(
 
     // Estimate max delay needed for initial staggered animation
     // We have ~6 major components, each with 30ms delay + ~500ms animation duration
-    val estimatedMaxAnimationTime = 6 * 30L + 500L
+    val estimatedMaxAnimationTime = 5 * 30L + 500L
 
     // Mark initial animation as complete after estimated time
     // This ensures newly composed items (from scrolling) skip the animation
@@ -225,19 +439,13 @@ fun HabitCreationScreen(
     // Supervision contact state
     var supervisorEmails by remember(prefillHabit) { mutableStateOf<List<String>>(emptyList()) }
     var supervisorPhones by remember(prefillHabit) { mutableStateOf<List<String>>(emptyList()) }
-    var emailInput by remember { mutableStateOf("") }
-    var phoneInput by remember { mutableStateOf("") }
+    var showAddSupervisorDialog by remember { mutableStateOf(false) }
     var countryCode by remember { mutableStateOf("+86") }
-    var showEmailMaxToast by remember { mutableStateOf(false) }
-    var showPhoneMaxToast by remember { mutableStateOf(false) }
     var showDuplicateEmailToast by remember { mutableStateOf(false) }
     var showDuplicatePhoneToast by remember { mutableStateOf(false) }
-    var showInvalidEmailToast by remember { mutableStateOf(false) }
-    var showInvalidPhoneToast by remember { mutableStateOf(false) }
-    var isEmailListExpanded by remember { mutableStateOf(false) }
-    var isPhoneListExpanded by remember { mutableStateOf(false) }
-    var isEmailSectionExpanded by remember { mutableStateOf(false) }
-    var isPhoneSectionExpanded by remember { mutableStateOf(false) }
+    var isSupervisorExpanded by remember { mutableStateOf(false) }
+    var hasAddedSupervisorEmail by remember { mutableStateOf(false) }
+    var hasAddedSupervisorPhone by remember { mutableStateOf(false) }
 
     // Repeat days state (for weekly cycle)
     var selectedRepeatDays by remember(prefillHabit) { mutableStateOf<Set<Int>>(prefillHabit?.repeatDays?.toSet() ?: setOf()) }
@@ -268,8 +476,6 @@ fun HabitCreationScreen(
                 notes = it.notes
                 supervisorEmails = it.getSupervisorEmailsList()
                 supervisorPhones = it.getSupervisorPhonesList()
-                isEmailSectionExpanded = it.getSupervisorEmailsList().isNotEmpty()
-                isPhoneSectionExpanded = it.getSupervisorPhonesList().isNotEmpty()
             }
         }
     }
@@ -293,24 +499,6 @@ fun HabitCreationScreen(
             hapticFeedback.performHapticFeedback(HapticFeedbackType.TextHandleMove)
             android.widget.Toast.makeText(context, R.string.create_habit_max_length_hint, android.widget.Toast.LENGTH_SHORT).show()
             showMaxLengthToast = false
-        }
-    }
-
-    // 显示邮箱最大长度 Toast
-    if (showEmailMaxToast) {
-        LaunchedEffect(Unit) {
-            hapticFeedback.performHapticFeedback(HapticFeedbackType.TextHandleMove)
-            android.widget.Toast.makeText(context, R.string.create_habit_max_length_hint, android.widget.Toast.LENGTH_SHORT).show()
-            showEmailMaxToast = false
-        }
-    }
-
-    // 显示电话最大长度 Toast
-    if (showPhoneMaxToast) {
-        LaunchedEffect(Unit) {
-            hapticFeedback.performHapticFeedback(HapticFeedbackType.TextHandleMove)
-            android.widget.Toast.makeText(context, R.string.create_habit_max_length_hint, android.widget.Toast.LENGTH_SHORT).show()
-            showPhoneMaxToast = false
         }
     }
 
@@ -351,42 +539,10 @@ fun HabitCreationScreen(
         }
     }
 
-    // 显示无效邮箱 Toast
-    if (showInvalidEmailToast) {
-        LaunchedEffect(Unit) {
-            hapticFeedback.performHapticFeedback(HapticFeedbackType.TextHandleMove)
-            android.widget.Toast.makeText(context, R.string.create_habit_supervisor_email_invalid, android.widget.Toast.LENGTH_SHORT).show()
-            showInvalidEmailToast = false
-        }
-    }
-
-    // 显示无效电话 Toast
-    if (showInvalidPhoneToast) {
-        LaunchedEffect(Unit) {
-            hapticFeedback.performHapticFeedback(HapticFeedbackType.TextHandleMove)
-            android.widget.Toast.makeText(context, R.string.create_habit_supervisor_phone_invalid, android.widget.Toast.LENGTH_SHORT).show()
-            showInvalidPhoneToast = false
-        }
-    }
-
     // 错误状态标记
     var showHabitNameError by remember { mutableStateOf(false) }
     var showReminderTimeError by remember { mutableStateOf(false) }
     var showRepeatDaysError by remember { mutableStateOf(false) }
-    var showSupervisorEmailError by remember { mutableStateOf(false) }
-    var showSupervisorPhoneError by remember { mutableStateOf(false) }
-
-    // 邮箱验证正则
-    fun isValidEmail(email: String): Boolean {
-        val emailPattern = "^[a-zA-Z0-9._%+-]+@[a-zA-Z0-9.-]+\\.[a-zA-Z]{2,}$"
-        return email.matches(emailPattern.toRegex())
-    }
-
-    // 电话验证正则（简单验证，允许数字、+、-、空格）
-    fun isValidPhone(phone: String): Boolean {
-        val phonePattern = "^[+]?[0-9\\s-]{7,20}$"
-        return phone.matches(phonePattern.toRegex())
-    }
 
     // 验证必填项
     fun validateInputs(): Boolean {
@@ -394,8 +550,6 @@ fun HabitCreationScreen(
         showHabitNameError = false
         showReminderTimeError = false
         showRepeatDaysError = false
-        showSupervisorEmailError = false
-        showSupervisorPhoneError = false
 
         var isValid = true
 
@@ -524,146 +678,126 @@ fun HabitCreationScreen(
                 .imeNestedScroll(),
             verticalArrangement = Arrangement.spacedBy(16.dp)
         ) {
-            // 1. Repeat cycle selection - Button group with custom shapes
+            // 1. Repeat cycle selection + repeat days (merged to avoid double spacing)
             AnimatedCreationItem(
                 index = 0,
                 initialAnimationComplete = initialAnimationComplete
             ) {
-                Row(
-                    modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.spacedBy((-1).dp)
-                ) {
-                RepeatCycle.values().forEachIndexed { index, cycle ->
-                    val isSelected = repeatCycle == cycle
-                    val interactionSource = remember { MutableInteractionSource() }
-                    val isPressed by interactionSource.collectIsPressedAsState()
-                    
-                    // 按压时圆角变大动画
-                    val cornerSize = animateDpAsState(
-                        targetValue = if (isPressed) 24.dp else 8.dp,
-                        label = "cornerSize"
-                    )
-                    
-                    val backgroundColor = if (isSelected) {
-                        MaterialTheme.colorScheme.primary
-                    } else {
-                        MaterialTheme.colorScheme.surfaceVariant
-                    }
-
-                    val contentColor = if (isSelected) {
-                        MaterialTheme.colorScheme.onPrimary
-                    } else {
-                        MaterialTheme.colorScheme.onSurfaceVariant
-                    }
-                    
-                    Surface(
-                        modifier = Modifier
-                            .weight(1f)
-                            .height(48.dp)
-                            .clickable(
-                                interactionSource = interactionSource,
-                                indication = null
-                            ) { repeatCycle = cycle },
-                        shape = RoundedCornerShape(
-                            topStart = if (index == 0) cornerSize.value else 0.dp,
-                            topEnd = if (index == RepeatCycle.values().lastIndex) cornerSize.value else 0.dp,
-                            bottomStart = if (index == 0) cornerSize.value else 0.dp,
-                            bottomEnd = if (index == RepeatCycle.values().lastIndex) cornerSize.value else 0.dp
-                        ),
-                        color = backgroundColor,
-                        contentColor = contentColor
+                Column(modifier = Modifier.fillMaxWidth()) {
+                    Row(
+                        modifier = Modifier.fillMaxWidth(),
+                        horizontalArrangement = Arrangement.spacedBy((-1).dp)
                     ) {
-                        Box(
-                            contentAlignment = Alignment.Center
-                        ) {
-                            Text(
-                                text = when (cycle) {
-                                    RepeatCycle.DAILY -> stringResource(id = R.string.create_habit_daily_option)
-                                    RepeatCycle.WEEKLY -> stringResource(id = R.string.create_habit_weekly_option)
-                                },
-                                style = MaterialTheme.typography.bodyLarge
-                            )
-                        }
-                    }
-                }
-            }
-            } // Close AnimatedCreationItem for repeat cycle
+                    RepeatCycle.values().forEachIndexed { index, cycle ->
+                        val isSelected = repeatCycle == cycle
+                        val interactionSource = remember { MutableInteractionSource() }
+                        val isPressed by interactionSource.collectIsPressedAsState()
 
-            // 2. Repeat days selection (for weekly cycle)
-            AnimatedCreationItem(
-                index = 1,
-                initialAnimationComplete = initialAnimationComplete
-            ) {
-                AnimatedVisibility(
-                    visible = repeatCycle == RepeatCycle.WEEKLY,
-                    enter = expandVertically() + fadeIn(),
-                    exit = shrinkVertically() + fadeOut()
-                ) {
-                Card(
-                    modifier = Modifier.fillMaxWidth(),
-                    colors = CardDefaults.cardColors(
-                        containerColor = if (showRepeatDaysError) {
-                            MaterialTheme.colorScheme.errorContainer.copy(alpha = 0.3f)
+                        val cornerSize = animateDpAsState(
+                            targetValue = if (isPressed) 24.dp else 8.dp,
+                            label = "cornerSize"
+                        )
+
+                        val backgroundColor = if (isSelected) {
+                            MaterialTheme.colorScheme.primary
                         } else {
-                            androidx.compose.ui.graphics.Color.Transparent
+                            MaterialTheme.colorScheme.surfaceVariant
                         }
-                    ),
-                    shape = RoundedCornerShape(0.dp)
-                ) {
-                    Column(
-                        modifier = Modifier.fillMaxWidth()
-                    ) {
-                        Row(
-                            modifier = Modifier.fillMaxWidth(),
-                            horizontalArrangement = Arrangement.spacedBy(4.dp)
-                        ) {
-                            // Display order: 日一二三四五六
-                            // Actual indices: 6, 0, 1, 2, 3, 4, 5
-                            val dayIndices = listOf(6, 0, 1, 2, 3, 4, 5)
-                            val dayLabels = listOf(
-                                stringResource(id = R.string.create_habit_day_sunday),
-                                stringResource(id = R.string.create_habit_day_monday),
-                                stringResource(id = R.string.create_habit_day_tuesday),
-                                stringResource(id = R.string.create_habit_day_wednesday),
-                                stringResource(id = R.string.create_habit_day_thursday),
-                                stringResource(id = R.string.create_habit_day_friday),
-                                stringResource(id = R.string.create_habit_day_saturday)
-                            )
 
-                            dayIndices.forEachIndexed { displayPos, actualIndex ->
-                                FilterChip(
-                                    selected = selectedRepeatDays.contains(actualIndex),
-                                    onClick = {
-                                        selectedRepeatDays = if (selectedRepeatDays.contains(actualIndex)) {
-                                            selectedRepeatDays - actualIndex
-                                        } else {
-                                            selectedRepeatDays + actualIndex
-                                        }
-                                        showRepeatDaysError = false
+                        val contentColor = if (isSelected) {
+                            MaterialTheme.colorScheme.onPrimary
+                        } else {
+                            MaterialTheme.colorScheme.onSurfaceVariant
+                        }
+
+                        Surface(
+                            modifier = Modifier
+                                .weight(1f)
+                                .height(48.dp)
+                                .clickable(
+                                    interactionSource = interactionSource,
+                                    indication = null
+                                ) { repeatCycle = cycle },
+                            shape = RoundedCornerShape(
+                                topStart = if (index == 0) cornerSize.value else 0.dp,
+                                topEnd = if (index == RepeatCycle.values().lastIndex) cornerSize.value else 0.dp,
+                                bottomStart = if (index == 0) cornerSize.value else 0.dp,
+                                bottomEnd = if (index == RepeatCycle.values().lastIndex) cornerSize.value else 0.dp
+                            ),
+                            color = backgroundColor,
+                            contentColor = contentColor
+                        ) {
+                            Box(
+                                contentAlignment = Alignment.Center
+                            ) {
+                                Text(
+                                    text = when (cycle) {
+                                        RepeatCycle.DAILY -> stringResource(id = R.string.create_habit_daily_option)
+                                        RepeatCycle.WEEKLY -> stringResource(id = R.string.create_habit_weekly_option)
                                     },
-                                    label = {
-                                        Text(
-                                            text = dayLabels[displayPos],
-                                            textAlign = TextAlign.Center,
-                                            modifier = Modifier.fillMaxWidth()
-                                        )
-                                    },
-                                    modifier = Modifier.weight(1f),
-                                    colors = FilterChipDefaults.filterChipColors(
-                                        selectedContainerColor = MaterialTheme.colorScheme.primary,
-                                        selectedLabelColor = MaterialTheme.colorScheme.onPrimary
-                                    )
+                                    style = MaterialTheme.typography.bodyLarge
                                 )
                             }
                         }
                     }
                 }
-            }
-            } // Close AnimatedCreationItem for repeat days
 
-            // 3. Habit name input field
+                    AnimatedVisibility(
+                        visible = repeatCycle == RepeatCycle.WEEKLY,
+                        enter = expandVertically() + fadeIn(),
+                        exit = shrinkVertically() + fadeOut()
+                    ) {
+                        Column {
+                            Spacer(modifier = Modifier.height(16.dp))
+                            Row(
+                                modifier = Modifier.fillMaxWidth(),
+                                horizontalArrangement = Arrangement.spacedBy(4.dp)
+                            ) {
+                                val dayIndices = listOf(6, 0, 1, 2, 3, 4, 5)
+                                val dayLabels = listOf(
+                                    stringResource(id = R.string.create_habit_day_sunday),
+                                    stringResource(id = R.string.create_habit_day_monday),
+                                    stringResource(id = R.string.create_habit_day_tuesday),
+                                    stringResource(id = R.string.create_habit_day_wednesday),
+                                    stringResource(id = R.string.create_habit_day_thursday),
+                                    stringResource(id = R.string.create_habit_day_friday),
+                                    stringResource(id = R.string.create_habit_day_saturday)
+                                )
+
+                                dayIndices.forEachIndexed { displayPos, actualIndex ->
+                                    FilterChip(
+                                        selected = selectedRepeatDays.contains(actualIndex),
+                                        onClick = {
+                                            selectedRepeatDays = if (selectedRepeatDays.contains(actualIndex)) {
+                                                selectedRepeatDays - actualIndex
+                                            } else {
+                                                selectedRepeatDays + actualIndex
+                                            }
+                                            showRepeatDaysError = false
+                                        },
+                                        label = {
+                                            Text(
+                                                text = dayLabels[displayPos],
+                                                textAlign = TextAlign.Center,
+                                                modifier = Modifier.fillMaxWidth()
+                                            )
+                                        },
+                                        modifier = Modifier.weight(1f),
+                                        colors = FilterChipDefaults.filterChipColors(
+                                            selectedContainerColor = MaterialTheme.colorScheme.primary,
+                                            selectedLabelColor = MaterialTheme.colorScheme.onPrimary
+                                        )
+                                    )
+                                }
+                            }
+                        }
+                    }
+                }
+            } // Close AnimatedCreationItem for repeat cycle + days
+
+            // 2. Habit name input field
             AnimatedCreationItem(
-                index = 2,
+                index = 1,
                 initialAnimationComplete = initialAnimationComplete
             ) {
                 OutlinedTextField(
@@ -704,163 +838,69 @@ fun HabitCreationScreen(
 
             // 4. Reminder time section
             AnimatedCreationItem(
-                index = 3,
+                index = 2,
                 initialAnimationComplete = initialAnimationComplete
             ) {
-                Card(
-                    modifier = Modifier.fillMaxWidth(),
-                colors = CardDefaults.cardColors(
-                    containerColor = if (showReminderTimeError) {
-                        MaterialTheme.colorScheme.errorContainer.copy(alpha = 0.3f)
-                    } else {
-                        androidx.compose.ui.graphics.Color.Transparent
-                    }
-                ),
-                shape = RoundedCornerShape(0.dp)
-            ) {
-                Column(
-                    modifier = Modifier
-                        .fillMaxWidth()
+                AddSection(
+                    title = stringResource(id = R.string.create_habit_reminder_time_label),
+                    addButtonLabelRes = R.string.create_habit_add_reminder_button,
+                    onAddClick = {
+                        currentTimePickerTime = java.time.LocalTime.now()
+                        showTimePicker = true
+                    },
+                    itemCount = reminderTimes.size,
+                    emptyTextRes = R.string.create_habit_no_reminder_set,
+                    countTextRes = R.string.create_habit_reminder_set_count,
+                    isListExpanded = isReminderExpanded,
+                    onListExpandedChange = { isReminderExpanded = it },
+                    showError = showReminderTimeError
                 ) {
-                    // Header row with add button
-                    Row(
-                        modifier = Modifier.fillMaxWidth(),
-                        horizontalArrangement = Arrangement.SpaceBetween,
-                        verticalAlignment = Alignment.CenterVertically
-                    ) {
-                        Text(
-                            text = stringResource(id = R.string.create_habit_reminder_time_label),
-                            style = MaterialTheme.typography.bodyLarge,
-                            color = if (showReminderTimeError) {
-                                MaterialTheme.colorScheme.error
-                            } else {
-                                MaterialTheme.colorScheme.onSurface
-                            }
-                        )
-
-                        // Button with animated shape
-                        val interactionSource = remember { MutableInteractionSource() }
-                        val isPressed by interactionSource.collectIsPressedAsState()
-
-                        // 按压时圆角变大动画
-                        val cornerSize = animateDpAsState(
-                            targetValue = if (isPressed) 24.dp else 8.dp,
-                            label = "cornerSize"
-                        )
-
-                        Surface(
-                            modifier = Modifier
-                                .height(40.dp)
-                                .clickable(
-                                    interactionSource = interactionSource,
-                                    indication = null
-                                ) {
-                                    currentTimePickerTime = java.time.LocalTime.now()
-                                    showTimePicker = true
-                                },
-                            shape = RoundedCornerShape(cornerSize.value),
-                            color = MaterialTheme.colorScheme.primaryContainer,
-                            contentColor = MaterialTheme.colorScheme.onPrimaryContainer
+                    reminderTimes.forEachIndexed { index, time ->
+                        Row(
+                            modifier = Modifier.fillMaxWidth(),
+                            horizontalArrangement = Arrangement.SpaceBetween,
+                            verticalAlignment = Alignment.CenterVertically
                         ) {
-                            Row(
-                                modifier = Modifier
-                                    .fillMaxHeight()
-                                    .padding(horizontal = 16.dp),
-                                horizontalArrangement = Arrangement.spacedBy(8.dp),
-                                verticalAlignment = Alignment.CenterVertically
-                            ) {
-                                Icon(
-                                    imageVector = Icons.Outlined.Add,
-                                    contentDescription = null,
-                                    modifier = Modifier.size(18.dp)
-                                )
-                                Text(
-                                    text = stringResource(id = R.string.create_habit_add_reminder_button),
-                                    style = MaterialTheme.typography.bodyMedium
-                                )
-                            }
-                        }
-                    }
-                    
-                    Spacer(modifier = Modifier.height(8.dp))
-                    
-                    // Reminder status row
-                    Row(
-                        modifier = Modifier.fillMaxWidth(),
-                        horizontalArrangement = Arrangement.SpaceBetween,
-                        verticalAlignment = Alignment.CenterVertically
-                    ) {
-                        Text(
-                            text = if (reminderTimes.isEmpty()) {
-                                stringResource(id = R.string.create_habit_no_reminder_set)
-                            } else if (isReminderExpanded) {
-                                stringResource(id = R.string.create_habit_reminder_set_count, reminderTimes.size)
-                            } else {
-                                stringResource(id = R.string.create_habit_reminder_set_count, reminderTimes.size)
-                            },
-                            style = MaterialTheme.typography.bodyMedium,
-                            color = MaterialTheme.colorScheme.onSurfaceVariant
-                        )
-                        
-                        if (reminderTimes.isNotEmpty()) {
-                            TextButton(
-                                onClick = { isReminderExpanded = !isReminderExpanded }
-                            ) {
-                                Text(
-                                    text = if (isReminderExpanded) {
-                                        stringResource(id = R.string.create_habit_collapse_button)
-                                    } else {
-                                        stringResource(id = R.string.create_habit_expand_button)
-                                    }
-                                )
-                                Icon(
-                                    imageVector = if (isReminderExpanded) Icons.Outlined.KeyboardArrowUp else Icons.Outlined.KeyboardArrowDown,
-                                    contentDescription = if (isReminderExpanded) "收起" else "展开",
-                                    modifier = Modifier.size(18.dp)
-                                )
-                            }
-                        }
-                    }
-                    
-                    // Expandable reminder times list
-                    AnimatedVisibility(
-                        visible = isReminderExpanded && reminderTimes.isNotEmpty(),
-                        enter = expandVertically(),
-                        exit = shrinkVertically()
-                    ) {
-                        Column(
-                            modifier = Modifier.padding(top = 8.dp),
-                            verticalArrangement = Arrangement.spacedBy(8.dp)
-                        ) {
-                            reminderTimes.forEachIndexed { index, time ->
-                                Row(
-                                    modifier = Modifier.fillMaxWidth(),
-                                    horizontalArrangement = Arrangement.SpaceBetween,
-                                    verticalAlignment = Alignment.CenterVertically
-                                ) {
-                                    Text(
-                                        text = time,
-                                        style = MaterialTheme.typography.bodyLarge,
-                                        color = MaterialTheme.colorScheme.onSurface
-                                    )
-                                    IconButton(
-                                        onClick = {
-                                            reminderTimes = reminderTimes.filterIndexed { i, _ -> i != index }
-                                        }
-                                    ) {
-                                        Icon(
-                                            imageVector = Icons.Outlined.Delete,
-                                            contentDescription = stringResource(R.string.accessibility_delete_reminder_time, time),
-                                            tint = MaterialTheme.colorScheme.error
-                                        )
-                                    }
+                            Text(
+                                text = time,
+                                style = MaterialTheme.typography.bodyLarge,
+                                color = MaterialTheme.colorScheme.onSurface
+                            )
+                            IconButton(
+                                onClick = {
+                                    reminderTimes = reminderTimes.filterIndexed { i, _ -> i != index }
                                 }
+                            ) {
+                                Icon(
+                                    imageVector = Icons.Outlined.Delete,
+                                    contentDescription = stringResource(R.string.accessibility_delete_reminder_time, time),
+                                    tint = MaterialTheme.colorScheme.error
+                                )
                             }
                         }
                     }
                 }
             }
-            } // Close AnimatedCreationItem for reminder time
+
+            // 5. Supervisor section (merged email + phone)
+            AnimatedCreationItem(
+                index = 3,
+                initialAnimationComplete = initialAnimationComplete
+            ) {
+                SupervisorSection(
+                    supervisorEmails = supervisorEmails,
+                    supervisorPhones = supervisorPhones,
+                    isExpanded = isSupervisorExpanded,
+                    onExpandedChange = { isSupervisorExpanded = it },
+                    onAddClick = { showAddSupervisorDialog = true },
+                    onDeleteEmail = { index ->
+                        supervisorEmails = supervisorEmails.filterIndexed { i, _ -> i != index }
+                    },
+                    onDeletePhone = { index ->
+                        supervisorPhones = supervisorPhones.filterIndexed { i, _ -> i != index }
+                    }
+                )
+            }
 
             // TimePicker Dialog
             if (showTimePicker) {
@@ -874,7 +914,6 @@ fun HabitCreationScreen(
                             android.widget.Toast.makeText(context, context.getString(R.string.create_habit_duplicate_time), android.widget.Toast.LENGTH_SHORT).show()
                         } else {
                             reminderTimes = (reminderTimes + timeString).sorted()
-                            // 添加提醒时间后清除错误状态
                             showReminderTimeError = false
                         }
                         showTimePicker = false
@@ -882,7 +921,7 @@ fun HabitCreationScreen(
                 )
             }
 
-            // 5. Supervision contacts section
+            // 6. Notes section
             AnimatedCreationItem(
                 index = 4,
                 initialAnimationComplete = initialAnimationComplete
@@ -897,122 +936,6 @@ fun HabitCreationScreen(
                 Column(
                     modifier = Modifier.fillMaxWidth()
                 ) {
-                    Text(
-                        text = stringResource(id = R.string.create_habit_supervision_label),
-                        style = MaterialTheme.typography.bodyLarge,
-                        color = MaterialTheme.colorScheme.onSurface
-                    )
-                    
-                    Spacer(modifier = Modifier.height(8.dp))
-                    
-                    // Email section - independently expandable
-                    SupervisionContactSection(
-                        title = stringResource(id = R.string.create_habit_supervisor_email_label),
-                        inputValue = emailInput,
-                        onInputChange = { newValue ->
-                            if (newValue.length <= 100) {
-                                emailInput = newValue
-                            } else {
-                                showEmailMaxToast = true
-                            }
-                        },
-                        onAdd = {
-                            if (isValidEmail(emailInput)) {
-                                if (!supervisorEmails.contains(emailInput)) {
-                                    supervisorEmails = supervisorEmails + emailInput
-                                    emailInput = ""
-                                } else {
-                                    showDuplicateEmailToast = true
-                                }
-                            } else {
-                                showInvalidEmailToast = true
-                            }
-                        },
-                        isValid = { isValidEmail(it) },
-                        contacts = supervisorEmails,
-                        onDelete = { index ->
-                            supervisorEmails = supervisorEmails.filterIndexed { i, _ -> i != index }
-                        },
-                        isSectionExpanded = isEmailSectionExpanded,
-                        onSectionExpandedChange = { isEmailSectionExpanded = it },
-                        isListExpanded = isEmailListExpanded,
-                        onListExpandedChange = { isEmailListExpanded = it },
-                        keyboardType = KeyboardType.Email,
-                        hintRes = R.string.create_habit_supervisor_email_hint,
-                        addRes = R.string.create_habit_supervisor_email_add,
-                        emptyList = supervisorEmails.isEmpty()
-                    )
-                    
-                    Spacer(modifier = Modifier.height(12.dp))
-                    
-                    // Phone section - independently expandable with country code
-                    SupervisionContactSection(
-                        title = stringResource(id = R.string.create_habit_supervisor_phone_label),
-                        inputValue = phoneInput,
-                        onInputChange = { newValue ->
-                            if (newValue.length <= 20) {
-                                phoneInput = newValue
-                            } else {
-                                showPhoneMaxToast = true
-                            }
-                        },
-                        onAdd = {
-                            val fullPhone = "${countryCode.substringBefore(" ")}$phoneInput"
-                            if (isValidPhone(fullPhone)) {
-                                if (!supervisorPhones.contains(fullPhone)) {
-                                    supervisorPhones = supervisorPhones + fullPhone
-                                    phoneInput = ""
-                                } else {
-                                    showDuplicatePhoneToast = true
-                                }
-                            } else {
-                                showInvalidPhoneToast = true
-                            }
-                        },
-                        isValid = { isValidPhone("${countryCode.substringBefore(" ")}$it") },
-                        contacts = supervisorPhones,
-                        onDelete = { index ->
-                            supervisorPhones = supervisorPhones.filterIndexed { i, _ -> i != index }
-                        },
-                        isSectionExpanded = isPhoneSectionExpanded,
-                        onSectionExpandedChange = { isPhoneSectionExpanded = it },
-                        isListExpanded = isPhoneListExpanded,
-                        onListExpandedChange = { isPhoneListExpanded = it },
-                        keyboardType = KeyboardType.Phone,
-                        hintRes = R.string.create_habit_supervisor_phone_hint,
-                        addRes = R.string.create_habit_supervisor_phone_add,
-                        emptyList = supervisorPhones.isEmpty(),
-                        prefixValue = countryCode,
-                        onPrefixChange = { countryCode = it },
-                        prefixOptions = COUNTRY_CODES
-                    )
-                }
-            }
-            } // Close AnimatedCreationItem for supervision contacts
-
-            // 6. Notes section
-            AnimatedCreationItem(
-                index = 5,
-                initialAnimationComplete = initialAnimationComplete
-            ) {
-                Card(
-                    modifier = Modifier.fillMaxWidth(),
-                    colors = CardDefaults.cardColors(
-                        containerColor = androidx.compose.ui.graphics.Color.Transparent
-                    ),
-                    shape = RoundedCornerShape(0.dp)
-                ) {
-                Column(
-                    modifier = Modifier.fillMaxWidth()
-                ) {
-                    Text(
-                        text = stringResource(id = R.string.create_habit_notes_label),
-                        style = MaterialTheme.typography.bodyLarge,
-                        color = MaterialTheme.colorScheme.onSurface
-                    )
-                    
-                    Spacer(modifier = Modifier.height(8.dp))
-                    
                     OutlinedTextField(
                         value = notes,
                         onValueChange = {
@@ -1037,6 +960,34 @@ fun HabitCreationScreen(
 
             // TODO: Add more habit creation fields here
             // - Habit repeat days (for weekly cycle)
+
+            // Supervisor add dialog (tabbed: email + phone)
+            if (showAddSupervisorDialog) {
+                AddSupervisorDialog(
+                    initialCountryCode = countryCode,
+                    hasAddedEmail = hasAddedSupervisorEmail,
+                    hasAddedPhone = hasAddedSupervisorPhone,
+                    onDismiss = { showAddSupervisorDialog = false },
+                    onAddEmail = { email ->
+                        if (!supervisorEmails.contains(email)) {
+                            supervisorEmails = supervisorEmails + email
+                            hasAddedSupervisorEmail = true
+                        } else {
+                            showDuplicateEmailToast = true
+                        }
+                        showAddSupervisorDialog = false
+                    },
+                    onAddPhone = { phone ->
+                        if (!supervisorPhones.contains(phone)) {
+                            supervisorPhones = supervisorPhones + phone
+                            hasAddedSupervisorPhone = true
+                        } else {
+                            showDuplicatePhoneToast = true
+                        }
+                        showAddSupervisorDialog = false
+                    }
+                )
+            }
         }
     }
 }
@@ -1112,283 +1063,320 @@ val COUNTRY_CODES = listOf(
 )
 
 /**
- * 监督联系人输入区 - 可独立展开/收起
+ * 统一的添加区域组件 - 标题 + 添加按钮(右侧) + 状态行 + 可展开列表
  */
 @Composable
-private fun SupervisionContactSection(
+private fun AddSection(
     title: String,
-    inputValue: String,
-    onInputChange: (String) -> Unit,
-    onAdd: () -> Unit,
-    isValid: (String) -> Boolean,
-    contacts: List<String>,
-    onDelete: (Int) -> Unit,
-    isSectionExpanded: Boolean,
-    onSectionExpandedChange: (Boolean) -> Unit,
+    addButtonLabelRes: Int,
+    onAddClick: () -> Unit,
+    itemCount: Int,
+    emptyTextRes: Int,
+    countTextRes: Int,
     isListExpanded: Boolean,
     onListExpandedChange: (Boolean) -> Unit,
-    keyboardType: KeyboardType,
-    hintRes: Int,
-    addRes: Int,
-    emptyList: Boolean,
-    prefixValue: String? = null,
-    onPrefixChange: ((String) -> Unit)? = null,
-    prefixOptions: List<CountryCodeOption>? = null
+    showError: Boolean = false,
+    extraInfo: (@Composable ColumnScope.() -> Unit)? = null,
+    content: @Composable ColumnScope.() -> Unit
 ) {
-    val hasContacts = contacts.isNotEmpty()
-    val bgColor = if (hasContacts) {
-        MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.3f)
-    } else {
-        MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f)
-    }
-
-    // Surface wraps header + content so the background is continuous
-    Surface(
+    Card(
         modifier = Modifier.fillMaxWidth(),
-        shape = RoundedCornerShape(8.dp),
-        color = bgColor
+        colors = CardDefaults.cardColors(
+            containerColor = if (showError) {
+                MaterialTheme.colorScheme.errorContainer.copy(alpha = 0.3f)
+            } else {
+                MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f)
+            }
+        ),
+        shape = RoundedCornerShape(12.dp)
     ) {
         Column(
-            modifier = Modifier.fillMaxWidth()
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(12.dp)
         ) {
-            // Section header - clickable to expand/collapse
+            // Header row: title on left + add button on right
             Row(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .clickable { onSectionExpandedChange(!isSectionExpanded) }
-                    .padding(horizontal = 12.dp, vertical = 10.dp),
+                modifier = Modifier.fillMaxWidth(),
                 horizontalArrangement = Arrangement.SpaceBetween,
                 verticalAlignment = Alignment.CenterVertically
             ) {
-                Row(
-                    verticalAlignment = Alignment.CenterVertically,
-                    horizontalArrangement = Arrangement.spacedBy(8.dp)
+                Text(
+                    text = title,
+                    style = MaterialTheme.typography.bodyLarge,
+                    color = if (showError) {
+                        MaterialTheme.colorScheme.error
+                    } else {
+                        MaterialTheme.colorScheme.onSurface
+                    }
+                )
+
+                val interactionSource = remember { MutableInteractionSource() }
+                val isPressed by interactionSource.collectIsPressedAsState()
+                val cornerSize = animateDpAsState(
+                    targetValue = if (isPressed) 24.dp else 8.dp,
+                    label = "addButtonCorner"
+                )
+
+                val addLabel = stringResource(id = addButtonLabelRes)
+                Surface(
+                    modifier = Modifier
+                        .size(40.dp)
+                        .clickable(
+                            interactionSource = interactionSource,
+                            indication = null
+                        ) { onAddClick() },
+                    shape = RoundedCornerShape(cornerSize.value),
+                    color = MaterialTheme.colorScheme.primaryContainer,
+                    contentColor = MaterialTheme.colorScheme.onPrimaryContainer
                 ) {
-                    Icon(
-                        imageVector = if (isSectionExpanded) Icons.Outlined.ExpandLess else Icons.Outlined.ExpandMore,
-                        contentDescription = null,
-                        modifier = Modifier.size(20.dp),
-                        tint = MaterialTheme.colorScheme.onSurfaceVariant
-                    )
-                    Text(
-                        text = title,
-                        style = MaterialTheme.typography.bodyMedium,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant
-                    )
-                }
-                if (hasContacts) {
-                    Text(
-                        text = stringResource(id = R.string.create_habit_contacts_count, contacts.size),
-                        style = MaterialTheme.typography.bodySmall,
-                        color = MaterialTheme.colorScheme.primary
-                    )
+                    Box(contentAlignment = Alignment.Center) {
+                        Icon(
+                            imageVector = Icons.Outlined.Add,
+                            contentDescription = addLabel,
+                            modifier = Modifier.size(18.dp)
+                        )
+                    }
                 }
             }
 
-            // Expandable content
-            AnimatedVisibility(
-                visible = isSectionExpanded,
-                enter = expandVertically() + fadeIn(),
-                exit = shrinkVertically() + fadeOut()
-            ) {
-                Column(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(start = 12.dp, end = 12.dp, bottom = 12.dp)
-                ) {
-                    // Input row
-                    if (prefixValue != null && onPrefixChange != null && prefixOptions != null) {
-                        // Phone input with country code prefix
-                        var prefixExpanded by remember { mutableStateOf(false) }
-                        val countryCodeSelector = stringResource(R.string.country_code_selector)
-                        val smsWarningColor = Color(0xFFFFF3CD)
-                        val smsWarningTextColor = Color(0xFF664D00)
-                        Row(
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .background(smsWarningColor, RoundedCornerShape(4.dp))
-                                .padding(horizontal = 8.dp, vertical = 6.dp),
-                            verticalAlignment = Alignment.CenterVertically,
-                            horizontalArrangement = Arrangement.spacedBy(6.dp)
-                        ) {
-                            Icon(
-                                imageVector = Icons.Outlined.Warning,
-                                contentDescription = null,
-                                modifier = Modifier.size(16.dp),
-                                tint = smsWarningTextColor
-                            )
-                            Text(
-                                text = stringResource(R.string.create_habit_supervisor_phone_sms_cost_warning),
-                                style = MaterialTheme.typography.bodySmall,
-                                color = smsWarningTextColor
-                            )
-                        }
-                        Spacer(modifier = Modifier.height(8.dp))
-                        Row(
-                            modifier = Modifier.fillMaxWidth(),
-                            verticalAlignment = Alignment.CenterVertically,
-                            horizontalArrangement = Arrangement.spacedBy(8.dp)
-                        ) {
-                            Box {
-                                OutlinedTextField(
-                                    value = prefixValue,
-                                    onValueChange = {},
-                                    modifier = Modifier.width(100.dp).semantics {
-                                        contentDescription = "$prefixValue $countryCodeSelector"
-                                    },
-                                    readOnly = true,
-                                    singleLine = true,
-                                    textStyle = MaterialTheme.typography.bodyLarge,
-                                    label = { Text(stringResource(R.string.country_code_label)) },
-                                    colors = OutlinedTextFieldDefaults.colors(
-                                        unfocusedBorderColor = MaterialTheme.colorScheme.outline,
-                                        focusedBorderColor = MaterialTheme.colorScheme.primary
-                                    ),
-                                    trailingIcon = {
-                                        Icon(
-                                            imageVector = Icons.Outlined.KeyboardArrowDown,
-                                            contentDescription = null,
-                                            modifier = Modifier.size(20.dp)
-                                        )
-                                    }
-                                )
-                                Box(
-                                    modifier = Modifier
-                                        .matchParentSize()
-                                        .clickable(
-                                            interactionSource = remember { MutableInteractionSource() },
-                                            indication = null
-                                        ) { prefixExpanded = true }
-                                )
-                                DropdownMenu(
-                                    expanded = prefixExpanded,
-                                    onDismissRequest = { prefixExpanded = false }
-                                ) {
-                                    prefixOptions.forEach { option ->
-                                        DropdownMenuItem(
-                                            text = {
-                                                Text(
-                                                    text = "${option.prefix} ${stringResource(option.displayNameRes)}",
-                                                    style = MaterialTheme.typography.bodyMedium
-                                                )
-                                            },
-                                            onClick = {
-                                                onPrefixChange(option.prefix)
-                                                prefixExpanded = false
-                                            }
-                                        )
-                                    }
-                                }
-                            }
+            Spacer(modifier = Modifier.height(4.dp))
 
-                            OutlinedTextField(
-                                value = inputValue,
-                                onValueChange = onInputChange,
-                                label = { Text(text = stringResource(id = hintRes)) },
-                                modifier = Modifier.weight(1f),
-                                singleLine = true,
-                                keyboardOptions = KeyboardOptions(keyboardType = keyboardType),
-                                trailingIcon = {
-                                    IconButton(
-                                        onClick = onAdd,
-                                        enabled = inputValue.isNotBlank()
-                                    ) {
-                                        Icon(
-                                            imageVector = Icons.Outlined.Add,
-                                            contentDescription = stringResource(id = addRes),
-                                            tint = if (inputValue.isNotBlank()) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurfaceVariant
-                                        )
-                                    }
-                                }
-                            )
-                        }
+            // Extra info (e.g., SMS warning for phone section)
+            if (extraInfo != null) {
+                extraInfo()
+                Spacer(modifier = Modifier.height(4.dp))
+            }
+
+            // Status row: count/empty text + expand/collapse button
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .heightIn(min = 40.dp),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Text(
+                    text = if (itemCount == 0) {
+                        stringResource(id = emptyTextRes)
                     } else {
-                        OutlinedTextField(
-                            value = inputValue,
-                            onValueChange = onInputChange,
-                            label = { Text(text = stringResource(id = hintRes)) },
-                            modifier = Modifier.fillMaxWidth(),
-                            singleLine = true,
-                            keyboardOptions = KeyboardOptions(keyboardType = keyboardType),
-                            trailingIcon = {
-                                IconButton(
-                                    onClick = onAdd,
-                                    enabled = inputValue.isNotBlank()
-                                ) {
-                                    Icon(
-                                        imageVector = Icons.Outlined.Add,
-                                        contentDescription = stringResource(id = addRes),
-                                        tint = if (inputValue.isNotBlank()) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurfaceVariant
-                                    )
-                                }
+                        stringResource(id = countTextRes, itemCount)
+                    },
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                )
+
+                if (itemCount > 0) {
+                    TextButton(
+                        onClick = { onListExpandedChange(!isListExpanded) }
+                    ) {
+                        Text(
+                            text = if (isListExpanded) {
+                                stringResource(id = R.string.create_habit_collapse_button)
+                            } else {
+                                stringResource(id = R.string.create_habit_expand_button)
                             }
                         )
+                        Icon(
+                            imageVector = if (isListExpanded) Icons.Outlined.KeyboardArrowUp else Icons.Outlined.KeyboardArrowDown,
+                            contentDescription = if (isListExpanded) "收起" else "展开",
+                            modifier = Modifier.size(18.dp)
+                        )
                     }
+                }
+            }
 
-                    // Contact list
-                    if (hasContacts) {
-                        Spacer(modifier = Modifier.height(8.dp))
+            // Expandable content list
+            AnimatedVisibility(
+                visible = isListExpanded && itemCount > 0,
+                enter = expandVertically(),
+                exit = shrinkVertically()
+            ) {
+                    Column(
+                        modifier = Modifier.padding(top = 4.dp),
+                        verticalArrangement = Arrangement.spacedBy(8.dp)
+                    ) {
+                        content()
+                }
+            }
+        }
+    }
+}
 
+/**
+ * 监督人区域组件 - 合并显示邮箱和电话，带说明文字和展开/收起
+ */
+@Composable
+private fun SupervisorSection(
+    supervisorEmails: List<String>,
+    supervisorPhones: List<String>,
+    isExpanded: Boolean,
+    onExpandedChange: (Boolean) -> Unit,
+    onAddClick: () -> Unit,
+    onDeleteEmail: (Int) -> Unit,
+    onDeletePhone: (Int) -> Unit
+) {
+    val totalCount = supervisorEmails.size + supervisorPhones.size
+    Card(
+        modifier = Modifier.fillMaxWidth(),
+        colors = CardDefaults.cardColors(
+            containerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f)
+        ),
+        shape = RoundedCornerShape(12.dp)
+    ) {
+        Column(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(12.dp)
+        ) {
+            // Header row: title + add button
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Text(
+                    text = stringResource(R.string.create_habit_supervision_label),
+                    style = MaterialTheme.typography.bodyLarge,
+                    color = MaterialTheme.colorScheme.onSurface
+                )
+                val interactionSource = remember { MutableInteractionSource() }
+                val isPressed by interactionSource.collectIsPressedAsState()
+                val cornerSize = animateDpAsState(
+                    targetValue = if (isPressed) 24.dp else 8.dp,
+                    label = "addButtonCorner"
+                )
+                Surface(
+                    modifier = Modifier
+                        .size(40.dp)
+                        .clickable(
+                            interactionSource = interactionSource,
+                            indication = null
+                        ) { onAddClick() },
+                    shape = RoundedCornerShape(cornerSize.value),
+                    color = MaterialTheme.colorScheme.primaryContainer,
+                    contentColor = MaterialTheme.colorScheme.onPrimaryContainer
+                ) {
+                    Box(contentAlignment = Alignment.Center) {
+                        Icon(
+                            imageVector = Icons.Outlined.Add,
+                            contentDescription = stringResource(R.string.create_habit_supervisor_add),
+                            modifier = Modifier.size(18.dp)
+                        )
+                    }
+                }
+            }
+
+            // Status row: count + expand/collapse
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .heightIn(min = 40.dp),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Text(
+                    text = if (totalCount == 0) {
+                        stringResource(R.string.create_habit_no_supervisor)
+                    } else {
+                        stringResource(R.string.create_habit_supervisor_count, totalCount)
+                    },
+                    style = MaterialTheme.typography.bodyMedium,
+                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                )
+                if (totalCount > 0) {
+                    TextButton(
+                        onClick = { onExpandedChange(!isExpanded) }
+                    ) {
+                        Text(
+                            text = if (isExpanded) {
+                                stringResource(R.string.create_habit_collapse_button)
+                            } else {
+                                stringResource(R.string.create_habit_expand_button)
+                            }
+                        )
+                        Icon(
+                            imageVector = if (isExpanded) Icons.Outlined.KeyboardArrowUp else Icons.Outlined.KeyboardArrowDown,
+                            contentDescription = null,
+                            modifier = Modifier.size(18.dp)
+                        )
+                    }
+                }
+            }
+
+            // Expandable content list
+            AnimatedVisibility(
+                visible = isExpanded && totalCount > 0,
+                enter = expandVertically(),
+                exit = shrinkVertically()
+            ) {
+                Column(
+                    modifier = Modifier.padding(top = 4.dp),
+                    verticalArrangement = Arrangement.spacedBy(8.dp)
+                ) {
+                    supervisorEmails.forEachIndexed { index, email ->
                         Row(
                             modifier = Modifier.fillMaxWidth(),
                             horizontalArrangement = Arrangement.SpaceBetween,
                             verticalAlignment = Alignment.CenterVertically
                         ) {
-                            Text(
-                                text = stringResource(id = R.string.create_habit_supervisor_count, contacts.size),
-                                style = MaterialTheme.typography.bodyMedium,
-                                color = MaterialTheme.colorScheme.onSurfaceVariant
-                            )
-
-                            TextButton(
-                                onClick = { onListExpandedChange(!isListExpanded) }
+                            Row(
+                                verticalAlignment = Alignment.CenterVertically,
+                                horizontalArrangement = Arrangement.spacedBy(8.dp)
                             ) {
-                                Text(
-                                    text = if (isListExpanded) {
-                                        stringResource(id = R.string.create_habit_collapse_button)
-                                    } else {
-                                        stringResource(id = R.string.create_habit_expand_button)
-                                    }
-                                )
                                 Icon(
-                                    imageVector = if (isListExpanded) Icons.Outlined.KeyboardArrowUp else Icons.Outlined.KeyboardArrowDown,
-                                    contentDescription = if (isListExpanded) "收起" else "展开",
-                                    modifier = Modifier.size(18.dp)
+                                    imageVector = Icons.Outlined.Email,
+                                    contentDescription = null,
+                                    modifier = Modifier.size(18.dp),
+                                    tint = MaterialTheme.colorScheme.onSurfaceVariant
+                                )
+                                Text(
+                                    text = email,
+                                    style = MaterialTheme.typography.bodyMedium,
+                                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                                )
+                            }
+                            IconButton(
+                                onClick = { onDeleteEmail(index) }
+                            ) {
+                                Icon(
+                                    imageVector = Icons.Outlined.Delete,
+                                    contentDescription = stringResource(R.string.accessibility_delete_contact, email),
+                                    tint = MaterialTheme.colorScheme.error
                                 )
                             }
                         }
-
-                        AnimatedVisibility(
-                            visible = isListExpanded,
-                            enter = expandVertically(),
-                            exit = shrinkVertically()
+                    }
+                    supervisorPhones.forEachIndexed { index, phone ->
+                        Row(
+                            modifier = Modifier.fillMaxWidth(),
+                            horizontalArrangement = Arrangement.SpaceBetween,
+                            verticalAlignment = Alignment.CenterVertically
                         ) {
-                            Column(
-                                modifier = Modifier.padding(top = 8.dp),
-                                verticalArrangement = Arrangement.spacedBy(4.dp)
+                            Row(
+                                verticalAlignment = Alignment.CenterVertically,
+                                horizontalArrangement = Arrangement.spacedBy(8.dp)
                             ) {
-                                contacts.forEachIndexed { index, contact ->
-                                    Row(
-                                        modifier = Modifier.fillMaxWidth(),
-                                        horizontalArrangement = Arrangement.SpaceBetween,
-                                        verticalAlignment = Alignment.CenterVertically
-                                    ) {
-                                        Text(
-                                            text = contact,
-                                            style = MaterialTheme.typography.bodyMedium,
-                                            color = MaterialTheme.colorScheme.onSurfaceVariant
-                                        )
-                                        IconButton(
-                                            onClick = { onDelete(index) }
-                                        ) {
-                                            Icon(
-                                                imageVector = Icons.Outlined.Delete,
-                                                contentDescription = stringResource(R.string.accessibility_delete_contact, contact),
-                                                tint = MaterialTheme.colorScheme.error
-                                            )
-                                        }
-                                    }
-                                }
+                                Icon(
+                                    imageVector = Icons.Outlined.Phone,
+                                    contentDescription = null,
+                                    modifier = Modifier.size(18.dp),
+                                    tint = MaterialTheme.colorScheme.onSurfaceVariant
+                                )
+                                Text(
+                                    text = phone,
+                                    style = MaterialTheme.typography.bodyMedium,
+                                    color = MaterialTheme.colorScheme.onSurfaceVariant
+                                )
+                            }
+                            IconButton(
+                                onClick = { onDeletePhone(index) }
+                            ) {
+                                Icon(
+                                    imageVector = Icons.Outlined.Delete,
+                                    contentDescription = stringResource(R.string.accessibility_delete_contact, phone),
+                                    tint = MaterialTheme.colorScheme.error
+                                )
                             }
                         }
                     }

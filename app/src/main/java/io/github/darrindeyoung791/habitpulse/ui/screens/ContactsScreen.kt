@@ -78,6 +78,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.focus.FocusRequester
+import androidx.compose.ui.focus.focusRequester
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.hapticfeedback.HapticFeedbackType
 import androidx.compose.ui.input.nestedscroll.nestedScroll
@@ -93,6 +94,7 @@ import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.window.DialogProperties
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import io.github.darrindeyoung791.habitpulse.HabitPulseApplication
 import io.github.darrindeyoung791.habitpulse.R
@@ -758,6 +760,14 @@ fun ContactBottomSheetContent(
         if (isPhoneContact) contact.value.removePrefix(defaultCountryCode) else contact.value
     }
     var editInput by remember(initialEditValue) { mutableStateOf(initialEditValue) }
+    val editFocusRequester = remember { FocusRequester() }
+
+    LaunchedEffect(showEditDialog) {
+        if (showEditDialog) {
+            kotlinx.coroutines.delay(100)
+            editFocusRequester.requestFocus()
+        }
+    }
 
     // Edit dialog
     if (showEditDialog) {
@@ -769,6 +779,10 @@ fun ContactBottomSheetContent(
         }
         AlertDialog(
             onDismissRequest = { showEditDialog = false },
+            properties = DialogProperties(
+                dismissOnBackPress = true,
+                dismissOnClickOutside = false
+            ),
             title = { Text(dialogTitle) },
             text = {
                 Column {
@@ -791,7 +805,7 @@ fun ContactBottomSheetContent(
                                 OutlinedTextField(
                                     value = editCountryCode,
                                     onValueChange = {},
-                                    modifier = Modifier.width(100.dp),
+                                    modifier = Modifier.width(120.dp),
                                     readOnly = true,
                                     singleLine = true,
                                     textStyle = MaterialTheme.typography.bodyLarge,
@@ -843,7 +857,7 @@ fun ContactBottomSheetContent(
                                     editError = false
                                 },
                                 label = { Text(stringResource(R.string.contacts_edit_phone_label)) },
-                                modifier = Modifier.weight(1f),
+                                modifier = Modifier.weight(1f).focusRequester(editFocusRequester),
                                 singleLine = true,
                                 isError = editError,
                                 supportingText = if (editError) {
@@ -866,7 +880,7 @@ fun ContactBottomSheetContent(
                                 { Text(stringResource(R.string.contacts_edit_email_invalid)) }
                             } else null,
                             keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Email),
-                            modifier = Modifier.fillMaxWidth()
+                            modifier = Modifier.fillMaxWidth().focusRequester(editFocusRequester)
                         )
                     }
                 }
@@ -950,7 +964,7 @@ fun ContactBottomSheetContent(
                     Icon(
                         imageVector = Icons.Outlined.Edit,
                         contentDescription = stringResource(R.string.contacts_edit_button),
-                        tint = MaterialTheme.colorScheme.primary
+                        tint = MaterialTheme.colorScheme.onSurfaceVariant
                     )
                 }
             }
