@@ -420,6 +420,10 @@
     <string name="ai_submit">提交</string>
     <string name="ai_custom_input_placeholder">手动输入</string>
     <string name="ai_submit_selection">提交选择（已选 %d 项）</string>
+    <string name="ai_add_time_button">添加时间</string>
+    <string name="ai_selected_times_label">已选时间</string>
+    <string name="ai_select_time_first">请先取消当前选项</string>
+    <string name="ai_deselect_times_first">请先清空已选时间</string>
     <string name="ai_day_mon">一</string>
     <string name="ai_day_tue">二</string>
     <string name="ai_day_wed">三</string>

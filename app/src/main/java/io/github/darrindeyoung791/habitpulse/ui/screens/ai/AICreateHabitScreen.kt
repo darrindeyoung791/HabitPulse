@@ -9,6 +9,8 @@ import androidx.compose.material.icons.filled.CheckCircle
 import androidx.compose.material.icons.filled.Edit
 import androidx.compose.material.icons.filled.RadioButtonUnchecked
 import androidx.compose.material.icons.filled.Schedule
+import androidx.compose.material.icons.outlined.Add
+import androidx.compose.material.icons.outlined.Delete
 import androidx.compose.foundation.lazy.LazyColumn
 import androidx.compose.foundation.lazy.itemsIndexed
 import androidx.compose.foundation.lazy.rememberLazyListState
@@ -61,8 +63,12 @@ import kotlinx.coroutines.launch
 import androidx.navigation.NavHostController
 import kotlinx.coroutines.flow.first
 import androidx.activity.compose.BackHandler
+import io.github.darrindeyoung791.habitpulse.ui.screens.TimePickerDialog
 import io.github.darrindeyoung791.habitpulse.ui.utils.rememberDebounceClickHandler
 import io.github.darrindeyoung791.habitpulse.ui.utils.rememberHideKeyboardAndNavigateBack
+import java.time.LocalTime
+import java.time.format.DateTimeFormatter
+import java.util.Locale
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -881,8 +887,13 @@ fun QuestionComponent(
                     }
                 }
                 "time", "time_of_day" -> {
-                    var selectedTime by remember { mutableStateOf<String?>(null) }
+                    var selectedChipTime by remember { mutableStateOf<String?>(null) }
                     var customInput by remember { mutableStateOf("") }
+                    var selectedTimes by remember { mutableStateOf<List<String>>(emptyList()) }
+                    var showAITimePicker by remember { mutableStateOf(false) }
+                    var currentPickerTime by remember { mutableStateOf(LocalTime.now()) }
+                    val context = LocalContext.current
+
                     Column {
                         if (question.options.isNotEmpty()) {
                             Row(
@@ -891,7 +902,15 @@ fun QuestionComponent(
                                 question.options.forEach { time ->
                                     AssistChip(
                                         onClick = {
-                                            selectedTime = if (time == selectedTime) null else time
+                                            if (selectedTimes.isNotEmpty()) {
+                                                android.widget.Toast.makeText(
+                                                    context,
+                                                    context.getString(R.string.ai_deselect_times_first),
+                                                    android.widget.Toast.LENGTH_SHORT
+                                                ).show()
+                                            } else {
+                                                selectedChipTime = if (time == selectedChipTime) null else time
+                                            }
                                         },
                                         label = { Text(time) }
                                     )
@@ -899,24 +918,115 @@ fun QuestionComponent(
                             }
                             Spacer(modifier = Modifier.height(8.dp))
                         }
+
                         OutlinedTextField(
                             value = customInput,
                             onValueChange = { customInput = it },
                             modifier = Modifier.fillMaxWidth(),
+                            enabled = selectedTimes.isEmpty(),
                             placeholder = { Text(stringResource(R.string.ai_custom_input_placeholder)) }
                         )
+
+                        Spacer(modifier = Modifier.height(8.dp))
+
+                        FilledTonalButton(
+                            onClick = {
+                                if (selectedChipTime != null) {
+                                    android.widget.Toast.makeText(
+                                        context,
+                                        context.getString(R.string.ai_select_time_first),
+                                        android.widget.Toast.LENGTH_SHORT
+                                    ).show()
+                                } else {
+                                    currentPickerTime = LocalTime.now()
+                                    showAITimePicker = true
+                                }
+                            },
+                            shape = RoundedCornerShape(8.dp)
+                        ) {
+                            Icon(
+                                imageVector = Icons.Outlined.Add,
+                                contentDescription = null,
+                                modifier = Modifier.size(18.dp)
+                            )
+                            Spacer(modifier = Modifier.width(4.dp))
+                            Text(stringResource(R.string.ai_add_time_button))
+                        }
+
+                        if (selectedTimes.isNotEmpty()) {
+                            Spacer(modifier = Modifier.height(8.dp))
+                            Card(
+                                colors = CardDefaults.cardColors(
+                                    containerColor = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = 0.5f)
+                                ),
+                                shape = RoundedCornerShape(12.dp)
+                            ) {
+                                Column(modifier = Modifier.padding(12.dp)) {
+                                    Text(
+                                        text = stringResource(R.string.ai_selected_times_label),
+                                        style = MaterialTheme.typography.bodyLarge,
+                                        color = MaterialTheme.colorScheme.onSurface
+                                    )
+                                    Spacer(modifier = Modifier.height(4.dp))
+                                    selectedTimes.forEachIndexed { index, time ->
+                                        Row(
+                                            modifier = Modifier.fillMaxWidth(),
+                                            horizontalArrangement = Arrangement.SpaceBetween,
+                                            verticalAlignment = Alignment.CenterVertically
+                                        ) {
+                                            Text(
+                                                text = time,
+                                                style = MaterialTheme.typography.bodyLarge,
+                                                color = MaterialTheme.colorScheme.onSurface
+                                            )
+                                            IconButton(
+                                                onClick = {
+                                                    selectedTimes = selectedTimes.filterIndexed { i, _ -> i != index }
+                                                }
+                                            ) {
+                                                Icon(
+                                                    imageVector = Icons.Outlined.Delete,
+                                                    contentDescription = stringResource(R.string.accessibility_delete_reminder_time, time),
+                                                    tint = MaterialTheme.colorScheme.error
+                                                )
+                                            }
+                                        }
+                                    }
+                                }
+                            }
+                        }
+
                         Spacer(modifier = Modifier.height(4.dp))
                         Button(
                             onClick = {
                                 val parts = mutableListOf<String>()
-                                if (selectedTime != null) parts.add(selectedTime!!)
+                                if (selectedChipTime != null) parts.add(selectedChipTime!!)
                                 if (customInput.isNotBlank()) parts.add(customInput)
+                                if (selectedTimes.isNotEmpty()) {
+                                    val formatter = DateTimeFormatter.ofPattern("h:mm a", Locale.US)
+                                    val formatted = selectedTimes.map { LocalTime.parse(it).format(formatter) }
+                                    parts.add(formatted.joinToString("，"))
+                                }
                                 onAnswer(parts.joinToString("，"))
                             },
-                            enabled = selectedTime != null || customInput.isNotBlank()
+                            enabled = selectedChipTime != null || customInput.isNotBlank() || selectedTimes.isNotEmpty()
                         ) {
                             Text(stringResource(R.string.ai_submit))
                         }
+                    }
+
+                    if (showAITimePicker) {
+                        TimePickerDialog(
+                            currentTime = currentPickerTime,
+                            onDismissRequest = { showAITimePicker = false },
+                            onConfirmRequest = { selectedTime ->
+                                val timeString = String.format("%02d:%02d", selectedTime.hour, selectedTime.minute)
+                                if (timeString !in selectedTimes) {
+                                    selectedTimes = selectedTimes + timeString
+                                }
+                                showAITimePicker = false
+                            }
+                        )
                     }
                 }
                 "day_of_week" -> {

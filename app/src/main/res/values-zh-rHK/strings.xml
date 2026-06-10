@@ -414,6 +414,10 @@
     <string name="ai_submit">提交</string>
     <string name="ai_custom_input_placeholder">手動輸入</string>
     <string name="ai_submit_selection">提交選擇（已選 %d 項）</string>
+    <string name="ai_add_time_button">新增時間</string>
+    <string name="ai_selected_times_label">已選時間</string>
+    <string name="ai_select_time_first">請先取消目前選項</string>
+    <string name="ai_deselect_times_first">請先清除已選時間</string>
     <string name="ai_day_mon">一</string>
     <string name="ai_day_tue">二</string>
     <string name="ai_day_wed">三</string>
