@@ -239,6 +239,20 @@
     <string name="welcome_limited_mode">受限模式</string>
     <string name="welcome_limited_mode_info">你已選擇受限模式，部分功能將無法使用</string>
 
+    <!-- Onboarding Wizard -->
+    <string name="onboarding_step_notification_title">通知設定</string>
+    <string name="onboarding_step_notification_desc">設定通知和勿擾時段，讓習慣提醒更智慧</string>
+    <string name="onboarding_step_ai_desc">設定 AI 服務後，可以用 AI 智慧建立習慣。你也可以稍後在設定中設定。</string>
+    <string name="onboarding_step_ai_hint">AI 設定可略過，稍後在設定中設定</string>
+    <string name="onboarding_step_previous">上一步</string>
+    <string name="onboarding_step_next">下一步</string>
+    <string name="onboarding_step_skip">略過</string>
+    <string name="onboarding_step_complete">完成</string>
+    <string name="onboarding_tos_link">使用條款</string>
+    <string name="onboarding_privacy_link">隱私權政策</string>
+    <string name="onboarding_tos_placeholder">使用條款即將推出</string>
+    <string name="onboarding_privacy_placeholder">隱私權政策即將推出</string>
+
     <!-- Notification Settings -->
     <string name="settings_notifications">通知</string>
     <string name="settings_persistent_notification">保持背景執行</string>

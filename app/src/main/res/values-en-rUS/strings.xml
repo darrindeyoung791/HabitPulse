@@ -238,6 +238,20 @@
     <string name="welcome_limited_mode">Limited Mode</string>
     <string name="welcome_limited_mode_info">You have chosen Limited Mode. Some features will be unavailable.</string>
 
+    <!-- Onboarding Wizard -->
+    <string name="onboarding_step_notification_title">Notification Settings</string>
+    <string name="onboarding_step_notification_desc">Configure notifications and Do Not Disturb to make habit reminders smarter</string>
+    <string name="onboarding_step_ai_desc">Configure AI service to create habits intelligently. You can also configure this later in Settings.</string>
+    <string name="onboarding_step_ai_hint">AI setup can be skipped and configured later in Settings</string>
+    <string name="onboarding_step_previous">Previous</string>
+    <string name="onboarding_step_next">Next</string>
+    <string name="onboarding_step_skip">Skip</string>
+    <string name="onboarding_step_complete">Complete</string>
+    <string name="onboarding_tos_link">Terms of Service</string>
+    <string name="onboarding_privacy_link">Privacy Policy</string>
+    <string name="onboarding_tos_placeholder">Terms of Service coming soon</string>
+    <string name="onboarding_privacy_placeholder">Privacy Policy coming soon</string>
+
     <!-- Notification Settings -->
     <string name="settings_notifications">Notifications</string>
     <string name="settings_persistent_notification">Keep running in background</string>
