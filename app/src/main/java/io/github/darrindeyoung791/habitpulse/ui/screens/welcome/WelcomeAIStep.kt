@@ -9,7 +9,9 @@ import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.automirrored.outlined.Send
+import androidx.compose.material.icons.filled.Check
 import androidx.compose.material.icons.filled.Clear
 import androidx.compose.material.icons.filled.Visibility
 import androidx.compose.material.icons.filled.VisibilityOff
@@ -354,10 +356,9 @@ fun WelcomeAIStep(
                 onClick = onBack,
                 modifier = Modifier.weight(1f)
             ) {
-                Text(
-                    text = stringResource(R.string.onboarding_step_previous),
-                    style = MaterialTheme.typography.titleMedium,
-                    fontWeight = FontWeight.SemiBold
+                Icon(
+                    imageVector = Icons.AutoMirrored.Filled.ArrowBack,
+                    contentDescription = stringResource(R.string.onboarding_step_previous)
                 )
             }
             TextButton(
@@ -391,10 +392,9 @@ fun WelcomeAIStep(
                 },
                 modifier = Modifier.weight(1f)
             ) {
-                Text(
-                    text = stringResource(R.string.onboarding_step_complete),
-                    style = MaterialTheme.typography.titleMedium,
-                    fontWeight = FontWeight.SemiBold
+                Icon(
+                    imageVector = Icons.Default.Check,
+                    contentDescription = stringResource(R.string.onboarding_step_complete)
                 )
             }
             }

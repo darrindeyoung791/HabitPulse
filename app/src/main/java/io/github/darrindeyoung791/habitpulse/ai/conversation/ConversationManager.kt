@@ -99,6 +99,8 @@ class ConversationManager(
         isStreaming = true
         _state.value = _state.value.copy(isStopped = false)
         var streamingText = ""
+        var alreadyProcessed = false
+        val completeJsonBlock = Regex("```json[\\s\\S]*?```")
 
         streamJob = scope.launch(Dispatchers.IO) {
             try {
@@ -107,10 +109,16 @@ class ConversationManager(
                     if (_state.value.isStopped) {
                         throw kotlinx.coroutines.CancellationException("stopped by user")
                     }
+                    if (alreadyProcessed) return@collect
                     when (chunk) {
                         is LLMClient.StreamChunk.Content -> {
                             streamingText += chunk.delta
                             _events.value = ConversationEvent.AIMessageReceived(streamingText, isStreaming = true)
+                            if (completeJsonBlock.containsMatchIn(streamingText)) {
+                                alreadyProcessed = true
+                                processResponse(streamingText)
+                                throw kotlinx.coroutines.CancellationException("early stop - complete tool call detected")
+                            }
                         }
                         is LLMClient.StreamChunk.Done -> {
                             processResponse(chunk.fullContent)

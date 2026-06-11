@@ -2,6 +2,7 @@ package io.github.darrindeyoung791.habitpulse.ai.llm
 
 import com.google.gson.Gson
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.ensureActive
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.flow
@@ -117,6 +118,7 @@ class LLMClient(
                 connection.disconnect()
                 return@flow
             } catch (e: Exception) {
+                if (e is CancellationException) throw e
                 lastError = e
                 lastCode = getErrorCode(e)
                 if (attempt < config.maxRetries - 1) {
