@@ -41,6 +41,7 @@ import androidx.compose.material.icons.outlined.Person
 import androidx.compose.material.icons.outlined.Settings
 import androidx.compose.material.icons.outlined.Storage
 import androidx.compose.material.icons.outlined.Tablet
+import androidx.compose.material.icons.outlined.Tune
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.ui.*
@@ -499,6 +500,31 @@ fun SettingsScreen() {
                 .padding(innerPadding),
             listState = listState
         ) {
+            // 新版设置入口（放在最顶部）
+            item {
+                SettingsListItem(
+                    headline = stringResource(id = R.string.settings_new_settings_entry),
+                    supportingText = stringResource(id = R.string.settings_new_settings_entry_desc),
+                    leadingIcon = {
+                        Icon(
+                            imageVector = Icons.Outlined.Tune,
+                            contentDescription = null
+                        )
+                    },
+                    onClick = {
+                        val intent = Intent(context, NewSettingsActivity::class.java)
+                        context.startActivity(intent)
+                    },
+                    trailingIcon = {
+                        Icon(
+                            imageVector = Icons.AutoMirrored.Filled.KeyboardArrowRight,
+                            contentDescription = null,
+                            tint = MaterialTheme.colorScheme.onSurfaceVariant
+                        )
+                    }
+                )
+            }
+
             // AI 部分（放在最顶部）
             item {
                 // Section header
@@ -1179,7 +1205,7 @@ fun SettingsListItem(
  *
  * @return Pair of List<Habit> and List<HabitCompletion> (habits and their completion records)
  */
-private fun generateSampleHabits(): Pair<List<Habit>, List<HabitCompletion>> {
+internal fun generateSampleHabits(): Pair<List<Habit>, List<HabitCompletion>> {
     val random = kotlin.random.Random(System.currentTimeMillis())
 
     // Unique supervisors for testing Contacts screen (~20 total contacts)

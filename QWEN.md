@@ -42,7 +42,16 @@ HabitPulse/
 │   │   ├── main/
 │   │   │   ├── java/io/github/darrindeyoung791/habitpulse/
 │   │   │   │   ├── MainActivity.kt              # Main entry point with NavHost
-│   │   │   │   ├── SettingsActivity.kt          # Settings screen
+│   │   │   │   ├── SettingsActivity.kt          # Settings screen (legacy)
+│   │   │   │   ├── NewSettingsActivity.kt       # New settings home (segmented list UI)
+│   │   │   │   ├── NewSettingsAIActivity.kt     # New settings: AI
+│   │   │   │   ├── NewSettingsAIProviderActivity.kt # New settings: AI provider config
+│   │   │   │   ├── NewSettingsNotificationsActivity.kt # New settings: notifications
+│   │   │   │   ├── NewSettingsReminderActivity.kt # New settings: reminders
+│   │   │   │   ├── NewSettingsTemplateActivity.kt # New settings: notification template
+│   │   │   │   ├── NewSettingsGeneralActivity.kt # New settings: general
+│   │   │   │   ├── NewSettingsAboutActivity.kt  # New settings: about
+│   │   │   │   ├── NewSettingsDebugActivity.kt  # New settings: debug (hidden, 5-tap on version)
 │   │   │   │   ├── LauncherActivity.kt          # Launcher that routes to Welcome or MainActivity
 │   │   │   │   ├── WelcomeActivity.kt           # Onboarding/welcome flow
 │   │   │   │   ├── OpenSourceLicensesActivity.kt # Open source licenses display
@@ -84,6 +93,23 @@ HabitPulse/
 │   │   │   │   │   │   ├── ContactsScreen.kt    # Supervisor contacts list
 │   │   │   │   │   │   ├── WelcomeScreen.kt     # Onboarding/consent screen
 │   │   │   │   │   │   └── AdScreen.kt          # Splash ad screen
+│   │   │   │   │   ├── screens/settings/
+│   │   │   │   │   │   ├── NewSettingsScaffold.kt       # Shared scaffold for new settings screens
+│   │   │   │   │   │   ├── NewSettingsHomeScreen.kt     # New settings home
+│   │   │   │   │   │   ├── NewSettingsAIScreen.kt       # AI settings
+│   │   │   │   │   │   ├── NewSettingsAIProviderScreen.kt # AI provider config
+│   │   │   │   │   │   ├── NewSettingsNotificationsScreen.kt # Notifications
+│   │   │   │   │   │   ├── NewSettingsReminderScreen.kt # Reminders
+│   │   │   │   │   │   ├── NewSettingsTemplateScreen.kt # Notification template
+│   │   │   │   │   │   ├── NewSettingsGeneralScreen.kt # General
+│   │   │   │   │   │   ├── NewSettingsAboutDetailScreen.kt # About detail (5-tap on version opens debug)
+│   │   │   │   │   │   ├── NewSettingsDebugScreen.kt     # Debug settings (add sample habits)
+│   │   │   │   │   │   └── components/
+│   │   │   │   │   │       ├── SettingsSegmentedItem.kt # Segmented list item + icon chip + surface
+│   │   │   │   │   │       ├── SettingsSegmentedSwitch.kt # Segmented switch row
+│   │   │   │   │   │       ├── SettingsSegmentedGroup.kt # Vertical group wrapper
+│   │   │   │   │   │       ├── SettingsIconTint.kt     # Accent tint palette for icon chips
+│   │   │   │   │   │       └── SettingsComponentsPreviews.kt # Compose previews
 │   │   │   │   │   ├── theme/
 │   │   │   │   │   │   ├── Color.kt             # Color definitions
 │   │   │   │   │   │   ├── Theme.kt             # Material theme setup
@@ -372,6 +398,8 @@ The project is in **early development stage** (v0.7.11-alpha):
   - `HabitTest` (17 tests) - covers JSON parsing helper methods, `copyWith*` methods, edge cases (all 7 days, duplicates, empty strings)
   - `HabitStatusTest` (12 tests) - covers `pendingCount`, `isCompletelyOverdue`, negative pendingCount, old-style completion compatibility
   - `HabitCompletionTest` (5 tests) - covers `getTodayDate()`, `getFormattedDate()`, and default values
+- ✅ **New Settings Redesign** - Segmented list settings UI with grouped items, leading icon chips, switches, and per-screen scaffolds
+- ✅ **Debug Settings Page** - Hidden debug page reached by tapping the version item 5 times within 5 seconds on the new About screen; hosts developer tools (add sample habits), icon-less list items
 
 ### In Progress
 - 🔄 Count section (track unplanned events, such as game scores)

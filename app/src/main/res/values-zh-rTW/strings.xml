@@ -2,7 +2,21 @@
 <resources>
     <string name="app_name" translatable="false">HabitPulse</string>
     <string name="settings_title">設定</string>
+    <string name="settings_coming_soon">即將推出</string>
+    <string name="settings_category_ai">AI 設定</string>
+    <string name="settings_category_ai_description">設定 AI 供應商與模型參數</string>
+    <string name="settings_category_lan">連接與同步</string>
+    <string name="settings_category_general">一般</string>
+    <string name="settings_category_general_description">儲存、介面與顯示設定</string>
+    <string name="settings_configure_provider">設定供應商</string>
+    <string name="settings_configure_provider_description">設定 AI 供應商、模型與 API 金鑰</string>
+    <string name="settings_memory">記憶</string>
+    <string name="settings_memory_description">讓 AI 記住你的習慣與偏好</string>
+    <string name="settings_ui_display">介面與顯示</string>
+    <string name="settings_new_settings_entry">新版設定</string>
+    <string name="settings_new_settings_entry_desc">體驗全新的分類式設定介面</string>
     <string name="settings_about">關於</string>
+    <string name="settings_about_description">版本、開發者與開放原始碼授權</string>
     <string name="settings_app_version">應用程式版本</string>
     <string name="settings_developer">開發者</string>
     <string name="settings_back">返回</string>
@@ -13,6 +27,7 @@
     <string name="settings_app_info_button">前往「設定」查看 %1$s 應用程式資訊…</string>
     <string name="settings_github_button">前往 GitHub 查看本開源專案…</string>
     <string name="settings_help_button">幫助與回饋…</string>
+    <string name="settings_help_button_description">查看說明文件或反映問題</string>
     <string name="settings_support_habitpulse">支援 %1$s</string>
     <string name="settings_support_habitpulse_description">開啟開屏廣告，以支援 %1$s。感謝你的支援！</string>
     <string name="settings_support_habitpulse_switch">開啟開屏廣告</string>
@@ -130,6 +145,9 @@
     <string name="debug_add_sample_data_yes">新增</string>
     <string name="debug_add_sample_data_no">取消</string>
     <string name="debug_sample_data_added">已新增 40 筆範例資料</string>
+    <string name="settings_debug_title">調試設定</string>
+    <string name="settings_debug_add_sample_habits">新增範例習慣</string>
+    <string name="settings_debug_add_sample_habits_description">新增一批範例習慣與完成記錄，便於測試介面與功能</string>
 
     <!-- Accessibility -->
     <string name="accessibility_talkback_splash_ad_disabled">為了不影響視障使用者，開屏廣告功能無法開啟</string>
@@ -255,6 +273,7 @@
 
     <!-- Notification Settings -->
     <string name="settings_notifications">通知</string>
+    <string name="settings_notifications_description">提醒、常駐通知與通知範本</string>
     <string name="settings_persistent_notification">保持背景執行</string>
     <string name="settings_persistent_notification_description">顯示持續通知，保持應用程式即時提醒</string>
     <string name="settings_persistent_notification_authorize">前往授權</string>

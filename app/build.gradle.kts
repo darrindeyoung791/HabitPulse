@@ -17,8 +17,8 @@ android {
         applicationId = "io.github.darrindeyoung791.habitpulse"
         minSdk = 26
         targetSdk = 37
-        versionCode = 181
-        versionName = "0.8.33-alpha"
+        versionCode = 182
+        versionName = "0.8.34-alpha"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
     }
@@ -96,15 +96,14 @@ dependencies {
     ksp("androidx.room:room-compiler:$roomVersion")
 
     // Lifecycle and ViewModel
-    implementation("androidx.lifecycle:lifecycle-viewmodel-compose:2.10.0")
-    implementation("androidx.lifecycle:lifecycle-runtime-compose:2.10.0")
+    implementation("androidx.lifecycle:lifecycle-viewmodel-compose:2.11.0")
+    implementation("androidx.lifecycle:lifecycle-runtime-compose:2.11.0")
 
     // DataStore for preferences
     implementation("androidx.datastore:datastore-preferences:1.2.1")
 
     implementation("androidx.compose.material:material-icons-core")
     implementation("androidx.compose.material:material-icons-extended")
-    implementation("androidx.compose.material3:material3")
     implementation("androidx.core:core-splashscreen:1.2.0")
     // Material library required for DynamicColors.applyToActivitiesIfAvailable
     implementation("com.google.android.material:material:1.14.0")

@@ -156,19 +156,19 @@ fun ReminderSettingsScreen(
                         enter = expandVertically(expandFrom = Alignment.Top),
                         exit = shrinkVertically(shrinkTowards = Alignment.Top)
                     ) {
-                        Column {
-                            HorizontalDivider(modifier = Modifier.padding(start = 72.dp))
-                            DndRangeSlider(
-                                startTime = dndStartTime,
-                                endTime = dndEndTime,
-                                onStartTimeChange = { time ->
-                                    scope.launch { userPreferences.setDndStartTime(time) }
-                                },
-                                onEndTimeChange = { time ->
-                                    scope.launch { userPreferences.setDndEndTime(time) }
-                                }
-                            )
-                        }
+                        DndRangeSlider(
+                            startTime = dndStartTime,
+                            endTime = dndEndTime,
+                            onStartTimeChange = { time ->
+                                scope.launch { userPreferences.setDndStartTime(time) }
+                            },
+                            onEndTimeChange = { time ->
+                                scope.launch { userPreferences.setDndEndTime(time) }
+                            },
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(horizontal = 16.dp)
+                        )
                     }
                 }
 

@@ -1,7 +1,21 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
     <string name="settings_title">Settings</string>
+    <string name="settings_coming_soon">Coming soon</string>
+    <string name="settings_category_ai">AI Configuration</string>
+    <string name="settings_category_ai_description">Configure AI providers and model parameters</string>
+    <string name="settings_category_lan">Link &amp; Sync</string>
+    <string name="settings_category_general">General</string>
+    <string name="settings_category_general_description">Storage, appearance and display settings</string>
+    <string name="settings_configure_provider">Configure Provider</string>
+    <string name="settings_configure_provider_description">Set up the AI provider, model and API key</string>
+    <string name="settings_memory">Memory</string>
+    <string name="settings_memory_description">Let AI remember your habits and preferences</string>
+    <string name="settings_ui_display">Interface &amp; Display</string>
+    <string name="settings_new_settings_entry">New Settings</string>
+    <string name="settings_new_settings_entry_desc">Try the new categorized settings interface</string>
     <string name="settings_about">About</string>
+    <string name="settings_about_description">Version, developers and open-source licenses</string>
     <string name="settings_app_version">Version</string>
     <string name="settings_developer">Developer</string>
     <string name="settings_back">Back</string>
@@ -12,6 +26,7 @@
     <string name="settings_app_info_button">App info…</string>
     <string name="settings_github_button">GitHub repo…</string>
     <string name="settings_help_button">Help and feedback…</string>
+    <string name="settings_help_button_description">View help documentation or report issues</string>
     <string name="settings_support_habitpulse">Support %1$s</string>
     <string name="settings_support_habitpulse_description">Enable splash ad to support %1$s. Thank you for your support!</string>
     <string name="settings_support_habitpulse_switch">Enable Splash Ad</string>
@@ -129,6 +144,9 @@
     <string name="debug_add_sample_data_yes">Add</string>
     <string name="debug_add_sample_data_no">Cancel</string>
     <string name="debug_sample_data_added">Added 40 sample data entries</string>
+    <string name="settings_debug_title">Debug Settings</string>
+    <string name="settings_debug_add_sample_habits">Add sample habits</string>
+    <string name="settings_debug_add_sample_habits_description">Add a batch of sample habits and completion records for testing the UI and features</string>
 
     <!-- Accessibility -->
     <string name="accessibility_talkback_splash_ad_disabled">To avoid affecting users with visual impairments, the splash ad feature cannot be enabled</string>
@@ -254,6 +272,7 @@
 
     <!-- Notification Settings -->
     <string name="settings_notifications">Notifications</string>
+    <string name="settings_notifications_description">Reminders, persistent notifications and templates</string>
     <string name="settings_persistent_notification">Keep running in background</string>
     <string name="settings_persistent_notification_description">Show a persistent notification to keep yourself informed</string>
     <string name="settings_persistent_notification_authorize">Give permission</string>
