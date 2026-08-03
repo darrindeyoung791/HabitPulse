@@ -17,8 +17,8 @@ android {
         applicationId = "io.github.darrindeyoung791.habitpulse"
         minSdk = 26
         targetSdk = 37
-        versionCode = 183
-        versionName = "0.8.35-alpha"
+        versionCode = 184
+        versionName = "0.8.36-alpha"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
     }
@@ -48,7 +48,7 @@ android {
     }
     androidResources {
         generateLocaleConfig = true
-        localeFilters += listOf("zh-rCN", "zh-rTW", "zh-rHK", "en-rUS")
+        localeFilters += listOf("zh-rCN", "zh-rTW", "zh-rHK", "en-rUS", "en-rGB")
     }
     lint {
         abortOnError = false

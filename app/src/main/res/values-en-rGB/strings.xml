@@ -1,0 +1,597 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="settings_title">Settings</string>
+    <string name="settings_coming_soon">Coming soon</string>
+    <string name="settings_category_ai">AI Configuration</string>
+    <string name="settings_category_ai_description">Configure AI providers and model parameters</string>
+    <string name="settings_category_lan">Connect &amp; Sync</string>
+    <string name="settings_category_general">General</string>
+    <string name="settings_category_general_description">Storage, appearance and display settings</string>
+    <string name="settings_configure_provider">Configure Provider</string>
+    <string name="settings_configure_provider_description">Set up the AI provider, model and API key</string>
+    <string name="settings_memory">Memory</string>
+    <string name="settings_memory_description">Let AI remember your habits and preferences</string>
+    <string name="settings_ui_display">Interface &amp; Display</string>
+    <string name="settings_new_settings_entry">New Settings</string>
+    <string name="settings_new_settings_entry_desc">Try the new categorised settings interface</string>
+    <string name="settings_about">About</string>
+    <string name="settings_about_description">Version, developers and open-source licenses</string>
+    <string name="settings_app_version">Version</string>
+    <string name="settings_developer">Developer</string>
+    <string name="settings_back">Back</string>
+    <string name="settings_about_section">About</string>
+    <string name="settings_privacy_notice">%1$s takes your privacy seriously. Your data is stored on your device, and %1$s does not transmit your personal information over the Internet.</string>
+    <string name="settings_app_version_label">Version</string>
+    <string name="settings_developer_name">The HabitPulse Dev Team</string>
+    <string name="settings_app_info_button">App info…</string>
+    <string name="settings_github_button">GitHub repo…</string>
+    <string name="settings_help_button">Help &amp; feedback…</string>
+    <string name="settings_help_button_description">View help documentation or report issues</string>
+    <string name="settings_support_habitpulse">Support %1$s</string>
+    <string name="settings_support_habitpulse_description">Enable splash ad to support %1$s. Thank you for your support!</string>
+    <string name="settings_support_habitpulse_switch">Enable Splash Ad</string>
+    <string name="settings_support_habitpulse_switch_description">Display a closable splash ad when the app starts. If you find the ad bothersome, you can turn this option off anytime.</string>
+    <string name="settings_support_habitpulse_switch_description_talkback">Splash ad is unavailable when accessibility services are enabled</string>
+    <string name="ad_skip_button">Skip Ad (%1$ds)</string>
+    <string name="ad_space_for_rent">Your advertisement can be here.</string>
+    <string name="main_calendar_view">Calendar view</string>
+    <string name="main_settings">Settings</string>
+    <string name="main_new_habit">Create habit</string>
+    <string name="main_no_habits">No habits</string>
+    <string name="main_create_habit">Create habit</string>
+    <string name="main_title_habits">Habits</string>
+    <string name="main_title_contacts">Contacts</string>
+    <string name="main_title_records">Records</string>
+    <string name="main_tab_habits">Habits</string>
+    <string name="main_tab_contacts">Contacts</string>
+    <string name="main_tab_records">Records</string>
+    <string name="main_subtitle_habit_count">%d habit(s)</string>
+    <string name="main_subtitle_contact_count">%1$d contact(s), %2$d habit(s) with reminder(s)</string>
+    <string name="main_blank_contacts_description">This is the contacts page placeholder content, to be filled with supervisor management in the future.</string>
+    <string name="main_blank_records_description">This is the records page placeholder content, to be filled with habit history in the future.</string>
+    <string name="main_expand_drawer">Expand drawer</string>
+    <string name="main_collapse_drawer">Collapse drawer</string>
+    <string name="main_create_habit_title">Create habit</string>
+    <string name="create_habit_title">Create Habit</string>
+    <string name="edit_habit_title">Edit Habit</string>
+    <string name="create_habit_habit_name_label">Habit Name</string>
+    <string name="create_habit_habit_name_placeholder">How about \"Drink water\"?</string>
+    <string name="create_habit_repeat_cycle_label">Repeat Cycle</string>
+    <string name="create_habit_daily_option">Daily</string>
+    <string name="create_habit_weekly_option">Weekly</string>
+    <string name="create_habit_repeat_days_label">Repeat Days</string>
+    <string name="create_habit_repeat_days_hint">Select repeat days</string>
+    <string name="create_habit_day_sunday">S</string>
+    <string name="create_habit_day_monday">M</string>
+    <string name="create_habit_day_tuesday">T</string>
+    <string name="create_habit_day_wednesday">W</string>
+    <string name="create_habit_day_thursday">T</string>
+    <string name="create_habit_day_friday">F</string>
+    <string name="create_habit_day_saturday">S</string>
+    <string name="create_habit_reminder_time_label">Reminder Time(s)</string>
+    <string name="create_habit_reminder_description">Set reminder times to help you build your habit</string>
+    <string name="create_habit_no_reminder_set">No reminder time(s) set</string>
+    <string name="create_habit_no_supervisor">No supervisor set</string>
+    <string name="create_habit_reminder_set_count">%d reminder time(s) set</string>
+    <string name="create_habit_add_reminder_button">Add Time</string>
+    <string name="create_habit_supervisor_count">%d supervisor(s) set</string>
+    <string name="create_habit_expand_button">Expand</string>
+    <string name="create_habit_collapse_button">Collapse</string>
+    <string name="create_habit_duplicate_time">This time already exists</string>
+    <string name="create_habit_duplicate_supervisor">This supervisor already exists</string>
+    <string name="create_habit_time_picker_title">Select Reminder Time</string>
+    <string name="create_habit_time_picker_confirm">OK</string>
+    <string name="create_habit_time_picker_dismiss">Cancel</string>
+    <string name="create_habit_time_picker_hint">Select PM for noon</string>
+    <string name="create_habit_max_length_hint">Maximum 100 characters</string>
+    <string name="create_habit_supervision_label">Supervisor</string>
+    <string name="create_habit_supervisor_description">Add supervisors to get notified via email or SMS when habits are completed</string>
+    <string name="create_habit_supervisor_add">Add Supervisor</string>
+    <string name="create_habit_add_supervisor_title">Add Supervisor</string>
+    <string name="create_habit_tab_email">Add Email</string>
+    <string name="create_habit_tab_phone">Add Phone</string>
+    <string name="create_habit_add_supervisor_done">Done</string>
+    <string name="create_habit_tab_switch_blocked">Please clear the input first before switching</string>
+    <string name="create_habit_add_email_dialog_description">Add an email address to send email notifications when a habit is completed</string>
+    <string name="create_habit_add_phone_dialog_description">Add a phone number to send SMS notifications when a habit is completed</string>
+    <string name="create_habit_contacts_count">%d</string>
+    <string name="create_habit_supervisor_email_hint">Enter email address</string>
+    <string name="create_habit_supervisor_email_invalid">Please enter a valid email address</string>
+    <string name="create_habit_supervisor_phone_hint">Enter phone number</string>
+    <string name="create_habit_supervisor_phone_invalid">Please enter a valid phone number</string>
+    <string name="create_habit_notes_label">Notes</string>
+    <string name="create_habit_notes_hint">Notes, multi-line supported</string>
+    <string name="create_habit_notes_max_length_hint">Maximum 2000 characters</string>
+    <string name="create_habit_save_button">Save</string>
+    <string name="create_habit_cancel_button">Cancel</string>
+    <string name="create_habit_validation_failed">Please fill in all required fields</string>
+    <string name="habit_card_menu_undo">Undo check-in</string>
+    <string name="habit_card_menu_edit">Edit</string>
+    <string name="habit_card_menu_delete">Delete</string>
+    <string name="habit_card_menu_undo_create">Undo Create</string>
+    <string name="habit_card_menu_confirm_create">Confirm Create</string>
+    <string name="habit_card_menu_complete">Done</string>
+    <string name="habit_card_more_times">%1$s and %2$d more</string>
+    <string name="habit_card_delete_confirm_title">Confirm Delete</string>
+    <string name="habit_card_delete_confirm_message">Are you sure you want to delete the habit \"%1$s\"? This action cannot be undone.</string>
+    <string name="habit_card_delete_confirm">Delete</string>
+    <string name="habit_card_delete_cancel">Cancel</string>
+    <string name="habit_card_completed_count">Completed %d times</string>
+    <string name="habit_card_repeat_daily">Daily</string>
+    <string name="habit_card_repeat_weekly">Mon, Tue, Wed</string>
+    <string name="habit_card_repeat_days_format">Every %s</string>
+    <string name="habit_card_reminder_count">%1$s etc. %2$d times</string>
+    <string name="habit_card_reminder_single">%s</string>
+    <string name="habit_card_notes_preview">%s…</string>
+    <string name="habit_card_checkin_button">Check-in</string>
+    <string name="habit_card_reminder_dialog_title">Reminder Details</string>
+    <string name="habit_card_reminder_dialog_dismiss">Close</string>
+    <string name="habit_card_notes_dialog_title">Notes Details</string>
+    <string name="habit_card_notes_dialog_dismiss">Close</string>
+    <string name="habit_card_no_notes">No notes</string>
+    <string name="habit_card_repeat_days_sunday">Sun</string>
+    <string name="habit_card_repeat_days_monday">Mon</string>
+    <string name="habit_card_repeat_days_tuesday">Tue</string>
+    <string name="habit_card_repeat_days_wednesday">Wed</string>
+    <string name="habit_card_repeat_days_thursday">Thu</string>
+    <string name="habit_card_repeat_days_friday">Fri</string>
+    <string name="habit_card_repeat_days_saturday">Sat</string>
+    <string name="habit_card_repeat_days_separator">, </string>
+    
+    <!-- Debug / Developer options -->
+    <string name="debug_add_sample_data_dialog_title">Add Sample Data?</string>
+    <string name="debug_add_sample_data_dialog_message">Add 40 sample habit data entries?\n\nThis feature is for debugging on new devices. It will add habits with different reminder methods, supervision methods, and notes. Some supervisors appear in multiple habits for testing UI scrolling performance.</string>
+    <string name="debug_add_sample_data_yes">Add</string>
+    <string name="debug_add_sample_data_no">Cancel</string>
+    <string name="debug_sample_data_added">Added 40 sample data entries</string>
+    <string name="settings_debug_title">Debug Settings</string>
+    <string name="settings_debug_add_sample_habits">Add sample habits</string>
+    <string name="settings_debug_add_sample_habits_description">Add a batch of sample habits and completion records for testing the UI and features</string>
+
+    <!-- Accessibility -->
+    <string name="accessibility_talkback_splash_ad_disabled">To avoid affecting users with visual impairments, the splash ad feature cannot be enabled</string>
+    <string name="accessibility_habit_checkin">Check in %s</string>
+    <string name="accessibility_search_habits">Search habits</string>
+    <string name="accessibility_search_contacts">Search contacts</string>
+    <string name="accessibility_clear_search">Clear search</string>
+    <string name="accessibility_delete_reminder_time">Delete reminder %s</string>
+    <string name="accessibility_delete_contact">Delete %s</string>
+
+    <!-- Search -->
+    <string name="search_habits_hint">Search habits…</string>
+    <string name="search_contacts_hint">Search contacts…</string>
+    <string name="search_no_results">No matching habits found</string>
+    <string name="search_no_results_description">Try a different keyword</string>
+    <string name="contacts_no_search_results">No matching contacts found</string>
+    <string name="contacts_no_search_results_description">Try a different keyword</string>
+    <string name="search_results_count">%d habit(s) found</string>
+
+    <!-- Records Screen -->
+    <string name="records_all_habits">All Habits</string>
+    <string name="records_select_habit">Select Habit</string>
+    <string name="records_completion_count">%d completion(s)</string>
+    <string name="records_subtitle_completion_days">%d day(s) with completions</string>
+    <string name="records_date_format">dd MMM yyyy</string>
+    <string name="records_date_format_short">dd/MM/yyyy</string>
+    <string name="records_time_format">HH:mm</string>
+    <string name="records_no_completions">No completion records</string>
+    <string name="records_no_completions_description">The selected habit has no completion records yet</string>
+    <string name="records_completion_sequence">Completion #%d</string>
+    <string name="records_card_content_description">%1$s, Completion #%2$d, completed on %3$s at %4$s</string>
+    <string name="records_jump_to_date">Jump to Date</string>
+    <string name="records_selected_date">Selected: %s</string>
+    <string name="records_clear_date">Clear Date</string>
+    <string name="records_date_picker_title">Select Date</string>
+    <string name="records_date_picker_confirm">OK</string>
+    <string name="records_date_picker_dismiss">Cancel</string>
+    <string name="records_date_filter_tooltip">Select Date</string>
+    <string name="records_date_filter_selected">Selected Date</string>
+    
+    <!-- Relative dates -->
+    <string name="records_date_today">Today</string>
+    <string name="records_date_yesterday">Yesterday</string>
+    <string name="records_date_days_ago">%d days ago</string>
+    <string name="records_date_last_week">Last week</string>
+    <string name="records_date_weeks_ago">%d weeks ago</string>
+    <string name="records_date_last_month">Last month</string>
+    <string name="records_date_months_ago">%d months ago</string>
+    <string name="records_date_last_year">Last year</string>
+    <string name="records_date_years_ago">%d years ago</string>
+
+    <!-- Settings - Visual -->
+    <string name="settings_visual">Visual</string>
+    <string name="settings_force_tablet_landscape">Force tablet landscape mode</string>
+    <string name="settings_force_tablet_landscape_description">Use tablet landscape layout on small tablets in landscape orientation</string>
+    <string name="settings_force_tablet_landscape_warning_title">Force enable tablet landscape mode?</string>
+    <string name="settings_force_tablet_landscape_warning_message">This feature is optimised for small-screen tablets. Enabling it on phones may cause layout issues. Proceed anyway?</string>
+
+    <!-- Contacts Screen -->
+    <string name="contacts_title">Contacts</string>
+    <string name="contacts_no_contacts">No contacts</string>
+    <string name="contacts_no_contacts_description">Contacts will appear here after adding habit supervisors</string>
+    <string name="contacts_email_type">Email</string>
+    <string name="contacts_phone_type">Phone</string>
+    <string name="contacts_used_in_habits">Used in %d habit(s)</string>
+    <string name="contacts_bottom_sheet_title">Habits using this contact</string>
+    <string name="contacts_bottom_sheet_no_habits">This contact is not used in any habits</string>
+    <string name="contacts_delete_from_habit">Delete from this habit</string>
+    <string name="contacts_delete_from_all_habits">Delete from all habits</string>
+    <string name="contacts_delete_confirm_title">Confirm Delete</string>
+    <string name="contacts_delete_from_habit_confirm">Delete this contact from the current habit?</string>
+    <string name="contacts_delete_from_all_habits_confirm">Delete this contact from all habits? This action cannot be undone.</string>
+    <string name="contacts_delete_confirm">Delete</string>
+    <string name="contacts_delete_cancel">Cancel</string>
+    <string name="contacts_last_supervisor_warning">This is the only contact for this habit. Deleting will change supervision to "No supervisor, local notification only"</string>
+
+    <!-- Dialog buttons -->
+    <string name="dialog_confirm">OK</string>
+    <string name="dialog_cancel">Cancel</string>
+
+    <!-- Open Source Licenses -->
+    <string name="settings_open_source_licenses">Open Source Licenses</string>
+    <string name="settings_open_source_licenses_description">View open source library licenses used in this project</string>
+
+    <!-- Multi-Select & Sort -->
+    <string name="multi_select_sort_title">Multi-Select &amp; Sort</string>
+    <string name="multi_select_sort_cancel">Cancel</string>
+    <string name="multi_select_sort_delete">Delete</string>
+    <string name="multi_select_sort_save">Save</string>
+    <string name="multi_select_sort_select_all">Select All</string>
+    <string name="multi_select_sort_empty">No habits</string>
+    <string name="multi_select_sort_delete_confirm_title">Confirm Delete</string>
+    <string name="multi_select_sort_delete_confirm_message">Delete %1$s selected habits? This action cannot be undone.</string>
+    <string name="multi_select_sort_delete_confirm">Delete</string>
+    <string name="multi_select_sort_delete_cancel">Cancel</string>
+    <string name="accessibility_drag_handle">Drag handle</string>
+    <string name="accessibility_drag_to_reorder">Drag to reorder</string>
+    <string name="habit_context_menu_multi_select">Multi-Select &amp; Sort</string>
+
+    <!-- Welcome Screen -->
+    <string name="welcome_description">A clean and lightweight habit tracker designed to outlast the three-minute enthusiasm.</string>
+    <string name="welcome_permissions_title">For timely notifications, %1$s may use the following permissions:</string>
+    <string name="welcome_permission_notification_title">Send persistent notifications</string>
+    <string name="welcome_permission_background_title">Run continuously in the background</string>
+    <string name="welcome_agree_button">I Agree, Continue</string>
+    <string name="welcome_disagree_button">Disagree, Enter Limited Mode</string>
+    <string name="welcome_limited_mode">Limited Mode</string>
+    <string name="welcome_limited_mode_info">You have chosen Limited Mode. Some features will be unavailable.</string>
+
+    <!-- Onboarding Wizard -->
+    <string name="onboarding_step_notification_title">Notification Settings</string>
+    <string name="onboarding_step_notification_desc">Configure notifications and Do Not Disturb to make habit reminders smarter</string>
+    <string name="onboarding_step_ai_desc">Configure AI service to create habits intelligently. You can also configure this later in Settings.</string>
+    <string name="onboarding_step_ai_hint">AI setup can be skipped and configured later in Settings</string>
+    <string name="onboarding_step_previous">Previous</string>
+    <string name="onboarding_step_next">Next</string>
+    <string name="onboarding_step_skip">Skip</string>
+    <string name="onboarding_step_complete">Complete</string>
+    <string name="onboarding_tos_link">Terms of Service</string>
+    <string name="onboarding_privacy_link">Privacy Policy</string>
+    <string name="onboarding_tos_placeholder">Terms of Service coming soon</string>
+    <string name="onboarding_privacy_placeholder">Privacy Policy coming soon</string>
+
+    <!-- Notification Settings -->
+    <string name="settings_notifications">Notifications</string>
+    <string name="settings_notifications_description">Reminders, persistent notifications and templates</string>
+    <string name="settings_persistent_notification">Keep running in background</string>
+    <string name="settings_persistent_notification_description">Show a persistent notification to keep yourself informed</string>
+    <string name="settings_persistent_notification_authorize">Give permission</string>
+    <string name="settings_persistent_notification_permission_denied">Notification permission not granted. Cannot enable this feature.</string>
+    <string name="settings_persistent_notification_limited_mode_title">Exit Limited Mode?</string>
+    <string name="settings_persistent_notification_limited_mode_message">Enabling this will exit Limited Mode. A persistent notification will help keep the app running in the background. Continue?</string>
+
+    <!-- Storage Settings -->
+    <string name="settings_storage">Storage Cleanup</string>
+    <string name="settings_clear_webview_cache">Clear Cache</string>
+    <string name="settings_clear_webview_cache_description">Clear cached data generated by web browsing</string>
+    <string name="settings_clear_webview_cache_dialog_title">Clear cache?</string>
+    <string name="settings_clear_webview_cache_dialog_message">This will clear all cached data generated by web browsing. After clearing, web pages may take slightly longer to load next time.</string>
+    <string name="settings_clear_webview_cache_success">Cache cleared</string>
+    <string name="settings_clear_webview_cookies">Deep Clean</string>
+    <string name="settings_clear_webview_cookies_description">Clear cache and login status</string>
+    <string name="settings_clear_webview_cookies_dialog_title">Deep clean?</string>
+    <string name="settings_clear_webview_cookies_dialog_message">This will clear all cache and cookies. After clearing, web pages may take slightly longer to load next time. Any accounts you\'ve saved in the in-app browser will be logged out. Are you sure you want to continue?</string>
+    <string name="settings_clear_webview_cookies_success">Deep clean complete, login status cleared</string>
+    <string name="settings_storage_notice">This clears the cache in the in-app browser and does not affect your habit tracking data.</string>
+    <string name="settings_clear_cache">Clear</string>
+    <string name="settings_cancel">Cancel</string>
+
+    <!-- Notification Permission Dialog (shown on startup) -->
+    <string name="notification_permission_dialog_title">Notification Permission Disabled</string>
+    <string name="notification_permission_dialog_message">You have enabled Keep Running in Background, but notification permission is not granted. The persistent notification will not be shown, and the app may not be able to remind you on time.</string>
+    <string name="notification_permission_dialog_go_to_settings">Go to Settings</string>
+    <string name="notification_permission_dialog_disable">Turn Off Background Running</string>
+
+    <!-- Notification Channel -->
+    <string name="notification_channel_name">Background Running Notification</string>
+    <string name="notification_channel_description">Persistent notification to keep %1$s running in the background</string>
+    <string name="notification_title">%1$s is running</string>
+    <string name="notification_content">Keeping your habit reminders and background sync active</string>
+
+    <!-- Reminder Notification Channel -->
+    <string name="reminder_channel_name">Habit Reminders</string>
+    <string name="reminder_channel_description">Used for 30-minute habit reminders</string>
+    <string name="reminder_notification_title">%d habits to check in</string>
+    <string name="reminder_notification_more">and %d more…</string>
+    <string name="reminder_test_notification_title">Test Reminder</string>
+    <string name="reminder_test_habit_a">Test Habit A</string>
+    <string name="reminder_test_habit_b">Test Habit B</string>
+
+    <!-- Reminder Settings -->
+    <string name="settings_reminder">Habit Reminders</string>
+    <string name="settings_reminder_description">Remind every 30 minutes of upcoming habits</string>
+    <string name="settings_reminder_dnd">Do Not Disturb</string>
+    <string name="settings_reminder_dnd_description">Suppress notifications during set hours</string>
+    <string name="settings_reminder_dnd_start">Start</string>
+    <string name="settings_reminder_dnd_end">End</string>
+    <string name="settings_reminder_dnd_to">to</string>
+    <string name="settings_reminder_settings">Reminder Settings</string>
+    <string name="settings_reminder_settings_description">Check keep-alive status and send test notification</string>
+
+    <!-- Reminder Settings Screen -->
+    <string name="reminder_settings_title">Reminder Settings</string>
+    <string name="reminder_settings_keepalive_status">Keep-Alive Status</string>
+    <string name="reminder_settings_next_alarm">Next Reminder</string>
+    <string name="reminder_settings_notification_permission">Notification Permission</string>
+    <string name="reminder_settings_system_settings">Customise notifications…</string>
+    <string name="reminder_settings_background_keepalive">Keep HabitPulse running in background…</string>
+    <string name="reminder_settings_test_notification">Send Test Notification</string>
+    <string name="reminder_settings_test_notification_sent">Test notification sent</string>
+    <string name="reminder_settings_test_notification_scheduled">Test notification will be sent in 1 minute</string>
+    <string name="reminder_settings_test_notification_delayed">Send test notification in 1 minute</string>
+    <string name="reminder_settings_reminder_disabled">Reminders disabled</string>
+    <string name="reminder_settings_service_running">Running</string>
+    <string name="reminder_settings_service_stopped">Stopped</string>
+    <string name="reminder_settings_today_count">Today\'s reminders</string>
+    <string name="reminder_settings_no_alarm_scheduled">Not scheduled</string>
+    <string name="reminder_settings_permission_granted">Granted</string>
+    <string name="reminder_settings_permission_denied">Denied</string>
+
+    <!-- Reward Bottom Sheet -->
+    <string name="reward_title">You have completed %2$s %1$d time(s)</string>
+    <string name="reward_subtitle">Keep it up</string>
+    <string name="reward_notify_supervisor">Notify supervisors of %s</string>
+    <string name="reward_skip_notification">Skip notification this time</string>
+    <string name="reward_complete">Complete</string>
+    <string name="accessibility_reward_sheet">Complete habit check-in</string>
+    <string name="accessibility_notify_supervisors">Notify supervisors</string>
+    <string name="accessibility_skip_notification">Skip notification</string>
+    <string name="reward_dismiss_toast">Remember to manually notify your supervisors</string>
+
+    <!-- WebView Screen -->
+    <string name="webview_title">Help &amp; Feedback</string>
+    <string name="webview_close">Close</string>
+    <string name="webview_back">Back</string>
+    <string name="webview_menu">Menu</string>
+    <string name="webview_menu_refresh">Refresh</string>
+    <string name="webview_menu_open_in_browser">Open in Browser</string>
+    <string name="webview_menu_share">Share</string>
+    <string name="webview_loading_failed">Loading failed</string>
+    <string name="webview_retry">Retry</string>
+    <string name="webview_help">Help &amp; Feedback</string>
+    <string name="webview_ssl_warning_title">Insecure Connection</string>
+    <string name="webview_ssl_warning_message">The page uses an insecure connection (%2$s), your information may be intercepted. Continue anyway?</string>
+    <string name="webview_ssl_warning_continue">Continue</string>
+    <string name="webview_ssl_warning_cancel">Cancel</string>
+    <string name="webview_external_link_title">Leaving the %1$s website</string>
+    <string name="webview_external_link_message">You are about to leave the %1$s website. Please be careful when accessing third-party websites.</string>
+    <string name="webview_external_link_confirm">I understand</string>
+    <string name="webview_network_error_title">Network Connection Error</string>
+    <string name="webview_network_error_description">Unable to load the page. Please check your network connection and try again.</string>
+    <string name="webview_network_error_tips">Try switching between Wi-Fi and mobile data, or check your network settings.</string>
+    <string name="webview_network_error_refresh">Refresh</string>
+    <string name="webview_network_error_open_browser">Open in Browser</string>
+    <string name="webview_network_error_close">Close</string>
+    <string name="webview_network_error_back">Go Back</string>
+
+    <!-- AI Settings -->
+    <string name="ai_settings_title">AI Settings</string>
+    <string name="ai_settings_api_endpoint">API Endpoint</string>
+    <string name="ai_settings_api_endpoint_label">API Endpoint</string>
+    <string name="ai_settings_api_key">API Key</string>
+    <string name="ai_settings_api_key_label">API Key</string>
+    <string name="ai_api_key_required_title">API Key Required</string>
+    <string name="ai_api_key_required_message">Please configure an API key in Settings before using AI habit creation.</string>
+    <string name="ai_api_key_required_action">Go to Settings</string>
+    <string name="ai_settings_model">Model</string>
+    <string name="ai_settings_model_label">Select Model</string>
+    <string name="ai_settings_test_connection">Test Connection</string>
+    <string name="ai_settings_test_connection_description">Verify that the API endpoint, key and model are usable</string>
+    <string name="ai_settings_connection_success">Connection successful</string>
+    <string name="ai_settings_connection_failed">Connection failed</string>
+    <string name="ai_settings_notice_title">Configuration Guide</string>
+    <string name="ai_settings_notice_content">This app supports OpenAI-compatible LLM APIs (such as Zhipu GLM, DeepSeek, etc.).\n\nAPI Endpoint: Fill in the complete API address ending with a slash.\nAPI Key: Obtain from the respective platform.\nModel: Supports Zhipu glm-4.7-flash (default), glm-4-flash, glm-4, etc.</string>
+    <string name="ai_settings_streaming">Streaming Output</string>
+    <string name="ai_settings_streaming_description">Display AI thinking process and responses in real-time</string>
+    <string name="ai_settings_model_default_label">%1$s (Default)</string>
+    <string name="ai_settings_model_flagship_label">%1$s (Latest flagship)</string>
+    <string name="clear">Clear</string>
+    <string name="show_password">Show password</string>
+    <string name="hide_password">Hide password</string>
+    <string name="settings_ai_section">AI</string>
+    <string name="settings_ai_section_description">Configure AI smart habit creation</string>
+    <string name="settings_ai_section_settings_desc">Configure API endpoint, key and model</string>
+
+    <!-- AI Create Habit -->
+    <string name="ai_create_title">AI Create Habit</string>
+    <string name="ai_streaming_title">AI Outputting…</string>
+    <string name="ai_welcome_title">Create habits with AI</string>
+    <string name="ai_welcome_subtitle">Tell me the habits you want to build, I\'ll help you create them</string>
+    <string name="ai_input_placeholder">Describe the habit you want to build…</string>
+    <string name="ai_send_button">Send</string>
+    <string name="ai_stop_button">Stop</string>
+    <string name="ai_clear_conversation">Clear conversation</string>
+    <string name="ai_exit_title">Confirm exit?</string>
+    <string name="ai_exit_message">After leaving, the conversation will not be saved.</string>
+    <string name="ai_exit_unsaved_message">After leaving, the conversation will not be saved. There are unsaved habits.</string>
+    <string name="ai_retry_confirm_title">Confirm retry?</string>
+    <string name="ai_retry_confirm_message">Retry will delete the currently created habits. Continue?</string>
+    <string name="ai_clear_title">Clear conversation?</string>
+    <string name="ai_clear_message">This will clear all messages.</string>
+    <string name="ai_confirm_title">Confirm creation</string>
+    <string name="ai_confirm_message">Create %d habits?</string>
+    <string name="ai_confirm_create">Create</string>
+    <string name="ai_text_input_placeholder">Enter your answer…</string>
+    <string name="ai_unsupported_question_type">Unsupported question type</string>
+    <string name="ai_submit">Submit</string>
+    <string name="ai_custom_input_placeholder">Type manually</string>
+    <string name="ai_submit_selection">Submit (%d selected)</string>
+    <string name="ai_add_time_button">Add Time</string>
+    <string name="ai_selected_times_label">Selected Times</string>
+    <string name="ai_select_time_first">Deselect current option first</string>
+    <string name="ai_deselect_times_first">Clear selected times first</string>
+    <string name="ai_day_mon">Mon</string>
+    <string name="ai_day_tue">Tue</string>
+    <string name="ai_day_wed">Wed</string>
+    <string name="ai_day_thu">Thu</string>
+    <string name="ai_day_fri">Fri</string>
+    <string name="ai_day_sat">Sat</string>
+    <string name="ai_day_sun">Sun</string>
+
+    <!-- AI Disclaimer -->
+    <string name="ai_disclaimer">AI may make mistakes. Please review before saving.</string>
+
+    <!-- AI Error Messages -->
+    <string name="ai_error_scroll_to_bottom">Scroll to bottom</string>
+    <string name="ai_error_not_configured">Please configure API in settings</string>
+    <string name="ai_error_prefix">Error: %s</string>
+    <string name="ai_error_auth_failed">Authentication failed, check API Key</string>
+    <string name="ai_error_access_denied">Access denied, check API Key permissions</string>
+    <string name="ai_error_server_error">Server error (HTTP %d), please retry later</string>
+    <string name="ai_error_timeout">Connection timeout, check network or API address</string>
+    <string name="ai_error_connection_failed">Cannot connect to server, check API address</string>
+    <string name="ai_error_dns_failed">DNS resolution failed, check API address</string>
+    <string name="ai_error_invalid_url">Invalid API URL format</string>
+    <string name="ai_error_unknown">Unknown error</string>
+    <string name="create_habit_selection_title">New Habit</string>
+    <string name="create_habit_selection_manual">Manual</string>
+    <string name="create_habit_selection_manual_desc">Fill in all fields yourself</string>
+    <string name="create_habit_selection_ai">AI Smart Create</string>
+    <string name="create_habit_selection_ai_desc">Describe your habit, AI will help you refine it</string>
+    <string name="go_back">Back</string>
+    <string name="settings_ai_title">AI Settings</string>
+    <string name="confirm">Confirm</string>
+    <string name="cancel">Cancel</string>
+
+    <!-- Thinking Block -->
+    <string name="hide_thinking">Hide thinking</string>
+    <string name="view_thinking">View thinking</string>
+    <string name="thinking_in_progress">Thinking…</string>
+    <string name="collapse">Collapse</string>
+    <string name="expand">Expand</string>
+
+    <!-- Entry Zone -->
+    <string name="entry_zone_today_habits">Today</string>
+    <string name="entry_zone_today_habits_badge">%d items</string>
+    <string name="entry_zone_lan_sync">LAN Sync</string>
+    <string name="entry_zone_lan_sync_badge">Offline</string>
+    <string name="entry_zone_lan_sync_placeholder_title">LAN Sync</string>
+    <string name="entry_zone_lan_sync_placeholder_desc">LAN sync feature is under development. Stay tuned!</string>
+    <string name="habit_card_status_about_to_start">About to Start</string>
+    <string name="habit_card_status_overdue">Overdue</string>
+    <string name="habit_card_status_completed">Completed</string>
+    <string name="habit_card_progress_format">%1$d/%2$d</string>
+    <string name="check_in_feedback_late_title">Check-in Reminder</string>
+    <string name="check_in_feedback_late_message">Remember to check in on time next time</string>
+    <string name="check_in_feedback_already_completed_title">Already Checked In</string>
+    <string name="check_in_feedback_already_completed_message">You\'ve already checked in today</string>
+    <string name="check_in_feedback_too_early_title">Too Early</string>
+    <string name="check_in_feedback_too_early_message">Earliest check-in at %s</string>
+    <string name="check_in_feedback_success_title">Checked In</string>
+    <string name="check_in_feedback_success_message">Keep it up!</string>
+    <string name="check_in_feedback_dismiss">Got it</string>
+    <string name="check_in_feedback_not_today_title">No Check-in Today</string>
+    <string name="check_in_feedback_not_today_message">This habit is not scheduled for today</string>
+    <string name="entry_zone_about_to_start">About to Start</string>
+    <string name="entry_zone_overdue">Overdue</string>
+    <string name="entry_zone_stats">Visual Stats</string>
+    <string name="entry_zone_stats_badge">Visual</string>
+    <string name="entry_zone_stats_placeholder_title">Visual Stats</string>
+    <string name="entry_zone_stats_placeholder_desc">Statistics visualisation is under development. Stay tuned!</string>
+    <string name="today_section_soon">About to Start</string>
+    <string name="today_section_later">Later</string>
+    <string name="today_section_allday">All Day</string>
+    <string name="reminder_settings_dnd_same_time">Do Not Disturb start and end time cannot be the same</string>
+
+    <!-- Notification Confirm Dialog -->
+    <string name="notification_confirm_title">Notify Supervisors</string>
+    <string name="notification_confirm_send_email">Send Email</string>
+    <string name="notification_confirm_send_sms">Send SMS to %s</string>
+    <string name="notification_confirm_cancel">Cancel</string>
+    <string name="notification_confirm_no_email_app">No email app found</string>
+    <string name="notification_confirm_no_sms_app">No SMS app found</string>
+    <string name="notification_confirm_dismiss_toast">Remember to notify your supervisors</string>
+    <string name="notification_confirm_no_contacts">No supervisors to notify</string>
+
+    <!-- Notification Template -->
+    <string name="notification_template_settings_title">Notification Template</string>
+    <string name="notification_template_settings_desc">Customise supervisor notification message</string>
+    <string name="notification_template_label">Message Template</string>
+    <string name="notification_template_variable_hint">Available variables: {habit_name} habit name, {checkin_time} check-in time, {habit_notes} habit notes</string>
+    <string name="notification_template_save_success">Template saved</string>
+    <string name="notification_template_reset">Reset to Default</string>
+
+    <!-- Notification Email -->
+    <string name="notification_email_subject">Check-in notification for %s</string>
+
+    <!-- Default notification template (used when no custom template is saved) -->
+    <string name="notification_default_template">Completed {habit_name} check-in ({checkin_time}), just so you know.</string>
+
+    <!-- Region code selector -->
+    <string name="region_code_label">Code</string>
+    <string name="contacts_edit_button">Edit</string>
+    <string name="contacts_edit_email_title">Edit Email</string>
+    <string name="contacts_edit_phone_title">Edit Phone</string>
+    <string name="contacts_edit_email_description">Update this contact\'s email across all associated habits</string>
+    <string name="contacts_edit_phone_description">Update this contact\'s phone across all associated habits</string>
+    <string name="contacts_edit_email_label">Email address</string>
+    <string name="contacts_edit_phone_label">Phone number</string>
+    <string name="contacts_edit_email_invalid">Invalid email format</string>
+    <string name="contacts_edit_phone_invalid">Invalid phone number format</string>
+    <string name="create_habit_supervisor_phone_sms_cost_warning">SMS reminders may incur charges</string>
+    <string name="region_code_selector">Region phone code</string>
+
+    <!-- Region code names -->
+    <string name="region_cn">Chinese mainland</string>
+    <string name="region_us_ca">USA/Canada</string>
+    <string name="region_uk">UK</string>
+    <string name="region_jp">Japan</string>
+    <string name="region_kr">South Korea</string>
+    <string name="region_au">Australia</string>
+    <string name="region_hk">Hong Kong</string>
+    <string name="region_tw">Taiwan</string>
+    <string name="region_sg">Singapore</string>
+    <string name="region_de">Germany</string>
+    <string name="region_fr">France</string>
+    <string name="region_in">India</string>
+    <string name="region_it">Italy</string>
+    <string name="region_br">Brazil</string>
+    <string name="region_ru">Russia</string>
+    <string name="region_es">Spain</string>
+    <string name="region_nl">Netherlands</string>
+    <string name="region_se">Sweden</string>
+    <string name="region_ch">Switzerland</string>
+    <string name="region_no">Norway</string>
+    <string name="region_dk">Denmark</string>
+    <string name="region_fi">Finland</string>
+    <string name="region_pl">Poland</string>
+    <string name="region_gr">Greece</string>
+    <string name="region_my">Malaysia</string>
+    <string name="region_ph">Philippines</string>
+    <string name="region_id">Indonesia</string>
+    <string name="region_th">Thailand</string>
+    <string name="region_vn">Vietnam</string>
+    <string name="region_np">Nepal</string>
+    <string name="region_lk">Sri Lanka</string>
+    <string name="region_ae">UAE</string>
+    <string name="region_sa">Saudi Arabia</string>
+    <string name="region_il">Israel</string>
+    <string name="region_za">South Africa</string>
+    <string name="region_eg">Egypt</string>
+    <string name="region_ng">Nigeria</string>
+    <string name="region_ar">Argentina</string>
+    <string name="region_cl">Chile</string>
+    <string name="region_co">Colombia</string>
+    <string name="region_mx">Mexico</string>
+    <string name="region_nz">New Zealand</string>
+</resources>

@@ -96,7 +96,6 @@ import java.time.LocalDate
 import java.time.format.DateTimeFormatter
 import java.util.Calendar
 import java.util.Date
-import java.util.Locale
 import java.util.UUID
 
 /**
@@ -136,8 +135,9 @@ fun formatRelativeDate(date: Date): String {
         daysDiff in 2..6 -> stringResource(id = R.string.records_date_days_ago, daysDiff)
         daysDiff == 7 -> stringResource(id = R.string.records_date_last_week)
         daysDiff in 8..13 -> {
-            then.getDisplayName(Calendar.DAY_OF_WEEK, Calendar.LONG, Locale.getDefault())
-                ?: then.getDisplayName(Calendar.DAY_OF_WEEK, Calendar.SHORT, Locale.getDefault())
+            val formatLocale = LocalConfiguration.current.locales[0]
+            then.getDisplayName(Calendar.DAY_OF_WEEK, Calendar.LONG, formatLocale)
+                ?: then.getDisplayName(Calendar.DAY_OF_WEEK, Calendar.SHORT, formatLocale)
         }
         daysDiff < 28 -> {
             val weeks = daysDiff / 7
@@ -224,11 +224,12 @@ fun RecordsScreenContent(
     // Date formatters
     val dateFormatPattern = stringResource(id = R.string.records_date_format)
     val timeFormatPattern = stringResource(id = R.string.records_time_format)
-    val displayDateFormat = remember(dateFormatPattern) {
-        SimpleDateFormat(dateFormatPattern, Locale.getDefault())
+    val formatLocale = LocalConfiguration.current.locales[0]
+    val displayDateFormat = remember(dateFormatPattern, formatLocale) {
+        SimpleDateFormat(dateFormatPattern, formatLocale)
     }
-    val timeFormat = remember(timeFormatPattern) {
-        SimpleDateFormat(timeFormatPattern, Locale.getDefault())
+    val timeFormat = remember(timeFormatPattern, formatLocale) {
+        SimpleDateFormat(timeFormatPattern, formatLocale)
     }
 
     // Apply nested scroll
@@ -532,7 +533,10 @@ fun DateFilterButton(
     modifier: Modifier = Modifier
 ) {
     val shortDateFormat = stringResource(id = R.string.records_date_format_short)
-    val dateFormatter = remember { DateTimeFormatter.ofPattern(shortDateFormat) }
+    val formatLocale = LocalConfiguration.current.locales[0]
+    val dateFormatter = remember(shortDateFormat, formatLocale) {
+        DateTimeFormatter.ofPattern(shortDateFormat, formatLocale)
+    }
     val dateStr = selectedDate?.format(dateFormatter)
 
     AnimatedContent(

@@ -18,7 +18,7 @@
 - **Responsive Layout**: Adaptive navigation (Bottom Bar, Rail, Drawer) based on screen size
 - **Split-screen Support**: Multi-window support enabled
 - **Predictive Back Gesture**: Android 13+ predictive back gesture support
-- **Localization**: Chinese (Simplified/Traditional) and English (US) support
+- **Localization**: Chinese (Simplified/Traditional) and English (US/UK) support
 - **Accessibility**: TalkBack support for all navigation elements
 
 ### Tech Stack
@@ -126,7 +126,8 @@ HabitPulse/
 │   │   │   │       └── OnboardingPreferences.kt       # SharedPreferences for onboarding state
 │   │   │   ├── res/                             # Android resources
 │   │   │   │   ├── values/strings.xml           # Chinese strings
-│   │   │   │   ├── values-en-rUS/strings.xml    # English strings
+│   │   │   │   ├── values-en-rUS/strings.xml    # English (US) strings
+│   │   │   │   ├── values-en-rGB/strings.xml    # English (UK) strings
 │   │   │   │   ├── values-zh-rCN/               # Chinese (Simplified)
 │   │   │   │   ├── values-zh-rHK/               # Chinese (Traditional, Hong Kong)
 │   │   │   │   ├── values-zh-rTW/               # Chinese (Traditional, Taiwan)
@@ -272,7 +273,7 @@ Records every habit completion with timestamp.
 - **Kotlin style**: Official (as per `gradle.properties`)
 - **JVM target**: Java 17
 - **Compose**: Enabled with Material Design 3
-- **i18n**: Simplified Chinese, Traditional Chinese, and English(US)
+- **i18n**: Simplified Chinese, Traditional Chinese, and English (US/UK)
 
 ### Architecture Patterns
 - Single Activity architecture with Navigation Compose
@@ -306,18 +307,22 @@ Records every habit completion with timestamp.
 - **No hardcoded strings**: All user-visible strings must be stored in `strings.xml` resource files
 - **String resource location**:
   - Default (Chinese): `res/values/strings.xml`
-  - English: `res/values-en-rUS/strings.xml`
+  - English (US): `res/values-en-rUS/strings.xml`
+  - English (UK): `res/values-en-rGB/strings.xml`
 - **Usage in Compose**: Use `stringResource(R.string.resource_name)` to retrieve localized strings
 - **Naming convention**: Use snake_case for string resource names (e.g., `habit_creation_title`)
 - **Supported languages**:
   - Chinese (Simplified) - Default
   - Chinese (Traditional, Hong Kong) - `res/values-zh-rHK/`
   - Chinese (Traditional, Taiwan) - `res/values-zh-rTW/`
-  - English (US)
+  - English (US) - `res/values-en-rUS/`
+  - English (UK) - `res/values-en-rGB/`
 - **Auto-mirrored icons**: Icons with directional meaning (e.g., arrows, back/forward) should use `autoMirrored="true"` in drawable resources for RTL support
 - **Agent requirement**: When adding new UI text, always:
-  1. Add string resources to `values/strings.xml` and all locale-specific `strings.xml` files (`values-en-rUS/strings.xml`, `values-zh-rHK/strings.xml`, `values-zh-rTW/strings.xml`)
+  1. Add string resources to `values/strings.xml` and all locale-specific `strings.xml` files (`values-en-rUS/strings.xml`, `values-en-rGB/strings.xml`, `values-zh-rHK/strings.xml`, `values-zh-rTW/strings.xml`)
   2. Reference via `R.string.*` in code, never inline string literals
+- **IMPORTANT — localeFilters**: `app/build.gradle.kts` limits packaged locales via `androidResources { localeFilters += listOf(...) }`. When adding a new locale, you MUST also add it to `localeFilters`, otherwise its resources are stripped from the APK at link time (merged res contains it, but `aapt2 dump resources` shows no entry) and the device silently falls back to another locale. Debugging symptom: adding `values-en-rGB/` alone did nothing on an en-GB device because `en-rGB` was missing from `localeFilters`.
+- **Locale resolution**: Runtime locale resolution follows the packaged resource configs, NOT `Locale.getDefault()`. Use `LocalConfiguration.current.locales[0]` for date/time formatters so they match the app's actual resource language (see `RecordsScreen.kt`).
 
 ## Current Status
 
@@ -339,7 +344,7 @@ The project is in **early development stage** (v0.5.19-alpha):
 - ✅ Device corner radius support (Android 12+)
 - ✅ Predictive back gesture support
 - ✅ Split-screen support
-- ✅ Localization (Simplified Chinese, Traditional Chinese, English) with values-zh-rCN, values-zh-rHK, values-zh-rTW, values-en-rUS, values-night
+- ✅ Localization (Simplified Chinese, Traditional Chinese, English US/UK) with values-zh-rCN, values-zh-rHK, values-zh-rTW, values-en-rUS, values-en-rGB, values-night
 - ✅ Room database integration (v2.8.4, v3 schema)
 - ✅ Habit entity with UUID primary key
 - ✅ HabitDao with CRUD operations and Flow support
