@@ -184,3 +184,31 @@ internal fun SettingsListSurface(
         }
     }
 }
+
+/**
+ * A non-clickable segmented surface used to place arbitrary content (e.g. a slider)
+ * into a [SettingsSegmentedGroup] with the same background / corner treatment as
+ * [SettingsListSurface], but without ripple, press animation, or click handling.
+ */
+@Composable
+internal fun SettingsSegmentedBox(
+    index: Int,
+    count: Int,
+    modifier: Modifier = Modifier,
+    content: @Composable () -> Unit
+) {
+    val topStart = if (index == 0) LargeCorner else SmallCorner
+    val topEnd = if (index == 0) LargeCorner else SmallCorner
+    val bottomStart = if (index == count - 1) LargeCorner else SmallCorner
+    val bottomEnd = if (index == count - 1) LargeCorner else SmallCorner
+    val shape = RoundedCornerShape(topStart, topEnd, bottomEnd, bottomStart)
+
+    Box(
+        modifier = modifier
+            .fillMaxWidth()
+            .clip(shape)
+            .background(MaterialTheme.colorScheme.surfaceContainer)
+    ) {
+        content()
+    }
+}

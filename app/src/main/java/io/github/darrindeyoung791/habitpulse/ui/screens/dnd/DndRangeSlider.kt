@@ -73,8 +73,8 @@ fun DndRangeSlider(
         RangeSlider(
             value = curStart..curEnd,
             onValueChange = { range ->
-                curStart = range.start
-                curEnd = range.endInclusive
+                curStart = snapToStep(range.start)
+                curEnd = snapToStep(range.endInclusive)
             },
             onValueChangeFinished = {
                 val snappedStart = snapToStep(curStart)

@@ -110,7 +110,7 @@ fun NewSettingsGeneralScreen(
         }
         Text(
             text = stringResource(id = R.string.settings_storage_notice),
-            style = MaterialTheme.typography.bodySmall,
+            style = MaterialTheme.typography.bodyMedium,
             color = MaterialTheme.colorScheme.onSurfaceVariant,
             modifier = Modifier.padding(start = 16.dp, end = 16.dp, top = 8.dp)
         )

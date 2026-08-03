@@ -6,7 +6,6 @@ import android.app.PendingIntent
 import android.content.Context
 import android.content.Intent
 import android.os.Build
-import android.provider.Settings
 import android.widget.Toast
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.expandVertically
@@ -17,10 +16,8 @@ import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
-import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.outlined.HelpOutline
 import androidx.compose.material.icons.automirrored.outlined.Send
@@ -36,7 +33,6 @@ import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.Text
-import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
@@ -49,12 +45,11 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import io.github.darrindeyoung791.habitpulse.R
-import io.github.darrindeyoung791.habitpulse.WebViewActivity
 import io.github.darrindeyoung791.habitpulse.data.preferences.UserPreferences
-import io.github.darrindeyoung791.habitpulse.navigation.RouteConfig
 import io.github.darrindeyoung791.habitpulse.receiver.ReminderReceiver
 import io.github.darrindeyoung791.habitpulse.service.ForegroundNotificationService
 import io.github.darrindeyoung791.habitpulse.ui.screens.dnd.DndRangeSlider
+import io.github.darrindeyoung791.habitpulse.ui.screens.settings.components.SettingsSegmentedBox
 import io.github.darrindeyoung791.habitpulse.ui.screens.settings.components.SettingsSegmentedGroup
 import io.github.darrindeyoung791.habitpulse.ui.screens.settings.components.SettingsSegmentedSwitch
 import io.github.darrindeyoung791.habitpulse.utils.NotificationHelper
@@ -85,6 +80,9 @@ fun NewSettingsReminderScreen(
     val isServiceRunning = isForegroundServiceRunning(context, ForegroundNotificationService::class.java)
     val hasNotificationPermission = NotificationHelper.hasNotificationPermission(context)
 
+    val showDndSlider = dndEnabled && reminderEnabled
+    val switchCount = if (showDndSlider) 3 else 2
+
     NewSettingsScaffold(
         title = stringResource(id = R.string.reminder_settings_title),
         onBack = onBack,
@@ -93,7 +91,7 @@ fun NewSettingsReminderScreen(
         SettingsSegmentedGroup {
             SettingsSegmentedSwitch(
                 index = 0,
-                count = 2,
+                count = switchCount,
                 headline = stringResource(id = R.string.settings_reminder),
                 supportingText = stringResource(id = R.string.settings_reminder_description),
                 leadingIcon = Icons.Outlined.Alarm,
@@ -112,7 +110,7 @@ fun NewSettingsReminderScreen(
             )
             SettingsSegmentedSwitch(
                 index = 1,
-                count = 2,
+                count = switchCount,
                 headline = stringResource(id = R.string.settings_reminder_dnd),
                 supportingText = stringResource(id = R.string.settings_reminder_dnd_description),
                 leadingIcon = Icons.Outlined.Bedtime,
@@ -122,22 +120,23 @@ fun NewSettingsReminderScreen(
                     scope.launch { userPreferences.setDndEnabled(isChecked) }
                 }
             )
-        }
-
-        AnimatedVisibility(
-            visible = dndEnabled && reminderEnabled,
-            enter = expandVertically(expandFrom = Alignment.Top),
-            exit = shrinkVertically(shrinkTowards = Alignment.Top)
-        ) {
-            DndRangeSlider(
-                startTime = dndStartTime,
-                endTime = dndEndTime,
-                onStartTimeChange = { time -> scope.launch { userPreferences.setDndStartTime(time) } },
-                onEndTimeChange = { time -> scope.launch { userPreferences.setDndEndTime(time) } },
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(horizontal = 16.dp)
-            )
+            AnimatedVisibility(
+                visible = showDndSlider,
+                enter = expandVertically(expandFrom = Alignment.Top),
+                exit = shrinkVertically(shrinkTowards = Alignment.Top)
+            ) {
+                SettingsSegmentedBox(index = 2, count = 3) {
+                    DndRangeSlider(
+                        startTime = dndStartTime,
+                        endTime = dndEndTime,
+                        onStartTimeChange = { time -> scope.launch { userPreferences.setDndStartTime(time) } },
+                        onEndTimeChange = { time -> scope.launch { userPreferences.setDndEndTime(time) } },
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(horizontal = 16.dp)
+                    )
+                }
+            }
         }
 
         if (reminderEnabled) {
@@ -269,25 +268,6 @@ fun NewSettingsReminderScreen(
                 Spacer(modifier = Modifier.width(8.dp))
                 Text(text = stringResource(id = R.string.reminder_settings_test_notification_delayed))
             }
-
-            LinkTextButton(
-                text = stringResource(id = R.string.reminder_settings_system_settings),
-                onClick = {
-                    val intent = Intent(Settings.ACTION_APP_NOTIFICATION_SETTINGS).apply {
-                        putExtra(Settings.EXTRA_APP_PACKAGE, context.packageName)
-                    }
-                    context.startActivity(intent)
-                }
-            )
-            LinkTextButton(
-                text = stringResource(id = R.string.reminder_settings_background_keepalive),
-                onClick = {
-                    val intent = Intent(context, WebViewActivity::class.java).apply {
-                        putExtra(WebViewActivity.EXTRA_INITIAL_URL, RouteConfig.REMINDER_HELP_URL)
-                    }
-                    context.startActivity(intent)
-                }
-            )
         }
     }
 }
@@ -332,18 +312,6 @@ private fun StatusRow(
             style = MaterialTheme.typography.bodyMedium,
             color = if (isPositive) MaterialTheme.colorScheme.primary else MaterialTheme.colorScheme.onSurface
         )
-    }
-}
-
-@Composable
-private fun LinkTextButton(text: String, onClick: () -> Unit) {
-    TextButton(
-        onClick = onClick,
-        modifier = Modifier.padding(horizontal = 16.dp),
-        shape = RoundedCornerShape(0.dp),
-        contentPadding = PaddingValues(0.dp)
-    ) {
-        Text(text = text, style = MaterialTheme.typography.bodyMedium)
     }
 }
 

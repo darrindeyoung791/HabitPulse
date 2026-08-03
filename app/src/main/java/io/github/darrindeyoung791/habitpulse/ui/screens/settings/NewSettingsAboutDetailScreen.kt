@@ -5,9 +5,7 @@ import android.content.Intent
 import android.net.Uri
 import android.provider.Settings
 import android.widget.Toast
-import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.outlined.Article
 import androidx.compose.material.icons.outlined.FavoriteBorder
@@ -16,7 +14,6 @@ import androidx.compose.material.icons.outlined.Person
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
-import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
@@ -37,6 +34,7 @@ import io.github.darrindeyoung791.habitpulse.navigation.RouteConfig
 import io.github.darrindeyoung791.habitpulse.ui.screens.settings.components.SettingsSegmentedGroup
 import io.github.darrindeyoung791.habitpulse.ui.screens.settings.components.SettingsSegmentedItem
 import io.github.darrindeyoung791.habitpulse.ui.screens.settings.components.SettingsSegmentedSwitch
+import io.github.darrindeyoung791.habitpulse.ui.screens.settings.components.SettingsTextLinkButton
 import io.github.darrindeyoung791.habitpulse.utils.AccessibilityUtils
 import kotlinx.coroutines.launch
 
@@ -175,7 +173,8 @@ fun NewSettingsAboutDetailScreen(
             )
         }
 
-        TextButton(
+        SettingsTextLinkButton(
+            text = stringResource(id = R.string.settings_app_info_button, appName),
             onClick = {
                 try {
                     val intent = Intent(Settings.ACTION_APPLICATION_DETAILS_SETTINGS)
@@ -185,26 +184,17 @@ fun NewSettingsAboutDetailScreen(
                     val intent = Intent(Settings.ACTION_MANAGE_APPLICATIONS_SETTINGS)
                     context.startActivity(intent)
                 }
-            },
-            shape = RoundedCornerShape(0.dp),
-            contentPadding = PaddingValues(0.dp),
-            modifier = Modifier.padding(horizontal = 16.dp, vertical = 4.dp)
-        ) {
-            Text(text = stringResource(id = R.string.settings_app_info_button, appName), style = MaterialTheme.typography.bodyMedium)
-        }
-        TextButton(
+            }
+        )
+        SettingsTextLinkButton(
+            text = stringResource(id = R.string.settings_github_button),
             onClick = {
                 val intent = Intent(context, WebViewActivity::class.java).apply {
                     putExtra(WebViewActivity.EXTRA_INITIAL_URL, RouteConfig.GITHUB_URL)
                 }
                 context.startActivity(intent)
-            },
-            shape = RoundedCornerShape(0.dp),
-            contentPadding = PaddingValues(0.dp),
-            modifier = Modifier.padding(horizontal = 16.dp, vertical = 4.dp)
-        ) {
-            Text(stringResource(id = R.string.settings_github_button), style = MaterialTheme.typography.bodyMedium)
-        }
+            }
+        )
     }
 }
 

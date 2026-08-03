@@ -5,13 +5,15 @@
 
 ## 概览
 
-列表项体系位于 `ui/screens/settings/components/` 包，由 4 个公共组件 + 2 个内部实现组成：
+列表项体系位于 `ui/screens/settings/components/` 包，由 5 个公共组件 + 3 个内部实现组成：
 
 | 组件 | 类型 | 用途 |
 |------|------|------|
 | `SettingsSegmentedItem` | 公共 | 导航 / 动作列表项（可选图标 + 文本 + 可选箭头） |
 | `SettingsSegmentedSwitch` | 公共 | 开关列表项（整行可切换） |
 | `SettingsSegmentedGroup` | 公共 | 竖直分组容器（内部自动加 4dp 间距） |
+| `SettingsTextLinkButton` | 公共 | 紧凑文本链接按钮（无 48dp 最小触控区，仅文本高度） |
+| `SettingsSegmentedBox` | internal | 非点击分段表面：圆角 / 底色，放置任意内容（如滑块） |
 | `SettingsListSurface` | internal | 共享行表面：圆角 / 底色 / 涟漪 / 点击 |
 | `SettingsIconChip` | internal | 前置图标圆角方块 chip |
 | `AccentPalette` / `rememberAccentTint` | internal | 图标 chip 固定低饱和强调色板 |
@@ -49,6 +51,11 @@
 | 行内垂直 padding | `12.dp` |
 | 行内元素间距 | `Row` 的 `spacedBy(16.dp)` |
 | 标题与副标题间距 | 文本列 `spacedBy(4.dp)` |
+
+- **组与组之间**在页面上用 `Spacer(modifier = Modifier.height(SettingsBetweenGroupGap))` 分隔，
+  使不同分组（如设置首页的「帮助与反馈」独立组）视觉上明显大于组内 4dp 间距。
+  参考实现：`NewSettingsHomeScreen.kt`（主组与帮助组之间）、`NewSettingsAIScreen.kt`
+  （流式输出组与记忆组之间，均为 `Spacer(16.dp)`）。
 
 ### 1.4 文本
 
@@ -160,6 +167,30 @@ Box(
 
 ---
 
+## 4.5 非点击分段表面（SettingsSegmentedBox）
+
+- 用途：把**非交互内容**（如免打扰时间滑块 `DndRangeSlider`）放进分段组，获得与列表项一致的
+  圆角 + `surfaceContainer` 底色，但不响应点击（无涟漪、无按下圆角动画）。
+- 使用：`SettingsSegmentedBox(index = 2, count = 3) { ... }`，`index` / `count` 与组内其他项
+  一起决定圆角；内部内容自带 padding（如滑块 `padding(horizontal = 16.dp)`）。
+- 参考实现：`NewSettingsReminderScreen.kt`（免打扰时段滑块作为组内第三项，`index=2, count=3`）。
+- 注意：当滑块随开关隐藏时，组内可见项数变化，`count` 需随之调整（滑块可见 = 3，隐藏 = 2）。
+
+## 4.6 紧凑文本链接按钮（SettingsTextLinkButton）
+
+- 用途：设置页内独立成行的文本按钮（如「去「设置」自定义通知…」「保持后台运行…」）。
+- 与默认 `TextButton` 的区别：通过 `CompositionLocalProvider(LocalMinimumInteractiveComponentSize provides 0.dp)`
+  移除 48dp 最小触控区，使堆叠的文本按钮仅占文本高度、间距更紧凑。
+- 样式：`shape = RectangleShape`，`contentPadding = PaddingValues(horizontal = 16.dp)`，
+  文本 `bodyMedium`。
+- 使用：传字符串用 `SettingsTextLinkButton(text = ..., onClick = ...)`；
+  传资源 id 用 `SettingsTextLinkButtonRes(textRes = ..., onClick = ...)`。
+- 参考实现：`NewSettingsNotificationsScreen.kt`（自定义通知 / 保持后台运行）、
+  `NewSettingsAboutDetailScreen.kt`（应用信息 / GitHub 链接）。
+- 注意：弹窗内的确认/取消按钮（`AlertDialog` 的 `TextButton`）**不**用此组件，保持系统默认触控区。
+
+---
+
 ## 5. 使用约定（开发指南）
 
 1. **同一控件在任意页面必须同一样式**：导航行用 `SettingsSegmentedItem`，开关行用
@@ -185,3 +216,5 @@ Box(
 - **开关按了没反应？** → 确认 `SettingsSegmentedSwitch` 的 `onCheckedChange` 传给行 `onClick`，
   且 `Switch` 的 `onCheckedChange = null`。
 - **两个页面的同一控件看起来不一样？** → 对照本规范核对：底色 / 圆角 / 字体 / 间距 / 图标 chip 尺寸。
+- **文本按钮之间间距太大？** → 用 `SettingsTextLinkButton`（已移除 48dp 最小触控区）；不要用裸 `TextButton` 堆叠。
+- **滑块想放进分段组却出现整行点击效果？** → 用 `SettingsSegmentedBox`（非点击表面），不要用 `SettingsSegmentedItem`。

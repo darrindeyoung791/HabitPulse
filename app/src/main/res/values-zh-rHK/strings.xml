@@ -271,7 +271,7 @@
     <string name="onboarding_privacy_placeholder">私隱政策即將推出</string>
 
     <!-- Notification Settings -->
-    <string name="settings_notifications">通知</string>
+    <string name="settings_notifications">通知提醒</string>
     <string name="settings_notifications_description">提醒、常駐通知與通知範本</string>
     <string name="settings_persistent_notification">保持後台運行</string>
     <string name="settings_persistent_notification_description">顯示持久通知，保持應用程式及時提醒</string>

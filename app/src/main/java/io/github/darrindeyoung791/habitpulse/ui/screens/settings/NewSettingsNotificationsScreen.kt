@@ -1,6 +1,8 @@
 package io.github.darrindeyoung791.habitpulse.ui.screens.settings
 
 import android.Manifest
+import android.content.Intent
+import android.provider.Settings
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
@@ -21,11 +23,14 @@ import androidx.compose.ui.res.stringResource
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import io.github.darrindeyoung791.habitpulse.HabitPulseApplication
 import io.github.darrindeyoung791.habitpulse.R
+import io.github.darrindeyoung791.habitpulse.WebViewActivity
 import io.github.darrindeyoung791.habitpulse.data.preferences.UserPreferences
+import io.github.darrindeyoung791.habitpulse.navigation.RouteConfig
 import io.github.darrindeyoung791.habitpulse.service.ForegroundNotificationService
 import io.github.darrindeyoung791.habitpulse.ui.screens.settings.components.SettingsSegmentedGroup
 import io.github.darrindeyoung791.habitpulse.ui.screens.settings.components.SettingsSegmentedItem
 import io.github.darrindeyoung791.habitpulse.ui.screens.settings.components.SettingsSegmentedSwitch
+import io.github.darrindeyoung791.habitpulse.ui.screens.settings.components.SettingsTextLinkButton
 import io.github.darrindeyoung791.habitpulse.utils.NotificationHelper
 import io.github.darrindeyoung791.habitpulse.utils.NotificationPermissionHelper
 import kotlinx.coroutines.launch
@@ -140,5 +145,24 @@ fun NewSettingsNotificationsScreen(
                 onClick = onNavigateTemplate
             )
         }
+
+        SettingsTextLinkButton(
+            text = stringResource(id = R.string.reminder_settings_system_settings),
+            onClick = {
+                val intent = Intent(Settings.ACTION_APP_NOTIFICATION_SETTINGS).apply {
+                    putExtra(Settings.EXTRA_APP_PACKAGE, context.packageName)
+                }
+                context.startActivity(intent)
+            }
+        )
+        SettingsTextLinkButton(
+            text = stringResource(id = R.string.reminder_settings_background_keepalive),
+            onClick = {
+                val intent = Intent(context, WebViewActivity::class.java).apply {
+                    putExtra(WebViewActivity.EXTRA_INITIAL_URL, RouteConfig.REMINDER_HELP_URL)
+                }
+                context.startActivity(intent)
+            }
+        )
     }
 }
