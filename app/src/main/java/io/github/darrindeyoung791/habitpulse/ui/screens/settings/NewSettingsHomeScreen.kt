@@ -4,6 +4,7 @@ import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.outlined.HelpOutline
 import androidx.compose.material.icons.outlined.AutoAwesome
 import androidx.compose.material.icons.outlined.Info
+import androidx.compose.material.icons.outlined.Lan
 import androidx.compose.material.icons.outlined.Notifications
 import androidx.compose.material.icons.outlined.Settings
 import androidx.compose.material3.ExperimentalMaterial3Api
@@ -43,7 +44,7 @@ fun NewSettingsHomeScreen(
                 headline = stringResource(id = R.string.settings_category_lan),
                 enabled = false,
                 showArrow = false,
-                leadingIcon = Icons.Outlined.Settings,
+                leadingIcon = Icons.Outlined.Lan,
                 onClick = {}
             )
             SettingsSegmentedItem(

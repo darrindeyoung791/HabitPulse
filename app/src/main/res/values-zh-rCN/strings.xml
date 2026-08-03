@@ -257,6 +257,20 @@
     <string name="welcome_limited_mode">受限模式</string>
     <string name="welcome_limited_mode_info">你已选择受限模式，部分功能将不可用</string>
 
+    <!-- Onboarding Wizard -->
+    <string name="onboarding_step_notification_title">通知设置</string>
+    <string name="onboarding_step_notification_desc">配置通知和免打扰时段，让习惯提醒更智能</string>
+    <string name="onboarding_step_ai_desc">配置 AI 服务后，可以用 AI 智能创建习惯。你也可以稍后在设置中配置。</string>
+    <string name="onboarding_step_ai_hint">AI 设置可跳过，稍后在设置中配置</string>
+    <string name="onboarding_step_previous">上一步</string>
+    <string name="onboarding_step_next">下一步</string>
+    <string name="onboarding_step_skip">跳过</string>
+    <string name="onboarding_step_complete">完成</string>
+    <string name="onboarding_tos_link">使用条款</string>
+    <string name="onboarding_privacy_link">隐私政策</string>
+    <string name="onboarding_tos_placeholder">使用条款即将推出</string>
+    <string name="onboarding_privacy_placeholder">隐私政策即将推出</string>
+
     <!-- Notification Settings -->
     <string name="settings_notifications">通知</string>
     <string name="settings_notifications_description">提醒、常驻通知与通知模板</string>
@@ -294,6 +308,45 @@
     <string name="notification_channel_description">用于保持 %1$s 在后台运行的持久通知</string>
     <string name="notification_title">%1$s 正在运行</string>
     <string name="notification_content">保持习惯提醒和后台同步</string>
+
+    <!-- Reminder Notification Channel -->
+    <string name="reminder_channel_name">习惯提醒</string>
+    <string name="reminder_channel_description">用于每30分钟提醒即将开始的习惯</string>
+    <string name="reminder_notification_title">%d个习惯即将打卡</string>
+    <string name="reminder_notification_more">还有%d个…</string>
+    <string name="reminder_test_notification_title">测试提醒</string>
+    <string name="reminder_test_habit_a">测试习惯A</string>
+    <string name="reminder_test_habit_b">测试习惯B</string>
+
+    <!-- Reminder Settings -->
+    <string name="settings_reminder">习惯提醒</string>
+    <string name="settings_reminder_description">每30分钟提醒即将开始的习惯</string>
+    <string name="settings_reminder_dnd">免打扰时段</string>
+    <string name="settings_reminder_dnd_description">在设定的时段内不发送提醒通知</string>
+    <string name="settings_reminder_dnd_start">开始</string>
+    <string name="settings_reminder_dnd_end">结束</string>
+    <string name="settings_reminder_dnd_to">至</string>
+    <string name="settings_reminder_settings">提醒设置</string>
+    <string name="settings_reminder_settings_description">查看保活状态和发送测试通知</string>
+
+    <!-- Reminder Settings Screen -->
+    <string name="reminder_settings_title">提醒设置</string>
+    <string name="reminder_settings_keepalive_status">保活状态</string>
+    <string name="reminder_settings_next_alarm">下次提醒</string>
+    <string name="reminder_settings_notification_permission">通知权限</string>
+    <string name="reminder_settings_system_settings">去「设置」自定义通知…</string>
+    <string name="reminder_settings_background_keepalive">保持 HabitPulse 后台运行…</string>
+    <string name="reminder_settings_test_notification">发送测试通知</string>
+    <string name="reminder_settings_test_notification_sent">测试通知已发送</string>
+    <string name="reminder_settings_test_notification_scheduled">1 分钟后将发送测试通知</string>
+    <string name="reminder_settings_test_notification_delayed">一分钟后发送测试通知</string>
+    <string name="reminder_settings_reminder_disabled">提醒已关闭</string>
+    <string name="reminder_settings_service_running">运行中</string>
+    <string name="reminder_settings_service_stopped">未运行</string>
+    <string name="reminder_settings_today_count">今日已提醒</string>
+    <string name="reminder_settings_no_alarm_scheduled">未安排</string>
+    <string name="reminder_settings_permission_granted">已授权</string>
+    <string name="reminder_settings_permission_denied">未授权</string>
 
     <!-- Reward Bottom Sheet -->
     <string name="reward_title">这是你第 %1$d 次完成 %2$s</string>
@@ -344,12 +397,15 @@
     <string name="ai_settings_model">模型</string>
     <string name="ai_settings_model_label">选择模型</string>
     <string name="ai_settings_test_connection">测试连接</string>
+    <string name="ai_settings_test_connection_description">验证 API 端点、密钥与模型是否可用</string>
     <string name="ai_settings_connection_success">连接成功</string>
     <string name="ai_settings_connection_failed">连接失败</string>
     <string name="ai_settings_notice_title">配置说明</string>
     <string name="ai_settings_notice_content">本应用支持兼容 OpenAI 格式的 LLM API（如智谱 GLM、DeepSeek 等）。\n\nAPI 端点：请填写完整的 API 地址，以斜杠结尾。\nAPI 密钥：请从相应平台获取。\n模型名称：支持智谱 glm-4.7-flash（默认）、glm-4-flash、glm-4 等。</string>
     <string name="ai_settings_streaming">流式输出</string>
     <string name="ai_settings_streaming_description">实时显示 AI 思考过程和回答</string>
+    <string name="ai_settings_model_default_label">%1$s（默认）</string>
+    <string name="ai_settings_model_flagship_label">%1$s（最新旗舰）</string>
     <string name="clear">清除</string>
     <string name="show_password">显示密码</string>
     <string name="hide_password">隐藏密码</string>
@@ -442,6 +498,8 @@
     <string name="check_in_feedback_already_completed_message">今日已经打卡，不能重复打卡</string>
     <string name="check_in_feedback_too_early_title">时间未到</string>
     <string name="check_in_feedback_too_early_message">最早 %s 可打卡</string>
+    <string name="check_in_feedback_success_title">打卡成功</string>
+    <string name="check_in_feedback_success_message">继续保持！</string>
     <string name="check_in_feedback_dismiss">知道了</string>
     <string name="check_in_feedback_not_today_title">今日无需打卡</string>
     <string name="check_in_feedback_not_today_message">该习惯不在今日的排程中</string>
@@ -454,6 +512,7 @@
     <string name="today_section_soon">即将开始</string>
     <string name="today_section_later">稍后</string>
     <string name="today_section_allday">全天</string>
+    <string name="reminder_settings_dnd_same_time">免打扰的开始和结束时间不能相同</string>
 
     <!-- Notification Confirm Dialog -->
     <string name="notification_confirm_title">通知监督人</string>
@@ -479,8 +538,8 @@
     <!-- Default notification template (used when no custom template is saved) -->
     <string name="notification_default_template">已完成 {habit_name} 打卡（{checkin_time}），特此通知。</string>
 
-    <!-- Country code selector -->
-    <string name="country_code_label">区号</string>
+    <!-- Region code selector -->
+    <string name="region_code_label">区号</string>
     <string name="contacts_edit_button">编辑</string>
     <string name="contacts_edit_email_title">编辑邮箱</string>
     <string name="contacts_edit_phone_title">编辑电话</string>
@@ -491,49 +550,49 @@
     <string name="contacts_edit_email_invalid">邮箱格式无效</string>
     <string name="contacts_edit_phone_invalid">电话号码格式无效</string>
     <string name="create_habit_supervisor_phone_sms_cost_warning">短信提醒可能会产生费用</string>
-    <string name="country_code_selector">国家与地区电话区号</string>
+    <string name="region_code_selector">地区电话区号</string>
 
-    <!-- Country code names -->
-    <string name="country_cn">中国大陆</string>
-    <string name="country_us_ca">美国/加拿大</string>
-    <string name="country_uk">英国</string>
-    <string name="country_jp">日本</string>
-    <string name="country_kr">韩国</string>
-    <string name="country_au">澳大利亚</string>
-    <string name="country_hk">香港</string>
-    <string name="country_tw">台湾</string>
-    <string name="country_sg">新加坡</string>
-    <string name="country_de">德国</string>
-    <string name="country_fr">法国</string>
-    <string name="country_in">印度</string>
-    <string name="country_it">意大利</string>
-    <string name="country_br">巴西</string>
-    <string name="country_ru">俄罗斯</string>
-    <string name="country_es">西班牙</string>
-    <string name="country_nl">荷兰</string>
-    <string name="country_se">瑞典</string>
-    <string name="country_ch">瑞士</string>
-    <string name="country_no">挪威</string>
-    <string name="country_dk">丹麦</string>
-    <string name="country_fi">芬兰</string>
-    <string name="country_pl">波兰</string>
-    <string name="country_gr">希腊</string>
-    <string name="country_my">马来西亚</string>
-    <string name="country_ph">菲律宾</string>
-    <string name="country_id">印尼</string>
-    <string name="country_th">泰国</string>
-    <string name="country_vn">越南</string>
-    <string name="country_np">尼泊尔</string>
-    <string name="country_lk">斯里兰卡</string>
-    <string name="country_ae">阿联酋</string>
-    <string name="country_sa">沙特</string>
-    <string name="country_il">以色列</string>
-    <string name="country_za">南非</string>
-    <string name="country_eg">埃及</string>
-    <string name="country_ng">尼日利亚</string>
-    <string name="country_ar">阿根廷</string>
-    <string name="country_cl">智利</string>
-    <string name="country_co">哥伦比亚</string>
-    <string name="country_mx">墨西哥</string>
-    <string name="country_nz">新西兰</string>
+    <!-- Region code names -->
+    <string name="region_cn">中国大陆</string>
+    <string name="region_us_ca">美国/加拿大</string>
+    <string name="region_uk">英国</string>
+    <string name="region_jp">日本</string>
+    <string name="region_kr">韩国</string>
+    <string name="region_au">澳大利亚</string>
+    <string name="region_hk">香港</string>
+    <string name="region_tw">台湾</string>
+    <string name="region_sg">新加坡</string>
+    <string name="region_de">德国</string>
+    <string name="region_fr">法国</string>
+    <string name="region_in">印度</string>
+    <string name="region_it">意大利</string>
+    <string name="region_br">巴西</string>
+    <string name="region_ru">俄罗斯</string>
+    <string name="region_es">西班牙</string>
+    <string name="region_nl">荷兰</string>
+    <string name="region_se">瑞典</string>
+    <string name="region_ch">瑞士</string>
+    <string name="region_no">挪威</string>
+    <string name="region_dk">丹麦</string>
+    <string name="region_fi">芬兰</string>
+    <string name="region_pl">波兰</string>
+    <string name="region_gr">希腊</string>
+    <string name="region_my">马来西亚</string>
+    <string name="region_ph">菲律宾</string>
+    <string name="region_id">印尼</string>
+    <string name="region_th">泰国</string>
+    <string name="region_vn">越南</string>
+    <string name="region_np">尼泊尔</string>
+    <string name="region_lk">斯里兰卡</string>
+    <string name="region_ae">阿联酋</string>
+    <string name="region_sa">沙特</string>
+    <string name="region_il">以色列</string>
+    <string name="region_za">南非</string>
+    <string name="region_eg">埃及</string>
+    <string name="region_ng">尼日利亚</string>
+    <string name="region_ar">阿根廷</string>
+    <string name="region_cl">智利</string>
+    <string name="region_co">哥伦比亚</string>
+    <string name="region_mx">墨西哥</string>
+    <string name="region_nz">新西兰</string>
 </resources>

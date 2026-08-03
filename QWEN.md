@@ -44,8 +44,7 @@ HabitPulse/
 │   │   │   │   ├── MainActivity.kt              # Main entry point with NavHost
 │   │   │   │   ├── SettingsActivity.kt          # Settings screen (legacy)
 │   │   │   │   ├── NewSettingsActivity.kt       # New settings home (segmented list UI)
-│   │   │   │   ├── NewSettingsAIActivity.kt     # New settings: AI
-│   │   │   │   ├── NewSettingsAIProviderActivity.kt # New settings: AI provider config
+│   │   │   │   ├── NewSettingsAIActivity.kt     # New settings: AI (includes provider config)
 │   │   │   │   ├── NewSettingsNotificationsActivity.kt # New settings: notifications
 │   │   │   │   ├── NewSettingsReminderActivity.kt # New settings: reminders
 │   │   │   │   ├── NewSettingsTemplateActivity.kt # New settings: notification template
@@ -63,7 +62,7 @@ HabitPulse/
 │   │   │   │   │   ├── model/
 │   │   │   │   │   │   ├── Habit.kt             # Habit entity with Room annotations
 │   │   │   │   │   │   ├── HabitCompletion.kt   # Habit completion record entity
-│   │   │   │   │   │   ├── HabitStatus.kt       # Habit status enum + HabitWithStatus data class
+│   │   │   │   │   │   ├── HabitStatus.kt       # Habit status enum + HabitWithStatus
 │   │   │   │   │   │   ├── SlotCheckInEngine.kt # Pure slot check-in & status calculation logic
 │   │   │   │   │   │   └── CheckInResult.kt     # (defined in SlotCheckInEngine)
 │   │   │   │   │   ├── database/
@@ -96,8 +95,7 @@ HabitPulse/
 │   │   │   │   │   ├── screens/settings/
 │   │   │   │   │   │   ├── NewSettingsScaffold.kt       # Shared scaffold for new settings screens
 │   │   │   │   │   │   ├── NewSettingsHomeScreen.kt     # New settings home
-│   │   │   │   │   │   ├── NewSettingsAIScreen.kt       # AI settings
-│   │   │   │   │   │   ├── NewSettingsAIProviderScreen.kt # AI provider config
+│   │   │   │   │   │   ├── NewSettingsAIScreen.kt       # AI settings (includes provider config form)
 │   │   │   │   │   │   ├── NewSettingsNotificationsScreen.kt # Notifications
 │   │   │   │   │   │   ├── NewSettingsReminderScreen.kt # Reminders
 │   │   │   │   │   │   ├── NewSettingsTemplateScreen.kt # Notification template
@@ -136,7 +134,7 @@ HabitPulse/
 │   │   │   └── AndroidManifest.xml
 │   │   ├── test/
 │   │   │   └── java/io/github/darrindeyoung791/habitpulse/
-│   │   │       ├── ExampleUnitTest.kt              # Example test
+│   │   │       ├── ExampleUnitTest.kt
 │   │   │       └── data/model/
 │   │   │           ├── HabitTest.kt              # Habit JSON parsing helper tests
 │   │   │           ├── HabitCompletionTest.kt    # HabitCompletion unit tests
@@ -168,8 +166,7 @@ HabitPulse/
 | repeatDays | TEXT | Days to repeat (JSON format, e.g., [1,3,5]) |
 | reminderTimes | TEXT | Reminder times (JSON format, e.g., ["08:00","20:00"]) |
 | notes | TEXT | Habit notes |
-| supervisionMethod | TEXT | NONE, EMAIL, or SMS |
-| supervisorEmails | TEXT | Supervisor emails (JSON format) |
+| supervisorEmails | TEXT | Supervisor emails (JSON format); supports mixed email + phone per habit |
 | supervisorPhones | TEXT | Supervisor phones (JSON format) |
 | completedToday | INTEGER (BOOLEAN) | Today's completion status (0/1) |
 | completionCount | INTEGER | Total completion count |
@@ -324,7 +321,7 @@ Records every habit completion with timestamp.
 
 ## Current Status
 
-The project is in **early development stage** (v0.7.11-alpha):
+The project is in **early development stage** (v0.5.19-alpha):
 
 ### Completed
 - ✅ Project structure set up
@@ -392,17 +389,38 @@ The project is in **early development stage** (v0.7.11-alpha):
 - ✅ WebView in Settings - GitHub link opens in WebView instead of external browser
 - ✅ URL Variables - Domain allowlist uses RouteConfig variables for easy renaming
 - ✅ Predictive Back Gesture Fix - 修复返回手势与系统预测性返回动画冲突导致的杀后台问题
+- ✅ Check-in Status System (Phase 1-4) - Slot-based check-in with DAO v4 migration, status engine, `HabitWithStatus` data class, ViewModel flows, and UI integration:
+  - ✅ DB v4 migration (`slotTime`, `isLate` columns in habit_completions; `MIGRATION_3_4`)
+  - ✅ DAO methods: `getCompletionsByDate()`, `getCompletionByHabitIdDateAndSlot()`
+  - ✅ Repository: `performSlotCheckIn()`, `undoSlotCompletion()`, `getTodayCompletions()`
+  - ✅ `HabitStatus` enum + `HabitWithStatus` data class with `pendingCount` / `isCompletelyOverdue`
+  - ✅ Status engine: `calculateHabitStatus()` with ABOUT_TO_START / OVERDUE / COMPLETED_TODAY detection
+  - ✅ Count flows: `pendingTodayCount`, `aboutToStartCount`, `overdueCount`
+  - ✅ 60s day-change polling with ProcessLifecycleOwner
+  - ✅ Slot-based check-in: `findTargetSlot` (earliest incomplete), 1h window, overdue detection
+  - ✅ `CheckInResult` sealed class for feedback (Success/AlreadyCompleted/TooEarly)
+  - ✅ Undo: deletes most recent completion record
+  - ✅ RewardSheet gated to on-time full completion only
+  - ✅ HabitCard status badges (已完成/即将开始/逾期) with colored chips
+  - ✅ HabitCard progress display (x/y for multi-reminder habits)
+  - ✅ EntryZone dynamic cards (今日提醒/即将开始/逾期) with auto-hide on zero count
+- ✅ `filteredHabitsWithStatus` StateFlow for search with status data
+- ✅ TodayHabitsScreen migrated to `habitsWithStatusForDisplay`
 - ✅ **SlotCheckInEngine Extraction** - Pure business logic (`calculateHabitStatus`, `isApplicableToday`, `executeSlotCheckIn`, `CheckInResult`) extracted from HabitViewModel into testable standalone `SlotCheckInEngine` object in `data/model/`
+- ✅ **Mixed Contact Supervision** - Removed `SupervisionMethod` enum, DB v5 migration (DROP COLUMN), independent email/phone input sections in creation UI, unified contact aggregation
 - ✅ **Unit Test Setup** - 65 unit tests across 4 test classes:
   - `SlotCheckInEngineTest` (31 tests) - covers status calculation, slot check-in logic, applicable day detection, edge cases (empty slots, midnight, boundary conditions, old-style completions)
-  - `HabitTest` (17 tests) - covers JSON parsing helper methods, `copyWith*` methods, edge cases (all 7 days, duplicates, empty strings)
+  - `HabitTest` (21 tests) - covers JSON parsing helper methods, `copyWith*` methods, `hasSupervision`, edge cases (all 7 days, duplicates, empty strings)
   - `HabitStatusTest` (12 tests) - covers `pendingCount`, `isCompletelyOverdue`, negative pendingCount, old-style completion compatibility
   - `HabitCompletionTest` (5 tests) - covers `getTodayDate()`, `getFormattedDate()`, and default values
 - ✅ **New Settings Redesign** - Segmented list settings UI with grouped items, leading icon chips, switches, and per-screen scaffolds
 - ✅ **Debug Settings Page** - Hidden debug page reached by tapping the version item 5 times within 5 seconds on the new About screen; hosts developer tools (add sample habits), icon-less list items
+- ✅ **AI Config Provider Merge** - AI provider config form merged directly into the AI config page (second-level page); `NewSettingsAIProviderScreen.kt` / `NewSettingsAIProviderActivity.kt` deleted
+- ✅ **AI Config Page Layout** - Provider config form (endpoint/key/model/test connection), streaming output switch + memory entry grouped as segmented list items; notice shown as standalone text (same style as About screen), no horizontal divider
+- ✅ **Model Label Localization** - Preset model labels (`glm-4-flash-250414（默认）`, `glm-5.1（最新旗舰）`) resource-ized via `ai_settings_model_default_label` / `ai_settings_model_flagship_label` format strings in all 4 locale files
+- ✅ **Old Settings Interface Migration** - Entry points to legacy settings migrated to new settings: Home settings button → `NewSettingsActivity`, AI Create Habit settings button → `NewSettingsAIActivity` (both in `HabitPulseNavGraph.kt`)
 
 ### In Progress
-- 🔄 Count section (track unplanned events, such as game scores)
 - 🔄 Calendar section
 
 ### Planned
@@ -416,8 +434,8 @@ The project is in **early development stage** (v0.7.11-alpha):
 
 - **Namespace**: `io.github.darrindeyoung791.habitpulse`
 - **Application ID**: `io.github.darrindeyoung791.habitpulse`
-- **Version Code**: 144
-- **Version Name**: 0.7.11-alpha
+- **Version Code**: 161
+- **Version Name**: 0.8.13-alpha
 
 ## Screen Flow
 

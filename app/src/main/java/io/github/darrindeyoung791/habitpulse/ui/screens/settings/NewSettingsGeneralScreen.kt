@@ -63,6 +63,30 @@ fun NewSettingsGeneralScreen(
         onBack = onBack,
         onHelp = onOpenHelp
     ) {
+        SectionHeader(text = stringResource(id = R.string.settings_ui_display))
+        if (showForceTabletLandscapeSwitch) {
+            SettingsSegmentedGroup {
+                SettingsSegmentedSwitch(
+                    index = 0,
+                    count = 1,
+                    headline = stringResource(id = R.string.settings_force_tablet_landscape),
+                    supportingText = stringResource(id = R.string.settings_force_tablet_landscape_description),
+                    leadingIcon = Icons.Outlined.Tablet,
+                    checked = forceTabletLandscape,
+                    onCheckedChange = { isChecked ->
+                        if (isChecked) {
+                            pendingForceTabletLandscapeValue = true
+                            showForceTabletLandscapeDialog = true
+                        } else {
+                            scope.launch {
+                                userPreferences.setForceTabletLandscape(false)
+                            }
+                        }
+                    }
+                )
+            }
+        }
+
         SectionHeader(text = stringResource(id = R.string.settings_storage))
         SettingsSegmentedGroup {
             SettingsSegmentedItem(
@@ -90,30 +114,6 @@ fun NewSettingsGeneralScreen(
             color = MaterialTheme.colorScheme.onSurfaceVariant,
             modifier = Modifier.padding(start = 16.dp, end = 16.dp, top = 8.dp)
         )
-
-        SectionHeader(text = stringResource(id = R.string.settings_ui_display))
-        if (showForceTabletLandscapeSwitch) {
-            SettingsSegmentedGroup {
-                SettingsSegmentedSwitch(
-                    index = 0,
-                    count = 1,
-                    headline = stringResource(id = R.string.settings_force_tablet_landscape),
-                    supportingText = stringResource(id = R.string.settings_force_tablet_landscape_description),
-                    leadingIcon = Icons.Outlined.Tablet,
-                    checked = forceTabletLandscape,
-                    onCheckedChange = { isChecked ->
-                        if (isChecked) {
-                            pendingForceTabletLandscapeValue = true
-                            showForceTabletLandscapeDialog = true
-                        } else {
-                            scope.launch {
-                                userPreferences.setForceTabletLandscape(false)
-                            }
-                        }
-                    }
-                )
-            }
-        }
     }
 
     if (showClearCacheDialog) {

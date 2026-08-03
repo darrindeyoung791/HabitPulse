@@ -4,11 +4,13 @@ import android.content.ActivityNotFoundException
 import android.content.Intent
 import android.net.Uri
 import android.provider.Settings
+import android.widget.Toast
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.outlined.Article
+import androidx.compose.material.icons.outlined.FavoriteBorder
 import androidx.compose.material.icons.outlined.Info
 import androidx.compose.material.icons.outlined.Person
 import androidx.compose.material3.ExperimentalMaterial3Api
@@ -16,20 +18,27 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import io.github.darrindeyoung791.habitpulse.OpenSourceLicensesActivity
 import io.github.darrindeyoung791.habitpulse.R
 import io.github.darrindeyoung791.habitpulse.WebViewActivity
+import io.github.darrindeyoung791.habitpulse.data.preferences.UserPreferences
 import io.github.darrindeyoung791.habitpulse.navigation.RouteConfig
 import io.github.darrindeyoung791.habitpulse.ui.screens.settings.components.SettingsSegmentedGroup
 import io.github.darrindeyoung791.habitpulse.ui.screens.settings.components.SettingsSegmentedItem
+import io.github.darrindeyoung791.habitpulse.ui.screens.settings.components.SettingsSegmentedSwitch
+import io.github.darrindeyoung791.habitpulse.utils.AccessibilityUtils
+import kotlinx.coroutines.launch
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -59,6 +68,20 @@ fun NewSettingsAboutDetailScreen(
     }
 
     val appName = stringResource(id = R.string.app_name)
+
+    val scope = rememberCoroutineScope()
+    val userPreferences = remember { UserPreferences.getInstance(context) }
+
+    val showSplashAd by userPreferences.showSplashAdFlow.collectAsStateWithLifecycle(initialValue = false)
+
+    var isTalkBackEnabled by remember { mutableStateOf(AccessibilityUtils.isTalkBackEnabled(context)) }
+
+    LaunchedEffect(Unit) {
+        while (true) {
+            kotlinx.coroutines.delay(1000)
+            isTalkBackEnabled = AccessibilityUtils.isTalkBackEnabled(context)
+        }
+    }
 
     NewSettingsScaffold(
         title = stringResource(id = R.string.settings_about),
@@ -120,6 +143,38 @@ fun NewSettingsAboutDetailScreen(
             )
         }
 
+        SectionHeader(text = stringResource(id = R.string.settings_support_habitpulse, appName))
+        SettingsSegmentedGroup {
+            SettingsSegmentedSwitch(
+                index = 0,
+                count = 1,
+                headline = stringResource(id = R.string.settings_support_habitpulse_switch),
+                supportingText = stringResource(
+                    id = if (isTalkBackEnabled) {
+                        R.string.settings_support_habitpulse_switch_description_talkback
+                    } else {
+                        R.string.settings_support_habitpulse_switch_description
+                    }
+                ),
+                leadingIcon = Icons.Outlined.FavoriteBorder,
+                checked = showSplashAd && !isTalkBackEnabled,
+                enabled = !isTalkBackEnabled,
+                onCheckedChange = { isChecked ->
+                    if (isChecked && isTalkBackEnabled) {
+                        Toast.makeText(
+                            context,
+                            context.getString(R.string.accessibility_talkback_splash_ad_disabled),
+                            Toast.LENGTH_SHORT
+                        ).show()
+                    } else {
+                        scope.launch {
+                            userPreferences.setShowSplashAd(isChecked)
+                        }
+                    }
+                }
+            )
+        }
+
         TextButton(
             onClick = {
                 try {
@@ -151,4 +206,14 @@ fun NewSettingsAboutDetailScreen(
             Text(stringResource(id = R.string.settings_github_button), style = MaterialTheme.typography.bodyMedium)
         }
     }
+}
+
+@Composable
+private fun SectionHeader(text: String) {
+    Text(
+        text = text,
+        style = MaterialTheme.typography.labelMedium,
+        color = MaterialTheme.colorScheme.primary,
+        modifier = Modifier.padding(start = 16.dp, end = 16.dp, top = 24.dp, bottom = 8.dp)
+    )
 }

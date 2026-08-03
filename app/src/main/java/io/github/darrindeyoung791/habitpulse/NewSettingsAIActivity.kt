@@ -35,9 +35,6 @@ private fun NewSettingsAIContent() {
 
     NewSettingsAIScreen(
         onBack = { (context as? android.app.Activity)?.finish() },
-        onOpenHelp = onHelp,
-        onNavigateProvider = {
-            context.startActivity(Intent(context, NewSettingsAIProviderActivity::class.java))
-        }
+        onOpenHelp = onHelp
     )
 }

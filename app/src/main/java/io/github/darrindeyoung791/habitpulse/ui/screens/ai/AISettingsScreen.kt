@@ -66,12 +66,15 @@ fun AISettingsScreen(
 
     val listState = rememberLazyListState()
 
+    val defaultModelLabel = stringResource(id = R.string.ai_settings_model_default_label, "glm-4-flash-250414")
+    val flagshipModelLabel = stringResource(id = R.string.ai_settings_model_flagship_label, "glm-5.1")
+
     val presetModels = listOf(
-        "glm-4-flash-250414" to "glm-4-flash-250414 (默认)",
+        "glm-4-flash-250414" to defaultModelLabel,
         "glm-4.7-flash" to "glm-4.7-flash",
         "glm-4-flash" to "glm-4-flash",
         "glm-3-flash" to "glm-3-flash",
-        "glm-5.1" to "glm-5.1 (最新旗舰)"
+        "glm-5.1" to flagshipModelLabel
     )
 
     var modelDropdownExpanded by remember { mutableStateOf(false) }

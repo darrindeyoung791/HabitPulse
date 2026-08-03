@@ -44,8 +44,7 @@ HabitPulse/
 │   │   │   │   ├── MainActivity.kt              # Main entry point with NavHost
 │   │   │   │   ├── SettingsActivity.kt          # Settings screen (legacy)
 │   │   │   │   ├── NewSettingsActivity.kt       # New settings home (segmented list UI)
-│   │   │   │   ├── NewSettingsAIActivity.kt     # New settings: AI
-│   │   │   │   ├── NewSettingsAIProviderActivity.kt # New settings: AI provider config
+│   │   │   │   ├── NewSettingsAIActivity.kt     # New settings: AI (includes provider config)
 │   │   │   │   ├── NewSettingsNotificationsActivity.kt # New settings: notifications
 │   │   │   │   ├── NewSettingsReminderActivity.kt # New settings: reminders
 │   │   │   │   ├── NewSettingsTemplateActivity.kt # New settings: notification template
@@ -96,8 +95,7 @@ HabitPulse/
 │   │   │   │   │   ├── screens/settings/
 │   │   │   │   │   │   ├── NewSettingsScaffold.kt       # Shared scaffold for new settings screens
 │   │   │   │   │   │   ├── NewSettingsHomeScreen.kt     # New settings home
-│   │   │   │   │   │   ├── NewSettingsAIScreen.kt       # AI settings
-│   │   │   │   │   │   ├── NewSettingsAIProviderScreen.kt # AI provider config
+│   │   │   │   │   │   ├── NewSettingsAIScreen.kt       # AI settings (includes provider config form)
 │   │   │   │   │   │   ├── NewSettingsNotificationsScreen.kt # Notifications
 │   │   │   │   │   │   ├── NewSettingsReminderScreen.kt # Reminders
 │   │   │   │   │   │   ├── NewSettingsTemplateScreen.kt # Notification template
@@ -417,6 +415,10 @@ The project is in **early development stage** (v0.5.19-alpha):
   - `HabitCompletionTest` (5 tests) - covers `getTodayDate()`, `getFormattedDate()`, and default values
 - ✅ **New Settings Redesign** - Segmented list settings UI with grouped items, leading icon chips, switches, and per-screen scaffolds
 - ✅ **Debug Settings Page** - Hidden debug page reached by tapping the version item 5 times within 5 seconds on the new About screen; hosts developer tools (add sample habits), icon-less list items
+- ✅ **AI Config Provider Merge** - AI provider config form merged directly into the AI config page (second-level page); `NewSettingsAIProviderScreen.kt` / `NewSettingsAIProviderActivity.kt` deleted
+- ✅ **AI Config Page Layout** - Provider config form (endpoint/key/model/test connection), streaming output switch + memory entry grouped as segmented list items; notice shown as standalone text (same style as About screen), no horizontal divider
+- ✅ **Model Label Localization** - Preset model labels (`glm-4-flash-250414（默认）`, `glm-5.1（最新旗舰）`) resource-ized via `ai_settings_model_default_label` / `ai_settings_model_flagship_label` format strings in all 4 locale files
+- ✅ **Old Settings Interface Migration** - Entry points to legacy settings migrated to new settings: Home settings button → `NewSettingsActivity`, AI Create Habit settings button → `NewSettingsAIActivity` (both in `HabitPulseNavGraph.kt`)
 
 ### In Progress
 - 🔄 Calendar section

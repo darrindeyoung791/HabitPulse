@@ -1,5 +1,6 @@
 package io.github.darrindeyoung791.habitpulse.ui.screens.settings
 
+import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.ColumnScope
 import androidx.compose.foundation.layout.PaddingValues
@@ -18,10 +19,12 @@ import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import io.github.darrindeyoung791.habitpulse.R
+import io.github.darrindeyoung791.habitpulse.ui.screens.settings.components.ScrollEdgeFadeOverlay
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -63,14 +66,25 @@ fun NewSettingsScaffold(
             )
         }
     ) { innerPadding ->
-        Column(
+        val scrollState = rememberScrollState()
+        Box(
             modifier = Modifier
                 .fillMaxSize()
                 .padding(innerPadding)
-                .verticalScroll(rememberScrollState())
-                .padding(contentPadding)
         ) {
-            content()
+            Column(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .verticalScroll(scrollState)
+                    .padding(contentPadding)
+            ) {
+                content()
+            }
+
+            ScrollEdgeFadeOverlay(
+                scrollState = scrollState,
+                modifier = Modifier.matchParentSize()
+            )
         }
     }
 }
