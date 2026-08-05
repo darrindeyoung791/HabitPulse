@@ -161,6 +161,17 @@
     <string name="settings_debug_reminder_title">提醒调试</string>
     <string name="settings_debug_add_sample_habits">添加示例习惯</string>
     <string name="settings_debug_add_sample_habits_description">添加一批示例习惯与完成记录，便于测试界面与功能</string>
+    <string name="settings_debug_vibration">震动调试</string>
+    <string name="settings_debug_vibration_description">调整按压震动时长与强度</string>
+    <string name="settings_debug_vibration_title">震动调试</string>
+    <string name="settings_debug_vibration_duration_group">时长</string>
+    <string name="settings_debug_vibration_duration">震动时长</string>
+    <string name="settings_debug_vibration_amplitude_group">强度</string>
+    <string name="settings_debug_vibration_amplitude">震动强度</string>
+    <string name="settings_debug_vibration_test">测试震动</string>
+    <string name="settings_debug_vibration_reset">恢复默认</string>
+    <string name="settings_debug_vibration_notice_title">强度说明</string>
+    <string name="settings_debug_vibration_notice_content">强度为 1-255，仅当设备硬件支持幅度控制（线性马达）时生效；不支持的设备会使用系统默认强度，滑块调节可能无效。与时长无关，可独立调节。</string>
 
     <!-- Accessibility -->
     <string name="accessibility_talkback_splash_ad_disabled">为了不影响视力障碍用户，开屏广告功能无法开启</string>
@@ -433,6 +444,7 @@
     <string name="ai_config_empty">暂无 AI 配置，请点击下方「添加 AI 配置」创建。</string>
     <string name="ai_config_migrated_name">默认配置</string>
     <string name="ai_settings_save">保存</string>
+    <string name="settings_unsaved_changes">有未保存的更改</string>
     <string name="ai_settings_thinking">深度思考</string>
     <string name="ai_settings_thinking_description">让模型先进行深度推理再给出回答（部分模型支持）</string>
     <string name="clear">清除</string>

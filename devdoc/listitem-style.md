@@ -238,10 +238,12 @@ Box(
 
 | 项 | 值 | 说明 |
 |----|-----|------|
-| 单次时长 | `PressVibrationDurationMs = 25ms` | 主页打卡按钮（50ms）的一半，模拟卡片按压触感 |
+| 单次时长 | `PressVibrationDurationMs = 25ms`（默认） | 主页打卡按钮（50ms）的一半，模拟卡片按压触感 |
+| 单次强度 | `PressVibrationDefaultAmplitude = 128`（默认，1-255） | 仅设备硬件支持幅度控制（`hasAmplitudeControl()`）时生效 |
 | 触发时机 | **按下** + **松手**各一次 | 按下瞬间立即震，松手瞬间立即震，松手不再等待动画 |
 | 门控 | 「通用 → 关闭应用内全部震动」 | `HAPTIC_FEEDBACK_ENABLED`（默认 true = 震动），开关默认关闭 |
 | 禁用项 | 全程静默 | 按下时 `enabled = false` 则不武装、不震动 |
+| 用户可调 | 调试 → 震动调试子页面 | 时长 5-200ms 与强度 1-255 滑块，含测试按钮与恢复默认，存储于 DataStore（`PRESS_VIBRATION_DURATION_MS` / `PRESS_VIBRATION_AMPLITUDE`） |
 
 ### 7.2 核心实现（`ui/utils/PressVibrationFeedback.kt`）
 
@@ -253,8 +255,11 @@ fun PressVibrationFeedback(
 ) {
     val context = LocalContext.current
     val hapticsEnabled = rememberHapticsEnabled()
+    val (durationMs, amplitude) = rememberPressVibrationParams()   // 读取用户配置
     val currentEnabled by rememberUpdatedState(enabled)
     val currentHaptics by rememberUpdatedState(hapticsEnabled)
+    val currentDuration by rememberUpdatedState(durationMs)
+    val currentAmplitude by rememberUpdatedState(amplitude)
 
     LaunchedEffect(interactionSource, context) {
         var armed = false
@@ -262,10 +267,10 @@ fun PressVibrationFeedback(
             when (interaction) {
                 is PressInteraction.Press -> {
                     armed = currentEnabled && currentHaptics   // 按下瞬间快照
-                    if (armed) vibrateShort(context)
+                    if (armed) vibrateShort(context, currentDuration, currentAmplitude)
                 }
                 is PressInteraction.Release -> {
-                    if (armed) vibrateShort(context)           // 松手仍按按下时的状态震
+                    if (armed) vibrateShort(context, currentDuration, currentAmplitude)
                     armed = false
                 }
                 is PressInteraction.Cancel -> armed = false
@@ -280,6 +285,9 @@ fun PressVibrationFeedback(
 
 - `rememberHapticsEnabled()`：`@Composable`，读取 `UserPreferences.hapticsEnabledFlow`（默认 true）。
 - `vibrateShort(context)`：非 Composable 的 25ms 一次性震动，供手动触发场景（打卡按钮、滑动条）复用。
+  签名 `vibrateShort(context, durationMs = PressVibrationDurationMs, amplitude = PressVibrationDefaultAmplitude)`；
+  强度仅当 `vibrator.hasAmplitudeControl()` 为 true 时生效，否则回退 `VibrationEffect.DEFAULT_AMPLITUDE`。
+- `rememberPressVibrationParams()`：`@Composable`，返回 `Pair<Long, Int>`（时长/强度），读取用户调试页配置。
 
 ### 7.3 接入位置
 
@@ -289,7 +297,7 @@ fun PressVibrationFeedback(
 | 文本链接按钮（`SettingsTextLinkButton`） | 本地 `remember { MutableInteractionSource() }` 传入 `TextButton` 并附加 |
 | 返回 / 帮助按钮（`NewSettingsScaffold`） | 各 `IconButton` 本地 interactionSource 并附加 |
 | 主页打卡按钮（`HabitScreen.CheckInButton`） | 保留原有 50ms 震动，但用 `rememberHapticsEnabled()` 门控（保证「全部震动」开关生效） |
-| 免打扰步进滑动条（`DndRangeSlider`） | 不走交互源；在 `onValueChange` 中 snapped 值变化时 `vibrateShort`（点击轨道 / 拖动跨步 → 震动，同一步内拖动不震） |
+| 免打扰步进滑动条（`DndRangeSlider`） | 不走交互源；在 `onValueChange` 中 snapped 值变化时 `vibrateShort`（点击轨道 / 拖动跨步 → 震动，同一步内拖动不震），时长/强度同样读取用户配置 |
 
 其余界面（首页卡片、记录页等）按钮**日后接入**，一律复用 `PressVibrationFeedback` / `rememberHapticsEnabled`，
 不要在各自页面自行调 `vibrator`。

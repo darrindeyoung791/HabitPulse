@@ -153,6 +153,17 @@
     <string name="settings_debug_reminder_title">Reminder Debug</string>
     <string name="settings_debug_add_sample_habits">Add sample habits</string>
     <string name="settings_debug_add_sample_habits_description">Add a batch of sample habits and completion records for testing the UI and features</string>
+    <string name="settings_debug_vibration">Vibration Debug</string>
+    <string name="settings_debug_vibration_description">Adjust press vibration duration and intensity</string>
+    <string name="settings_debug_vibration_title">Vibration Debug</string>
+    <string name="settings_debug_vibration_duration_group">Duration</string>
+    <string name="settings_debug_vibration_duration">Vibration duration</string>
+    <string name="settings_debug_vibration_amplitude_group">Intensity</string>
+    <string name="settings_debug_vibration_amplitude">Vibration intensity</string>
+    <string name="settings_debug_vibration_test">Test vibration</string>
+    <string name="settings_debug_vibration_reset">Reset to default</string>
+    <string name="settings_debug_vibration_notice_title">Intensity note</string>
+    <string name="settings_debug_vibration_notice_content">Intensity ranges 1-255 and only takes effect when the device hardware supports amplitude control (linear motor). Unsupported devices use the system default intensity and the slider may have no effect. Intensity is independent of duration and can be adjusted separately.</string>
 
     <!-- Accessibility -->
     <string name="accessibility_talkback_splash_ad_disabled">To avoid affecting users with visual impairments, the splash ad feature cannot be enabled</string>
@@ -425,6 +436,7 @@
     <string name="ai_config_empty">No AI configs yet. Tap \"Add AI config\" below to create one.</string>
     <string name="ai_config_migrated_name">Default config</string>
     <string name="ai_settings_save">Save</string>
+    <string name="settings_unsaved_changes">You have unsaved changes</string>
     <string name="ai_settings_thinking">Deep thinking</string>
     <string name="ai_settings_thinking_description">Let the model reason deeply before answering (supported by some models)</string>
     <string name="clear">Clear</string>

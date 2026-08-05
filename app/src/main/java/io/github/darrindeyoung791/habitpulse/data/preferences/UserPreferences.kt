@@ -6,6 +6,7 @@ import androidx.datastore.core.DataStore
 import androidx.datastore.preferences.core.Preferences
 import androidx.datastore.preferences.core.booleanPreferencesKey
 import androidx.datastore.preferences.core.edit
+import androidx.datastore.preferences.core.intPreferencesKey
 import androidx.datastore.preferences.core.longPreferencesKey
 import androidx.datastore.preferences.core.stringPreferencesKey
 import androidx.datastore.preferences.preferencesDataStore
@@ -114,6 +115,16 @@ object PreferencesKeys {
      * 通知监督人内容模板
      */
     val NOTIFICATION_TEMPLATE = stringPreferencesKey("notification_template")
+
+    /**
+     * 按压震动时长（毫秒），默认 25
+     */
+    val PRESS_VIBRATION_DURATION_MS = longPreferencesKey("press_vibration_duration_ms")
+
+    /**
+     * 按压震动强度（1-255），默认 128
+     */
+    val PRESS_VIBRATION_AMPLITUDE = intPreferencesKey("press_vibration_amplitude")
 }
 
 /**
@@ -532,6 +543,50 @@ class UserPreferences(private val context: Context) {
     suspend fun resetNotificationTemplate() {
         context.dataStore.edit { preferences ->
             preferences.remove(PreferencesKeys.NOTIFICATION_TEMPLATE)
+        }
+    }
+
+    /**
+     * 按压震动时长的 Flow
+     * 默认值为 25（毫秒）
+     */
+    val pressVibrationDurationMsFlow: Flow<Long> = context.dataStore.data.map { preferences ->
+        preferences[PreferencesKeys.PRESS_VIBRATION_DURATION_MS] ?: 25L
+    }
+
+    /**
+     * 设置按压震动时长
+     */
+    suspend fun setPressVibrationDurationMs(ms: Long) {
+        context.dataStore.edit { preferences ->
+            preferences[PreferencesKeys.PRESS_VIBRATION_DURATION_MS] = ms
+        }
+    }
+
+    /**
+     * 按压震动强度的 Flow
+     * 默认值为 128（中等，范围内 1-255）
+     */
+    val pressVibrationAmplitudeFlow: Flow<Int> = context.dataStore.data.map { preferences ->
+        preferences[PreferencesKeys.PRESS_VIBRATION_AMPLITUDE] ?: 128
+    }
+
+    /**
+     * 设置按压震动强度
+     */
+    suspend fun setPressVibrationAmplitude(amplitude: Int) {
+        context.dataStore.edit { preferences ->
+            preferences[PreferencesKeys.PRESS_VIBRATION_AMPLITUDE] = amplitude
+        }
+    }
+
+    /**
+     * 重置按压震动参数为默认值（清除存储）
+     */
+    suspend fun resetPressVibration() {
+        context.dataStore.edit { preferences ->
+            preferences.remove(PreferencesKeys.PRESS_VIBRATION_DURATION_MS)
+            preferences.remove(PreferencesKeys.PRESS_VIBRATION_AMPLITUDE)
         }
     }
 }

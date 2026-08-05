@@ -1,6 +1,8 @@
 package io.github.darrindeyoung791.habitpulse.ui.screens.settings
 
-import androidx.compose.foundation.layout.PaddingValues
+import android.widget.Toast
+import androidx.activity.compose.BackHandler
+import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -20,13 +22,13 @@ import androidx.compose.material.icons.outlined.Delete
 import androidx.compose.material.icons.outlined.Psychology
 import androidx.compose.material.icons.outlined.Subject
 import androidx.compose.material3.AlertDialog
-import androidx.compose.material3.Button
 import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.DropdownMenuItem
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.ExposedDropdownMenuBox
 import androidx.compose.material3.ExposedDropdownMenuDefaults
+import androidx.compose.material3.ExtendedFloatingActionButton
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
 import androidx.compose.material3.MaterialTheme
@@ -56,6 +58,7 @@ import io.github.darrindeyoung791.habitpulse.ui.screens.settings.components.Sett
 import io.github.darrindeyoung791.habitpulse.ui.screens.settings.components.SettingsSegmentedGroup
 import io.github.darrindeyoung791.habitpulse.ui.screens.settings.components.SettingsSegmentedItem
 import io.github.darrindeyoung791.habitpulse.ui.screens.settings.components.SettingsSegmentedSwitch
+import io.github.darrindeyoung791.habitpulse.ui.utils.PressVibrationFeedback
 import kotlinx.coroutines.launch
 import java.util.UUID
 
@@ -105,13 +108,89 @@ fun NewSettingsAIEditScreen(
     val canSave = nameInput.isNotBlank() && endpointInput.isNotBlank() &&
         apiKeyInput.isNotBlank() && modelInput.isNotBlank()
 
+    val hasUnsavedChanges =
+        nameInput != (editingConfig?.name.orEmpty()) ||
+            endpointInput != (editingConfig?.apiEndpoint.orEmpty()) ||
+            apiKeyInput != (editingConfig?.apiKey.orEmpty()) ||
+            modelInput != (editingConfig?.modelName.orEmpty()) ||
+            streamingEnabled != (editingConfig?.streamingEnabled ?: true) ||
+            thinkingEnabled != (editingConfig?.thinkingEnabled ?: false)
+
+    val handleBack: () -> Unit = {
+        if (hasUnsavedChanges) {
+            Toast.makeText(
+                context,
+                context.getString(R.string.settings_unsaved_changes),
+                Toast.LENGTH_SHORT
+            ).show()
+        }
+        onBack()
+    }
+    BackHandler { handleBack() }
+
     NewSettingsScaffold(
         title = stringResource(
             id = if (isEditMode) R.string.ai_config_edit_title else R.string.ai_config_add_title
         ),
-        onBack = onBack,
+        onBack = handleBack,
         onHelp = onOpenHelp,
-        contentPadding = PaddingValues(16.dp)
+        floatingActionButton = {
+            val fabInteractionSource = remember { MutableInteractionSource() }
+            ExtendedFloatingActionButton(
+                onClick = {
+                    if (!canSave) return@ExtendedFloatingActionButton
+                    val trimmedName = nameInput.trim()
+                    if (trimmedName.isBlank()) return@ExtendedFloatingActionButton
+                    scope.launch {
+                        val values = { existing: AIConfig ->
+                            existing.copy(
+                                name = trimmedName,
+                                apiEndpoint = endpointInput.trim(),
+                                apiKey = apiKeyInput.trim(),
+                                modelName = modelInput.trim(),
+                                streamingEnabled = streamingEnabled,
+                                thinkingEnabled = thinkingEnabled
+                            )
+                        }
+                        if (isEditMode && editingConfig != null) {
+                            userPreferences.updateAIConfig(values(editingConfig))
+                        } else {
+                            val newConfig = AIConfig(
+                                id = UUID.randomUUID().toString(),
+                                name = trimmedName,
+                                apiEndpoint = endpointInput.trim(),
+                                apiKey = apiKeyInput.trim(),
+                                modelName = modelInput.trim(),
+                                streamingEnabled = streamingEnabled,
+                                thinkingEnabled = thinkingEnabled
+                            )
+                            userPreferences.addAIConfig(newConfig)
+                            userPreferences.setActiveAIConfig(newConfig.id)
+                        }
+                        onBack()
+                    }
+                },
+                interactionSource = fabInteractionSource,
+                containerColor = if (canSave) {
+                    MaterialTheme.colorScheme.primaryContainer
+                } else {
+                    MaterialTheme.colorScheme.surfaceContainerHigh
+                },
+                contentColor = if (canSave) {
+                    MaterialTheme.colorScheme.onPrimaryContainer
+                } else {
+                    MaterialTheme.colorScheme.onSurfaceVariant
+                },
+                icon = {
+                    Icon(
+                        imageVector = Icons.Outlined.Check,
+                        contentDescription = null
+                    )
+                },
+                text = { Text(text = stringResource(id = R.string.ai_settings_save)) }
+            )
+            PressVibrationFeedback(interactionSource = fabInteractionSource, enabled = canSave)
+        }
     ) {
         Spacer(modifier = Modifier.height(8.dp))
 
@@ -275,54 +354,6 @@ fun NewSettingsAIEditScreen(
         }
 
         Spacer(modifier = Modifier.height(SettingsBetweenGroupGap))
-
-        Button(
-            onClick = {
-                val trimmedName = nameInput.trim()
-                if (trimmedName.isBlank()) return@Button
-                scope.launch {
-                    val values = { existing: AIConfig ->
-                        existing.copy(
-                            name = trimmedName,
-                            apiEndpoint = endpointInput.trim(),
-                            apiKey = apiKeyInput.trim(),
-                            modelName = modelInput.trim(),
-                            streamingEnabled = streamingEnabled,
-                            thinkingEnabled = thinkingEnabled
-                        )
-                    }
-                    if (isEditMode && editingConfig != null) {
-                        userPreferences.updateAIConfig(values(editingConfig))
-                    } else {
-                        val newConfig = AIConfig(
-                            id = UUID.randomUUID().toString(),
-                            name = trimmedName,
-                            apiEndpoint = endpointInput.trim(),
-                            apiKey = apiKeyInput.trim(),
-                            modelName = modelInput.trim(),
-                            streamingEnabled = streamingEnabled,
-                            thinkingEnabled = thinkingEnabled
-                        )
-                        userPreferences.addAIConfig(newConfig)
-                        userPreferences.setActiveAIConfig(newConfig.id)
-                    }
-                    onBack()
-                }
-            },
-            modifier = Modifier
-                .fillMaxWidth()
-                .height(48.dp),
-            enabled = canSave,
-            shape = RoundedCornerShape(16.dp)
-        ) {
-            Icon(
-                imageVector = Icons.Outlined.Check,
-                contentDescription = null,
-                modifier = Modifier.size(18.dp)
-            )
-            Spacer(modifier = Modifier.width(8.dp))
-            Text(text = stringResource(id = R.string.ai_settings_save))
-        }
 
         if (isEditMode) {
             Spacer(modifier = Modifier.height(12.dp))

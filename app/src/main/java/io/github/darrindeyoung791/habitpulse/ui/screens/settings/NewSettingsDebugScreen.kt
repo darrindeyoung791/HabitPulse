@@ -30,7 +30,8 @@ import kotlinx.coroutines.launch
 fun NewSettingsDebugScreen(
     onBack: () -> Unit,
     onOpenHelp: () -> Unit,
-    onNavigateDebugReminder: () -> Unit
+    onNavigateDebugReminder: () -> Unit,
+    onNavigateDebugVibration: () -> Unit
 ) {
     val context = LocalContext.current
     val scope = rememberCoroutineScope()
@@ -58,10 +59,17 @@ fun NewSettingsDebugScreen(
         SettingsSegmentedGroup(tintOffset = 1) {
             SettingsSegmentedItem(
                 index = 0,
-                count = 1,
+                count = 2,
                 headline = stringResource(id = R.string.settings_reminder_settings),
                 supportingText = stringResource(id = R.string.settings_reminder_settings_description),
                 onClick = onNavigateDebugReminder
+            )
+            SettingsSegmentedItem(
+                index = 1,
+                count = 2,
+                headline = stringResource(id = R.string.settings_debug_vibration),
+                supportingText = stringResource(id = R.string.settings_debug_vibration_description),
+                onClick = onNavigateDebugVibration
             )
         }
     }

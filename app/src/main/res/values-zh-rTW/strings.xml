@@ -154,6 +154,17 @@
     <string name="settings_debug_reminder_title">提醒調試</string>
     <string name="settings_debug_add_sample_habits">新增範例習慣</string>
     <string name="settings_debug_add_sample_habits_description">新增一批範例習慣與完成記錄，便於測試介面與功能</string>
+    <string name="settings_debug_vibration">震動除錯</string>
+    <string name="settings_debug_vibration_description">調整按壓震動時長與強度</string>
+    <string name="settings_debug_vibration_title">震動除錯</string>
+    <string name="settings_debug_vibration_duration_group">時長</string>
+    <string name="settings_debug_vibration_duration">震動時長</string>
+    <string name="settings_debug_vibration_amplitude_group">強度</string>
+    <string name="settings_debug_vibration_amplitude">震動強度</string>
+    <string name="settings_debug_vibration_test">測試震動</string>
+    <string name="settings_debug_vibration_reset">恢復預設</string>
+    <string name="settings_debug_vibration_notice_title">強度說明</string>
+    <string name="settings_debug_vibration_notice_content">強度為 1-255，僅當裝置硬體支援幅度控制（線性馬達）時才生效；不支援的裝置會使用系統預設強度，滑桿調節可能無效。與時長無關，可獨立調節。</string>
 
     <!-- Accessibility -->
     <string name="accessibility_talkback_splash_ad_disabled">為了不影響視障使用者，開屏廣告功能無法開啟</string>
@@ -426,6 +437,7 @@
     <string name="ai_config_empty">目前沒有 AI 配置，請點選下方「新增 AI 配置」建立。</string>
     <string name="ai_config_migrated_name">預設配置</string>
     <string name="ai_settings_save">儲存</string>
+    <string name="settings_unsaved_changes">有未儲存的變更</string>
     <string name="ai_settings_thinking">深度思考</string>
     <string name="ai_settings_thinking_description">讓模型先進行深度推理再給出回答（部分模型支援）</string>
     <string name="clear">清除</string>

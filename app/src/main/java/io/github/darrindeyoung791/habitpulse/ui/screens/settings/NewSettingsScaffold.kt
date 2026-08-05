@@ -35,6 +35,7 @@ fun NewSettingsScaffold(
     onBack: () -> Unit,
     onHelp: (() -> Unit)? = null,
     contentPadding: PaddingValues = PaddingValues(horizontal = 16.dp, vertical = 16.dp),
+    floatingActionButton: @Composable () -> Unit = {},
     content: @Composable ColumnScope.() -> Unit
 ) {
     Scaffold(
@@ -73,7 +74,8 @@ fun NewSettingsScaffold(
                     }
                 }
             )
-        }
+        },
+        floatingActionButton = { floatingActionButton() }
     ) { innerPadding ->
         val scrollState = rememberScrollState()
         Box(
