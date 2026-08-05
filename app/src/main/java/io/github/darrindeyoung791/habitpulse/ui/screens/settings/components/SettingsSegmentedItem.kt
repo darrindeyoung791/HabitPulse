@@ -3,7 +3,7 @@ package io.github.darrindeyoung791.habitpulse.ui.screens.settings.components
 import androidx.compose.animation.core.animateDpAsState
 import androidx.compose.foundation.LocalIndication
 import androidx.compose.foundation.background
-import androidx.compose.foundation.clickable
+import androidx.compose.foundation.combinedClickable
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.interaction.collectIsPressedAsState
 import androidx.compose.foundation.layout.Arrangement
@@ -61,6 +61,7 @@ fun SettingsSegmentedItem(
     leadingIcon: ImageVector? = null,
     enabled: Boolean = true,
     showArrow: Boolean = true,
+    tintIndex: Int = index,
     onClick: () -> Unit,
     trailing: @Composable () -> Unit = {
         if (showArrow) {
@@ -73,7 +74,7 @@ fun SettingsSegmentedItem(
     }
 ) {
     val effectiveSupporting = supportingText ?: if (!enabled) stringResource(R.string.settings_coming_soon) else null
-    val tint = rememberAccentTint(index)
+    val tint = rememberAccentTint(tintIndex)
 
     SettingsListSurface(
         index = index,
@@ -130,10 +131,12 @@ internal fun SettingsListSurface(
     count: Int,
     enabled: Boolean,
     onClick: () -> Unit,
+    onLongClick: (() -> Unit)? = null,
     leading: @Composable () -> Unit,
     headline: String,
     supportingText: String?,
     trailing: @Composable () -> Unit,
+    selected: Boolean = false,
     interactionSource: MutableInteractionSource = remember { MutableInteractionSource() }
 ) {
     val pressed = interactionSource.collectIsPressedAsState().value
@@ -147,16 +150,29 @@ internal fun SettingsListSurface(
     val bottomEnd by animateDpAsState(if (isPressed) PressedCorner else if (index == count - 1) LargeCorner else SmallCorner)
     val shape = RoundedCornerShape(topStart, topEnd, bottomEnd, bottomStart)
 
+    val containerColor = if (selected) MaterialTheme.colorScheme.secondaryContainer else MaterialTheme.colorScheme.surfaceContainer
+    val headlineColor = when {
+        !enabled -> MaterialTheme.colorScheme.onSurfaceVariant
+        selected -> MaterialTheme.colorScheme.onSecondaryContainer
+        else -> MaterialTheme.colorScheme.onSurface
+    }
+    val supportingColor = when {
+        !enabled -> MaterialTheme.colorScheme.onSurfaceVariant
+        selected -> MaterialTheme.colorScheme.onSecondaryContainer
+        else -> MaterialTheme.colorScheme.onSurfaceVariant
+    }
+
     Box(
         modifier = Modifier
             .fillMaxWidth()
             .clip(shape)
-            .background(MaterialTheme.colorScheme.surfaceContainer)
-            .clickable(
+            .background(containerColor)
+            .combinedClickable(
                 interactionSource = interactionSource,
                 indication = LocalIndication.current,
                 enabled = enabled,
-                onClick = onClick
+                onClick = onClick,
+                onLongClick = onLongClick
             )
     ) {
         Row(
@@ -174,13 +190,13 @@ internal fun SettingsListSurface(
                 Text(
                     text = headline,
                     style = MaterialTheme.typography.bodyLarge,
-                    color = if (enabled) MaterialTheme.colorScheme.onSurface else MaterialTheme.colorScheme.onSurfaceVariant
+                    color = headlineColor
                 )
                 if (supportingText != null) {
                     Text(
                         text = supportingText,
                         style = MaterialTheme.typography.bodyMedium,
-                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                        color = supportingColor
                     )
                 }
             }

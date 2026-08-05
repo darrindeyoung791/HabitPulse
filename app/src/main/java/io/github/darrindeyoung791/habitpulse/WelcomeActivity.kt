@@ -99,10 +99,16 @@ class WelcomeActivity : ComponentActivity() {
                     onAIComplete = { endpoint, apiKey, model, streamingEnabled ->
                         CoroutineScope(Dispatchers.IO).launch {
                             val prefs = UserPreferences.getInstance(application)
-                            prefs.setLlmApiEndpoint(endpoint)
-                            prefs.setLlmApiKey(apiKey)
-                            prefs.setLlmModelName(model)
-                            prefs.setLlmStreamingResponse(streamingEnabled)
+                            val config = io.github.darrindeyoung791.habitpulse.data.model.AIConfig(
+                                id = java.util.UUID.randomUUID().toString(),
+                                name = application.getString(R.string.ai_config_migrated_name),
+                                apiEndpoint = endpoint,
+                                apiKey = apiKey,
+                                modelName = model,
+                                streamingEnabled = streamingEnabled
+                            )
+                            prefs.addAIConfig(config)
+                            prefs.setActiveAIConfig(config.id)
                         }
                         application.habitViewModel.completeOnboarding()
                         isFinishing = true

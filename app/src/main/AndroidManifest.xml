@@ -80,17 +80,17 @@
             android:resizeableActivity="true"
             android:configChanges="uiMode|orientation|screenSize|screenLayout|smallestScreenSize" />
         <activity
-            android:name=".NewSettingsNotificationsActivity"
+            android:name=".NewSettingsAIEditActivity"
             android:exported="false"
-            android:label="@string/settings_notifications"
+            android:label="@string/ai_config_add_title"
             android:theme="@style/Theme.HabitPulse"
             android:enableOnBackInvokedCallback="true"
             android:resizeableActivity="true"
             android:configChanges="uiMode|orientation|screenSize|screenLayout|smallestScreenSize" />
         <activity
-            android:name=".NewSettingsReminderActivity"
+            android:name=".NewSettingsNotificationsActivity"
             android:exported="false"
-            android:label="@string/reminder_settings_title"
+            android:label="@string/settings_notifications"
             android:theme="@style/Theme.HabitPulse"
             android:enableOnBackInvokedCallback="true"
             android:resizeableActivity="true"
@@ -136,9 +136,9 @@
             android:resizeableActivity="true"
             android:configChanges="uiMode|orientation|screenSize|screenLayout|smallestScreenSize" />
         <activity
-            android:name=".AISettingsActivity"
+            android:name=".NewSettingsDebugReminderActivity"
             android:exported="false"
-            android:label="@string/ai_settings_title"
+            android:label="@string/settings_debug_reminder_title"
             android:theme="@style/Theme.HabitPulse"
             android:enableOnBackInvokedCallback="true"
             android:resizeableActivity="true"

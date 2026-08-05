@@ -618,7 +618,6 @@ fun WelcomeMergedStep(
                                 prefs.setDndStartTime(dndStart)
                                 prefs.setDndEndTime(dndEnd)
                                 prefs.setPersistentNotification(persistentEnabled)
-                                prefs.setLlmStreamingResponse(streamingEnabled)
                             }
                             onComplete(endpointInput, apiKeyInput, modelInput, streamingEnabled)
                         }

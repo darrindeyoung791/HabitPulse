@@ -35,6 +35,16 @@ private fun NewSettingsAIContent() {
 
     NewSettingsAIScreen(
         onBack = { (context as? android.app.Activity)?.finish() },
-        onOpenHelp = onHelp
+        onOpenHelp = onHelp,
+        onAddConfig = {
+            context.startActivity(Intent(context, NewSettingsAIEditActivity::class.java))
+        },
+        onEditConfig = { configId ->
+            context.startActivity(
+                Intent(context, NewSettingsAIEditActivity::class.java).apply {
+                    putExtra(NewSettingsAIEditActivity.EXTRA_CONFIG_ID, configId)
+                }
+            )
+        }
     )
 }

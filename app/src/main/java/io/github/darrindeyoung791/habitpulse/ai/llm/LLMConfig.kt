@@ -5,6 +5,7 @@ data class LLMConfig(
     val apiKey: String,
     val modelName: String,
     val streamingEnabled: Boolean = true,
+    val thinkingEnabled: Boolean = false,
     val timeoutMs: Int = 30000,
     val maxRetries: Int = 3
 ) {

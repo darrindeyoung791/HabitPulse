@@ -36,9 +36,6 @@ private fun NewSettingsNotificationsContent() {
     NewSettingsNotificationsScreen(
         onBack = { (context as? android.app.Activity)?.finish() },
         onOpenHelp = onHelp,
-        onNavigateReminder = {
-            context.startActivity(Intent(context, NewSettingsReminderActivity::class.java))
-        },
         onNavigateTemplate = {
             context.startActivity(Intent(context, NewSettingsTemplateActivity::class.java))
         }

@@ -44,9 +44,10 @@ HabitPulse/
 │   │   │   │   ├── MainActivity.kt              # Main entry point with NavHost
 │   │   │   │   ├── SettingsActivity.kt          # Settings screen (legacy)
 │   │   │   │   ├── NewSettingsActivity.kt       # New settings home (segmented list UI)
-│   │   │   │   ├── NewSettingsAIActivity.kt     # New settings: AI (includes provider config)
+│   │   │   │   ├── NewSettingsAIActivity.kt     # New settings: AI config list
+│   │   │   │   ├── NewSettingsAIEditActivity.kt # New settings: AI config add/edit
 │   │   │   │   ├── NewSettingsNotificationsActivity.kt # New settings: notifications
-│   │   │   │   ├── NewSettingsReminderActivity.kt # New settings: reminders
+│   │   │   │   ├── NewSettingsDebugReminderActivity.kt # New settings: debug reminders
 │   │   │   │   ├── NewSettingsTemplateActivity.kt # New settings: notification template
 │   │   │   │   ├── NewSettingsGeneralActivity.kt # New settings: general
 │   │   │   │   ├── NewSettingsAboutActivity.kt  # New settings: about
@@ -65,6 +66,7 @@ HabitPulse/
 │   │   │   │   │   │   ├── HabitCompletion.kt   # Habit completion record entity
 │   │   │   │   │   │   ├── HabitStatus.kt       # Habit status enum + HabitWithStatus
 │   │   │   │   │   │   ├── SlotCheckInEngine.kt # Pure slot check-in & status calculation logic
+│   │   │   │   │   │   ├── AIConfig.kt          # Multi-config LLM settings (Gson-serialized)
 │   │   │   │   │   │   └── CheckInResult.kt     # (defined in SlotCheckInEngine)
 │   │   │   │   │   ├── database/
 │   │   │   │   │   ├── database/
@@ -96,9 +98,10 @@ HabitPulse/
 │   │   │   │   │   ├── screens/settings/
 │   │   │   │   │   │   ├── NewSettingsScaffold.kt       # Shared scaffold for new settings screens
 │   │   │   │   │   │   ├── NewSettingsHomeScreen.kt     # New settings home
-│   │   │   │   │   │   ├── NewSettingsAIScreen.kt       # AI settings (includes provider config form)
+│   │   │   │   │   │   ├── NewSettingsAIScreen.kt       # AI settings (config list, selection)
+│   │   │   │   │   │   ├── NewSettingsAIEditScreen.kt   # AI config add/edit form
 │   │   │   │   │   │   ├── NewSettingsNotificationsScreen.kt # Notifications
-│   │   │   │   │   │   ├── NewSettingsReminderScreen.kt # Reminders
+│   │   │   │   │   │   ├── NewSettingsDebugReminderScreen.kt # Debug reminders
 │   │   │   │   │   │   ├── NewSettingsTemplateScreen.kt # Notification template
 │   │   │   │   │   │   ├── NewSettingsGeneralScreen.kt # General
 │   │   │   │   │   │   ├── NewSettingsLanguageScreen.kt # Language (radio list)
@@ -108,6 +111,7 @@ HabitPulse/
 │   │   │   │   │   │       ├── SettingsSegmentedItem.kt # Segmented list item + icon chip + surface
 │   │   │   │   │   │       ├── SettingsSegmentedSwitch.kt # Segmented switch row
 │   │   │   │   │   │       ├── SettingsSegmentedGroup.kt # Vertical group wrapper
+│   │   │   │   │   │       ├── SettingsSectionHeader.kt # Segment section header text
 │   │   │   │   │   │       ├── SettingsIconTint.kt     # Accent tint palette for icon chips
 │   │   │   │   │   │       └── SettingsComponentsPreviews.kt # Compose previews
 │   │   │   │   │   ├── theme/
@@ -423,12 +427,13 @@ The project is in **early development stage** (v0.5.19-alpha):
   - `HabitCompletionTest` (5 tests) - covers `getTodayDate()`, `getFormattedDate()`, and default values
 - ✅ **New Settings Redesign** - Segmented list settings UI with grouped items, leading icon chips, switches, and per-screen scaffolds
 - ✅ **Debug Settings Page** - Hidden debug page reached by tapping the version item 5 times within 5 seconds on the new About screen; hosts developer tools (add sample habits), icon-less list items
-- ✅ **AI Config Provider Merge** - AI provider config form merged directly into the AI config page (second-level page); `NewSettingsAIProviderScreen.kt` / `NewSettingsAIProviderActivity.kt` deleted
+- ✅ **AI Config Provider Merge (superseded)** - AI provider config form was merged directly into the AI config page (second-level page); `NewSettingsAIProviderScreen.kt` / `NewSettingsAIProviderActivity.kt` deleted. Superseded by **Multi-AI-Config Settings** below, which moved the form out into a separate add/edit page (`NewSettingsAIEditActivity`)
 - ✅ **AI Config Page Layout** - Provider config form (endpoint/key/model/test connection), streaming output switch + memory entry grouped as segmented list items; notice shown as standalone text (same style as About screen), no horizontal divider
 - ✅ **Model Label Localization** - Preset model labels (`glm-4-flash-250414（默认）`, `glm-5.1（最新旗舰）`) resource-ized via `ai_settings_model_default_label` / `ai_settings_model_flagship_label` format strings in all 4 locale files
 - ✅ **Old Settings Interface Migration** - Entry points to legacy settings migrated to new settings: Home settings button → `NewSettingsActivity`, AI Create Habit settings button → `NewSettingsAIActivity` (both in `HabitPulseNavGraph.kt`)
 - ✅ **In-App Language Switching** - Settings → General → Language entry (Android 13+ per-app language via platform `LocaleManager`; `LocaleManagerCompat` getter + reflection fallback for API 33 `@SystemApi` setter); dedicated `NewSettingsLanguageActivity` sub-page: "跟随系统" in its own group with system-language supporting text + fixed self-named labels (中文（简体，中国大陆）/ 中文（繁体，台湾）/ 中文（繁体，香港）/ English (US) / English (UK), `translatable="false"`), radio-button rows; selecting a language returns to the previous page with a single refresh; option hidden on API < 33; managed by `utils/AppLocaleManager.kt`
 - ✅ **Settings Press Haptics** - Non-disabled settings list items (`SettingsListSurface`), text link buttons (`SettingsTextLinkButton`), and scaffold back/help `IconButton`s vibrate 25ms on press-down and 25ms on release (half of the 50ms home check-in button) via `ui/utils/PressVibrationFeedback.kt` (`PressVibrationFeedback` composable + `vibrateShort` + `rememberHapticsEnabled`); new General toggle "关闭应用内全部震动" (`HAPTIC_FEEDBACK_ENABLED` in `UserPreferences.kt`, default on, with the "关闭" switch showing off by default so the phone vibrates by default) gates all in-app vibration including the check-in button; "界面与显示" group renamed to "显示与触感" (all 6 string files)
+- ✅ **Multi-AI-Config Settings** - AI settings upgraded from a single provider config to a managed list: AI config list page (`NewSettingsAIScreen`) shows all configs (tap row = set active, trailing edit pencil = edit page, radio shows active), "添加 AI 配置" opens `NewSettingsAIEditActivity`; edit page (`NewSettingsAIEditScreen`) has name/endpoint/key/model fields + per-config streaming & deep-thinking switches + test connection + save/delete; storage migrated to DataStore `llm_ai_configs` (JSON array of `AIConfig`, Gson + `@SerializedName`) + `llm_active_config_id`; legacy `llm_api_endpoint/llm_api_key/llm_model_name/llm_streaming_response` keys are deprecated and one-time migrated into a "默认配置" (via `migrateLegacyAiConfig()` on cold start, then physically removed); consumers (`AICreateHabitViewModel`, `AICreateHabitScreen`, welcome flow) read the active config through `getActiveAIConfig()`/`activeConfigFlow`; shared `AiConnectionTester` for test-connection; `SettingsSectionHeader` extracted as a shared component; legacy `AISettingsScreen`/`AISettingsActivity` deleted, legacy `SettingsActivity` AI entry repointed to `NewSettingsAIActivity`; welcome flow kept compiling with minimal changes (full welcome/AI feature refactor deferred)
 
 ### In Progress
 - 🔄 Calendar section

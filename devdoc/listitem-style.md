@@ -206,6 +206,8 @@ Box(
 6. **动态取色**：行底色用 `surfaceContainer`；图标 chip 是刻意固定的低饱和色板，不要改成动态取色。
 7. **禁用占位项**：`enabled = false` + `onClick = {}`，自动显示「即将推出」。
 8. **RTL**：图标用 `autoMirrored` 变体，padding 用 `start/end`，不写死方向。
+9. **触感震动**：可点击的列表项 / 开关行 / 文本按钮 / 返回帮助按钮默认带按压震动，由
+   `PressVibrationFeedback` 自动附加；**不要**在业务组件里直接调 `vibrator`（见第 7 节）。
 
 ---
 
@@ -218,3 +220,89 @@ Box(
 - **两个页面的同一控件看起来不一样？** → 对照本规范核对：底色 / 圆角 / 字体 / 间距 / 图标 chip 尺寸。
 - **文本按钮之间间距太大？** → 用 `SettingsTextLinkButton`（已移除 48dp 最小触控区）；不要用裸 `TextButton` 堆叠。
 - **滑块想放进分段组却出现整行点击效果？** → 用 `SettingsSegmentedBox`（非点击表面），不要用 `SettingsSegmentedItem`。
+- **快速按下并抬起不震动？** → 必须是 `PressVibrationFeedback` 的「逐事件收集」实现；不要改成用
+  `collectIsPressedAsState` 观察组合期状态（见 7.4 踩坑）。
+- **禁用的按钮松手瞬间不震动？** → 确认按下时该按钮是否可用：`armed` 在按下瞬间快照，
+  可用→松手仍震动；若按下时已 `enabled = false`（真·禁用占位项）全程静默是预期行为。
+- **关闭「应用内全部震动」后仍在震？** → 检查是否有地方绕过了 `rememberHapticsEnabled()` 直接调
+  `vibrator`（含打卡按钮，见 7.3）。
+
+---
+
+## 7. 按压触感震动（Press Haptics）
+
+> 设置页可点击控件（列表项 / 开关行 / 文本按钮 / 返回帮助按钮）与免打扰步进滑动条统一带按压触感
+> 震动，作为交互反馈的一部分。改动震动方案前请先同步更新本节。
+
+### 7.1 设计规格
+
+| 项 | 值 | 说明 |
+|----|-----|------|
+| 单次时长 | `PressVibrationDurationMs = 25ms` | 主页打卡按钮（50ms）的一半，模拟卡片按压触感 |
+| 触发时机 | **按下** + **松手**各一次 | 按下瞬间立即震，松手瞬间立即震，松手不再等待动画 |
+| 门控 | 「通用 → 关闭应用内全部震动」 | `HAPTIC_FEEDBACK_ENABLED`（默认 true = 震动），开关默认关闭 |
+| 禁用项 | 全程静默 | 按下时 `enabled = false` 则不武装、不震动 |
+
+### 7.2 核心实现（`ui/utils/PressVibrationFeedback.kt`）
+
+```kotlin
+@Composable
+fun PressVibrationFeedback(
+    interactionSource: MutableInteractionSource,
+    enabled: Boolean = true
+) {
+    val context = LocalContext.current
+    val hapticsEnabled = rememberHapticsEnabled()
+    val currentEnabled by rememberUpdatedState(enabled)
+    val currentHaptics by rememberUpdatedState(hapticsEnabled)
+
+    LaunchedEffect(interactionSource, context) {
+        var armed = false
+        interactionSource.interactions.collect { interaction ->
+            when (interaction) {
+                is PressInteraction.Press -> {
+                    armed = currentEnabled && currentHaptics   // 按下瞬间快照
+                    if (armed) vibrateShort(context)
+                }
+                is PressInteraction.Release -> {
+                    if (armed) vibrateShort(context)           // 松手仍按按下时的状态震
+                    armed = false
+                }
+                is PressInteraction.Cancel -> armed = false
+                else -> Unit
+            }
+        }
+    }
+}
+```
+
+同文件提供两个辅助入口：
+
+- `rememberHapticsEnabled()`：`@Composable`，读取 `UserPreferences.hapticsEnabledFlow`（默认 true）。
+- `vibrateShort(context)`：非 Composable 的 25ms 一次性震动，供手动触发场景（打卡按钮、滑动条）复用。
+
+### 7.3 接入位置
+
+| 控件 | 接入方式 |
+|------|----------|
+| 列表项 / 开关行（`SettingsSegmentedItem` / `SettingsSegmentedSwitch`） | `SettingsListSurface` 内统一 `PressVibrationFeedback(interactionSource, enabled)` |
+| 文本链接按钮（`SettingsTextLinkButton`） | 本地 `remember { MutableInteractionSource() }` 传入 `TextButton` 并附加 |
+| 返回 / 帮助按钮（`NewSettingsScaffold`） | 各 `IconButton` 本地 interactionSource 并附加 |
+| 主页打卡按钮（`HabitScreen.CheckInButton`） | 保留原有 50ms 震动，但用 `rememberHapticsEnabled()` 门控（保证「全部震动」开关生效） |
+| 免打扰步进滑动条（`DndRangeSlider`） | 不走交互源；在 `onValueChange` 中 snapped 值变化时 `vibrateShort`（点击轨道 / 拖动跨步 → 震动，同一步内拖动不震） |
+
+其余界面（首页卡片、记录页等）按钮**日后接入**，一律复用 `PressVibrationFeedback` / `rememberHapticsEnabled`，
+不要在各自页面自行调 `vibrator`。
+
+### 7.4 关键要点（踩坑记录）
+
+1. **必须「逐事件收集」，不要用 `collectIsPressedAsState`**：Compose 会把同一帧内的按下/抬起
+   状态合并，极快的按下-抬起可能永远读不到中间 `true`，导致不震动；直接 `interactions.collect`
+   每条 Press/Release 事件都不会丢。
+2. **用 `rememberUpdatedState` 避免重启 collector**：`enabled` / 开关变化时若以它们为
+   `LaunchedEffect` 的 key 重启收集，会重置 `armed` 并可能错过本次按压的 Release；
+   正确做法是 collector 常驻、通过 `rememberUpdatedState` 读最新值。
+3. **`armed` 在按下瞬间快照**：按下时若可用则武装，之后即使组件主动禁用（如 AI「测试连接」
+   按下后 `isTesting=true`）松手仍按武装状态震动；按下时本身禁用则全程静默。
+4. **既有震动也要门控**：任何已存在的震动（如打卡按钮 50ms）必须走 `rememberHapticsEnabled()`，
+   否则「关闭应用内全部震动」选项名不副实。

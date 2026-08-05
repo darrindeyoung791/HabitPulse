@@ -30,7 +30,6 @@ import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import io.github.darrindeyoung791.habitpulse.R
 import io.github.darrindeyoung791.habitpulse.ai.llm.LLMConfig
-import io.github.darrindeyoung791.habitpulse.data.preferences.UserPreferences
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.launch
 import kotlinx.coroutines.withContext
@@ -383,10 +382,6 @@ fun WelcomeAIStep(
                             Toast.LENGTH_SHORT
                         ).show()
                     } else {
-                        scope.launch {
-                            UserPreferences.getInstance(context.applicationContext)
-                                .setLlmStreamingResponse(streamingEnabled)
-                        }
                         onComplete(endpointInput, apiKeyInput, modelInput, streamingEnabled)
                     }
                 },

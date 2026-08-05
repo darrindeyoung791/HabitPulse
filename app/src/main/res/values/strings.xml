@@ -158,6 +158,7 @@
     <string name="debug_add_sample_data_no">取消</string>
     <string name="debug_sample_data_added">已添加 40 条样例数据</string>
     <string name="settings_debug_title">调试设置</string>
+    <string name="settings_debug_reminder_title">提醒调试</string>
     <string name="settings_debug_add_sample_habits">添加示例习惯</string>
     <string name="settings_debug_add_sample_habits_description">添加一批示例习惯与完成记录，便于测试界面与功能</string>
 
@@ -403,10 +404,9 @@
     <string name="ai_settings_api_endpoint_label">API 端点</string>
     <string name="ai_settings_api_key">API 密钥</string>
     <string name="ai_settings_api_key_label">API 密钥</string>
-    <string name="ai_api_key_required_title">需要配置 API 密钥</string>
-    <string name="ai_api_key_required_message">请先在设置中配置 API 密钥，然后才能使用 AI 创建习惯功能。</string>
-    <string name="ai_api_key_required_action">前往设置</string>
-    <string name="ai_settings_model">模型</string>
+    <string name="ai_api_key_required_title">需要添加提供商</string>
+    <string name="ai_api_key_required_message">请先在设置中添加 AI 提供商，然后才能使用 AI 创建习惯功能。</string>
+    <string name="ai_api_key_required_action">添加提供商</string>
     <string name="ai_settings_model_label">选择模型</string>
     <string name="ai_settings_test_connection">测试连接</string>
     <string name="ai_settings_test_connection_description">验证 API 端点、密钥与模型是否可用</string>
@@ -418,6 +418,23 @@
     <string name="ai_settings_streaming_description">实时显示 AI 思考过程和回答</string>
     <string name="ai_settings_model_default_label">%1$s（默认）</string>
     <string name="ai_settings_model_flagship_label">%1$s（最新旗舰）</string>
+    <string name="ai_config_providers">AI 提供商</string>
+    <string name="ai_config_page_hint">已添加的提供商可以随时切换使用；也可以继续添加更多提供商，按行选中即可设为当前使用。</string>
+    <string name="ai_config_add">添加 AI 配置</string>
+    <string name="ai_config_add_openai_hint">支持 OpenAI 兼容格式的接口</string>
+    <string name="ai_config_add_title">添加 AI 配置</string>
+    <string name="ai_config_edit_title">编辑配置</string>
+    <string name="ai_config_edit">编辑</string>
+    <string name="ai_config_name_label">配置名称</string>
+    <string name="ai_config_name_placeholder">例如：智谱 GLM</string>
+    <string name="ai_config_delete">删除配置</string>
+    <string name="ai_config_delete_title">删除该配置？</string>
+    <string name="ai_config_delete_message">删除后此配置将无法恢复。</string>
+    <string name="ai_config_empty">暂无 AI 配置，请点击下方「添加 AI 配置」创建。</string>
+    <string name="ai_config_migrated_name">默认配置</string>
+    <string name="ai_settings_save">保存</string>
+    <string name="ai_settings_thinking">深度思考</string>
+    <string name="ai_settings_thinking_description">让模型先进行深度推理再给出回答（部分模型支持）</string>
     <string name="clear">清除</string>
     <string name="show_password">显示密码</string>
     <string name="hide_password">隐藏密码</string>
@@ -471,7 +488,7 @@
 
     <!-- AI Error Messages -->
     <string name="ai_error_scroll_to_bottom">滚动到底部</string>
-    <string name="ai_error_not_configured">请先在设置中配置 API</string>
+    <string name="ai_error_not_configured">请先在设置中添加 AI 提供商</string>
     <string name="ai_error_prefix">错误：%s</string>
     <string name="ai_error_auth_failed">认证失败，请检查 API 密钥是否正确</string>
     <string name="ai_error_access_denied">访问被拒绝，请检查 API 密钥权限</string>

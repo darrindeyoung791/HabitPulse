@@ -553,7 +553,7 @@ fun SettingsScreen() {
                         )
                     },
                     onClick = {
-                        val intent = Intent(context, AISettingsActivity::class.java)
+                        val intent = Intent(context, NewSettingsAIActivity::class.java)
                         context.startActivity(intent)
                     },
                     trailingIcon = {

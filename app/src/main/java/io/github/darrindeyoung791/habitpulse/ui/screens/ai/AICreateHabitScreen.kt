@@ -57,11 +57,9 @@ import androidx.compose.ui.focus.FocusRequester
 import androidx.compose.ui.focus.focusRequester
 import androidx.compose.ui.graphics.SolidColor
 import androidx.compose.ui.platform.LocalSoftwareKeyboardController
-import kotlinx.coroutines.launch
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import androidx.navigation.NavHostController
-import kotlinx.coroutines.flow.first
 import androidx.activity.compose.BackHandler
 import io.github.darrindeyoung791.habitpulse.ui.screens.TimePickerDialog
 import io.github.darrindeyoung791.habitpulse.ui.utils.rememberDebounceClickHandler
@@ -174,9 +172,9 @@ fun AICreateHabitScreen(
     }
 
     val userPreferences = remember { UserPreferences.getInstance(context) }
-    val apiKey by userPreferences.llmApiKeyFlow.collectAsStateWithLifecycle(initialValue = "")
+    val activeConfig by userPreferences.activeConfigFlow.collectAsStateWithLifecycle(initialValue = null)
 
-    if (apiKey.isBlank()) {
+    if (activeConfig?.apiKey.isNullOrBlank()) {
         NoApiKeyPrompt(
             onGoToSettings = onNavigateToSettings,
             onNavigateBack = onNavigateBack
@@ -439,9 +437,9 @@ fun AICreateHabitScreen(
                         focusRequester = focusRequester,
                         onSendClick = {
                             scope.launch {
-                                val apiKey = userPreferences.llmApiKeyFlow.first()
+                                val active = userPreferences.getActiveAIConfig()
 
-                                if (apiKey.isBlank()) {
+                                if (active?.apiKey.isNullOrBlank()) {
                                     viewModel.updateInputText("")
                                     return@launch
                                 }

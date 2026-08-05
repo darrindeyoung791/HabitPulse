@@ -17,7 +17,6 @@ import io.github.darrindeyoung791.habitpulse.data.repository.HabitRepository
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
-import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
 import java.util.UUID
 
@@ -149,12 +148,9 @@ class AICreateHabitViewModel(application: Application) : AndroidViewModel(applic
         if (text.isBlank()) return
 
         viewModelScope.launch {
-            val endpoint = userPreferences.llmApiEndpointFlow.first()
-            val apiKey = userPreferences.llmApiKeyFlow.first()
-            val modelName = userPreferences.llmModelNameFlow.first()
-            val streamingEnabled = userPreferences.llmStreamingResponseFlow.first()
+            val activeConfig = userPreferences.getActiveAIConfig()
 
-            if (endpoint.isBlank() || apiKey.isBlank()) {
+            if (activeConfig == null || !activeConfig.isValid()) {
                 _uiState.value = _uiState.value.copy(
                     errorMessage = getApplication<HabitPulseApplication>().getString(R.string.ai_error_not_configured)
                 )
@@ -165,12 +161,12 @@ class AICreateHabitViewModel(application: Application) : AndroidViewModel(applic
             _uiState.value = _uiState.value.copy(isLoading = true, showClearButton = true)
 
             if (conversationManager == null) {
-                val client = LLMClient.fromPreferences(endpoint, apiKey, modelName, streamingEnabled)
+                val client = LLMClient(activeConfig.toLLMConfig())
                 val prompt = SystemPrompt.getSystemPrompt(getApplication())
                 conversationManager = ConversationManager(
                     llmClient = client,
                     toolRegistry = toolRegistry,
-                    streamingEnabled = streamingEnabled,
+                    streamingEnabled = activeConfig.streamingEnabled,
                     scope = viewModelScope,
                     systemPrompt = prompt
                 )

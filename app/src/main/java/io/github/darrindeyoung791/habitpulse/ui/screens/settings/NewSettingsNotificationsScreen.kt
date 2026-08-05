@@ -6,9 +6,17 @@ import android.provider.Settings
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
+import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.expandVertically
+import androidx.compose.animation.shrinkVertically
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.padding
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.outlined.Article
 import androidx.compose.material.icons.outlined.Alarm
+import androidx.compose.material.icons.outlined.Bedtime
 import androidx.compose.material.icons.outlined.Notifications
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.runtime.Composable
@@ -18,8 +26,11 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
+import androidx.compose.ui.Alignment
+import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import io.github.darrindeyoung791.habitpulse.HabitPulseApplication
 import io.github.darrindeyoung791.habitpulse.R
@@ -27,12 +38,17 @@ import io.github.darrindeyoung791.habitpulse.WebViewActivity
 import io.github.darrindeyoung791.habitpulse.data.preferences.UserPreferences
 import io.github.darrindeyoung791.habitpulse.navigation.RouteConfig
 import io.github.darrindeyoung791.habitpulse.service.ForegroundNotificationService
+import io.github.darrindeyoung791.habitpulse.ui.screens.dnd.DndRangeSlider
+import io.github.darrindeyoung791.habitpulse.ui.screens.settings.components.SettingsBetweenGroupGap
+import io.github.darrindeyoung791.habitpulse.ui.screens.settings.components.SettingsSegmentedBox
 import io.github.darrindeyoung791.habitpulse.ui.screens.settings.components.SettingsSegmentedGroup
 import io.github.darrindeyoung791.habitpulse.ui.screens.settings.components.SettingsSegmentedItem
 import io.github.darrindeyoung791.habitpulse.ui.screens.settings.components.SettingsSegmentedSwitch
 import io.github.darrindeyoung791.habitpulse.ui.screens.settings.components.SettingsTextLinkButton
 import io.github.darrindeyoung791.habitpulse.utils.NotificationHelper
 import io.github.darrindeyoung791.habitpulse.utils.NotificationPermissionHelper
+import io.github.darrindeyoung791.habitpulse.utils.ReminderManager
+import io.github.darrindeyoung791.habitpulse.utils.ReminderNotificationBuilder
 import kotlinx.coroutines.launch
 
 @OptIn(ExperimentalMaterial3Api::class)
@@ -40,7 +56,6 @@ import kotlinx.coroutines.launch
 fun NewSettingsNotificationsScreen(
     onBack: () -> Unit,
     onOpenHelp: () -> Unit,
-    onNavigateReminder: () -> Unit,
     onNavigateTemplate: () -> Unit
 ) {
     val context = LocalContext.current
@@ -48,6 +63,10 @@ fun NewSettingsNotificationsScreen(
     val userPreferences = remember { UserPreferences.getInstance(context) }
 
     val persistentNotification by userPreferences.persistentNotificationFlow.collectAsStateWithLifecycle(initialValue = false)
+    val reminderEnabled by userPreferences.reminderEnabledFlow.collectAsStateWithLifecycle(initialValue = true)
+    val dndEnabled by userPreferences.dndEnabledFlow.collectAsStateWithLifecycle(initialValue = true)
+    val dndStartTime by userPreferences.dndStartTimeFlow.collectAsStateWithLifecycle(initialValue = "22:00")
+    val dndEndTime by userPreferences.dndEndTimeFlow.collectAsStateWithLifecycle(initialValue = "07:00")
 
     var hasNotificationPermission by remember { mutableStateOf(NotificationHelper.hasNotificationPermission(context)) }
 
@@ -70,16 +89,72 @@ fun NewSettingsNotificationsScreen(
         }
     }
 
+    val showDndSlider = dndEnabled && reminderEnabled
+    val switchCount = if (showDndSlider) 3 else 2
+
     NewSettingsScaffold(
         title = stringResource(id = R.string.settings_notifications),
         onBack = onBack,
         onHelp = onOpenHelp
     ) {
         SettingsSegmentedGroup {
+            SettingsSegmentedSwitch(
+                index = 0,
+                count = switchCount,
+                headline = stringResource(id = R.string.settings_reminder),
+                supportingText = stringResource(id = R.string.settings_reminder_description),
+                leadingIcon = Icons.Outlined.Alarm,
+                checked = reminderEnabled,
+                onCheckedChange = { isChecked ->
+                    scope.launch {
+                        userPreferences.setReminderEnabled(isChecked)
+                        if (isChecked) {
+                            ReminderNotificationBuilder.createNotificationChannel(context)
+                            ReminderManager.scheduleNextAlarm(context)
+                        } else {
+                            ReminderManager.cancelAlarm(context)
+                        }
+                    }
+                }
+            )
+            SettingsSegmentedSwitch(
+                index = 1,
+                count = switchCount,
+                headline = stringResource(id = R.string.settings_reminder_dnd),
+                supportingText = stringResource(id = R.string.settings_reminder_dnd_description),
+                leadingIcon = Icons.Outlined.Bedtime,
+                checked = dndEnabled && reminderEnabled,
+                enabled = reminderEnabled,
+                onCheckedChange = { isChecked ->
+                    scope.launch { userPreferences.setDndEnabled(isChecked) }
+                }
+            )
+            AnimatedVisibility(
+                visible = showDndSlider,
+                enter = expandVertically(expandFrom = Alignment.Top),
+                exit = shrinkVertically(shrinkTowards = Alignment.Top)
+            ) {
+                SettingsSegmentedBox(index = 2, count = 3) {
+                    DndRangeSlider(
+                        startTime = dndStartTime,
+                        endTime = dndEndTime,
+                        onStartTimeChange = { time -> scope.launch { userPreferences.setDndStartTime(time) } },
+                        onEndTimeChange = { time -> scope.launch { userPreferences.setDndEndTime(time) } },
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .padding(horizontal = 16.dp)
+                    )
+                }
+            }
+        }
+
+        Spacer(modifier = Modifier.height(SettingsBetweenGroupGap))
+
+        SettingsSegmentedGroup(tintOffset = switchCount) {
             if (hasNotificationPermission) {
                 SettingsSegmentedSwitch(
                     index = 0,
-                    count = 3,
+                    count = 2,
                     headline = stringResource(id = R.string.settings_persistent_notification),
                     supportingText = stringResource(id = R.string.settings_persistent_notification_description),
                     leadingIcon = Icons.Outlined.Notifications,
@@ -110,7 +185,7 @@ fun NewSettingsNotificationsScreen(
             } else {
                 SettingsSegmentedItem(
                     index = 0,
-                    count = 3,
+                    count = 2,
                     headline = stringResource(id = R.string.settings_persistent_notification),
                     supportingText = stringResource(id = R.string.settings_persistent_notification_authorize),
                     showArrow = false,
@@ -130,15 +205,7 @@ fun NewSettingsNotificationsScreen(
             }
             SettingsSegmentedItem(
                 index = 1,
-                count = 3,
-                headline = stringResource(id = R.string.settings_reminder),
-                supportingText = stringResource(id = R.string.settings_reminder_description),
-                leadingIcon = Icons.Outlined.Alarm,
-                onClick = onNavigateReminder
-            )
-            SettingsSegmentedItem(
-                index = 2,
-                count = 3,
+                count = 2,
                 headline = stringResource(id = R.string.notification_template_settings_title),
                 supportingText = stringResource(id = R.string.notification_template_settings_desc),
                 leadingIcon = Icons.AutoMirrored.Outlined.Article,

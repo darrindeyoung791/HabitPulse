@@ -9,9 +9,14 @@ import androidx.datastore.preferences.core.edit
 import androidx.datastore.preferences.core.longPreferencesKey
 import androidx.datastore.preferences.core.stringPreferencesKey
 import androidx.datastore.preferences.preferencesDataStore
+import com.google.gson.Gson
+import com.google.gson.reflect.TypeToken
+import io.github.darrindeyoung791.habitpulse.R
+import io.github.darrindeyoung791.habitpulse.data.model.AIConfig
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.map
+import java.util.UUID
 
 /**
  * 用户偏好设置存储
@@ -48,24 +53,27 @@ object PreferencesKeys {
     val PERSISTENT_NOTIFICATION = booleanPreferencesKey("persistent_notification")
 
     /**
-     * LLM API 端点
+     * LLM 配置列表（JSON 数组，元素为 AIConfig）
      */
-    val LLM_API_ENDPOINT = stringPreferencesKey("llm_api_endpoint")
+    val LLM_AI_CONFIGS = stringPreferencesKey("llm_ai_configs")
 
     /**
-     * LLM API 密钥
+     * 当前使用的 LLM 配置 id
      */
-    val LLM_API_KEY = stringPreferencesKey("llm_api_key")
+    val LLM_ACTIVE_CONFIG_ID = stringPreferencesKey("llm_active_config_id")
 
-    /**
-     * LLM 模型名称
-     */
-    val LLM_MODEL_NAME = stringPreferencesKey("llm_model_name")
+    // ---- 旧版单配置键（仅供一次性迁移读取，迁移完成后物理删除，不再被业务使用） ----
+    @Deprecated("已迁移到 LLM_AI_CONFIGS，仅用于 migrateLegacyAiConfig 一次性读取")
+    val LEGACY_LLM_API_ENDPOINT = stringPreferencesKey("llm_api_endpoint")
 
-    /**
-     * LLM 流式输出
-     */
-    val LLM_STREAMING_RESPONSE = booleanPreferencesKey("llm_streaming_response")
+    @Deprecated("已迁移到 LLM_AI_CONFIGS，仅用于 migrateLegacyAiConfig 一次性读取")
+    val LEGACY_LLM_API_KEY = stringPreferencesKey("llm_api_key")
+
+    @Deprecated("已迁移到 LLM_AI_CONFIGS，仅用于 migrateLegacyAiConfig 一次性读取")
+    val LEGACY_LLM_MODEL_NAME = stringPreferencesKey("llm_model_name")
+
+    @Deprecated("已迁移到 AIConfig.streamingEnabled，仅用于 migrateLegacyAiConfig 一次性读取")
+    val LEGACY_LLM_STREAMING_RESPONSE = booleanPreferencesKey("llm_streaming_response")
 
     /**
      * 是否开启习惯提醒通知（每30分钟）
@@ -132,6 +140,9 @@ class UserPreferences(private val context: Context) {
         @Volatile
         private var INSTANCE: UserPreferences? = null
 
+        private val gson = Gson()
+        private val configListType = object : TypeToken<List<AIConfig>>() {}.type
+
         /**
          * 获取单例实例
          */
@@ -141,6 +152,36 @@ class UserPreferences(private val context: Context) {
                 INSTANCE = instance
                 instance
             }
+        }
+    }
+
+    /**
+     * 把旧版单配置键只读合成为一条「默认配置」；旧键无有效值时返回 null。
+     * 供迁移完成前的读取兜底与一次性迁移复用。
+     */
+    private fun synthesizeLegacyConfig(preferences: Preferences): AIConfig? {
+        val legacyEndpoint = preferences[PreferencesKeys.LEGACY_LLM_API_ENDPOINT]
+        val legacyKey = preferences[PreferencesKeys.LEGACY_LLM_API_KEY]
+        val legacyModel = preferences[PreferencesKeys.LEGACY_LLM_MODEL_NAME]
+        val legacyStreaming = preferences[PreferencesKeys.LEGACY_LLM_STREAMING_RESPONSE]
+        if (legacyEndpoint == null && legacyKey.isNullOrBlank() && legacyModel == null) return null
+        return AIConfig(
+            id = UUID.randomUUID().toString(),
+            name = context.getString(R.string.ai_config_migrated_name),
+            apiEndpoint = legacyEndpoint ?: "https://open.bigmodel.cn/api/paas/v4/chat/completions",
+            apiKey = legacyKey.orEmpty(),
+            modelName = legacyModel ?: "glm-4-flash-250414",
+            streamingEnabled = legacyStreaming ?: true
+        )
+    }
+
+    private fun encodeConfigs(configs: List<AIConfig>): String = gson.toJson(configs)
+
+    private fun decodeConfigs(json: String): List<AIConfig> {
+        return try {
+            gson.fromJson<List<AIConfig>>(json, configListType) ?: emptyList()
+        } catch (_: Exception) {
+            emptyList()
         }
     }
 
@@ -234,78 +275,108 @@ class UserPreferences(private val context: Context) {
     }
 
     /**
-     * LLM API 端点的 Flow
-     * 默认值为智谱 API 端点
-     */
-    val llmApiEndpointFlow: Flow<String> = context.dataStore.data.map { preferences ->
-        preferences[PreferencesKeys.LLM_API_ENDPOINT] ?: "https://open.bigmodel.cn/api/paas/v4/chat/completions"
-    }
-
-    /**
-     * 设置 LLM API 端点
+     * 全部 LLM 配置列表的 Flow。
      *
-     * @param endpoint API 端点 URL
+     * 若 `llm_ai_configs` 键尚未写入但旧版单配置键存在（迁移完成前），
+     * 则只读合成一条「默认配置」以保证 UI 与业务在迁移完成前也能读到正确的值。
      */
-    suspend fun setLlmApiEndpoint(endpoint: String) {
-        context.dataStore.edit { preferences ->
-            preferences[PreferencesKeys.LLM_API_ENDPOINT] = endpoint
+    val aiConfigsFlow: Flow<List<AIConfig>> = context.dataStore.data.map { preferences ->
+        val stored = preferences[PreferencesKeys.LLM_AI_CONFIGS]
+        if (stored != null) {
+            decodeConfigs(stored)
+        } else {
+            synthesizeLegacyConfig(preferences)?.let { listOf(it) } ?: emptyList()
         }
     }
 
     /**
-     * LLM API 密钥的 Flow
-     * 默认值为空字符串
+     * 当前使用的 LLM 配置的 Flow。
+     * 优先返回 activeConfigId 指向的配置；若 id 失效则回退到第一条；列表为空返回 null。
      */
-    val llmApiKeyFlow: Flow<String> = context.dataStore.data.map { preferences ->
-        preferences[PreferencesKeys.LLM_API_KEY] ?: ""
-    }
-
-    /**
-     * 设置 LLM API 密钥
-     *
-     * @param apiKey API 密钥
-     */
-    suspend fun setLlmApiKey(apiKey: String) {
-        context.dataStore.edit { preferences ->
-            preferences[PreferencesKeys.LLM_API_KEY] = apiKey
+    val activeConfigFlow: Flow<AIConfig?> = context.dataStore.data.map { preferences ->
+        val configs = preferences[PreferencesKeys.LLM_AI_CONFIGS]?.let { decodeConfigs(it) }
+            ?: synthesizeLegacyConfig(preferences)?.let { listOf(it) }
+            ?: emptyList()
+        if (configs.isEmpty()) {
+            null
+        } else {
+            val activeId = preferences[PreferencesKeys.LLM_ACTIVE_CONFIG_ID]
+            configs.firstOrNull { it.id == activeId } ?: configs.first()
         }
     }
 
     /**
-     * LLM 模型名称的 Flow
-     * 默认值为 "glm-4-flash-250414"
+     * 同步读取当前使用的 LLM 配置；无配置时返回 null。
      */
-    val llmModelNameFlow: Flow<String> = context.dataStore.data.map { preferences ->
-        preferences[PreferencesKeys.LLM_MODEL_NAME] ?: "glm-4-flash-250414"
-    }
+    suspend fun getActiveAIConfig(): AIConfig? = activeConfigFlow.first()
 
     /**
-     * 设置 LLM 模型名称
-     *
-     * @param modelName 模型名称
+     * 新增一条配置。若当前没有已选配置，则自动设为当前使用。
      */
-    suspend fun setLlmModelName(modelName: String) {
+    suspend fun addAIConfig(config: AIConfig) {
         context.dataStore.edit { preferences ->
-            preferences[PreferencesKeys.LLM_MODEL_NAME] = modelName
+            val current = preferences[PreferencesKeys.LLM_AI_CONFIGS]?.let { decodeConfigs(it) } ?: emptyList()
+            val updated = current + config
+            preferences[PreferencesKeys.LLM_AI_CONFIGS] = encodeConfigs(updated)
+            if (preferences[PreferencesKeys.LLM_ACTIVE_CONFIG_ID] == null) {
+                preferences[PreferencesKeys.LLM_ACTIVE_CONFIG_ID] = config.id
+            }
         }
     }
 
     /**
-     * LLM 流式输出的 Flow
-     * 默认值为 false（不开启）
+     * 更新一条已有配置（按 id 匹配）。
      */
-    val llmStreamingResponseFlow: Flow<Boolean> = context.dataStore.data.map { preferences ->
-        preferences[PreferencesKeys.LLM_STREAMING_RESPONSE] ?: true
+    suspend fun updateAIConfig(config: AIConfig) {
+        context.dataStore.edit { preferences ->
+            val current = preferences[PreferencesKeys.LLM_AI_CONFIGS]?.let { decodeConfigs(it) } ?: emptyList()
+            val updated = current.map { if (it.id == config.id) config else it }
+            preferences[PreferencesKeys.LLM_AI_CONFIGS] = encodeConfigs(updated)
+        }
     }
 
     /**
-     * 设置 LLM 流式输出
-     *
-     * @param enabled true 为开启，false 为不开启
+     * 删除一条配置。若删除的是当前使用项，则自动提升列表第一条；列表清空则无当前配置。
      */
-    suspend fun setLlmStreamingResponse(enabled: Boolean) {
+    suspend fun deleteAIConfig(id: String) {
         context.dataStore.edit { preferences ->
-            preferences[PreferencesKeys.LLM_STREAMING_RESPONSE] = enabled
+            val current = preferences[PreferencesKeys.LLM_AI_CONFIGS]?.let { decodeConfigs(it) } ?: emptyList()
+            val updated = current.filterNot { it.id == id }
+            preferences[PreferencesKeys.LLM_AI_CONFIGS] = encodeConfigs(updated)
+            if (preferences[PreferencesKeys.LLM_ACTIVE_CONFIG_ID] == id) {
+                if (updated.isNotEmpty()) {
+                    preferences[PreferencesKeys.LLM_ACTIVE_CONFIG_ID] = updated.first().id
+                } else {
+                    preferences.remove(PreferencesKeys.LLM_ACTIVE_CONFIG_ID)
+                }
+            }
+        }
+    }
+
+    /**
+     * 设置当前使用的配置。
+     */
+    suspend fun setActiveAIConfig(id: String) {
+        context.dataStore.edit { preferences ->
+            preferences[PreferencesKeys.LLM_ACTIVE_CONFIG_ID] = id
+        }
+    }
+
+    /**
+     * 一次性迁移：把旧版单配置键（llm_api_endpoint / llm_api_key / llm_model_name /
+     * llm_streaming_response）迁移为一条「默认配置」并设为当前使用，随后物理删除旧键。
+     * 幂等：`llm_ai_configs` 已存在时直接返回。
+     */
+    suspend fun migrateLegacyAiConfig() {
+        context.dataStore.edit { preferences ->
+            if (preferences[PreferencesKeys.LLM_AI_CONFIGS] != null) return@edit
+            val legacy = synthesizeLegacyConfig(preferences) ?: return@edit
+            preferences[PreferencesKeys.LLM_AI_CONFIGS] = encodeConfigs(listOf(legacy))
+            preferences[PreferencesKeys.LLM_ACTIVE_CONFIG_ID] = legacy.id
+            preferences.remove(PreferencesKeys.LEGACY_LLM_API_ENDPOINT)
+            preferences.remove(PreferencesKeys.LEGACY_LLM_API_KEY)
+            preferences.remove(PreferencesKeys.LEGACY_LLM_MODEL_NAME)
+            preferences.remove(PreferencesKeys.LEGACY_LLM_STREAMING_RESPONSE)
         }
     }
 

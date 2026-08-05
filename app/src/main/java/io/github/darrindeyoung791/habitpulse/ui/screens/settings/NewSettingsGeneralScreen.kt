@@ -29,6 +29,7 @@ import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import io.github.darrindeyoung791.habitpulse.R
 import io.github.darrindeyoung791.habitpulse.data.preferences.UserPreferences
+import io.github.darrindeyoung791.habitpulse.ui.screens.settings.components.SettingsSectionHeader
 import io.github.darrindeyoung791.habitpulse.ui.screens.settings.components.SettingsSegmentedGroup
 import io.github.darrindeyoung791.habitpulse.ui.screens.settings.components.SettingsSegmentedItem
 import io.github.darrindeyoung791.habitpulse.ui.screens.settings.components.SettingsSegmentedSwitch
@@ -68,7 +69,7 @@ fun NewSettingsGeneralScreen(
         onBack = onBack,
         onHelp = onOpenHelp
     ) {
-        SectionHeader(text = stringResource(id = R.string.settings_ui_display))
+        SettingsSectionHeader(text = stringResource(id = R.string.settings_ui_display))
         val showLanguageItem = AppLocaleManager.isPerAppLanguageSupported()
         val uiDisplayItemCount =
             (if (showLanguageItem) 1 else 0) + (if (showForceTabletLandscapeSwitch) 1 else 0) + 1
@@ -137,7 +138,7 @@ fun NewSettingsGeneralScreen(
             }
         }
 
-        SectionHeader(text = stringResource(id = R.string.settings_storage))
+        SettingsSectionHeader(text = stringResource(id = R.string.settings_storage))
         SettingsSegmentedGroup(tintOffset = 2) {
             SettingsSegmentedItem(
                 index = 0,
@@ -220,16 +221,6 @@ fun NewSettingsGeneralScreen(
             }
         )
     }
-}
-
-@Composable
-private fun SectionHeader(text: String) {
-    Text(
-        text = text,
-        style = MaterialTheme.typography.labelMedium,
-        color = MaterialTheme.colorScheme.primary,
-        modifier = Modifier.padding(start = 16.dp, end = 16.dp, top = 24.dp, bottom = 8.dp)
-    )
 }
 
 private fun clearWebViewCache(context: Context) {

@@ -297,22 +297,4 @@ class LLMClient(
             else -> e?.message ?: "连接失败，请检查配置后重试"
         }
     }
-
-    companion object {
-        fun fromPreferences(
-            apiEndpoint: String,
-            apiKey: String,
-            modelName: String,
-            streamingEnabled: Boolean = false
-        ): LLMClient {
-            return LLMClient(
-                config = LLMConfig(
-                    apiEndpoint = apiEndpoint,
-                    apiKey = apiKey,
-                    modelName = modelName,
-                    streamingEnabled = streamingEnabled
-                )
-            )
-        }
-    }
 }
