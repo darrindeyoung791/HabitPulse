@@ -298,9 +298,26 @@ fun PressVibrationFeedback(
 | 返回 / 帮助按钮（`NewSettingsScaffold`） | 各 `IconButton` 本地 interactionSource 并附加 |
 | 主页打卡按钮（`HabitScreen.CheckInButton`） | 保留原有 50ms 震动，但用 `rememberHapticsEnabled()` 门控（保证「全部震动」开关生效） |
 | 免打扰步进滑动条（`DndRangeSlider`） | 不走交互源；在 `onValueChange` 中 snapped 值变化时 `vibrateShort`（点击轨道 / 拖动跨步 → 震动，同一步内拖动不震），时长/强度同样读取用户配置 |
+| 设置页滚动到顶/底（`NewSettingsScaffold`） | 见 7.5 |
 
 其余界面（首页卡片、记录页等）按钮**日后接入**，一律复用 `PressVibrationFeedback` / `rememberHapticsEnabled`，
 不要在各自页面自行调 `vibrator`。
+
+### 7.5 滚动到顶/底边缘震动（Scroll Edge Haptics）
+
+设置页统一滚动容器（`NewSettingsScaffold`）在滚动到**顶部或底部**时震**一下**（单次 `vibrateShort`，
+不是按压的按下+松手两下）。
+
+实现要点：
+
+- **监听方式**：`LaunchedEffect(scrollState)` + `snapshotFlow { scrollState.value to scrollState.maxValue }`
+  逐次比较上次位置；`value <= 0` 且上次 `> 0` → 触顶；`value >= maxValue` 且上次 `< maxValue` → 触底，
+  触发时调用一次 `vibrateShort(context, currentDuration, currentAmplitude)`。
+- **不可滚动页面无效果**：`maxValue <= 0`（内容不满一屏，无法滚动）时不进入判断，边缘拖拽不震动。
+- **门控与参数**：同样受「关闭应用内全部震动」开关（`rememberHapticsEnabled()`）与调试页
+  时长/强度配置（`rememberPressVibrationParams()`）控制；用 `rememberUpdatedState` 读取，
+  避免开关/参数变化时重启 collector。
+- **单次触发**：触顶/触底各自只在「从非边缘位置进入边缘」时震一次，停留在边缘不再重复震。
 
 ### 7.4 关键要点（踩坑记录）
 

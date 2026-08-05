@@ -146,6 +146,7 @@
 
     <!-- Debug / Developer options -->
     <string name="debug_add_sample_data_dialog_title">新增範例資料？</string>
+    <string name="debug_add_sample_data_warning">警告：此操作會一次性新增大量範例習慣與完成記錄，可能打亂你已有的習慣，並產生大量不必要的提醒。</string>
     <string name="debug_add_sample_data_dialog_message">是否新增 40 筆範例習慣資料？\n\n此功能用於新機偵錯，將會新增包含不同提醒方式、監督方式和備註的習慣資料。部分監督者會在多個習慣中出現，用於測試介面捲動效能。</string>
     <string name="debug_add_sample_data_yes">新增</string>
     <string name="debug_add_sample_data_no">取消</string>

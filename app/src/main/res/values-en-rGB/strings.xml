@@ -145,6 +145,7 @@
     
     <!-- Debug / Developer options -->
     <string name="debug_add_sample_data_dialog_title">Add Sample Data?</string>
+    <string name="debug_add_sample_data_warning">Warning: This will add a large batch of sample habits and completion records at once, which may disrupt your existing habits and trigger many unnecessary reminders.</string>
     <string name="debug_add_sample_data_dialog_message">Add 40 sample habit data entries?\n\nThis feature is for debugging on new devices. It will add habits with different reminder methods, supervision methods, and notes. Some supervisors appear in multiple habits for testing UI scrolling performance.</string>
     <string name="debug_add_sample_data_yes">Add</string>
     <string name="debug_add_sample_data_no">Cancel</string>

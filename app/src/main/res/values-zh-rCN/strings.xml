@@ -146,6 +146,7 @@
 
     <!-- Debug / Developer options -->
     <string name="debug_add_sample_data_dialog_title">添加样例数据？</string>
+    <string name="debug_add_sample_data_warning">警告：此操作会一次性新增大量样例习惯与完成记录，可能打乱你已有的习惯，并产生大量不必要的提醒。</string>
     <string name="debug_add_sample_data_dialog_message">是否添加 40 条样例习惯数据？\n\n此功能用于新机调试，将添加包含不同提醒方式、监督方式和备注的习惯数据。部分监督人会在多个习惯中出现，用于测试界面滚动性能。</string>
     <string name="debug_add_sample_data_yes">添加</string>
     <string name="debug_add_sample_data_no">取消</string>

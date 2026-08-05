@@ -1,10 +1,12 @@
 package io.github.darrindeyoung791.habitpulse.ui.screens.settings
 
 import android.widget.Toast
+import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.height
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
@@ -78,7 +80,16 @@ fun NewSettingsDebugScreen(
         AlertDialog(
             onDismissRequest = { showAddSampleDialog = false },
             title = { Text(stringResource(id = R.string.debug_add_sample_data_dialog_title)) },
-            text = { Text(stringResource(id = R.string.debug_add_sample_data_dialog_message)) },
+            text = {
+                Column {
+                    Text(
+                        text = stringResource(id = R.string.debug_add_sample_data_warning),
+                        color = MaterialTheme.colorScheme.error
+                    )
+                    Spacer(modifier = Modifier.height(12.dp))
+                    Text(stringResource(id = R.string.debug_add_sample_data_dialog_message))
+                }
+            },
             confirmButton = {
                 TextButton(onClick = {
                     showAddSampleDialog = false
