@@ -37,6 +37,12 @@ object PreferencesKeys {
     val FORCE_TABLET_LANDSCAPE = booleanPreferencesKey("force_tablet_landscape")
 
     /**
+     * 是否开启应用内全部震动反馈
+     * 默认值为 true（开启）
+     */
+    val HAPTIC_FEEDBACK_ENABLED = booleanPreferencesKey("haptic_feedback_enabled")
+
+    /**
      * 是否开启持久通知以保持后台运行
      */
     val PERSISTENT_NOTIFICATION = booleanPreferencesKey("persistent_notification")
@@ -186,6 +192,25 @@ class UserPreferences(private val context: Context) {
     suspend fun setForceTabletLandscape(force: Boolean) {
         context.dataStore.edit { preferences ->
             preferences[PreferencesKeys.FORCE_TABLET_LANDSCAPE] = force
+        }
+    }
+
+    /**
+     * 是否开启应用内全部震动反馈的 Flow
+     * 默认值为 true（开启）
+     */
+    val hapticsEnabledFlow: Flow<Boolean> = context.dataStore.data.map { preferences ->
+        preferences[PreferencesKeys.HAPTIC_FEEDBACK_ENABLED] ?: true
+    }
+
+    /**
+     * 设置是否开启应用内全部震动反馈
+     *
+     * @param enabled true 为开启，false 为关闭
+     */
+    suspend fun setHapticsEnabled(enabled: Boolean) {
+        context.dataStore.edit { preferences ->
+            preferences[PreferencesKeys.HAPTIC_FEEDBACK_ENABLED] = enabled
         }
     }
 

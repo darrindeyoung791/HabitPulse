@@ -1,5 +1,6 @@
 package io.github.darrindeyoung791.habitpulse.ui.screens.settings
 
+import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.ColumnScope
@@ -25,6 +26,7 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import io.github.darrindeyoung791.habitpulse.R
 import io.github.darrindeyoung791.habitpulse.ui.screens.settings.components.ScrollEdgeFadeOverlay
+import io.github.darrindeyoung791.habitpulse.ui.utils.PressVibrationFeedback
 
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -46,21 +48,28 @@ fun NewSettingsScaffold(
                     )
                 },
                 navigationIcon = {
-                    IconButton(onClick = onBack) {
+                    val backInteractionSource = remember { MutableInteractionSource() }
+                    IconButton(
+                        onClick = onBack,
+                        interactionSource = backInteractionSource
+                    ) {
                         Icon(
                             imageVector = Icons.AutoMirrored.Filled.ArrowBack,
                             contentDescription = stringResource(id = R.string.settings_back)
                         )
                     }
+                    PressVibrationFeedback(interactionSource = backInteractionSource)
                 },
                 actions = {
                     if (onHelp != null) {
-                        IconButton(onClick = onHelp) {
+                        val helpInteractionSource = remember { MutableInteractionSource() }
+                        IconButton(onClick = onHelp, interactionSource = helpInteractionSource) {
                             Icon(
                                 imageVector = Icons.Outlined.HelpOutline,
                                 contentDescription = stringResource(id = R.string.webview_help)
                             )
                         }
+                        PressVibrationFeedback(interactionSource = helpInteractionSource)
                     }
                 }
             )

@@ -9,6 +9,8 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import io.github.darrindeyoung791.habitpulse.R
+import io.github.darrindeyoung791.habitpulse.ui.utils.rememberHapticsEnabled
+import io.github.darrindeyoung791.habitpulse.ui.utils.vibrateShort
 
 @Composable
 fun DndRangeSlider(
@@ -22,6 +24,7 @@ fun DndRangeSlider(
     val rangeStart = 1260f
     val rangeEnd = 1920f
     val stepCount = 21
+    val hapticsEnabled = rememberHapticsEnabled()
 
     var curStart by remember(startTime) { mutableFloatStateOf(snapToStep(toLinear(startTime))) }
     var curEnd by remember(endTime) { mutableFloatStateOf(snapToStep(toLinear(endTime))) }
@@ -73,8 +76,13 @@ fun DndRangeSlider(
         RangeSlider(
             value = curStart..curEnd,
             onValueChange = { range ->
-                curStart = snapToStep(range.start)
-                curEnd = snapToStep(range.endInclusive)
+                val newStart = snapToStep(range.start)
+                val newEnd = snapToStep(range.endInclusive)
+                if (hapticsEnabled && (newStart != curStart || newEnd != curEnd)) {
+                    vibrateShort(context)
+                }
+                curStart = newStart
+                curEnd = newEnd
             },
             onValueChangeFinished = {
                 val snappedStart = snapToStep(curStart)

@@ -31,6 +31,8 @@ import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import io.github.darrindeyoung791.habitpulse.R
+import io.github.darrindeyoung791.habitpulse.ui.theme.AccentTint
+import io.github.darrindeyoung791.habitpulse.ui.utils.PressVibrationFeedback
 
 internal val SettingsGroupItemGap = 4.dp
 internal val SettingsBetweenGroupGap = 16.dp
@@ -136,6 +138,8 @@ internal fun SettingsListSurface(
 ) {
     val pressed = interactionSource.collectIsPressedAsState().value
     val isPressed = pressed && enabled
+
+    PressVibrationFeedback(interactionSource = interactionSource, enabled = enabled)
 
     val topStart by animateDpAsState(if (isPressed) PressedCorner else if (index == 0) LargeCorner else SmallCorner)
     val topEnd by animateDpAsState(if (isPressed) PressedCorner else if (index == 0) LargeCorner else SmallCorner)
