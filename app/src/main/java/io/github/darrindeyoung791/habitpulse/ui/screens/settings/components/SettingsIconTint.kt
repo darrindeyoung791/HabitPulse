@@ -1,53 +1,27 @@
 package io.github.darrindeyoung791.habitpulse.ui.screens.settings.components
 
-import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.runtime.Composable
-import androidx.compose.ui.graphics.Color
-
-internal data class AccentTint(
-    val container: Color,
-    val content: Color
-)
-
-internal data class AccentTintPair(
-    val light: AccentTint,
-    val dark: AccentTint
-)
+import androidx.compose.runtime.staticCompositionLocalOf
+import androidx.compose.runtime.remember
+import io.github.darrindeyoung791.habitpulse.ui.theme.AccentSeeds
+import io.github.darrindeyoung791.habitpulse.ui.theme.AccentTint
+import io.github.darrindeyoung791.habitpulse.ui.theme.seedAccentTint
 
 /**
- * Low-saturation accent palette used for leading icon chips.
- * Fixed colors (NOT dynamic color), each with light/dark variants that adapt to theme.
+ * 页面级 tint 偏移量：同一页面内连续的分组继续使用色板，而不是从 index 0
+ * 重新开始，从而保证同一页面内的图标颜色不重复。
+ * 由 [SettingsSegmentedGroup] 提供（`tintOffset` 参数）。
  */
-internal val AccentPalette = listOf(
-    AccentTintPair(
-        light = AccentTint(Color(0xFFDCE8FB), Color(0xFF2A5AA8)),
-        dark = AccentTint(Color(0xFF1F2D4A), Color(0xFF9FC0F0))
-    ),
-    AccentTintPair(
-        light = AccentTint(Color(0xFFDCEFDC), Color(0xFF2E7D46)),
-        dark = AccentTint(Color(0xFF1E3327), Color(0xFF97D0A4))
-    ),
-    AccentTintPair(
-        light = AccentTint(Color(0xFFFBEBD6), Color(0xFF9A6B2A)),
-        dark = AccentTint(Color(0xFF36281A), Color(0xFFE3BC7E))
-    ),
-    AccentTintPair(
-        light = AccentTint(Color(0xFFEAE1F7), Color(0xFF5E3F9E)),
-        dark = AccentTint(Color(0xFF2B2340), Color(0xFFBCA6E8))
-    ),
-    AccentTintPair(
-        light = AccentTint(Color(0xFFF9E0E0), Color(0xFFA63C47)),
-        dark = AccentTint(Color(0xFF3A2224), Color(0xFFE8A0A6))
-    ),
-    AccentTintPair(
-        light = AccentTint(Color(0xFFD9EEEF), Color(0xFF2E7C80)),
-        dark = AccentTint(Color(0xFF1E3234), Color(0xFF9CD3D6))
-    )
-)
+internal val LocalAccentTintOffset = staticCompositionLocalOf { 0 }
 
+/**
+ * 前置图标 chip 的颜色：以 [AccentSeeds] 为种子、通过 Material 取色器
+ * （tonal spot 色板）派生 container / content 颜色，见 [seedAccentTint]。
+ */
 @Composable
 internal fun rememberAccentTint(index: Int): AccentTint {
-    val dark = isSystemInDarkTheme()
-    val pair = AccentPalette[(index % AccentPalette.size + AccentPalette.size) % AccentPalette.size]
-    return if (dark) pair.dark else pair.light
+    val dark = androidx.compose.foundation.isSystemInDarkTheme()
+    val globalIndex = (LocalAccentTintOffset.current + index).mod(AccentSeeds.size)
+    val seed = AccentSeeds[globalIndex]
+    return remember(seed, dark) { seedAccentTint(seed, dark) }
 }

@@ -142,7 +142,7 @@ fun NewSettingsAboutDetailScreen(
         }
 
         SectionHeader(text = stringResource(id = R.string.settings_support_habitpulse, appName))
-        SettingsSegmentedGroup {
+        SettingsSegmentedGroup(tintOffset = 3) {
             SettingsSegmentedSwitch(
                 index = 0,
                 count = 1,

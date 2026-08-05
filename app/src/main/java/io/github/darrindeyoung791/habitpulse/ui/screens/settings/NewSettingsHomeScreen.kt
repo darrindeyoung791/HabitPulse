@@ -78,7 +78,7 @@ fun NewSettingsHomeScreen(
             )
         }
         Spacer(modifier = Modifier.height(SettingsBetweenGroupGap))
-        SettingsSegmentedGroup {
+        SettingsSegmentedGroup(tintOffset = 5) {
             SettingsSegmentedItem(
                 index = 0,
                 count = 1,

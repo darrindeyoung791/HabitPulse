@@ -33,6 +33,7 @@ data class EntryItem(
     val iconContent: String? = null,
     val containerColor: Color? = null,
     val cardColor: Color? = null,
+    val contentColor: Color? = null,
     val onClick: () -> Unit
 )
 
@@ -192,7 +193,7 @@ private fun EntryCard(
                         text = entry.title,
                         style = MaterialTheme.typography.titleMedium,
                         fontWeight = FontWeight.Normal,
-                        color = MaterialTheme.colorScheme.onSurface,
+                        color = entry.contentColor ?: MaterialTheme.colorScheme.onSurface,
                         maxLines = 1,
                         overflow = TextOverflow.Ellipsis
                     )

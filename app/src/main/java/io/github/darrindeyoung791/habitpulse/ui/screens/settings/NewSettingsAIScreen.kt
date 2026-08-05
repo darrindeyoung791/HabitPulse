@@ -250,7 +250,7 @@ fun NewSettingsAIScreen(
 
         Spacer(modifier = Modifier.height(16.dp))
 
-        SettingsSegmentedGroup {
+        SettingsSegmentedGroup(tintOffset = 2) {
             SettingsSegmentedItem(
                 index = 0,
                 count = 1,
