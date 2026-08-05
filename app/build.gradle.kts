@@ -17,8 +17,8 @@ android {
         applicationId = "io.github.darrindeyoung791.habitpulse"
         minSdk = 26
         targetSdk = 37
-        versionCode = 184
-        versionName = "0.8.36-alpha"
+        versionCode = 185
+        versionName = "0.8.37-alpha"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
     }
@@ -53,6 +53,7 @@ android {
     lint {
         abortOnError = false
     }
+    compileSdkMinor = 0
     ksp {
         arg("room.schemaLocation", "$projectDir/schemas")
         arg("room.incremental", "true")
@@ -106,6 +107,7 @@ dependencies {
     implementation("androidx.compose.material:material-icons-extended")
     implementation("androidx.core:core-splashscreen:1.2.0")
     // Material library required for DynamicColors.applyToActivitiesIfAvailable
+    // (also bundles com.google.android.material.color.utilities used for seed-based accent palettes)
     implementation("com.google.android.material:material:1.14.0")
     implementation(libs.androidx.core.ktx)
     implementation(libs.androidx.lifecycle.runtime.ktx)
