@@ -112,6 +112,14 @@
             android:resizeableActivity="true"
             android:configChanges="uiMode|orientation|screenSize|screenLayout|smallestScreenSize" />
         <activity
+            android:name=".NewSettingsLanguageActivity"
+            android:exported="false"
+            android:label="@string/settings_language"
+            android:theme="@style/Theme.HabitPulse"
+            android:enableOnBackInvokedCallback="true"
+            android:resizeableActivity="true"
+            android:configChanges="uiMode|orientation|screenSize|screenLayout|smallestScreenSize" />
+        <activity
             android:name=".NewSettingsAboutActivity"
             android:exported="false"
             android:label="@string/settings_about"

@@ -8,6 +8,8 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.outlined.DeleteSweep
 import androidx.compose.material.icons.outlined.Tablet
+import androidx.compose.material.icons.outlined.Translate
+import androidx.compose.material.icons.outlined.Vibration
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.MaterialTheme
@@ -30,6 +32,7 @@ import io.github.darrindeyoung791.habitpulse.data.preferences.UserPreferences
 import io.github.darrindeyoung791.habitpulse.ui.screens.settings.components.SettingsSegmentedGroup
 import io.github.darrindeyoung791.habitpulse.ui.screens.settings.components.SettingsSegmentedItem
 import io.github.darrindeyoung791.habitpulse.ui.screens.settings.components.SettingsSegmentedSwitch
+import io.github.darrindeyoung791.habitpulse.utils.AppLocaleManager
 import kotlinx.coroutines.launch
 import java.io.File
 
@@ -37,7 +40,8 @@ import java.io.File
 @Composable
 fun NewSettingsGeneralScreen(
     onBack: () -> Unit,
-    onOpenHelp: () -> Unit
+    onOpenHelp: () -> Unit,
+    onOpenLanguage: () -> Unit
 ) {
     val context = LocalContext.current
     val scope = rememberCoroutineScope()
@@ -54,6 +58,7 @@ fun NewSettingsGeneralScreen(
     val showForceTabletLandscapeSwitch = !isTabletLandscape
 
     val forceTabletLandscape by userPreferences.forceTabletLandscapeFlow.collectAsStateWithLifecycle(initialValue = false)
+    val hapticsEnabled by userPreferences.hapticsEnabledFlow.collectAsStateWithLifecycle(initialValue = true)
 
     var showForceTabletLandscapeDialog by remember { mutableStateOf(false) }
     var pendingForceTabletLandscapeValue by remember { mutableStateOf(false) }
@@ -64,23 +69,68 @@ fun NewSettingsGeneralScreen(
         onHelp = onOpenHelp
     ) {
         SectionHeader(text = stringResource(id = R.string.settings_ui_display))
-        if (showForceTabletLandscapeSwitch) {
+        val showLanguageItem = AppLocaleManager.isPerAppLanguageSupported()
+        val uiDisplayItemCount =
+            (if (showLanguageItem) 1 else 0) + (if (showForceTabletLandscapeSwitch) 1 else 0) + 1
+        if (uiDisplayItemCount > 0) {
             SettingsSegmentedGroup {
-                SettingsSegmentedSwitch(
-                    index = 0,
-                    count = 1,
-                    headline = stringResource(id = R.string.settings_force_tablet_landscape),
-                    supportingText = stringResource(id = R.string.settings_force_tablet_landscape_description),
-                    leadingIcon = Icons.Outlined.Tablet,
-                    checked = forceTabletLandscape,
-                    onCheckedChange = { isChecked ->
-                        if (isChecked) {
-                            pendingForceTabletLandscapeValue = true
-                            showForceTabletLandscapeDialog = true
-                        } else {
-                            scope.launch {
-                                userPreferences.setForceTabletLandscape(false)
+                if (showLanguageItem) {
+                    val currentLanguageText = AppLocaleManager
+                        .getCurrentAppLocale(context)
+                        ?.toLanguageTag()
+                        ?.let { AppLocaleManager.labelRes(it) }
+                        ?.let { stringResource(id = it) }
+                    SettingsSegmentedItem(
+                        index = 0,
+                        count = uiDisplayItemCount,
+                        headline = stringResource(id = R.string.settings_language),
+                        supportingText = currentLanguageText
+                            ?: if (!AppLocaleManager.isSystemLanguageSupported(context)) {
+                                stringResource(
+                                    id = R.string.language_follow_system_unsupported,
+                                    stringResource(id = R.string.app_name)
+                                )
+                            } else {
+                                AppLocaleManager.systemLocaleLabelRes(context)
+                                    ?.let { stringResource(id = it) }
+                                    ?: stringResource(id = R.string.settings_language_system_default)
+                            },
+                        leadingIcon = Icons.Outlined.Translate,
+                        showArrow = true,
+                        onClick = onOpenLanguage
+                    )
+                }
+                if (showForceTabletLandscapeSwitch) {
+                    SettingsSegmentedSwitch(
+                        index = if (showLanguageItem) 1 else 0,
+                        count = uiDisplayItemCount,
+                        headline = stringResource(id = R.string.settings_force_tablet_landscape),
+                        supportingText = stringResource(id = R.string.settings_force_tablet_landscape_description),
+                        leadingIcon = Icons.Outlined.Tablet,
+                        checked = forceTabletLandscape,
+                        onCheckedChange = { isChecked ->
+                            if (isChecked) {
+                                pendingForceTabletLandscapeValue = true
+                                showForceTabletLandscapeDialog = true
+                            } else {
+                                scope.launch {
+                                    userPreferences.setForceTabletLandscape(false)
+                                }
                             }
+                        }
+                    )
+                }
+                val disableVibrations = !hapticsEnabled
+                SettingsSegmentedSwitch(
+                    index = uiDisplayItemCount - 1,
+                    count = uiDisplayItemCount,
+                    headline = stringResource(id = R.string.settings_haptic_feedback),
+                    supportingText = stringResource(id = R.string.settings_haptic_feedback_description),
+                    leadingIcon = Icons.Outlined.Vibration,
+                    checked = disableVibrations,
+                    onCheckedChange = { isChecked ->
+                        scope.launch {
+                            userPreferences.setHapticsEnabled(!isChecked)
                         }
                     }
                 )
@@ -88,7 +138,7 @@ fun NewSettingsGeneralScreen(
         }
 
         SectionHeader(text = stringResource(id = R.string.settings_storage))
-        SettingsSegmentedGroup {
+        SettingsSegmentedGroup(tintOffset = 2) {
             SettingsSegmentedItem(
                 index = 0,
                 count = 2,
