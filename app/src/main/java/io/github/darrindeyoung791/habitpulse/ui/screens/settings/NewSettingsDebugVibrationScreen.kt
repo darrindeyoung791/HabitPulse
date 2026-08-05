@@ -39,6 +39,7 @@ import io.github.darrindeyoung791.habitpulse.ui.screens.settings.components.Sett
 import io.github.darrindeyoung791.habitpulse.ui.screens.settings.components.SettingsSegmentedBox
 import io.github.darrindeyoung791.habitpulse.ui.utils.PressVibrationDefaultAmplitude
 import io.github.darrindeyoung791.habitpulse.ui.utils.PressVibrationDurationMs
+import kotlin.math.roundToInt
 import kotlinx.coroutines.launch
 
 /**
@@ -58,8 +59,8 @@ fun NewSettingsDebugVibrationScreen(
     val durationMs by userPreferences.pressVibrationDurationMsFlow.collectAsStateWithLifecycle(initialValue = PressVibrationDurationMs)
     val amplitude by userPreferences.pressVibrationAmplitudeFlow.collectAsStateWithLifecycle(initialValue = PressVibrationDefaultAmplitude)
 
-    var sliderDuration by remember { mutableFloatStateOf(durationMs.toFloat()) }
-    var sliderAmplitude by remember { mutableFloatStateOf(amplitude.toFloat()) }
+    var sliderDuration by remember(durationMs) { mutableFloatStateOf(durationMs.toFloat()) }
+    var sliderAmplitude by remember(amplitude) { mutableFloatStateOf(amplitude.toFloat()) }
 
     NewSettingsScaffold(
         title = stringResource(id = R.string.settings_debug_vibration_title),
@@ -80,19 +81,18 @@ fun NewSettingsDebugVibrationScreen(
                         modifier = Modifier.weight(1f)
                     )
                     Text(
-                        text = "${sliderDuration.toInt()} ms",
+                        text = "${sliderDuration.roundToInt()} ms",
                         style = MaterialTheme.typography.bodyMedium,
                         color = MaterialTheme.colorScheme.primary
                     )
                 }
                 Slider(
                     value = sliderDuration,
-                    onValueChange = { sliderDuration = it },
+                    onValueChange = { sliderDuration = snapDuration(it) },
                     valueRange = 5f..200f,
                     steps = 38,
                     onValueChangeFinished = {
-                        val value = sliderDuration.toInt().coerceIn(5, 200)
-                        sliderDuration = value.toFloat()
+                        val value = sliderDuration.roundToInt().coerceIn(5, 200)
                         scope.launch { userPreferences.setPressVibrationDurationMs(value.toLong()) }
                     }
                 )
@@ -115,19 +115,18 @@ fun NewSettingsDebugVibrationScreen(
                         modifier = Modifier.weight(1f)
                     )
                     Text(
-                        text = "${sliderAmplitude.toInt()}",
+                        text = "${sliderAmplitude.roundToInt()}",
                         style = MaterialTheme.typography.bodyMedium,
                         color = MaterialTheme.colorScheme.primary
                     )
                 }
                 Slider(
                     value = sliderAmplitude,
-                    onValueChange = { sliderAmplitude = it },
+                    onValueChange = { sliderAmplitude = snapAmplitude(it) },
                     valueRange = 1f..255f,
                     steps = 253,
                     onValueChangeFinished = {
-                        val value = sliderAmplitude.toInt().coerceIn(1, 255)
-                        sliderAmplitude = value.toFloat()
+                        val value = sliderAmplitude.roundToInt().coerceIn(1, 255)
                         scope.launch { userPreferences.setPressVibrationAmplitude(value) }
                     }
                 )
@@ -140,8 +139,8 @@ fun NewSettingsDebugVibrationScreen(
             onClick = {
                 vibrateTest(
                     context,
-                    sliderDuration.toInt().coerceIn(5, 200).toLong(),
-                    sliderAmplitude.toInt().coerceIn(1, 255)
+                    sliderDuration.roundToInt().coerceIn(5, 200).toLong(),
+                    sliderAmplitude.roundToInt().coerceIn(1, 255)
                 )
                 Toast.makeText(
                     context,
@@ -210,6 +209,16 @@ private fun SectionHeader(text: String) {
         color = MaterialTheme.colorScheme.primary,
         modifier = Modifier.padding(start = 16.dp, end = 16.dp, top = 24.dp, bottom = 8.dp)
     )
+}
+
+private fun snapDuration(value: Float): Float {
+    val snapped = (value / 5f).roundToInt() * 5f
+    return snapped.coerceIn(5f, 200f)
+}
+
+private fun snapAmplitude(value: Float): Float {
+    val snapped = value.roundToInt().toFloat()
+    return snapped.coerceIn(1f, 255f)
 }
 
 private fun vibrateTest(context: android.content.Context, durationMs: Long, amplitude: Int) {
