@@ -17,8 +17,8 @@ android {
         applicationId = "io.github.darrindeyoung791.habitpulse"
         minSdk = 26
         targetSdk = 37
-        versionCode = 188
-        versionName = "0.8.40-alpha"
+        versionCode = 190
+        versionName = "0.8.42-alpha"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
     }
@@ -141,4 +141,8 @@ dependencies {
 
     // Gson for JSON parsing
     implementation("com.google.code.gson:gson:2.14.0")
+
+    // Biometric for gated API key reveal (CryptoObject + BiometricPrompt)
+    implementation("androidx.biometric:biometric:1.1.0")
+    implementation("androidx.fragment:fragment-ktx:1.8.5")
 }

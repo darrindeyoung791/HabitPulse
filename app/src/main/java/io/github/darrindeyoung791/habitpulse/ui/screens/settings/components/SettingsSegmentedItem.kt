@@ -62,6 +62,7 @@ fun SettingsSegmentedItem(
     enabled: Boolean = true,
     showArrow: Boolean = true,
     tintIndex: Int = index,
+    selected: Boolean = false,
     onClick: () -> Unit,
     trailing: @Composable () -> Unit = {
         if (showArrow) {
@@ -80,6 +81,7 @@ fun SettingsSegmentedItem(
         index = index,
         count = count,
         enabled = enabled,
+        selected = selected,
         onClick = onClick,
         leading = {
             if (leadingIcon != null) {

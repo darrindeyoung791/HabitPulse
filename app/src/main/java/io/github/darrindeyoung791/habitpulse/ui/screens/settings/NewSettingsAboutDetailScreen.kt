@@ -11,9 +11,11 @@ import androidx.compose.material.icons.automirrored.outlined.Article
 import androidx.compose.material.icons.outlined.FavoriteBorder
 import androidx.compose.material.icons.outlined.Info
 import androidx.compose.material.icons.outlined.Person
+import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
@@ -49,6 +51,7 @@ fun NewSettingsAboutDetailScreen(
 
     var versionTapCount by remember { mutableStateOf(0) }
     var versionTapStartTime by remember { mutableStateOf(0L) }
+    var showDebugConfirm by remember { mutableStateOf(false) }
 
     val TAP_TIME_WINDOW = 5_000L
     val TAP_COUNT_THRESHOLD = 5
@@ -110,7 +113,7 @@ fun NewSettingsAboutDetailScreen(
                         if (versionTapCount >= TAP_COUNT_THRESHOLD) {
                             versionTapCount = 0
                             versionTapStartTime = 0
-                            onNavigateDebug()
+                            showDebugConfirm = true
                         }
                     }
                 }
@@ -193,6 +196,27 @@ fun NewSettingsAboutDetailScreen(
                     putExtra(WebViewActivity.EXTRA_INITIAL_URL, RouteConfig.GITHUB_URL)
                 }
                 context.startActivity(intent)
+            }
+        )
+    }
+
+    if (showDebugConfirm) {
+        AlertDialog(
+            onDismissRequest = { showDebugConfirm = false },
+            title = { Text(stringResource(id = R.string.settings_debug_confirm_title)) },
+            text = { Text(stringResource(id = R.string.settings_debug_confirm_message)) },
+            confirmButton = {
+                TextButton(onClick = {
+                    showDebugConfirm = false
+                    onNavigateDebug()
+                }) {
+                    Text(stringResource(id = R.string.dialog_confirm))
+                }
+            },
+            dismissButton = {
+                TextButton(onClick = { showDebugConfirm = false }) {
+                    Text(stringResource(id = R.string.dialog_cancel))
+                }
             }
         )
     }

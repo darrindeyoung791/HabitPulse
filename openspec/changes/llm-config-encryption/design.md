@@ -91,7 +91,7 @@
 ### D6. 查看门控流程（BiometricPrompt）
 
 `NewSettingsAIEditScreen` API key 输入框改造：
-- 常态：显示密文占位（如「已加密（已配置）」）或空，`PasswordVisualTransformation`。
+- 常态：加密态以不可选中的圆点（如 `••••••••••••`，`enabled = false` + disabled 配色，尾图标仍可点击）示意「已填写但已加密」，`PasswordVisualTransformation`。
 - 点击「查看」→ `BiometricPrompt`（`androidx.biometric`，`ALLOWED_AUTHENTICATORS` = `BIOMETRIC_STRONG | DEVICE_CREDENTIAL`）→ 成功回调中 `decryptReveal(config.displayCipher)` → 明文填入输入框并展示。
 - 展示后自动隐藏：退出页面或失去焦点/超时后恢复密文态；`showApiKey` 现有 toggle 改为仅本会话内、展示前必过验证。
 - **无生物识别设备**：`BiometricManager.canAuthenticate(BIOMETRIC_STRONG | DEVICE_CREDENTIAL)` 返回 `NONE` 时，查看按钮隐藏或禁用（仅运行时加密仍可用）。

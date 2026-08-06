@@ -17,6 +17,10 @@ data class AIConfig(
     val apiEndpoint: String,
     @SerializedName("apiKey")
     val apiKey: String,
+    @SerializedName("displayCipher")
+    val displayCipher: String = "",
+    @SerializedName("keyVersion")
+    val keyVersion: Int = 0,
     @SerializedName("modelName")
     val modelName: String,
     @SerializedName("streamingEnabled")
@@ -24,6 +28,11 @@ data class AIConfig(
     @SerializedName("thinkingEnabled")
     val thinkingEnabled: Boolean = false
 ) {
+    /**
+     * 是否已配置 API key（基于密文判断，不依赖明文）。
+     */
+    fun hasApiKeyConfigured(): Boolean = apiKey.isNotBlank()
+
     fun isValid(): Boolean {
         return name.isNotBlank() && apiEndpoint.isNotBlank() && apiKey.isNotBlank() && modelName.isNotBlank()
     }

@@ -14,6 +14,8 @@ import com.google.gson.Gson
 import com.google.gson.reflect.TypeToken
 import io.github.darrindeyoung791.habitpulse.R
 import io.github.darrindeyoung791.habitpulse.data.model.AIConfig
+import io.github.darrindeyoung791.habitpulse.data.security.ApiKeyCrypto
+import io.github.darrindeyoung791.habitpulse.data.security.ApiKeyMigration
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.flow.map
@@ -190,10 +192,21 @@ class UserPreferences(private val context: Context) {
 
     private fun decodeConfigs(json: String): List<AIConfig> {
         return try {
-            gson.fromJson<List<AIConfig>>(json, configListType) ?: emptyList()
+            (gson.fromJson<List<AIConfig>>(json, configListType) ?: emptyList())
+                .map { it.normalizeForStorage() }
         } catch (_: Exception) {
             emptyList()
         }
+    }
+
+    /**
+     * 兼容旧格式：旧 JSON 缺少 `displayCipher`/`keyVersion` 时，Gson 会把 `displayCipher`
+     * 置为 null、`keyVersion` 置为 0。这里归一化到数据类的非空默认值，保证后续读写不抛错。
+     */
+    private fun AIConfig.normalizeForStorage(): AIConfig {
+        val rawDisplay: String? = this.displayCipher
+        val displayCipher = rawDisplay ?: ""
+        return if (displayCipher == this.displayCipher) this else this.copy(displayCipher = displayCipher)
     }
 
     /**
@@ -318,30 +331,72 @@ class UserPreferences(private val context: Context) {
 
     /**
      * 同步读取当前使用的 LLM 配置；无配置时返回 null。
+     *
+     * 返回的配置 `apiKey` 为**明文**（用运行时密钥解密），供发请求使用。
+     * 若存储中仍是旧版明文（keyVersion == 0），会先惰性加密迁移再解密返回。
      */
-    suspend fun getActiveAIConfig(): AIConfig? = activeConfigFlow.first()
+    suspend fun getActiveAIConfig(): AIConfig? {
+        var config = activeConfigFlow.first() ?: return null
+        if (ApiKeyMigration.isPlaintext(config)) {
+            encryptAndPersistConfigs()
+            config = activeConfigFlow.first() ?: return null
+        }
+        val plainKey = ApiKeyMigration.decryptRuntimeSafely(
+            decrypt = { ApiKeyCrypto.decryptRuntime(it) },
+            runtimeCipher = config.apiKey
+        )
+        // 密钥失效/被清除：返回空 key 配置，调用方会提示用户重新录入
+        return config.copy(apiKey = plainKey)
+    }
 
     /**
-     * 新增一条配置。若当前没有已选配置，则自动设为当前使用。
+     * 若 [config] 的 apiKey 仍是明文（keyVersion == 0），用运行时密钥 + 展示密钥加密并回写。
+     * 幂等：已加密（keyVersion >= 1）或空白 key 直接原样返回。
      */
-    suspend fun addAIConfig(config: AIConfig) {
+    private fun encryptIfPlaintext(config: AIConfig): AIConfig =
+        ApiKeyMigration.encryptIfPlaintext(config) { plain ->
+            ApiKeyCrypto.encryptConfig(plain)
+        }
+
+    /**
+     * 一次性迁移：把 `llm_ai_configs` 中所有明文 apiKey 加密为密文并回写。
+     * 幂等：已加密的配置保持不变；无配置或全部已加密时不做任何写操作。
+     */
+    suspend fun encryptAndPersistConfigs() {
         context.dataStore.edit { preferences ->
-            val current = preferences[PreferencesKeys.LLM_AI_CONFIGS]?.let { decodeConfigs(it) } ?: emptyList()
-            val updated = current + config
-            preferences[PreferencesKeys.LLM_AI_CONFIGS] = encodeConfigs(updated)
-            if (preferences[PreferencesKeys.LLM_ACTIVE_CONFIG_ID] == null) {
-                preferences[PreferencesKeys.LLM_ACTIVE_CONFIG_ID] = config.id
+            val json = preferences[PreferencesKeys.LLM_AI_CONFIGS] ?: return@edit
+            val configs = decodeConfigs(json)
+            val migrated = configs.map { encryptIfPlaintext(it) }
+            if (migrated != configs) {
+                preferences[PreferencesKeys.LLM_AI_CONFIGS] = encodeConfigs(migrated)
             }
         }
     }
 
     /**
-     * 更新一条已有配置（按 id 匹配）。
+     * 新增一条配置。若当前没有已选配置，则自动设为当前使用。
+     * 保存时对明文 apiKey 加密（[encryptIfPlaintext]）。
      */
-    suspend fun updateAIConfig(config: AIConfig) {
+    suspend fun addAIConfig(config: AIConfig) {
+        val stored = encryptIfPlaintext(config)
         context.dataStore.edit { preferences ->
             val current = preferences[PreferencesKeys.LLM_AI_CONFIGS]?.let { decodeConfigs(it) } ?: emptyList()
-            val updated = current.map { if (it.id == config.id) config else it }
+            val updated = current + stored
+            preferences[PreferencesKeys.LLM_AI_CONFIGS] = encodeConfigs(updated)
+            if (preferences[PreferencesKeys.LLM_ACTIVE_CONFIG_ID] == null) {
+                preferences[PreferencesKeys.LLM_ACTIVE_CONFIG_ID] = stored.id
+            }
+        }
+    }
+
+    /**
+     * 更新一条已有配置（按 id 匹配）。保存时对明文 apiKey 加密（[encryptIfPlaintext]）。
+     */
+    suspend fun updateAIConfig(config: AIConfig) {
+        val stored = encryptIfPlaintext(config)
+        context.dataStore.edit { preferences ->
+            val current = preferences[PreferencesKeys.LLM_AI_CONFIGS]?.let { decodeConfigs(it) } ?: emptyList()
+            val updated = current.map { if (it.id == stored.id) stored else it }
             preferences[PreferencesKeys.LLM_AI_CONFIGS] = encodeConfigs(updated)
         }
     }

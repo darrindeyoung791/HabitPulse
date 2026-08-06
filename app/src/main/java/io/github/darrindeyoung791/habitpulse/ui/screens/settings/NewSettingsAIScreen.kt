@@ -1,10 +1,14 @@
 package io.github.darrindeyoung791.habitpulse.ui.screens.settings
 
 import android.net.Uri
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.PaddingValues
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.filled.RadioButtonChecked
+import androidx.compose.material.icons.filled.RadioButtonUnchecked
 import androidx.compose.material.icons.outlined.Add
 import androidx.compose.material.icons.outlined.Delete
 import androidx.compose.material.icons.outlined.Edit
@@ -23,6 +27,7 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
@@ -99,11 +104,29 @@ fun NewSettingsAIScreen(
                         },
                         onLongClick = { menuConfigId = config.id },
                         trailing = {
-                            IconButton(onClick = { onEditConfig(config.id) }) {
+                            Row(
+                                verticalAlignment = Alignment.CenterVertically,
+                                horizontalArrangement = Arrangement.spacedBy(8.dp)
+                            ) {
                                 Icon(
-                                    imageVector = Icons.Outlined.Edit,
-                                    contentDescription = stringResource(id = R.string.ai_config_edit)
+                                    imageVector = if (isActive) {
+                                        Icons.Filled.RadioButtonChecked
+                                    } else {
+                                        Icons.Filled.RadioButtonUnchecked
+                                    },
+                                    contentDescription = null,
+                                    tint = if (isActive) {
+                                        MaterialTheme.colorScheme.primary
+                                    } else {
+                                        MaterialTheme.colorScheme.onSurfaceVariant
+                                    }
                                 )
+                                IconButton(onClick = { onEditConfig(config.id) }) {
+                                    Icon(
+                                        imageVector = Icons.Outlined.Edit,
+                                        contentDescription = stringResource(id = R.string.ai_config_edit)
+                                    )
+                                }
                             }
                         }
                     )

@@ -438,6 +438,10 @@
     <string name="ai_config_empty">暂无 AI 配置，请点击下方「添加 AI 配置」创建。</string>
     <string name="ai_config_migrated_name">默认配置</string>
     <string name="ai_settings_save">保存</string>
+    <string name="ai_config_reveal_key">查看密钥</string>
+    <string name="ai_config_reveal_title">验证身份以查看 API 密钥</string>
+    <string name="ai_config_reveal_subtitle">使用指纹、面容或锁屏密码验证</string>
+    <string name="ai_config_reveal_failed">无法解密 API 密钥，请重新输入</string>
     <string name="settings_unsaved_changes">有未保存的更改</string>
     <string name="ai_settings_thinking">深度思考</string>
     <string name="ai_settings_thinking_description">让模型先进行深度推理再给出回答（部分模型支持）</string>

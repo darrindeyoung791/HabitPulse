@@ -174,7 +174,7 @@ fun AICreateHabitScreen(
     val userPreferences = remember { UserPreferences.getInstance(context) }
     val activeConfig by userPreferences.activeConfigFlow.collectAsStateWithLifecycle(initialValue = null)
 
-    if (activeConfig?.apiKey.isNullOrBlank()) {
+    if (activeConfig?.hasApiKeyConfigured() != true) {
         NoApiKeyPrompt(
             onGoToSettings = onNavigateToSettings,
             onNavigateBack = onNavigateBack
@@ -439,7 +439,7 @@ fun AICreateHabitScreen(
                             scope.launch {
                                 val active = userPreferences.getActiveAIConfig()
 
-                                if (active?.apiKey.isNullOrBlank()) {
+                                if (active?.hasApiKeyConfigured() != true) {
                                     viewModel.updateInputText("")
                                     return@launch
                                 }
