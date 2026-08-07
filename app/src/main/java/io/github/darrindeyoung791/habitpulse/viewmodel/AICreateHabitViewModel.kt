@@ -20,11 +20,6 @@ import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.launch
 import java.util.UUID
 
-object AIPrefillHabitHolder {
-    var prefillHabit: PartialHabit? = null
-    var editingHabitDbId: UUID? = null
-}
-
 private typealias TempId = UUID
 private typealias DbId = UUID
 

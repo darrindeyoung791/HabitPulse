@@ -22,6 +22,24 @@ object SystemPrompt {
     fun getSystemPrompt(context: Context): String {
         val template = getTemplate(context)
         val now = LocalDate.now()
+        return resolve(now, template)
+    }
+
+    /**
+     * 新版 tool-calling 对话的系统提示词（区别于旧版文本 ```json 协议的 [getSystemPrompt]）。
+     */
+    fun getChatSystemPrompt(context: Context): String {
+        val template = runCatching {
+            context.assets.open("prompts/chat_system_prompt.md")
+                .bufferedReader(StandardCharsets.UTF_8)
+                .use { it.readText() }
+        }.getOrNull()
+            ?: getTemplate(context)
+        val now = LocalDate.now()
+        return resolve(now, template)
+    }
+
+    private fun resolve(now: LocalDate, template: String): String {
         return template
             .replace("{current_date}", now.toString())
             .replace("{current_time}", LocalTime.now().format(DateTimeFormatter.ofPattern("HH:mm")))

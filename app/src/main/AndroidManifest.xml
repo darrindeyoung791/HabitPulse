@@ -88,6 +88,15 @@
             android:resizeableActivity="true"
             android:configChanges="uiMode|orientation|screenSize|screenLayout|smallestScreenSize" />
         <activity
+            android:name=".AIChatActivity"
+            android:exported="false"
+            android:label="@string/ai_chat_title"
+            android:theme="@style/Theme.HabitPulse"
+            android:enableOnBackInvokedCallback="true"
+            android:resizeableActivity="true"
+            android:windowSoftInputMode="adjustResize"
+            android:configChanges="uiMode|orientation|screenSize|screenLayout|smallestScreenSize" />
+        <activity
             android:name=".NewSettingsNotificationsActivity"
             android:exported="false"
             android:label="@string/settings_notifications"

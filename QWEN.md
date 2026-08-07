@@ -448,6 +448,15 @@ The project is in **early development stage** (v0.5.19-alpha):
   - 测试连接（`AiConnectionTester`）在编辑已配置 key 时用 `decryptRuntime` 静默解密后测试
   - 依赖：`androidx.biometric:biometric:1.1.0` + `androidx.fragment:fragment-ktx:1.8.5`
   - 单元测试：`AesGcmCipherTest`（9 用例：往返/IV 唯一/Base64/篡改/错误密钥）、`ApiKeyMigrationTest`（11 用例：明文判定/迁移幂等/失败保底）、`AIConfigCompatTest`（5 用例：密文判空/旧 JSON 兼容）
+- ✅ **AI Chat 全场景助手（tool-calling，与旧 AI 并存）** - 原生 function-calling 新版对话界面 `AIChatScreen` + `Route.AIChat`（旧 `AICreateHabitScreen`/`Route.AICreateHabit`/首页 FAB「AI 创建」全部保留，旧界面顶栏新增「新版 AI 对话」入口图标）：
+  - 协议层：`ToolDef`（JSON Schema）/`ChatRequest.tools`/`ChatMessage.role="tool"`+`toolCallId`；`LLMClient.chatStream` 累积 `delta.tool_calls` 分片（id/name/arguments），`StreamChunk.Usage` 捕获 `[DONE]` 前末 chunk 的 usage；捕获 `delta.reasoning_content`
+  - 引擎 `AIChatConversationManager`（`ai/conversation/`，与旧 `ConversationManager` 并存）：单轮 while 循环执行全部 tool_calls 并以 `role=tool` 回灌，直到无工具或命中暂停点（ask_question / create_habit / delete_habit）；`ToolResult.Error` ≥ MAX_RETRIES 触发错误事件；流式空内容/无工具回退一次非流式；`ConversationGuard` 扩展 `invalidSettingTries`（设置类连续报错 ≥3 触发 GuardBlocked）；`retryLastTurn` 删除最后一个 assistant 轮后重发
+  - 工具注册表 `ai/tools/chat/`（`ChatTool`/`ChatToolRegistry`/`functionSpec`）：9 个工具 - `create_habit`（HH:mm 去重、repeat_days 0..6 去重、WEEKLY 缺天报错提问、title≤30/notes≤200 截断）、`search_habits`（`HabitRepository.searchHabitsFlow` first()，无关键字返回全部习惯按 sortOrder；`habitToBrief` 共享转换函数，含主键+打卡统计）、`edit_habit`/`delete_habit`（校验 id+title 回显）、`get_settings_status`/`update_setting`/`open_settings_page`（`ControllableSetting` 6 开关白名单映射 `UserPreferences` setter 与 Activity）、`ask_question`/`reply`
+  - ViewModel `AIChatViewModel`（`viewmodel/`）：`messages` 单一数据源 + `usage: SessionUsage` 精确统计；`selectedConfigId` 会话级切换（默认读 `activeConfigFlow`，**不写回全局** `setActiveAIConfig`）；确认才 `insertHabit`/`deleteHabit`（无孤儿行）；未确认新习惯仅内存卡片；`HabitPickerCard` 带 `cardId`，支持 `searchHabitsInPicker`（卡内搜索全部习惯）/`submitPickerSelection`（多选提交给 AI）/`manualPickerDone`（我已手动操作继续会话）
+  - UI `AIChatScreen`（`ui/screens/ai/`）：TopAppBar（标题输出中变化、返回确认、`ProviderSwitcher` AssistChip→DropdownMenu 底部「管理提供商」、清除对话确认、Token 小字）；`ProviderSwitcher` 无配置时显「未配置」直接进 `NewSettingsAIActivity`；消息列表渲染气泡/`ThinkingBlock`/提问卡（choice/time/day_of_week/multi_choice/text/confirm）/新建习惯卡（确认/编辑/删除）/选择卡/编辑跳转卡/删除确认卡/设置状态与变更卡（撤销）/设置导航卡；底部输入栏横屏压缩 2 行 + 免责声明（横屏+键盘隐藏）；`HabitPickerCard` 含顶部搜索框（300ms 防抖）、多选高亮、行内编辑/删除、底部「提交选择」+「我已手动操作」
+  - `UserPreferences.getAIConfig(id)` 会话内按 id 取明文 key 配置（不写回全局）
+  - 系统提示词新增 `assets/prompts/chat_system_prompt.md`（tool-calling 专用，`SystemPrompt.getChatSystemPrompt`）；6 个 strings 文件新增 `ai_chat_*` 文案；新增 `ai_error_guard_blocked`
+  - 单元测试：`AIChatConversationManagerTest`（工具循环/暂停点/重试上限/流式降级）、`ConversationGuardTest`（同题拦截/纠错计数）、`ToolRegistryTest`（校验/白名单/状态数据）
 
 ### In Progress
 - 🔄 Calendar section

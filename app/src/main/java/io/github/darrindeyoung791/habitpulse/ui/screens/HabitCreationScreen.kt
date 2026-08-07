@@ -375,8 +375,7 @@ fun HabitCreationScreen(
     editMode: EditMode = EditMode.CREATE,
     habitId: UUID? = null,
     navController: androidx.navigation.NavHostController? = null,
-    application: HabitPulseApplication? = null,
-    prefillHabit: io.github.darrindeyoung791.habitpulse.ai.conversation.PartialHabit? = null
+    application: HabitPulseApplication? = null
 ) {
     val context = LocalContext.current
     val hapticFeedback = LocalHapticFeedback.current
@@ -422,23 +421,18 @@ fun HabitCreationScreen(
         initialAnimationComplete = true
     }
 
-    // UI 状态变量 - 支持预填数据
-    var habitName by remember(prefillHabit) { mutableStateOf(prefillHabit?.title ?: "") }
-    var repeatCycle by remember(prefillHabit) { mutableStateOf(
-        when (prefillHabit?.repeatCycle?.uppercase()) {
-            "WEEKLY" -> RepeatCycle.WEEKLY
-            else -> RepeatCycle.DAILY
-        }
-    ) }
-    var reminderTimes by remember(prefillHabit) { mutableStateOf(prefillHabit?.reminderTimes ?: emptyList()) }
+    // UI 状态变量
+    var habitName by remember { mutableStateOf("") }
+    var repeatCycle by remember { mutableStateOf(RepeatCycle.DAILY) }
+    var reminderTimes by remember { mutableStateOf<List<String>>(emptyList()) }
     var showTimePicker by remember { mutableStateOf(false) }
     var currentTimePickerTime by remember { mutableStateOf(java.time.LocalTime.now()) }
     var isReminderExpanded by remember { mutableStateOf(false) }
     var showMaxLengthToast by remember { mutableStateOf(false) }
 
     // Supervision contact state
-    var supervisorEmails by remember(prefillHabit) { mutableStateOf<List<String>>(emptyList()) }
-    var supervisorPhones by remember(prefillHabit) { mutableStateOf<List<String>>(emptyList()) }
+    var supervisorEmails by remember { mutableStateOf<List<String>>(emptyList()) }
+    var supervisorPhones by remember { mutableStateOf<List<String>>(emptyList()) }
     var showAddSupervisorDialog by remember { mutableStateOf(false) }
     var regionCode by remember { mutableStateOf("+86") }
     var showDuplicateEmailToast by remember { mutableStateOf(false) }
@@ -448,10 +442,10 @@ fun HabitCreationScreen(
     var hasAddedSupervisorPhone by remember { mutableStateOf(false) }
 
     // Repeat days state (for weekly cycle)
-    var selectedRepeatDays by remember(prefillHabit) { mutableStateOf<Set<Int>>(prefillHabit?.repeatDays?.toSet() ?: setOf()) }
+    var selectedRepeatDays by remember { mutableStateOf<Set<Int>>(setOf()) }
 
     // Notes state
-    var notes by remember(prefillHabit) { mutableStateOf(prefillHabit?.notes ?: "") }
+    var notes by remember { mutableStateOf("") }
     var showNotesMaxToast by remember { mutableStateOf(false) }
 
     // Focus requester for habit name field (only for CREATE mode)

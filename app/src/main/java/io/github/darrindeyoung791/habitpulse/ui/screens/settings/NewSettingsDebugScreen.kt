@@ -7,6 +7,7 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.runtime.Composable
@@ -18,9 +19,13 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.text.input.KeyboardType
+import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.ui.unit.dp
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import io.github.darrindeyoung791.habitpulse.HabitPulseApplication
 import io.github.darrindeyoung791.habitpulse.R
+import io.github.darrindeyoung791.habitpulse.data.preferences.UserPreferences
 import io.github.darrindeyoung791.habitpulse.generateSampleHabits
 import io.github.darrindeyoung791.habitpulse.ui.screens.settings.components.SettingsBetweenGroupGap
 import io.github.darrindeyoung791.habitpulse.ui.screens.settings.components.SettingsSegmentedGroup
@@ -37,8 +42,15 @@ fun NewSettingsDebugScreen(
 ) {
     val context = LocalContext.current
     val scope = rememberCoroutineScope()
+    val prefs = remember { UserPreferences.getInstance(context) }
 
     var showAddSampleDialog by remember { mutableStateOf(false) }
+
+    val toolRetryLimit by prefs.aiToolRetryLimitFlow.collectAsStateWithLifecycle(initialValue = 20)
+    val maxOutputTokens by prefs.aiMaxOutputTokensFlow.collectAsStateWithLifecycle(initialValue = 500)
+    val maxThinkingTokens by prefs.aiMaxThinkingTokensFlow.collectAsStateWithLifecycle(initialValue = 2000)
+
+    var editingAiParamId by remember { mutableStateOf<String?>(null) }
 
     NewSettingsScaffold(
         title = stringResource(id = R.string.settings_debug_title),
@@ -72,6 +84,35 @@ fun NewSettingsDebugScreen(
                 headline = stringResource(id = R.string.settings_debug_vibration),
                 supportingText = stringResource(id = R.string.settings_debug_vibration_description),
                 onClick = onNavigateDebugVibration
+            )
+        }
+
+        Spacer(modifier = Modifier.height(SettingsBetweenGroupGap))
+
+        SettingsSegmentedGroup(tintOffset = 2) {
+            SettingsSegmentedItem(
+                index = 0,
+                count = 3,
+                headline = stringResource(id = R.string.settings_debug_ai_retry_limit),
+                supportingText = toolRetryLimit.toString(),
+                showArrow = false,
+                onClick = { editingAiParamId = "retry" }
+            )
+            SettingsSegmentedItem(
+                index = 1,
+                count = 3,
+                headline = stringResource(id = R.string.settings_debug_ai_max_output_tokens),
+                supportingText = maxOutputTokens.toString(),
+                showArrow = false,
+                onClick = { editingAiParamId = "output" }
+            )
+            SettingsSegmentedItem(
+                index = 2,
+                count = 3,
+                headline = stringResource(id = R.string.settings_debug_ai_max_thinking_tokens),
+                supportingText = maxThinkingTokens.toString(),
+                showArrow = false,
+                onClick = { editingAiParamId = "thinking" }
             )
         }
     }
@@ -114,4 +155,68 @@ fun NewSettingsDebugScreen(
             }
         )
     }
+
+    editingAiParamId?.let { id ->
+        val (title, initialValue, apply) = when (id) {
+            "retry" -> Triple(
+                stringResource(R.string.settings_debug_ai_retry_limit),
+                toolRetryLimit,
+                prefs::setAiToolRetryLimit
+            )
+            "output" -> Triple(
+                stringResource(R.string.settings_debug_ai_max_output_tokens),
+                maxOutputTokens,
+                prefs::setAiMaxOutputTokens
+            )
+            else -> Triple(
+                stringResource(R.string.settings_debug_ai_max_thinking_tokens),
+                maxThinkingTokens,
+                prefs::setAiMaxThinkingTokens
+            )
+        }
+        NumberInputDialog(
+            title = title,
+            initialValue = initialValue,
+            onDismiss = { editingAiParamId = null },
+            onConfirm = { value ->
+                scope.launch { apply(value) }
+                editingAiParamId = null
+            }
+        )
+    }
+}
+
+@Composable
+private fun NumberInputDialog(
+    title: String,
+    initialValue: Int,
+    onDismiss: () -> Unit,
+    onConfirm: (Int) -> Unit
+) {
+    var text by remember { mutableStateOf(initialValue.toString()) }
+    AlertDialog(
+        onDismissRequest = onDismiss,
+        title = { Text(title) },
+        text = {
+            OutlinedTextField(
+                value = text,
+                onValueChange = { input -> text = input.filter { it.isDigit() }.take(6) },
+                keyboardOptions = KeyboardOptions(keyboardType = KeyboardType.Number),
+                singleLine = true
+            )
+        },
+        confirmButton = {
+            TextButton(
+                onClick = { text.toIntOrNull()?.let(onConfirm) ?: Unit },
+                enabled = text.toIntOrNull() != null
+            ) {
+                Text(stringResource(R.string.confirm))
+            }
+        },
+        dismissButton = {
+            TextButton(onClick = onDismiss) {
+                Text(stringResource(R.string.cancel))
+            }
+        }
+    )
 }

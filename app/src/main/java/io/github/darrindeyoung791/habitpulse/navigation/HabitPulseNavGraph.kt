@@ -29,7 +29,6 @@ import io.github.darrindeyoung791.habitpulse.ui.screens.TodayHabitsScreen
 import io.github.darrindeyoung791.habitpulse.ui.screens.WebViewScreen
 import io.github.darrindeyoung791.habitpulse.ui.screens.ai.AICreateHabitScreen
 import io.github.darrindeyoung791.habitpulse.NewSettingsAIActivity
-import io.github.darrindeyoung791.habitpulse.viewmodel.AIPrefillHabitHolder
 import java.util.UUID
 
 /**
@@ -142,12 +141,8 @@ fun HabitPulseNavGraph(
                         }
                     },
                     onAICreateHabit = {
-                        navController.navigate(Route.AICreateHabit.route) {
-                            launchSingleTop = true
-                            popUpTo(Route.Home.route) {
-                                inclusive = false
-                            }
-                        }
+                        val intent = android.content.Intent(context, io.github.darrindeyoung791.habitpulse.AIChatActivity::class.java)
+                        context.startActivity(intent)
                     },
                     onViewAboutToStart = {
                         navController.navigate(Route.TodayHabits.createRoute("about_to_start")) {
@@ -214,13 +209,6 @@ fun HabitPulseNavGraph(
                 ) + fadeOut(animationSpec = tween(durationMillis = 200))
             }
         ) {
-            val prefillHabit = remember { AIPrefillHabitHolder.prefillHabit.also { AIPrefillHabitHolder.prefillHabit = null } }
-            val editingHabitDbId = remember { AIPrefillHabitHolder.editingHabitDbId.also { AIPrefillHabitHolder.editingHabitDbId = null } }
-
-            val isAiEdit = prefillHabit != null && editingHabitDbId != null
-            val editMode = if (isAiEdit) EditMode.EDIT else EditMode.CREATE
-            val habitId = if (isAiEdit) editingHabitDbId else null
-
             Box(
                 modifier = Modifier
                     .fillMaxSize()
@@ -230,11 +218,9 @@ fun HabitPulseNavGraph(
                     onNavigateBack = {
                         navController.popBackStack()
                     },
-                    editMode = editMode,
-                    habitId = habitId,
+                    editMode = EditMode.CREATE,
                     navController = navController,
-                    application = context.applicationContext as HabitPulseApplication,
-                    prefillHabit = prefillHabit
+                    application = context.applicationContext as HabitPulseApplication
                 )
             }
         }

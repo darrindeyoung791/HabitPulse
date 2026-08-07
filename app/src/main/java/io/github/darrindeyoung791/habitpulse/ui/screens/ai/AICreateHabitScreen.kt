@@ -4,6 +4,8 @@ import androidx.compose.animation.*
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.combinedClickable
+import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.*
 import androidx.compose.material.icons.filled.CheckCircle
 import androidx.compose.material.icons.filled.Edit
@@ -19,6 +21,8 @@ import androidx.compose.foundation.text.BasicTextField
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.automirrored.filled.Send
+import androidx.compose.material.icons.filled.ArrowUpward
+import androidx.compose.material.icons.filled.Chat
 
 import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.ExpandLess
@@ -32,11 +36,14 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Shape
+import androidx.compose.ui.platform.LocalClipboardManager
 import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.res.stringResource
 import android.content.res.Configuration
+import android.widget.Toast
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
@@ -47,7 +54,6 @@ import io.github.darrindeyoung791.habitpulse.ai.conversation.PartialHabit
 import io.github.darrindeyoung791.habitpulse.data.preferences.UserPreferences
 import io.github.darrindeyoung791.habitpulse.navigation.Route
 import io.github.darrindeyoung791.habitpulse.viewmodel.AICreateHabitViewModel
-import io.github.darrindeyoung791.habitpulse.viewmodel.AIPrefillHabitHolder
 import io.github.darrindeyoung791.habitpulse.viewmodel.ChatMessageType
 import androidx.compose.animation.core.Spring
 import androidx.compose.animation.core.animateFloatAsState
@@ -64,6 +70,7 @@ import androidx.activity.compose.BackHandler
 import io.github.darrindeyoung791.habitpulse.ui.screens.TimePickerDialog
 import io.github.darrindeyoung791.habitpulse.ui.utils.rememberDebounceClickHandler
 import io.github.darrindeyoung791.habitpulse.ui.utils.rememberHideKeyboardAndNavigateBack
+import io.github.darrindeyoung791.habitpulse.ui.utils.PressVibrationFeedback
 import java.time.LocalTime
 import java.time.format.DateTimeFormatter
 import java.util.Locale
@@ -255,6 +262,19 @@ fun AICreateHabitScreen(
                         },
                         actions = {
                             IconButton(onClick = {
+                                context.startActivity(
+                                    android.content.Intent(
+                                        context,
+                                        io.github.darrindeyoung791.habitpulse.AIChatActivity::class.java
+                                    )
+                                )
+                            }) {
+                                Icon(
+                                    imageVector = Icons.Default.Chat,
+                                    contentDescription = stringResource(R.string.ai_chat_entry)
+                                )
+                            }
+                            IconButton(onClick = {
                                 if (hasMessages) {
                                     viewModel.showSettingsConfirmation()
                                 } else {
@@ -323,9 +343,9 @@ fun AICreateHabitScreen(
                                             onEditClick = {
                                                 scope.launch {
                                                     viewModel.saveHabitAndGetId(habit.tempId) { dbId ->
-                                                        AIPrefillHabitHolder.prefillHabit = habit
-                                                        AIPrefillHabitHolder.editingHabitDbId = dbId
-                                                        navController.navigate(Route.CreateHabit.route)
+                                                        if (dbId != null) {
+                                                            navController.navigate(Route.EditHabit.createRoute(dbId))
+                                                        }
                                                     }
                                                 }
                                             },
@@ -616,6 +636,8 @@ fun AIChatBubble(
     isStreaming: Boolean = false,
     modifier: Modifier = Modifier
 ) {
+    val context = LocalContext.current
+    val clipboard = LocalClipboardManager.current
     Column(
         modifier = modifier
             .fillMaxWidth()
@@ -624,74 +646,24 @@ fun AIChatBubble(
         if (thoughts.isNotEmpty()) {
             ThinkingBlock(
                 thoughts = thoughts,
-                isStreaming = isStreaming
+                isLoading = isStreaming
             )
             Spacer(modifier = Modifier.height(8.dp))
         }
         if (text.isNotEmpty()) {
             Text(
                 text = text,
-                style = MaterialTheme.typography.bodyLarge
+                style = MaterialTheme.typography.bodyLarge,
+                modifier = Modifier.combinedClickable(
+                    interactionSource = remember { MutableInteractionSource() },
+                    indication = null,
+                    onLongClick = {
+                        clipboard.setText(androidx.compose.ui.text.AnnotatedString(text))
+                        Toast.makeText(context, R.string.ai_chat_copied, Toast.LENGTH_SHORT).show()
+                    },
+                    onClick = {}
+                )
             )
-        }
-    }
-}
-
-@Composable
-fun ThinkingBlock(
-    thoughts: String,
-    isStreaming: Boolean = false,
-    modifier: Modifier = Modifier
-) {
-    var isExpanded by remember { mutableStateOf(false) }
-
-    val borderColor = MaterialTheme.colorScheme.outline.copy(alpha = 0.3f)
-    val containerColor = MaterialTheme.colorScheme.surfaceContainerHigh
-
-    Card(
-        modifier = modifier,
-        colors = CardDefaults.cardColors(containerColor = containerColor),
-        border = CardDefaults.outlinedCardBorder().copy(brush = androidx.compose.ui.graphics.SolidColor(borderColor))
-    ) {
-        Column(modifier = Modifier.padding(12.dp)) {
-            Row(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .clickable { isExpanded = !isExpanded },
-                verticalAlignment = Alignment.CenterVertically
-            ) {
-                if (isStreaming) {
-                    CircularProgressIndicator(
-                        modifier = Modifier.size(16.dp),
-                        strokeWidth = 2.dp,
-                        color = MaterialTheme.colorScheme.primary
-                    )
-                } else {
-                    Icon(
-                        imageVector = if (isExpanded) Icons.Default.ExpandLess else Icons.Default.ExpandMore,
-                        contentDescription = null,
-                        tint = MaterialTheme.colorScheme.primary
-                    )
-                }
-                Spacer(modifier = Modifier.width(8.dp))
-                Text(
-                    text = if (isStreaming) stringResource(R.string.thinking_in_progress) else stringResource(R.string.view_thinking),
-                    style = MaterialTheme.typography.labelMedium,
-                    color = MaterialTheme.colorScheme.primary
-                )
-                Spacer(modifier = Modifier.weight(1f))
-            }
-
-            if (isExpanded) {
-                Spacer(modifier = Modifier.height(8.dp))
-                HorizontalDivider(color = borderColor)
-                Spacer(modifier = Modifier.height(8.dp))
-                Text(
-                    text = thoughts,
-                    style = MaterialTheme.typography.bodySmall,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant
-                )
-            }
         }
     }
 }
@@ -735,13 +707,15 @@ fun AIChatInputBox(
     onStopClick: () -> Unit,
     isLoading: Boolean,
     isLandscape: Boolean = false,
+    placeholderRes: Int = R.string.ai_input_placeholder,
+    containerShape: Shape = RoundedCornerShape(24.dp),
     modifier: Modifier = Modifier
 ) {
     Surface(
         modifier = modifier
             .fillMaxWidth()
             .padding(horizontal = 16.dp, vertical = 8.dp),
-        shape = RoundedCornerShape(24.dp),
+        shape = containerShape,
         color = MaterialTheme.colorScheme.surfaceContainerHigh,
         border = BorderStroke(1.dp, MaterialTheme.colorScheme.outline.copy(alpha = 0.5f))
     ) {
@@ -769,7 +743,7 @@ fun AIChatInputBox(
                     Box {
                         if (inputText.isEmpty()) {
                             Text(
-                                text = stringResource(R.string.ai_input_placeholder),
+                                text = stringResource(placeholderRes),
                                 style = MaterialTheme.typography.bodyLarge,
                                 color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.6f)
                             )
@@ -779,34 +753,54 @@ fun AIChatInputBox(
                 }
             )
 
+            // 主题色圆形发送/停止按钮（非红色）；禁用态为半透明主题灰，区别于输入框底色
             if (isLoading) {
-                IconButton(
-                    onClick = onStopClick,
-                    modifier = Modifier.size(48.dp)
+                val stopInteractionSource = remember { MutableInteractionSource() }
+                PressVibrationFeedback(interactionSource = stopInteractionSource)
+                Box(
+                    modifier = Modifier
+                        .size(44.dp)
+                        .clip(RoundedCornerShape(22.dp))
+                        .background(MaterialTheme.colorScheme.primary)
+                        .clickable(
+                            interactionSource = stopInteractionSource,
+                            indication = null,
+                            onClick = { onStopClick() }
+                        ),
+                    contentAlignment = Alignment.Center
                 ) {
                     Icon(
                         imageVector = Icons.Default.Stop,
                         contentDescription = stringResource(R.string.ai_stop_button),
-                        tint = MaterialTheme.colorScheme.error
+                        tint = MaterialTheme.colorScheme.onPrimary,
+                        modifier = Modifier.size(22.dp)
                     )
                 }
             } else {
-                IconButton(
-                    onClick = {
-                        if (inputText.isNotBlank()) {
-                            onSendClick()
-                        }
-                    },
-                    modifier = Modifier.size(48.dp)
+                val sendEnabled = inputText.isNotBlank()
+                val sendInteractionSource = remember { MutableInteractionSource() }
+                PressVibrationFeedback(interactionSource = sendInteractionSource)
+                Box(
+                    modifier = Modifier
+                        .size(44.dp)
+                        .clip(RoundedCornerShape(22.dp))
+                        .background(
+                            if (sendEnabled) MaterialTheme.colorScheme.primary
+                            else MaterialTheme.colorScheme.primary.copy(alpha = 0.38f)
+                        )
+                        .clickable(
+                            interactionSource = sendInteractionSource,
+                            indication = null,
+                            enabled = sendEnabled
+                        ) { onSendClick() },
+                    contentAlignment = Alignment.Center
                 ) {
                     Icon(
-                        imageVector = Icons.AutoMirrored.Filled.Send,
+                        imageVector = Icons.Filled.ArrowUpward,
                         contentDescription = stringResource(R.string.ai_send_button),
-                        tint = if (inputText.isNotBlank()) {
-                            MaterialTheme.colorScheme.primary
-                        } else {
-                            MaterialTheme.colorScheme.onSurfaceVariant
-                        }
+                        tint = if (sendEnabled) MaterialTheme.colorScheme.onPrimary
+                        else MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.9f),
+                        modifier = Modifier.size(22.dp)
                     )
                 }
             }

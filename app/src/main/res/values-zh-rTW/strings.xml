@@ -159,6 +159,9 @@
     <string name="settings_debug_add_sample_habits_description">新增一批範例習慣與完成記錄，便於測試介面與功能</string>
     <string name="settings_debug_vibration">震動除錯</string>
     <string name="settings_debug_vibration_description">調整按壓震動時長與強度</string>
+    <string name="settings_debug_ai_retry_limit">AI 工具重試上限</string>
+    <string name="settings_debug_ai_max_output_tokens">AI 最大輸出 Token</string>
+    <string name="settings_debug_ai_max_thinking_tokens">AI 思考預算 Token</string>
     <string name="settings_debug_vibration_title">震動除錯</string>
     <string name="settings_debug_vibration_duration_group">時長</string>
     <string name="settings_debug_vibration_duration">震動時長</string>
@@ -500,6 +503,14 @@
     <string name="ai_day_sat">六</string>
     <string name="ai_day_sun">日</string>
 
+    <!-- AI Chat 設定白名單 -->
+    <string name="ai_setting_reminder_enabled">習慣提醒</string>
+    <string name="ai_setting_dnd_enabled">請勿打擾</string>
+    <string name="ai_setting_persistent_notification">保持背景執行</string>
+    <string name="ai_setting_haptic_feedback_enabled">應用程式內震動</string>
+    <string name="ai_setting_show_splash_ad">開屏廣告</string>
+    <string name="ai_setting_force_tablet_landscape">平板強制橫屏</string>
+
     <!-- AI Disclaimer -->
     <string name="ai_disclaimer">AI 可能會犯錯，請核對資訊後儲存。</string>
 
@@ -507,6 +518,7 @@
     <string name="ai_error_scroll_to_bottom">滾動到底部</string>
     <string name="ai_error_not_configured">請先在設定中新增 AI 供應商</string>
     <string name="ai_error_prefix">錯誤：%s</string>
+    <string name="ai_error_guard_blocked">AI 連續出錯已被自動停止，請調整指令後重試</string>
     <string name="ai_error_auth_failed">認證失敗，請檢查 API 金鑰是否正確</string>
     <string name="ai_error_access_denied">存取被拒絕，請檢查 API 金鑰權限</string>
     <string name="ai_error_server_error">伺服器錯誤（HTTP %d），請稍後重試</string>
@@ -515,6 +527,63 @@
     <string name="ai_error_dns_failed">無法解析網域名稱，請檢查 API 位址</string>
     <string name="ai_error_invalid_url">API 位址格式不正確</string>
     <string name="ai_error_unknown">未知錯誤</string>
+    <!-- AI Chat -->
+    <string name="ai_chat_title">AI 助手</string>
+    <string name="ai_chat_entry">新版 AI 對話</string>
+    <string name="ai_chat_manage_providers">管理供應商</string>
+    <string name="ai_chat_not_configured">未設定</string>
+    <string name="ai_chat_switch_provider_title">切換供應商？</string>
+    <string name="ai_chat_switch_provider_message">切換後將清空目前對話與未確認內容。</string>
+    <string name="ai_chat_switch_config">切換</string>
+    <string name="ai_chat_edit_habit">前往編輯</string>
+    <string name="ai_chat_open_settings">開啟設定</string>
+    <string name="ai_chat_undo">復原</string>
+    <string name="ai_chat_habit_created">已建立</string>
+    <string name="ai_chat_habit_deleted">已刪除</string>
+    <string name="ai_chat_delete_cancelled">已取消刪除</string>
+    <string name="ai_chat_setting_reverted">已恢復</string>
+    <string name="ai_chat_search_hint">找到以下習慣，可讓我編輯或刪除其中一個</string>
+    <string name="ai_chat_usage_empty">—</string>
+    <string name="ai_chat_input_hint">輸入訊息…</string>
+    <string name="ai_chat_confirm_leave_title">確認離開？</string>
+    <string name="ai_chat_confirm_leave_message">離開後對話將不保留。</string>
+    <string name="ai_chat_confirm_leave_unsaved">離開後對話將不保留，仍有習慣尚未儲存。</string>
+    <string name="ai_chat_thinking_title">深度思考</string>
+    <string name="ai_chat_thinking_in_progress">深度思考中…</string>
+    <string name="ai_chat_thinking_elapsed">已深度思考（%1$s秒）</string>
+    <string name="ai_chat_view_thinking">查看思考過程</string>
+    <string name="ai_chat_hide_thinking">收起思考過程</string>
+    <string name="ai_chat_token_count">%1$s tokens</string>
+    <string name="ai_chat_token_detail_prompt">輸入：%1$s</string>
+    <string name="ai_chat_token_detail_completion">輸出：%1$s</string>
+    <string name="ai_chat_token_calls">呼叫：%1$d 次</string>
+    <string name="ai_chat_welcome_title">我是你的 AI 習慣助手</string>
+    <string name="ai_chat_welcome_subtitle">可以讓我建立、查詢、修改或刪除習慣，也可以幫你調整應用程式設定。</string>
+    <string name="ai_chat_suggestion_create">幫我建立一個閱讀習慣</string>
+    <string name="ai_chat_suggestion_search">有哪些習慣需要我處理？</string>
+    <string name="ai_chat_suggestion_setting">幫我開啟通知設定</string>
+    <string name="ai_chat_setting_change_format">%1$s → %2$s</string>
+    <string name="ai_chat_on">開</string>
+    <string name="ai_chat_off">關</string>
+    <string name="ai_chat_delete">刪除</string>
+    <string name="ai_chat_delete_confirm_title">刪除這個習慣？</string>
+    <string name="ai_chat_open_settings_format">開啟%s設定</string>
+    <string name="ai_chat_copied">已複製</string>
+    <string name="ai_chat_retry">重試</string>
+    <string name="ai_chat_add_time">新增時間</string>
+    <string name="ai_chat_add_this_time">新增此時間</string>
+    <string name="ai_chat_pick_times">選擇時間</string>
+    <string name="ai_chat_selected_times">已選擇</string>
+    <string name="ai_chat_remove_time">移除該時間</string>
+    <string name="ai_chat_manual_fallback_hint">或手動輸入</string>
+    <string name="ai_chat_manual_submit">手動提交</string>
+    <string name="ai_chat_option_tab">選項</string>
+    <string name="ai_chat_manual_tab">手動輸入</string>
+    <string name="ai_chat_picker_search">搜尋習慣</string>
+    <string name="ai_chat_picker_no_result">未找到符合的習慣</string>
+    <string name="ai_chat_picker_submit">提交選擇</string>
+    <string name="ai_chat_picker_manual_done">我已手動操作</string>
+    <string name="ai_chat_picker_submitted">已選擇：%1$s</string>
     <string name="create_habit_selection_title">新建習慣</string>
     <string name="create_habit_selection_manual">手動填寫</string>
     <string name="create_habit_selection_manual_desc">自己填寫所有欄位</string>
@@ -526,9 +595,6 @@
     <string name="cancel">取消</string>
 
     <!-- Thinking Block -->
-    <string name="hide_thinking">收起思考</string>
-    <string name="view_thinking">查看思考</string>
-    <string name="thinking_in_progress">思考中…</string>
     <string name="collapse">折叠</string>
     <string name="expand">展開</string>
 

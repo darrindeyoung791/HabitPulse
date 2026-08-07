@@ -158,6 +158,9 @@
     <string name="settings_debug_add_sample_habits_description">Add a batch of sample habits and completion records for testing the UI and features</string>
     <string name="settings_debug_vibration">Vibration Debug</string>
     <string name="settings_debug_vibration_description">Adjust press vibration duration and intensity</string>
+    <string name="settings_debug_ai_retry_limit">AI tool retry limit</string>
+    <string name="settings_debug_ai_max_output_tokens">AI max output tokens</string>
+    <string name="settings_debug_ai_max_thinking_tokens">AI thinking budget tokens</string>
     <string name="settings_debug_vibration_title">Vibration Debug</string>
     <string name="settings_debug_vibration_duration_group">Duration</string>
     <string name="settings_debug_vibration_duration">Vibration duration</string>
@@ -499,6 +502,14 @@
     <string name="ai_day_sat">Sat</string>
     <string name="ai_day_sun">Sun</string>
 
+    <!-- AI Chat setting whitelist -->
+    <string name="ai_setting_reminder_enabled">Habit reminders</string>
+    <string name="ai_setting_dnd_enabled">Do not disturb</string>
+    <string name="ai_setting_persistent_notification">Background keep-alive</string>
+    <string name="ai_setting_haptic_feedback_enabled">In-app vibration</string>
+    <string name="ai_setting_show_splash_ad">Splash ad</string>
+    <string name="ai_setting_force_tablet_landscape">Force tablet landscape</string>
+
     <!-- AI Disclaimer -->
     <string name="ai_disclaimer">AI may make mistakes. Please review before saving.</string>
 
@@ -506,6 +517,7 @@
     <string name="ai_error_scroll_to_bottom">Scroll to bottom</string>
     <string name="ai_error_not_configured">Please add an AI provider in settings</string>
     <string name="ai_error_prefix">Error: %s</string>
+    <string name="ai_error_guard_blocked">AI stopped automatically after repeated errors. Please adjust your instructions and retry</string>
     <string name="ai_error_auth_failed">Authentication failed, check API Key</string>
     <string name="ai_error_access_denied">Access denied, check API Key permissions</string>
     <string name="ai_error_server_error">Server error (HTTP %d), please retry later</string>
@@ -514,6 +526,63 @@
     <string name="ai_error_dns_failed">DNS resolution failed, check API address</string>
     <string name="ai_error_invalid_url">Invalid API URL format</string>
     <string name="ai_error_unknown">Unknown error</string>
+    <!-- AI Chat -->
+    <string name="ai_chat_title">AI Assistant</string>
+    <string name="ai_chat_entry">New AI Chat</string>
+    <string name="ai_chat_manage_providers">Manage providers</string>
+    <string name="ai_chat_not_configured">Not configured</string>
+    <string name="ai_chat_switch_provider_title">Switch provider?</string>
+    <string name="ai_chat_switch_provider_message">Switching will clear the current conversation and unconfirmed content.</string>
+    <string name="ai_chat_switch_config">Switch</string>
+    <string name="ai_chat_edit_habit">Edit</string>
+    <string name="ai_chat_open_settings">Open settings</string>
+    <string name="ai_chat_undo">Undo</string>
+    <string name="ai_chat_habit_created">Created</string>
+    <string name="ai_chat_habit_deleted">Deleted</string>
+    <string name="ai_chat_delete_cancelled">Deletion cancelled</string>
+    <string name="ai_chat_setting_reverted">Reverted</string>
+    <string name="ai_chat_search_hint">Found habits below. Ask me to edit or delete one</string>
+    <string name="ai_chat_usage_empty">—</string>
+    <string name="ai_chat_input_hint">Type a message…</string>
+    <string name="ai_chat_confirm_leave_title">Leave conversation?</string>
+    <string name="ai_chat_confirm_leave_message">The conversation will not be saved.</string>
+    <string name="ai_chat_confirm_leave_unsaved">The conversation will not be saved, and there are unsaved habits.</string>
+    <string name="ai_chat_thinking_title">Deep thinking</string>
+    <string name="ai_chat_thinking_in_progress">Deep thinking…</string>
+    <string name="ai_chat_thinking_elapsed">Deep thinking (%1$s s)</string>
+    <string name="ai_chat_view_thinking">View thinking</string>
+    <string name="ai_chat_hide_thinking">Hide thinking</string>
+    <string name="ai_chat_token_count">%1$s tokens</string>
+    <string name="ai_chat_token_detail_prompt">Input: %1$s</string>
+    <string name="ai_chat_token_detail_completion">Output: %1$s</string>
+    <string name="ai_chat_token_calls">Calls: %1$d</string>
+    <string name="ai_chat_welcome_title">I\'m your AI habit assistant</string>
+    <string name="ai_chat_welcome_subtitle">Ask me to create, find, edit or delete habits, or adjust app settings.</string>
+    <string name="ai_chat_suggestion_create">Help me create a reading habit</string>
+    <string name="ai_chat_suggestion_search">Which habits need attention?</string>
+    <string name="ai_chat_suggestion_setting">Open the notifications settings</string>
+    <string name="ai_chat_setting_change_format">%1$s → %2$s</string>
+    <string name="ai_chat_on">On</string>
+    <string name="ai_chat_off">Off</string>
+    <string name="ai_chat_delete">Delete</string>
+    <string name="ai_chat_delete_confirm_title">Delete this habit?</string>
+    <string name="ai_chat_open_settings_format">Open %s settings</string>
+    <string name="ai_chat_copied">Copied</string>
+    <string name="ai_chat_retry">Retry</string>
+    <string name="ai_chat_add_time">Add time</string>
+    <string name="ai_chat_add_this_time">Add this time</string>
+    <string name="ai_chat_pick_times">Pick times</string>
+    <string name="ai_chat_selected_times">Selected</string>
+    <string name="ai_chat_remove_time">Remove time</string>
+    <string name="ai_chat_manual_fallback_hint">Or type manually</string>
+    <string name="ai_chat_manual_submit">Submit</string>
+    <string name="ai_chat_option_tab">Options</string>
+    <string name="ai_chat_manual_tab">Manual</string>
+    <string name="ai_chat_picker_search">Search habits</string>
+    <string name="ai_chat_picker_no_result">No matching habits</string>
+    <string name="ai_chat_picker_submit">Submit selection</string>
+    <string name="ai_chat_picker_manual_done">Done manually</string>
+    <string name="ai_chat_picker_submitted">Selected: %1$s</string>
     <string name="create_habit_selection_title">New Habit</string>
     <string name="create_habit_selection_manual">Manual</string>
     <string name="create_habit_selection_manual_desc">Fill in all fields yourself</string>
@@ -525,9 +594,6 @@
     <string name="cancel">Cancel</string>
 
     <!-- Thinking Block -->
-    <string name="hide_thinking">Hide thinking</string>
-    <string name="view_thinking">View thinking</string>
-    <string name="thinking_in_progress">Thinking…</string>
     <string name="collapse">Collapse</string>
     <string name="expand">Expand</string>
 

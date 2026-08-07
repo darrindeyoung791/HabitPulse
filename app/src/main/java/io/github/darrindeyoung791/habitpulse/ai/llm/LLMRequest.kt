@@ -12,14 +12,53 @@ data class ChatRequest(
     @SerializedName("temperature")
     val temperature: Float = 0.7f,
     @SerializedName("max_tokens")
-    val maxTokens: Int = 4096
+    val maxTokens: Int = 4096,
+    @SerializedName("tools")
+    val tools: List<ToolDef>? = null,
+    @SerializedName("tool_choice")
+    val toolChoice: String? = null,
+    @SerializedName("thinking")
+    val thinking: ThinkingParam? = null
+)
+
+/**
+ * 深度思考预算（GLM 兼容）。仅在配置了思考预算（[ThinkingParam.budgetTokens] > 0）时发送。
+ */
+data class ThinkingParam(
+    @SerializedName("type")
+    val type: String = "enabled",
+    @SerializedName("budget_tokens")
+    val budgetTokens: Int
 )
 
 data class Message(
     @SerializedName("role")
     val role: String,
     @SerializedName("content")
-    val content: String
+    val content: String,
+    @SerializedName("tool_call_id")
+    val toolCallId: String? = null,
+    @SerializedName("tool_calls")
+    val toolCalls: List<ToolCallData>? = null
+)
+
+/**
+ * OpenAI 兼容 function-calling 的工具定义（JSON Schema 形式）。
+ */
+data class ToolDef(
+    @SerializedName("type")
+    val type: String = "function",
+    @SerializedName("function")
+    val function: FunctionDef
+)
+
+data class FunctionDef(
+    @SerializedName("name")
+    val name: String,
+    @SerializedName("description")
+    val description: String,
+    @SerializedName("parameters")
+    val parameters: Map<String, Any?>? = null
 )
 
 data class ChatResponse(
@@ -50,7 +89,9 @@ data class AssistantMessage(
     @SerializedName("content")
     val content: String?,
     @SerializedName("tool_calls")
-    val toolCalls: List<ToolCallData>? = null
+    val toolCalls: List<ToolCallData>? = null,
+    @SerializedName("reasoning_content")
+    val reasoningContent: String? = null
 )
 
 data class ToolCallData(
@@ -119,5 +160,23 @@ data class Delta(
     @SerializedName("content")
     val content: String? = null,
     @SerializedName("reasoning_content")
-    val reasoningContent: String? = null
+    val reasoningContent: String? = null,
+    @SerializedName("tool_calls")
+    val toolCalls: List<DeltaToolCall>? = null
+)
+
+data class DeltaToolCall(
+    @SerializedName("index")
+    val index: Int? = null,
+    @SerializedName("id")
+    val id: String? = null,
+    @SerializedName("function")
+    val function: DeltaFunctionCallData? = null
+)
+
+data class DeltaFunctionCallData(
+    @SerializedName("name")
+    val name: String? = null,
+    @SerializedName("arguments")
+    val arguments: String? = null
 )

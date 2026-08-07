@@ -15,19 +15,32 @@ import java.net.HttpURLConnection
 import java.net.SocketTimeoutException
 import java.net.URL
 
-class LLMClient(
+open class LLMClient(
     private val config: LLMConfig
 ) {
     private val gson = Gson()
 
     sealed class StreamChunk {
         data class Content(val delta: String) : StreamChunk()
+        data class ToolCallFragment(
+            val progress: Map<String, FunctionCallData>
+        ) : StreamChunk()
+        data class ToolCallComplete(
+            val toolCalls: List<ToolCallData>
+        ) : StreamChunk()
+        data class Reasoning(val delta: String) : StreamChunk()
+        data class Usage(val usage: TokenUsage) : StreamChunk()
         data class Done(val fullContent: String) : StreamChunk()
         data class Error(val message: String, val code: Int? = null) : StreamChunk()
     }
 
     sealed class LLMResult {
-        data class Success(val content: String, val usage: TokenUsage? = null) : LLMResult()
+        data class Success(
+            val content: String,
+            val usage: TokenUsage? = null,
+            val toolCalls: List<ToolCallData> = emptyList(),
+            val thoughts: String = ""
+        ) : LLMResult()
         data class Error(val message: String, val code: Int? = null) : LLMResult()
     }
 
@@ -37,14 +50,18 @@ class LLMClient(
         val totalTokens: Int
     )
 
-    suspend fun chat(messages: List<Message>): LLMResult = withContext(Dispatchers.IO) {
+    open suspend fun chat(
+        messages: List<Message>,
+        tools: List<ToolDef>? = null,
+        toolChoice: String? = null
+    ): LLMResult = withContext(Dispatchers.IO) {
         var lastError: Exception? = null
         var lastCode: Int? = null
 
         repeat(config.maxRetries) { attempt ->
             ensureActive()
             try {
-                val result = doChat(messages)
+                val result = doChat(messages, tools, toolChoice)
                 return@withContext result
             } catch (e: Exception) {
                 lastError = e
@@ -61,7 +78,11 @@ class LLMClient(
         )
     }
 
-    fun chatStream(messages: List<Message>): Flow<StreamChunk> = flow {
+    open fun chatStream(
+        messages: List<Message>,
+        tools: List<ToolDef>? = null,
+        toolChoice: String? = null
+    ): Flow<StreamChunk> = flow {
         var lastError: Exception? = null
         var lastCode: Int? = null
 
@@ -76,7 +97,10 @@ class LLMClient(
                     messages = messages,
                     stream = true,
                     temperature = 0.7f,
-                    maxTokens = 4096
+                    maxTokens = config.maxOutputTokens,
+                    tools = tools,
+                    toolChoice = toolChoice,
+                    thinking = config.thinkingParam()
                 )
 
                 val body = gson.toJson(request)
@@ -97,6 +121,9 @@ class LLMClient(
                 )
 
                 val fullContent = StringBuilder()
+                val reasoningContent = StringBuilder()
+                val toolCallAccumulator = ToolCallAccumulator()
+                var lastUsage: TokenUsage? = null
                 var line: String?
 
                 while (reader.readLine().also { line = it } != null) {
@@ -109,11 +136,37 @@ class LLMClient(
 
                     val chunk = parseStreamChunk(data)
                     if (chunk != null) {
-                        emit(StreamChunk.Content(chunk))
-                        fullContent.append(chunk)
+                        val choice = chunk.choices?.firstOrNull()
+                        val delta = choice?.delta
+                        if (delta?.content != null) {
+                            emit(StreamChunk.Content(delta.content))
+                            fullContent.append(delta.content)
+                        }
+                        if (delta?.reasoningContent != null) {
+                            reasoningContent.append(delta.reasoningContent)
+                            emit(StreamChunk.Reasoning(delta.reasoningContent))
+                        }
+                        delta?.toolCalls?.let { toolCalls ->
+                            toolCallAccumulator.accumulate(toolCalls)
+                            val progress = toolCallAccumulator.currentProgress()
+                            if (progress.isNotEmpty()) {
+                                emit(StreamChunk.ToolCallFragment(progress))
+                            }
+                            if (toolCallAccumulator.isComplete()) {
+                                emit(StreamChunk.ToolCallComplete(toolCallAccumulator.completed()))
+                            }
+                        }
+                        chunk.usage?.let { usage ->
+                            lastUsage = TokenUsage(
+                                promptTokens = usage.promptTokens ?: 0,
+                                completionTokens = usage.completionTokens ?: 0,
+                                totalTokens = usage.totalTokens ?: 0
+                            )
+                        }
                     }
                 }
 
+                lastUsage?.let { emit(StreamChunk.Usage(it)) }
                 emit(StreamChunk.Done(fullContent.toString()))
                 connection.disconnect()
                 return@flow
@@ -137,7 +190,7 @@ class LLMClient(
         )
     }.flowOn(Dispatchers.IO)
 
-    private fun doChat(messages: List<Message>): LLMResult {
+    private fun doChat(messages: List<Message>, tools: List<ToolDef>? = null, toolChoice: String? = null): LLMResult {
         val connection = createConnection(isStreaming = false)
         connection.doOutput = true
 
@@ -146,7 +199,10 @@ class LLMClient(
             messages = messages,
             stream = false,
             temperature = 0.7f,
-            maxTokens = 4096
+            maxTokens = config.maxOutputTokens,
+            tools = tools,
+            toolChoice = toolChoice,
+            thinking = config.thinkingParam()
         )
 
         val body = gson.toJson(request)
@@ -180,10 +236,13 @@ class LLMClient(
             )
         }
 
-        return if ((finishReason == "tool_calls" || message?.toolCalls?.isNotEmpty() == true) && content.isBlank()) {
-            LLMResult.Success(response, tokenUsage)
+        val toolCalls = message?.toolCalls.orEmpty()
+        val thoughts = message?.reasoningContent ?: ""
+
+        return if ((finishReason == "tool_calls" || toolCalls.isNotEmpty()) && content.isBlank()) {
+            LLMResult.Success(response, tokenUsage, toolCalls, thoughts)
         } else {
-            LLMResult.Success(content, tokenUsage)
+            LLMResult.Success(content, tokenUsage, toolCalls, thoughts)
         }
     }
 
@@ -221,10 +280,9 @@ class LLMClient(
         }
     }
 
-    private fun parseStreamChunk(data: String): String? {
+    private fun parseStreamChunk(data: String): ChatCompletionChunk? {
         return try {
-            val chunk = gson.fromJson(data, ChatCompletionChunk::class.java)
-            chunk?.choices?.firstOrNull()?.delta?.content?.takeIf { it.isNotEmpty() }
+            gson.fromJson(data, ChatCompletionChunk::class.java)
         } catch (e: Exception) {
             null
         }
@@ -274,6 +332,55 @@ class LLMClient(
             is java.net.ConnectException -> -1
             is java.net.UnknownHostException -> -2
             else -> null
+        }
+    }
+
+    /**
+     * 累积流式 `delta.tool_calls` 分片，按 index 聚合 id/name/arguments。
+     * `isComplete()` 在累积了至少一个分片且 arguments 以 `}` 结尾时判定为完整。
+     */
+    private class ToolCallAccumulator {
+        private val byIndex = LinkedHashMap<Int, DeltaToolCall>()
+
+        fun accumulate(fragments: List<DeltaToolCall>) {
+            for (fragment in fragments) {
+                val index = fragment.index ?: 0
+                val existing = byIndex[index] ?: DeltaToolCall(index = index)
+                val mergedFunction = DeltaFunctionCallData(
+                    name = fragment.function?.name ?: existing.function?.name,
+                    arguments = (existing.function?.arguments ?: "") + (fragment.function?.arguments ?: "")
+                )
+                byIndex[index] = DeltaToolCall(
+                    index = index,
+                    id = fragment.id ?: existing.id,
+                    function = mergedFunction
+                )
+            }
+        }
+
+        fun currentProgress(): Map<String, FunctionCallData> {
+            return byIndex.values
+                .filter { it.id != null && it.function?.name != null }
+                .associate { it.id!! to FunctionCallData(it.function!!.name, it.function!!.arguments) }
+        }
+
+        fun isComplete(): Boolean {
+            return byIndex.values.any { it.function?.arguments?.endsWith("}") == true }
+        }
+
+        fun completed(): List<ToolCallData> {
+            return byIndex.values
+                .filter { it.id != null && it.function?.name != null && it.function!!.arguments?.endsWith("}") == true }
+                .map {
+                    ToolCallData(
+                        id = it.id,
+                        type = "function",
+                        function = FunctionCallData(
+                            name = it.function!!.name,
+                            arguments = it.function!!.arguments
+                        )
+                    )
+                }
         }
     }
 

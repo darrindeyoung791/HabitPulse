@@ -123,6 +123,10 @@ class ConversationManager(
                         is LLMClient.StreamChunk.Done -> {
                             processResponse(chunk.fullContent)
                         }
+                        is LLMClient.StreamChunk.ToolCallFragment -> {}
+                        is LLMClient.StreamChunk.ToolCallComplete -> {}
+                        is LLMClient.StreamChunk.Reasoning -> {}
+                        is LLMClient.StreamChunk.Usage -> {}
                         is LLMClient.StreamChunk.Error -> {
                             _events.value = ConversationEvent.Error(chunk.message)
                         }

@@ -127,6 +127,21 @@ object PreferencesKeys {
      * 按压震动强度（1-255），默认 128
      */
     val PRESS_VIBRATION_AMPLITUDE = intPreferencesKey("press_vibration_amplitude")
+
+    /**
+     * AI 工具调用失败的最大自动重试次数，默认 20
+     */
+    val AI_TOOL_RETRY_LIMIT = intPreferencesKey("ai_tool_retry_limit")
+
+    /**
+     * AI 单次最大输出 Token，默认 500（全局影响所有模型）
+     */
+    val AI_MAX_OUTPUT_TOKENS = intPreferencesKey("ai_max_output_tokens")
+
+    /**
+     * AI 最大思考预算（reasoning tokens），默认 2000；0 表示不发送思考预算参数
+     */
+    val AI_MAX_THINKING_TOKENS = intPreferencesKey("ai_max_thinking_tokens")
 }
 
 /**
@@ -429,6 +444,23 @@ class UserPreferences(private val context: Context) {
     }
 
     /**
+     * 按 id 读取指定配置，返回带**明文** apiKey（运行时密钥解密）的副本，供发请求使用。
+     * 会话内切换提供商用（不写回全局 active id）。找不到返回 null。
+     */
+    suspend fun getAIConfig(id: String): AIConfig? {
+        var config = aiConfigsFlow.first().firstOrNull { it.id == id } ?: return null
+        if (ApiKeyMigration.isPlaintext(config)) {
+            encryptAndPersistConfigs()
+            config = aiConfigsFlow.first().firstOrNull { it.id == id } ?: return null
+        }
+        val plainKey = ApiKeyMigration.decryptRuntimeSafely(
+            decrypt = { ApiKeyCrypto.decryptRuntime(it) },
+            runtimeCipher = config.apiKey
+        )
+        return config.copy(apiKey = plainKey)
+    }
+
+    /**
      * 一次性迁移：把旧版单配置键（llm_api_endpoint / llm_api_key / llm_model_name /
      * llm_streaming_response）迁移为一条「默认配置」并设为当前使用，随后物理删除旧键。
      * 幂等：`llm_ai_configs` 已存在时直接返回。
@@ -642,6 +674,57 @@ class UserPreferences(private val context: Context) {
         context.dataStore.edit { preferences ->
             preferences.remove(PreferencesKeys.PRESS_VIBRATION_DURATION_MS)
             preferences.remove(PreferencesKeys.PRESS_VIBRATION_AMPLITUDE)
+        }
+    }
+
+    /**
+     * AI 工具调用最大重试次数的 Flow
+     * 默认值为 20
+     */
+    val aiToolRetryLimitFlow: Flow<Int> = context.dataStore.data.map { preferences ->
+        preferences[PreferencesKeys.AI_TOOL_RETRY_LIMIT] ?: 20
+    }
+
+    /**
+     * 设置 AI 工具调用最大重试次数
+     */
+    suspend fun setAiToolRetryLimit(limit: Int) {
+        context.dataStore.edit { preferences ->
+            preferences[PreferencesKeys.AI_TOOL_RETRY_LIMIT] = limit
+        }
+    }
+
+    /**
+     * AI 单次最大输出 Token 的 Flow
+     * 默认值为 500
+     */
+    val aiMaxOutputTokensFlow: Flow<Int> = context.dataStore.data.map { preferences ->
+        preferences[PreferencesKeys.AI_MAX_OUTPUT_TOKENS] ?: 500
+    }
+
+    /**
+     * 设置 AI 单次最大输出 Token
+     */
+    suspend fun setAiMaxOutputTokens(tokens: Int) {
+        context.dataStore.edit { preferences ->
+            preferences[PreferencesKeys.AI_MAX_OUTPUT_TOKENS] = tokens
+        }
+    }
+
+    /**
+     * AI 最大思考预算的 Flow
+     * 默认值为 2000；0 表示不发送思考预算参数
+     */
+    val aiMaxThinkingTokensFlow: Flow<Int> = context.dataStore.data.map { preferences ->
+        preferences[PreferencesKeys.AI_MAX_THINKING_TOKENS] ?: 2000
+    }
+
+    /**
+     * 设置 AI 最大思考预算
+     */
+    suspend fun setAiMaxThinkingTokens(tokens: Int) {
+        context.dataStore.edit { preferences ->
+            preferences[PreferencesKeys.AI_MAX_THINKING_TOKENS] = tokens
         }
     }
 }
