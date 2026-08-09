@@ -4,6 +4,11 @@ import android.content.Intent
 import android.content.res.Configuration
 import android.widget.Toast
 import androidx.activity.compose.BackHandler
+import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
+import androidx.compose.animation.scaleIn
+import androidx.compose.animation.scaleOut
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
@@ -50,6 +55,9 @@ import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.semantics.Role
+import androidx.compose.ui.semantics.role
+import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
@@ -116,6 +124,11 @@ fun AIChatScreen(
     val density = LocalDensity.current
     val imeVisible = androidx.compose.foundation.layout.WindowInsets.ime.getBottom(density) > 0
     val deviceCornerRadius = getDeviceCornerRadius()
+    // 横屏时系统栏/摄像头在屏幕侧边，整个界面水平方向都要留出安全区。
+    // 注意：Compose 的 displayCutout 在部分设备（本模拟器即如此）上报 0，
+    // 必须改用 safeDrawing（systemBars + displayCutout 的并集）才能拿到横向 inset。
+    val chatHorizontalInsets = WindowInsets.safeDrawing
+        .only(WindowInsetsSides.Horizontal)
 
     // AI 输出开始/结束时各震动一次（受全局震动开关与参数控制）
     val hapticsEnabled = rememberHapticsEnabled()
@@ -175,8 +188,10 @@ fun AIChatScreen(
     }
 
     Scaffold(
+        contentWindowInsets = WindowInsets(0, 0, 0, 0),
         topBar = {
             TopAppBar(
+                modifier = Modifier.windowInsetsPadding(chatHorizontalInsets),
                 title = {
                     Text(
                         if (uiState.isLoading) stringResource(R.string.ai_streaming_title)
@@ -220,10 +235,7 @@ fun AIChatScreen(
             Column(
                 modifier = Modifier
                     .windowInsetsPadding(androidx.compose.foundation.layout.WindowInsets.navigationBars)
-                    .windowInsetsPadding(
-                        androidx.compose.foundation.layout.WindowInsets.displayCutout
-                            .only(androidx.compose.foundation.layout.WindowInsetsSides.Bottom)
-                    )
+                    .windowInsetsPadding(chatHorizontalInsets)
                     .imePadding()
             ) {
                 if (!(isLandscape && imeVisible)) {
@@ -250,14 +262,8 @@ fun AIChatScreen(
                     },
                     onStopClick = { viewModel.stopGeneration() },
                     isLoading = uiState.isGenerating,
-                    isLandscape = isLandscape,
                     placeholderRes = R.string.ai_chat_input_hint,
-                    containerShape = RoundedCornerShape(
-                        topStart = deviceCornerRadius,
-                        topEnd = deviceCornerRadius,
-                        bottomStart = deviceCornerRadius,
-                        bottomEnd = deviceCornerRadius
-                    )
+                    containerCornerRadius = deviceCornerRadius
                 )
             }
         }
@@ -265,6 +271,7 @@ fun AIChatScreen(
         Box(
             modifier = Modifier
                 .fillMaxSize()
+                .windowInsetsPadding(chatHorizontalInsets)
                 .padding(innerPadding)
         ) {
             LazyColumn(
@@ -298,29 +305,40 @@ fun AIChatScreen(
                 }
             }
             val scope = rememberCoroutineScope()
-            if (messages.isNotEmpty() && !followBottom) {
+            // FAB 节点保持常驻（有消息时始终组合），仅通过 AnimatedVisibility 显隐。
+            // 若用裸 if 条件组合，无障碍节点会随 followBottom 突变而频繁增删：
+            // 滚到底部时 followBottom 翻转为 true（canScrollForward 为 false 的瞬间），
+            // 恰好是无障碍焦点到达该按钮的时刻，导致 TalkBack 无法聚焦。
+            if (messages.isNotEmpty()) {
                 val fabInteractionSource = remember { MutableInteractionSource() }
                 PressVibrationFeedback(interactionSource = fabInteractionSource)
-                FloatingActionButton(
-                    onClick = {
-                        followBottom = true
-                        scope.launch {
-                            listState.scrollToItem(
-                                (messages.size - 1).coerceAtLeast(0),
-                                scrollOffset = Int.MAX_VALUE
-                            )
-                        }
-                    },
-                    interactionSource = fabInteractionSource,
-                    containerColor = MaterialTheme.colorScheme.secondaryContainer,
+                AnimatedVisibility(
+                    visible = !followBottom,
                     modifier = Modifier
                         .align(Alignment.BottomEnd)
-                        .padding(end = 16.dp, bottom = 16.dp)
+                        .padding(end = 16.dp, bottom = 16.dp),
+                    enter = fadeIn() + scaleIn(initialScale = 0.8f),
+                    exit = fadeOut() + scaleOut(targetScale = 0.8f)
                 ) {
-                    Icon(
-                        imageVector = Icons.Filled.KeyboardArrowDown,
-                        contentDescription = stringResource(R.string.ai_error_scroll_to_bottom)
-                    )
+                    FloatingActionButton(
+                        onClick = {
+                            followBottom = true
+                            scope.launch {
+                                listState.scrollToItem(
+                                    (messages.size - 1).coerceAtLeast(0),
+                                    scrollOffset = Int.MAX_VALUE
+                                )
+                            }
+                        },
+                        interactionSource = fabInteractionSource,
+                        containerColor = MaterialTheme.colorScheme.secondaryContainer,
+                        modifier = Modifier.semantics { role = Role.Button }
+                    ) {
+                        Icon(
+                            imageVector = Icons.Filled.KeyboardArrowDown,
+                            contentDescription = stringResource(R.string.ai_error_scroll_to_bottom)
+                        )
+                    }
                 }
             }
         }
@@ -621,7 +639,7 @@ private fun AIWelcomeContent(
                 interactionSource = chipInteractionSource,
                 label = { Text(suggestion) }
             )
-            Spacer(modifier = Modifier.height(8.dp))
+            Spacer(modifier = Modifier.height(4.dp))
         }
     }
 }

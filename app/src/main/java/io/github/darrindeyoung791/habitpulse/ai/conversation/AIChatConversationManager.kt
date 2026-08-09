@@ -11,12 +11,14 @@ import io.github.darrindeyoung791.habitpulse.ai.tools.chat.SessionUsage
 import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.Job
 import kotlinx.coroutines.ensureActive
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.collect
 import kotlinx.coroutines.launch
+import kotlin.coroutines.coroutineContext
 
 /**
  * 新版 AI 对话引擎：原生 function-calling 多轮工具链。
@@ -42,6 +44,16 @@ class AIChatConversationManager(
 ) {
     private val gson = Gson()
 
+    /**
+     * 模型空回复（思考超预算 / 未产出正文）时追加的系统提示，引导模型
+     * 直接给出一句简短回答。随后以非流式方式重试一次。
+     */
+    private companion object {
+        const val EMPTY_RESPONSE_NUDGE =
+            "系统提示：你上一条回复没有输出任何内容（可能思考预算已耗尽）。" +
+                "请立即用一句简洁的话直接回答用户的问题，不要再进行深度思考，也不要调用任何工具。"
+    }
+
     private val _events = MutableStateFlow<ChatEvent?>(null)
     val events: StateFlow<ChatEvent?> = _events.asStateFlow()
 
@@ -56,6 +68,19 @@ class AIChatConversationManager(
     private var isStreaming = false
     private var needUserPause = false
 
+    /**
+     * 生成代数：每次发起新的一轮都会自增。旧的 sendToLLM 循环在
+     * 检测到代数变化（被新一轮取代或已停止）时立即退出，避免旧流
+     * 覆盖新一轮的 [isStreaming] / [lastTurnResult] 等共享状态。
+     */
+    private var generation = 0
+
+    /** 当前 sendToLLM 所在协程的 Job，stop() 时取消以终止旧循环。 */
+    private var generationJob: Job? = null
+
+    /** 当前流式请求协程的 Job，stop() 时取消以立刻中断 socket 读取。 */
+    private var activeStreamingJob: Job? = null
+
     suspend fun startConversation(userInput: String) {
         if (isStopped) return
         retryCount = 0
@@ -65,14 +90,15 @@ class AIChatConversationManager(
     }
 
     suspend fun continueConversation(userInput: String) {
-        if (isStopped) return
+        // 用户新输入代表新一轮：即使上一轮被「停止」过，也恢复并继续。
+        isStopped = false
         needUserPause = false
         messages.add(Message(role = "user", content = userInput))
         sendToLLM()
     }
 
     suspend fun submitAnswer(answer: String) {
-        if (isStopped) return
+        isStopped = false
         needUserPause = false
         messages.add(Message(role = "user", content = answer))
         sendToLLM()
@@ -80,7 +106,8 @@ class AIChatConversationManager(
 
     suspend fun stop() {
         isStopped = true
-        isStreaming = false
+        generationJob?.cancel()
+        activeStreamingJob?.cancel()
         _events.value = ChatEvent.Stopped
     }
 
@@ -97,12 +124,15 @@ class AIChatConversationManager(
         isStopped = false
         isStreaming = false
         needUserPause = false
+        generation++
+        generationJob = null
+        activeStreamingJob = null
         guard.resetInvalidSettingTries()
     }
 
     /** 删除最后一个 assistant turn（含其 role=tool 尾消息）后重发。 */
     suspend fun retryLastTurn() {
-        if (isStreaming || isStopped) return
+        if (isStreaming) return
         isStopped = false
         removeLastAssistantTurn()
         retryCount = 0
@@ -123,112 +153,129 @@ class AIChatConversationManager(
     private suspend fun sendToLLM() {
         if (isStopped) return
         isStreaming = true
+        val gen = ++generation
+        generationJob?.cancel()
+        generationJob = coroutineContext[Job]
 
         var fallbackAttempted = false
+        var nudgeAttempted = false
 
-        while (true) {
-            if (isStopped) break
+        try {
+            while (true) {
+                if (isStopped || gen != generation) break
 
-            val turn = if (streamingEnabled && !fallbackAttempted) {
-                runStreamingTurn()
-            } else {
-                runNonStreamingTurn()
-            }
-
-            if (turn == null) {
-                // 出错或已停止（错误事件已发出），结束本轮
-                break
-            }
-
-            // 流式空内容且无工具 → 回退一次非流式
-            if (turn.usedStreaming && turn.toolCalls.isEmpty() && turn.content.isBlank() && !fallbackAttempted) {
-                fallbackAttempted = true
-                continue
-            }
-
-            fallbackAttempted = false
-
-            if (turn.toolCalls.isEmpty()) {
-                // 非流式：补发最终正文（流式路径已在 Done 时发送）
-                if (!turn.usedStreaming && turn.content.isNotBlank()) {
-                    _events.value = ChatEvent.AssistantText(turn.content, turn.thoughts)
+                val turn = if (streamingEnabled && !fallbackAttempted) {
+                    runStreamingTurn()
+                } else {
+                    runNonStreamingTurn()
                 }
-                break
-            }
 
-            // 有工具调用：执行并回灌
-            var pause = false
-            var hadToolError = false
-            for (tc in turn.toolCalls) {
-                val name = tc.function?.name ?: continue
-                val argsJson = tc.function?.arguments ?: "{}"
-                val args = parseArguments(argsJson)
-                val executionArgs = ChatToolRegistry.buildArguments(
-                    args,
-                    repo = contextRepo,
-                    prefs = contextPrefs
-                )
+                if (turn == null) {
+                    // 出错或已停止（错误事件已发出），结束本轮
+                    break
+                }
 
-                when (val outcome = toolRegistry.execute(name, executionArgs)) {
-                    is ChatToolResult.Success -> {
-                        messages.add(
-                            Message(
-                                role = "tool",
-                                content = encodeResult(outcome.data),
-                                toolCallId = tc.id
+                // 流式空内容且无工具 → 回退一次非流式
+                if (turn.usedStreaming && turn.toolCalls.isEmpty() && turn.content.isBlank() && !fallbackAttempted) {
+                    fallbackAttempted = true
+                    continue
+                }
+
+                fallbackAttempted = false
+
+                if (turn.toolCalls.isEmpty()) {
+                    // 非流式：补发最终正文（流式路径已在 Done 时发送）
+                    if (!turn.usedStreaming && turn.content.isNotBlank()) {
+                        _events.value = ChatEvent.AssistantText(turn.content, turn.thoughts)
+                    }
+
+                    // 空正文（思考超预算 / 模型未产出）：nudge 一次让模型直接回答
+                    if (turn.content.isBlank() && !nudgeAttempted) {
+                        nudgeAttempted = true
+                        fallbackAttempted = true
+                        messages.add(Message(role = "system", content = EMPTY_RESPONSE_NUDGE))
+                        continue
+                    }
+                    if (turn.content.isBlank()) {
+                        _events.value = ChatEvent.EmptyResponse
+                    }
+                    break
+                }
+
+                // 有工具调用：执行并回灌
+                var pause = false
+                var hadToolError = false
+                for (tc in turn.toolCalls) {
+                    val name = tc.function?.name ?: continue
+                    val argsJson = tc.function?.arguments ?: "{}"
+                    val args = parseArguments(argsJson)
+                    val executionArgs = ChatToolRegistry.buildArguments(
+                        args,
+                        repo = contextRepo,
+                        prefs = contextPrefs
+                    )
+
+                    when (val outcome = toolRegistry.execute(name, executionArgs)) {
+                        is ChatToolResult.Success -> {
+                            messages.add(
+                                Message(
+                                    role = "tool",
+                                    content = encodeResult(outcome.data),
+                                    toolCallId = tc.id
+                                )
                             )
-                        )
-                        _events.value = ChatEvent.ToolExecuted(name, outcome.data)
-                        retryCount = 0
-                        when (name) {
-                            "ask_question", "create_habit", "delete_habit" -> {
-                                pause = true
-                                _events.value = ChatEvent.PauseForUser(name)
+                            _events.value = ChatEvent.ToolExecuted(name, outcome.data)
+                            retryCount = 0
+                            when (name) {
+                                "ask_question", "create_habit", "delete_habit" -> {
+                                    pause = true
+                                    _events.value = ChatEvent.PauseForUser(name)
+                                }
+                            }
+                            if (name == "update_setting") {
+                                guard.resetInvalidSettingTries()
                             }
                         }
-                        if (name == "update_setting") {
-                            guard.resetInvalidSettingTries()
-                        }
-                    }
-                    is ChatToolResult.Error -> {
-                        hadToolError = true
-                        retryCount++
-                        if (name == "update_setting" || name == "open_settings_page") {
-                            guard.recordInvalidSetting()
-                        }
-                        messages.add(
-                            Message(
-                                role = "tool",
-                                content = "错误：${outcome.message}",
-                                toolCallId = tc.id
+                        is ChatToolResult.Error -> {
+                            hadToolError = true
+                            retryCount++
+                            if (name == "update_setting" || name == "open_settings_page") {
+                                guard.recordInvalidSetting()
+                            }
+                            messages.add(
+                                Message(
+                                    role = "tool",
+                                    content = "错误：${outcome.message}",
+                                    toolCallId = tc.id
+                                )
                             )
-                        )
-                        _events.value = ChatEvent.ToolError(name, outcome.message)
-                        if (retryCount >= maxToolRetries) {
-                            _events.value = ChatEvent.Error("已自动重试${maxToolRetries}次失败: ${outcome.message}")
-                            isStreaming = false
-                            return
+                            _events.value = ChatEvent.ToolError(name, outcome.message)
+                            if (retryCount >= maxToolRetries) {
+                                _events.value = ChatEvent.Error("已自动重试${maxToolRetries}次失败: ${outcome.message}")
+                                return
+                            }
                         }
                     }
                 }
-            }
 
-            if (hadToolError && guard.check(ConversationState()).shouldStop) {
-                _events.value = ChatEvent.GuardBlocked
+                if (hadToolError && guard.check(ConversationState()).shouldStop) {
+                    _events.value = ChatEvent.GuardBlocked
+                    isStopped = true
+                    return
+                }
+
+                if (pause) {
+                    break
+                }
+
+                // 无暂停且成功 → 继续循环驱动下一轮
+            }
+        } finally {
+            if (gen == generation) {
+                generationJob = null
                 isStreaming = false
-                isStopped = true
-                return
             }
-
-            if (pause) {
-                isStreaming = false
-                break
-            }
-
-            // 无暂停且成功 → 继续循环驱动下一轮
         }
-
-        isStreaming = false
     }
 
     /** 上下文注入（由构造方通过 setContextDependencies 设置）。 */
@@ -248,7 +295,7 @@ class AIChatConversationManager(
     )
 
     private suspend fun runNonStreamingTurn(): TurnResult? {
-        lastTurnResult = null
+        var turnResult: TurnResult? = null
         val job = scope.launch(Dispatchers.IO) {
             ensureActive()
             when (val result = llmClient.chat(messages, toolRegistry.toolDefs(), "auto")) {
@@ -261,7 +308,7 @@ class AIChatConversationManager(
                             toolCalls = result.toolCalls.ifEmpty { null }
                         )
                     )
-                    lastTurnResult = TurnResult(
+                    turnResult = TurnResult(
                         content = result.content,
                         thoughts = result.thoughts,
                         toolCalls = result.toolCalls,
@@ -278,13 +325,11 @@ class AIChatConversationManager(
         } catch (e: CancellationException) {
             job.cancel()
         }
-        return lastTurnResult
+        return turnResult
     }
 
-    private var lastTurnResult: TurnResult? = null
-
     private suspend fun runStreamingTurn(): TurnResult? {
-        lastTurnResult = null
+        var turnResult: TurnResult? = null
         var fullContent = StringBuilder()
         var thoughts = StringBuilder()
         var toolCalls = emptyList<ToolCallData>()
@@ -329,7 +374,7 @@ class AIChatConversationManager(
                                     )
                                 )
                             }
-                            lastTurnResult = TurnResult(
+                            turnResult = TurnResult(
                                 content = fullContent.toString(),
                                 thoughts = thoughts.toString(),
                                 toolCalls = toolCalls,
@@ -350,14 +395,17 @@ class AIChatConversationManager(
                 _events.value = ChatEvent.Error(e.message ?: "连接失败")
             }
         }
+        activeStreamingJob = job
         try {
             job.join()
         } catch (e: CancellationException) {
             job.cancel()
             return null
+        } finally {
+            if (activeStreamingJob === job) activeStreamingJob = null
         }
         if (llmError != null) return null
-        return lastTurnResult
+        return turnResult
     }
 
     private fun accUsage(usage: LLMClient.TokenUsage) {

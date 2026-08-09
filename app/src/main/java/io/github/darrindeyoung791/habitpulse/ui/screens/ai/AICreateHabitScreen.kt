@@ -36,16 +36,19 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.graphics.Shape
 import androidx.compose.ui.platform.LocalClipboardManager
 import androidx.compose.ui.platform.LocalConfiguration
-import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalDensity
+import androidx.compose.ui.platform.LocalWindowInfo
+
+import androidx.compose.ui.platform.LocalContext
+
 import androidx.compose.ui.res.stringResource
 import android.content.res.Configuration
 import android.widget.Toast
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.Dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
 import io.github.darrindeyoung791.habitpulse.HabitPulseApplication
@@ -296,6 +299,7 @@ fun AICreateHabitScreen(
             modifier = Modifier
                 .fillMaxSize()
                 .padding(innerPadding)
+                .windowInsetsPadding(WindowInsets.displayCutout.only(androidx.compose.foundation.layout.WindowInsetsSides.Horizontal + androidx.compose.foundation.layout.WindowInsetsSides.Bottom))
                 .windowInsetsPadding(WindowInsets.ime)
         ) {
             if (hasMessages) {
@@ -470,7 +474,6 @@ fun AICreateHabitScreen(
                         },
                         onStopClick = { viewModel.stopGeneration() },
                         isLoading = uiState.isLoading,
-                        isLandscape = isLandscape,
                         modifier = Modifier.fillMaxWidth()
                     )
                 }
@@ -706,36 +709,60 @@ fun AIChatInputBox(
     onSendClick: () -> Unit,
     onStopClick: () -> Unit,
     isLoading: Boolean,
-    isLandscape: Boolean = false,
     placeholderRes: Int = R.string.ai_input_placeholder,
-    containerShape: Shape = RoundedCornerShape(24.dp),
+    containerCornerRadius: Dp = 24.dp,
     modifier: Modifier = Modifier
 ) {
+    val containerShape = RoundedCornerShape(containerCornerRadius)
+    // 发送/停止按钮：尺寸更小，贴右下角；按钮圆角 + 内边距 = 输入框外圆角，
+    // 使按钮像「嵌」在圆角里，观感更现代。
+    val buttonSize = 32.dp
+    val buttonCornerRadius = 10.dp
+    val cornerInset = (containerCornerRadius - buttonCornerRadius).coerceAtLeast(8.dp)
+
+    // 默认约 3 行高；随输入增长最多约半屏，之后在输入框内部上下滚动。
+    // 横屏点击输入框时由系统 IME 进入原生全屏编辑（不在此手搓）。
+    val textStyle = MaterialTheme.typography.bodyLarge
+    // 用当前窗口实际高度计算半屏上限，避免 configuration.screenHeightDp
+    // 在 configChanges(orientation) 下未重建 Activity 时返回旧方向的屏高。
+    // containerDpSize 排除系统栏内边距，随窗口尺寸变化自动重组。
+    val configuration = LocalConfiguration.current
+    val windowHeightDp = run {
+        val windowHeight = LocalWindowInfo.current.containerDpSize.height
+        if (windowHeight != Dp.Unspecified && windowHeight > 0.dp) windowHeight
+        else configuration.screenHeightDp.dp
+    }
+    val maxInputHeightDp = (windowHeightDp * 0.5f)
+    // 用约 24dp 行高估算最大行数；仅作软上限，实际高度由下方 heightIn(max) 封顶
+    val maxLines = (((maxInputHeightDp.value - 40.dp.value) / 24.dp.value).toInt()).coerceAtLeast(3)
+
     Surface(
         modifier = modifier
             .fillMaxWidth()
             .padding(horizontal = 16.dp, vertical = 8.dp),
         shape = containerShape,
-        color = MaterialTheme.colorScheme.surfaceContainerHigh,
-        border = BorderStroke(1.dp, MaterialTheme.colorScheme.outline.copy(alpha = 0.5f))
+        color = MaterialTheme.colorScheme.background,
+        border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant),
+        shadowElevation = 4.dp
     ) {
-        Row(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(start = 4.dp, end = 4.dp, top = 4.dp, bottom = 4.dp),
-            verticalAlignment = Alignment.CenterVertically
-        ) {
+        Box(modifier = Modifier.fillMaxWidth()) {
             BasicTextField(
                 value = inputText,
                 onValueChange = onTextChange,
-                maxLines = if (isLandscape) 2 else Int.MAX_VALUE,
+                minLines = 3,
+                maxLines = maxLines,
                 modifier = Modifier
-                    .weight(1f)
-                    .defaultMinSize(minHeight = if (isLandscape) 64.dp else 72.dp)
-                    .padding(horizontal = 12.dp, vertical = 8.dp)
+                    .fillMaxWidth()
+                    .heightIn(max = maxInputHeightDp)
+                    .padding(
+                        start = 16.dp,
+                        end = buttonSize + 10.dp,
+                        top = 12.dp,
+                        bottom = 12.dp
+                    )
                     .focusRequester(focusRequester),
                 cursorBrush = SolidColor(MaterialTheme.colorScheme.onSurface),
-                textStyle = MaterialTheme.typography.bodyLarge.copy(
+                textStyle = textStyle.copy(
                     color = MaterialTheme.colorScheme.onSurface
                 ),
                 enabled = !isLoading,
@@ -753,14 +780,15 @@ fun AIChatInputBox(
                 }
             )
 
-            // 主题色圆形发送/停止按钮（非红色）；禁用态为半透明主题灰，区别于输入框底色
             if (isLoading) {
                 val stopInteractionSource = remember { MutableInteractionSource() }
                 PressVibrationFeedback(interactionSource = stopInteractionSource)
                 Box(
                     modifier = Modifier
-                        .size(44.dp)
-                        .clip(RoundedCornerShape(22.dp))
+                        .align(Alignment.BottomEnd)
+                        .padding(end = cornerInset, bottom = cornerInset)
+                        .size(buttonSize)
+                        .clip(RoundedCornerShape(buttonCornerRadius))
                         .background(MaterialTheme.colorScheme.primary)
                         .clickable(
                             interactionSource = stopInteractionSource,
@@ -773,7 +801,7 @@ fun AIChatInputBox(
                         imageVector = Icons.Default.Stop,
                         contentDescription = stringResource(R.string.ai_stop_button),
                         tint = MaterialTheme.colorScheme.onPrimary,
-                        modifier = Modifier.size(22.dp)
+                        modifier = Modifier.size(18.dp)
                     )
                 }
             } else {
@@ -782,8 +810,10 @@ fun AIChatInputBox(
                 PressVibrationFeedback(interactionSource = sendInteractionSource)
                 Box(
                     modifier = Modifier
-                        .size(44.dp)
-                        .clip(RoundedCornerShape(22.dp))
+                        .align(Alignment.BottomEnd)
+                        .padding(end = cornerInset, bottom = cornerInset)
+                        .size(buttonSize)
+                        .clip(RoundedCornerShape(buttonCornerRadius))
                         .background(
                             if (sendEnabled) MaterialTheme.colorScheme.primary
                             else MaterialTheme.colorScheme.primary.copy(alpha = 0.38f)
@@ -800,7 +830,7 @@ fun AIChatInputBox(
                         contentDescription = stringResource(R.string.ai_send_button),
                         tint = if (sendEnabled) MaterialTheme.colorScheme.onPrimary
                         else MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.9f),
-                        modifier = Modifier.size(22.dp)
+                        modifier = Modifier.size(18.dp)
                     )
                 }
             }

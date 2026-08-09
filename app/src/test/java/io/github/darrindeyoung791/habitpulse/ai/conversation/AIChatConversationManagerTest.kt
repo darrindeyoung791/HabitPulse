@@ -21,6 +21,7 @@ import kotlinx.coroutines.launch
 import kotlinx.coroutines.runBlocking
 import kotlinx.coroutines.yield
 import org.junit.Assert.assertEquals
+import org.junit.Assert.assertFalse
 import org.junit.Assert.assertTrue
 import org.junit.Test
 
@@ -320,5 +321,83 @@ class AIChatConversationManagerTest {
         val before = client.calls.size
         manager.startConversation("again")
         assertEquals(before, client.calls.size)
+    }
+
+    @Test
+    fun `continueConversation resumes after stop`() = runBlocking {
+        val client = ScriptedLLMClient()
+        client.enqueueNonStreaming(LLMClient.LLMResult.Success("第一轮", null, emptyList()))
+        val manager = newManager(client)
+        val collector = collectEvents(manager)
+
+        manager.startConversation("hi")
+        yield()
+        assertTrue(collector.events.any { it is ChatEvent.AssistantText && it.text == "第一轮" })
+
+        manager.stop()
+        yield()
+        assertTrue(collector.events.any { it is ChatEvent.Stopped })
+
+        // 停止后继续对话应恢复（修复：isStopped 不再永久阻塞新输入）
+        client.enqueueNonStreaming(LLMClient.LLMResult.Success("恢复后的回复", null, emptyList()))
+        manager.continueConversation("再来")
+        yield()
+        collector.job.cancel()
+        assertTrue(collector.events.any { it is ChatEvent.AssistantText && it.text == "恢复后的回复" })
+        assertEquals(2, client.calls.size)
+    }
+
+    @Test
+    fun `empty response nudges once then emits EmptyResponse`() = runBlocking {
+        val client = ScriptedLLMClient()
+        // 第一轮空回复 → nudge 重试（非流式）
+        client.enqueueNonStreaming(LLMClient.LLMResult.Success("", null, emptyList()))
+        // nudge 后仍空 → EmptyResponse
+        client.enqueueNonStreaming(LLMClient.LLMResult.Success("", null, emptyList()))
+        val manager = newManager(client)
+        val collector = collectEvents(manager)
+
+        manager.startConversation("hi")
+        yield()
+        collector.job.cancel()
+        assertTrue(collector.events.any { it is ChatEvent.EmptyResponse })
+        // 2 次调用：原始 + nudge 重试
+        assertEquals(2, client.calls.size)
+        // nudge 以 system 消息追加进第二次请求的上下文
+        assertTrue(client.calls[1].any { it.role == "system" && it.content.contains("没有输出任何内容") })
+    }
+
+    @Test
+    fun `empty response nudges then gets real reply`() = runBlocking {
+        val client = ScriptedLLMClient()
+        client.enqueueNonStreaming(LLMClient.LLMResult.Success("", null, emptyList()))
+        client.enqueueNonStreaming(LLMClient.LLMResult.Success("好的，我直接回答", null, emptyList()))
+        val manager = newManager(client)
+        val collector = collectEvents(manager)
+
+        manager.startConversation("hi")
+        yield()
+        collector.job.cancel()
+        assertFalse(collector.events.any { it is ChatEvent.EmptyResponse })
+        assertTrue(collector.events.any { it is ChatEvent.AssistantText && it.text == "好的，我直接回答" })
+        assertEquals(2, client.calls.size)
+    }
+
+    @Test
+    fun `empty streaming nudges and recovers with non streaming reply`() = runBlocking {
+        val client = ScriptedLLMClient()
+        // 流式空 Done → 回退非流式（仍空）→ nudge → 非流式给出正文
+        client.enqueueStreaming { flow { emit(LLMClient.StreamChunk.Done("")) } }
+        client.enqueueNonStreaming(LLMClient.LLMResult.Success("", null, emptyList()))
+        client.enqueueNonStreaming(LLMClient.LLMResult.Success("最终回复", null, emptyList()))
+        val manager = newManager(client, streaming = true)
+        val collector = collectEvents(manager)
+
+        manager.startConversation("hi")
+        yield()
+        collector.job.cancel()
+        assertFalse(collector.events.any { it is ChatEvent.EmptyResponse })
+        assertTrue(collector.events.any { it is ChatEvent.AssistantText && it.text == "最终回复" })
+        assertEquals(3, client.calls.size)
     }
 }

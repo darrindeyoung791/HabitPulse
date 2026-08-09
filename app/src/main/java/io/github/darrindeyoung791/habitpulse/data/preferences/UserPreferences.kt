@@ -134,12 +134,12 @@ object PreferencesKeys {
     val AI_TOOL_RETRY_LIMIT = intPreferencesKey("ai_tool_retry_limit")
 
     /**
-     * AI 单次最大输出 Token，默认 500（全局影响所有模型）
+     * AI 单次最大输出 Token，默认 5000（全局影响所有模型）
      */
     val AI_MAX_OUTPUT_TOKENS = intPreferencesKey("ai_max_output_tokens")
 
     /**
-     * AI 最大思考预算（reasoning tokens），默认 2000；0 表示不发送思考预算参数
+     * AI 最大思考预算（reasoning tokens），默认 5000；0 表示不发送思考预算参数
      */
     val AI_MAX_THINKING_TOKENS = intPreferencesKey("ai_max_thinking_tokens")
 }
@@ -696,10 +696,10 @@ class UserPreferences(private val context: Context) {
 
     /**
      * AI 单次最大输出 Token 的 Flow
-     * 默认值为 500
+     * 默认值为 5000
      */
     val aiMaxOutputTokensFlow: Flow<Int> = context.dataStore.data.map { preferences ->
-        preferences[PreferencesKeys.AI_MAX_OUTPUT_TOKENS] ?: 500
+        preferences[PreferencesKeys.AI_MAX_OUTPUT_TOKENS] ?: 5000
     }
 
     /**
@@ -713,10 +713,10 @@ class UserPreferences(private val context: Context) {
 
     /**
      * AI 最大思考预算的 Flow
-     * 默认值为 2000；0 表示不发送思考预算参数
+     * 默认值为 5000；0 表示不发送思考预算参数
      */
     val aiMaxThinkingTokensFlow: Flow<Int> = context.dataStore.data.map { preferences ->
-        preferences[PreferencesKeys.AI_MAX_THINKING_TOKENS] ?: 2000
+        preferences[PreferencesKeys.AI_MAX_THINKING_TOKENS] ?: 5000
     }
 
     /**

@@ -128,6 +128,10 @@ class AIChatViewModel(application: Application) : AndroidViewModel(application) 
                         _uiState.value = _uiState.value.copy(isLoading = false, isGenerating = false, showStop = false, showRetry = true)
                         appendSystemError(getApplication<HabitPulseApplication>().getString(R.string.ai_error_guard_blocked))
                     }
+                    ChatEvent.EmptyResponse -> {
+                        _uiState.value = _uiState.value.copy(isLoading = false, isGenerating = false, showStop = false, showRetry = true)
+                        appendSystemError(getApplication<HabitPulseApplication>().getString(R.string.ai_chat_empty_response))
+                    }
                     ChatEvent.Stopped -> {
                         _uiState.value = _uiState.value.copy(isLoading = false, isGenerating = false, showStop = false, showRetry = true)
                         stopStreamingAssistant()

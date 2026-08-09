@@ -518,6 +518,7 @@
     <string name="ai_error_not_configured">請先在設定中新增 AI 供應商</string>
     <string name="ai_error_prefix">錯誤：%s</string>
     <string name="ai_error_guard_blocked">AI 連續出錯已被自動停止，請調整指令後重試</string>
+    <string name="ai_chat_empty_response">模型沒有產生回答（可能是思考預算已耗盡）。請重試或換一種問法。</string>
     <string name="ai_error_auth_failed">認證失敗，請檢查 API 密鑰是否正確</string>
     <string name="ai_error_access_denied">存取被拒絕，請檢查 API 密鑰權限</string>
     <string name="ai_error_server_error">伺服器錯誤（HTTP %d），請稍後重試</string>

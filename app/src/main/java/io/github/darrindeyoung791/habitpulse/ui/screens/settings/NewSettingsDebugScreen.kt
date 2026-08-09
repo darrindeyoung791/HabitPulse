@@ -47,8 +47,8 @@ fun NewSettingsDebugScreen(
     var showAddSampleDialog by remember { mutableStateOf(false) }
 
     val toolRetryLimit by prefs.aiToolRetryLimitFlow.collectAsStateWithLifecycle(initialValue = 20)
-    val maxOutputTokens by prefs.aiMaxOutputTokensFlow.collectAsStateWithLifecycle(initialValue = 500)
-    val maxThinkingTokens by prefs.aiMaxThinkingTokensFlow.collectAsStateWithLifecycle(initialValue = 2000)
+    val maxOutputTokens by prefs.aiMaxOutputTokensFlow.collectAsStateWithLifecycle(initialValue = 5000)
+    val maxThinkingTokens by prefs.aiMaxThinkingTokensFlow.collectAsStateWithLifecycle(initialValue = 5000)
 
     var editingAiParamId by remember { mutableStateOf<String?>(null) }
 

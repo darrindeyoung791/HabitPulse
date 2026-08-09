@@ -8,8 +8,8 @@ data class LLMConfig(
     val thinkingEnabled: Boolean = false,
     val timeoutMs: Int = 30000,
     val maxRetries: Int = 3,
-    val maxOutputTokens: Int = 500,
-    val maxThinkingTokens: Int = 0
+    val maxOutputTokens: Int = 5000,
+    val maxThinkingTokens: Int = 5000
 ) {
     fun isValid(): Boolean {
         return apiEndpoint.isNotBlank() && apiKey.isNotBlank() && modelName.isNotBlank()

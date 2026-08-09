@@ -518,6 +518,7 @@
     <string name="ai_error_not_configured">Please add an AI provider in settings</string>
     <string name="ai_error_prefix">Error: %s</string>
     <string name="ai_error_guard_blocked">AI stopped automatically after repeated errors. Please adjust your instructions and retry</string>
+    <string name="ai_chat_empty_response">The model did not generate a reply (likely the thinking budget was exhausted). Please retry or rephrase your question.</string>
     <string name="ai_error_auth_failed">Authentication failed, check API Key</string>
     <string name="ai_error_access_denied">Access denied, check API Key permissions</string>
     <string name="ai_error_server_error">Server error (HTTP %d), please retry later</string>

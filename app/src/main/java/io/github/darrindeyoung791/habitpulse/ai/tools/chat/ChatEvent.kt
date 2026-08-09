@@ -86,6 +86,9 @@ sealed class ChatEvent {
 
     data class Error(val message: String) : ChatEvent()
 
+    /** 思考超预算 / 模型空回复：多次尝试后仍未产出正文或工具调用。 */
+    object EmptyResponse : ChatEvent()
+
     object GuardBlocked : ChatEvent()
 
     object Stopped : ChatEvent()
