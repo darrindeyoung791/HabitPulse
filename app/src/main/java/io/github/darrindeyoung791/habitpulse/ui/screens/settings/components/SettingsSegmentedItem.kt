@@ -34,7 +34,7 @@ import io.github.darrindeyoung791.habitpulse.R
 import io.github.darrindeyoung791.habitpulse.ui.theme.AccentTint
 import io.github.darrindeyoung791.habitpulse.ui.utils.PressVibrationFeedback
 
-internal val SettingsGroupItemGap = 4.dp
+internal val SettingsGroupItemGap = 2.dp
 internal val SettingsBetweenGroupGap = 16.dp
 private val LargeCorner = 16.dp
 private val SmallCorner = 4.dp

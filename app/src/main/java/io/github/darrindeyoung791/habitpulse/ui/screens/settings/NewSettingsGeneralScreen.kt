@@ -1,7 +1,6 @@
 package io.github.darrindeyoung791.habitpulse.ui.screens.settings
 
 import android.content.Context
-import android.content.res.Configuration
 import android.webkit.CookieManager
 import android.widget.Toast
 import androidx.compose.foundation.layout.padding
@@ -22,13 +21,13 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import io.github.darrindeyoung791.habitpulse.R
 import io.github.darrindeyoung791.habitpulse.data.preferences.UserPreferences
+import io.github.darrindeyoung791.habitpulse.ui.rememberDeviceFormInfo
 import io.github.darrindeyoung791.habitpulse.ui.screens.settings.components.SettingsSectionHeader
 import io.github.darrindeyoung791.habitpulse.ui.screens.settings.components.SettingsSegmentedGroup
 import io.github.darrindeyoung791.habitpulse.ui.screens.settings.components.SettingsSegmentedItem
@@ -51,11 +50,7 @@ fun NewSettingsGeneralScreen(
     var showClearCacheDialog by remember { mutableStateOf(false) }
     var showClearCookiesDialog by remember { mutableStateOf(false) }
 
-    val configuration = LocalConfiguration.current
-    val smallestScreenWidthDp = configuration.smallestScreenWidthDp
-    val isTabletDevice = smallestScreenWidthDp >= 600
-    val isLandscape = configuration.orientation == Configuration.ORIENTATION_LANDSCAPE
-    val isTabletLandscape = isTabletDevice && isLandscape
+    val isTabletLandscape = rememberDeviceFormInfo().isTabletLandscape
     val showForceTabletLandscapeSwitch = !isTabletLandscape
 
     val forceTabletLandscape by userPreferences.forceTabletLandscapeFlow.collectAsStateWithLifecycle(initialValue = false)

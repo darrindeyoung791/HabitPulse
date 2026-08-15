@@ -71,10 +71,10 @@ class HabitStatusTest {
     }
 
     @Test
-    fun `isCompletelyOverdue is false when both OVERDUE and ABOUT_TO_START`() {
+    fun `isCompletelyOverdue is true when both OVERDUE and ABOUT_TO_START`() {
         val h = habit(reminderTimes = listOf("08:00", "12:00"))
         val ws = HabitWithStatus(h, emptyList(), setOf(HabitStatus.PENDING_TODAY, HabitStatus.OVERDUE, HabitStatus.ABOUT_TO_START))
-        assertFalse(ws.isCompletelyOverdue)
+        assertTrue(ws.isCompletelyOverdue)
     }
 
     @Test

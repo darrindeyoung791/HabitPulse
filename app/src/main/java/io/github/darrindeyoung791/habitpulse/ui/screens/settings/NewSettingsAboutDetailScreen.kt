@@ -36,6 +36,7 @@ import io.github.darrindeyoung791.habitpulse.navigation.RouteConfig
 import io.github.darrindeyoung791.habitpulse.ui.screens.settings.components.SettingsSegmentedGroup
 import io.github.darrindeyoung791.habitpulse.ui.screens.settings.components.SettingsSegmentedItem
 import io.github.darrindeyoung791.habitpulse.ui.screens.settings.components.SettingsSegmentedSwitch
+import io.github.darrindeyoung791.habitpulse.ui.screens.settings.components.SettingsSectionHeader
 import io.github.darrindeyoung791.habitpulse.ui.screens.settings.components.SettingsTextLinkButton
 import io.github.darrindeyoung791.habitpulse.utils.AccessibilityUtils
 import kotlinx.coroutines.launch
@@ -144,7 +145,7 @@ fun NewSettingsAboutDetailScreen(
             )
         }
 
-        SectionHeader(text = stringResource(id = R.string.settings_support_habitpulse, appName))
+        SettingsSectionHeader(text = stringResource(id = R.string.settings_support_habitpulse, appName))
         SettingsSegmentedGroup(tintOffset = 3) {
             SettingsSegmentedSwitch(
                 index = 0,
@@ -220,14 +221,4 @@ fun NewSettingsAboutDetailScreen(
             }
         )
     }
-}
-
-@Composable
-private fun SectionHeader(text: String) {
-    Text(
-        text = text,
-        style = MaterialTheme.typography.labelMedium,
-        color = MaterialTheme.colorScheme.primary,
-        modifier = Modifier.padding(start = 16.dp, end = 16.dp, top = 24.dp, bottom = 8.dp)
-    )
 }

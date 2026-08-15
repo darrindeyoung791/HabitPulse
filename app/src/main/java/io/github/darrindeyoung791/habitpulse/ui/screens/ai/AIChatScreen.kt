@@ -1,7 +1,6 @@
 package io.github.darrindeyoung791.habitpulse.ui.screens.ai
 
 import android.content.Intent
-import android.content.res.Configuration
 import android.widget.Toast
 import androidx.activity.compose.BackHandler
 import androidx.compose.animation.AnimatedVisibility
@@ -51,7 +50,6 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.platform.LocalClipboardManager
-import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.res.stringResource
@@ -77,6 +75,7 @@ import io.github.darrindeyoung791.habitpulse.ai.tools.chat.SettingChangeData
 import io.github.darrindeyoung791.habitpulse.ai.tools.chat.SettingsNavData
 import io.github.darrindeyoung791.habitpulse.ai.tools.chat.SettingsStatusData
 import io.github.darrindeyoung791.habitpulse.navigation.getDeviceCornerRadius
+import io.github.darrindeyoung791.habitpulse.ui.rememberDeviceFormInfo
 import io.github.darrindeyoung791.habitpulse.ui.screens.settings.components.SettingsSegmentedGroup
 import io.github.darrindeyoung791.habitpulse.ui.screens.settings.components.SettingsSegmentedSwitch
 import io.github.darrindeyoung791.habitpulse.ui.theme.AccentSeeds
@@ -119,8 +118,7 @@ fun AIChatScreen(
 
     val hasUnconfirmedHabits = messages.any { it is AiChatUiMessage.CreatedHabitCard }
 
-    val configuration = LocalConfiguration.current
-    val isLandscape = configuration.orientation == Configuration.ORIENTATION_LANDSCAPE
+    val isLandscape = rememberDeviceFormInfo().isLandscape
     val density = LocalDensity.current
     val imeVisible = androidx.compose.foundation.layout.WindowInsets.ime.getBottom(density) > 0
     val deviceCornerRadius = getDeviceCornerRadius()

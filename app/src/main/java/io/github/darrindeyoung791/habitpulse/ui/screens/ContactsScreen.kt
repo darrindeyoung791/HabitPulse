@@ -1,6 +1,5 @@
 package io.github.darrindeyoung791.habitpulse.ui.screens
 
-import android.content.res.Configuration
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.core.spring
 import androidx.compose.animation.core.tween
@@ -82,7 +81,6 @@ import androidx.compose.ui.focus.focusRequester
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.hapticfeedback.HapticFeedbackType
 import androidx.compose.ui.input.nestedscroll.nestedScroll
-import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalHapticFeedback
 import androidx.compose.runtime.LaunchedEffect
@@ -102,6 +100,7 @@ import io.github.darrindeyoung791.habitpulse.data.model.Habit
 import io.github.darrindeyoung791.habitpulse.data.model.HabitCompletion
 import io.github.darrindeyoung791.habitpulse.data.model.RepeatCycle
 import io.github.darrindeyoung791.habitpulse.data.repository.HabitRepository
+import io.github.darrindeyoung791.habitpulse.ui.rememberDeviceFormInfo
 import io.github.darrindeyoung791.habitpulse.ui.theme.HabitPulseTheme
 import io.github.darrindeyoung791.habitpulse.ui.utils.rememberAnimationsFrozen
 import io.github.darrindeyoung791.habitpulse.ui.utils.StaggeredListItem
@@ -181,12 +180,10 @@ fun ContactsScreenContent(
     // Apply nested scroll
     val nestedScrollModifier = scrollBehavior?.let { modifier.nestedScroll(it.nestedScrollConnection) } ?: modifier
 
-    // Get screen configuration for two-column layout
-    val configuration = LocalConfiguration.current
-    val screenWidthDp = configuration.screenWidthDp
-    val isLandscape = configuration.orientation == Configuration.ORIENTATION_LANDSCAPE
+    // Get device form info for two-column layout
+    val deviceForm = rememberDeviceFormInfo()
     // Use two-column layout for tablets in landscape (≥840dp), same as HomeScreen
-    val useTwoColumnLayout = isLandscape && screenWidthDp >= 840
+    val useTwoColumnLayout = deviceForm.isWideLayout
 
     val animationsFrozen by rememberAnimationsFrozen(listState)
 

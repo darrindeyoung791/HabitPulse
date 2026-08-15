@@ -3,7 +3,6 @@ package io.github.darrindeyoung791.habitpulse
 import android.content.ActivityNotFoundException
 import android.content.Context
 import android.content.Intent
-import android.content.res.Configuration
 import android.net.Uri
 import android.os.Build
 import android.os.Bundle
@@ -48,7 +47,6 @@ import androidx.compose.ui.*
 import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.tooling.preview.Preview
@@ -57,6 +55,7 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import io.github.darrindeyoung791.habitpulse.data.model.Habit
 import io.github.darrindeyoung791.habitpulse.data.model.HabitCompletion
 import io.github.darrindeyoung791.habitpulse.data.model.RepeatCycle
+import io.github.darrindeyoung791.habitpulse.ui.rememberDeviceFormInfo
 
 import io.github.darrindeyoung791.habitpulse.data.preferences.UserPreferences
 import io.github.darrindeyoung791.habitpulse.data.repository.HabitRepository
@@ -109,14 +108,8 @@ fun SettingsScreen() {
     val persistentNotification by userPreferences.persistentNotificationFlow.collectAsStateWithLifecycle(initialValue = false)
 
 
-    // Use smallestScreenWidthDp to detect device type (independent of orientation)
-    // Tablet: smallestScreenWidthDp >= 600dp
-    // Phone: smallestScreenWidthDp < 600dp
-    val configuration = LocalConfiguration.current
-    val smallestScreenWidthDp = configuration.smallestScreenWidthDp
-    val isTabletDevice = smallestScreenWidthDp >= 600
-    val isLandscape = configuration.orientation == Configuration.ORIENTATION_LANDSCAPE
-    val isTabletLandscape = isTabletDevice && isLandscape
+    // 由统一设备形态判定器提供（independent of orientation）
+    val isTabletLandscape = rememberDeviceFormInfo().isTabletLandscape
     // 只有在非平板横屏设备上才显示此开关
     val showForceTabletLandscapeSwitch = !isTabletLandscape
 

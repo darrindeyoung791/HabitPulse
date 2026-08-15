@@ -17,5 +17,5 @@ data class HabitWithStatus(
         get() = habit.getReminderTimesList().size - todayCompletions.size
 
     val isCompletelyOverdue: Boolean
-        get() = status.contains(HabitStatus.OVERDUE) && !status.contains(HabitStatus.ABOUT_TO_START)
+        get() = status.contains(HabitStatus.OVERDUE)
 }

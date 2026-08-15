@@ -1,6 +1,5 @@
 package io.github.darrindeyoung791.habitpulse.ui.screens
 
-import android.content.res.Configuration
 import androidx.compose.animation.AnimatedContent
 import androidx.compose.animation.core.animateDpAsState
 import androidx.compose.animation.core.animateFloatAsState
@@ -29,7 +28,6 @@ import androidx.compose.material.icons.automirrored.filled.ArrowForward
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
 import androidx.compose.runtime.saveable.rememberSaveable
-import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.platform.LocalLayoutDirection
@@ -56,6 +54,7 @@ import androidx.compose.animation.SharedTransitionScope
 import io.github.darrindeyoung791.habitpulse.HabitPulseApplication
 import io.github.darrindeyoung791.habitpulse.R
 import io.github.darrindeyoung791.habitpulse.data.model.Habit
+import io.github.darrindeyoung791.habitpulse.ui.rememberDeviceFormInfo
 import io.github.darrindeyoung791.habitpulse.ui.theme.HabitPulseTheme
 import io.github.darrindeyoung791.habitpulse.ui.utils.rememberDebounceClickHandler
 import io.github.darrindeyoung791.habitpulse.ui.screens.DateFilterButton
@@ -183,14 +182,9 @@ fun HomeScreen(
         titleFocusRequester.requestFocus()
     }
 
-    val configuration = LocalConfiguration.current
-    val screenWidthDp = configuration.screenWidthDp
-    val isLandscape = configuration.orientation == Configuration.ORIENTATION_LANDSCAPE
-    // Use smallestScreenWidthDp to detect device type (independent of orientation)
-    // Tablet: smallestScreenWidthDp >= 600dp
-    // Phone: smallestScreenWidthDp < 600dp
-    val smallestScreenWidthDp = configuration.smallestScreenWidthDp
-    val isTabletDevice = smallestScreenWidthDp >= 600
+    val deviceForm = rememberDeviceFormInfo()
+    val isLandscape = deviceForm.isLandscape
+    val isTabletDevice = deviceForm.isTabletDevice
 
     // 获取用户偏好设置
     val userPreferences = application?.let {
@@ -202,8 +196,8 @@ fun HomeScreen(
     // - Tablet in landscape: PermanentNavigationDrawer with hamburger menu
     // - Phone in landscape: NavigationRail
     // - All portrait modes: BottomNavigationBar
-    val isPermanentDrawer = isTabletDevice && isLandscape
-    val useRail = !isTabletDevice && isLandscape
+    val isPermanentDrawer = deviceForm.isTabletLandscape
+    val useRail = deviceForm.isPhoneLandscape
     val useBottomBar = !isPermanentDrawer && !useRail
 
     // Fallback: forceTabletLandscape for edge cases
@@ -220,7 +214,7 @@ fun HomeScreen(
 
     // Detect waterfall mode (tablet landscape dual-column layout)
     // This is critical for scroll-to-top functionality
-    val isWaterfallMode = isLandscape && screenWidthDp >= 840
+    val isWaterfallMode = deviceForm.isWideLayout
 
     var currentSection by rememberSaveable { mutableStateOf(HomeSection.Habits) }
     var isDrawerExpanded by rememberSaveable { mutableStateOf(true) }

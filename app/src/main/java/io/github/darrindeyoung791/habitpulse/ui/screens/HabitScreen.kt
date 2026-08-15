@@ -1,6 +1,5 @@
 package io.github.darrindeyoung791.habitpulse.ui.screens
 
-import android.content.res.Configuration
 import androidx.activity.compose.BackHandler
 import androidx.compose.animation.AnimatedContent
 import androidx.compose.animation.AnimatedVisibility
@@ -96,6 +95,7 @@ import io.github.darrindeyoung791.habitpulse.data.model.HabitWithStatus
 import io.github.darrindeyoung791.habitpulse.data.model.RepeatCycle
 import io.github.darrindeyoung791.habitpulse.data.preferences.UserPreferences
 import io.github.darrindeyoung791.habitpulse.data.repository.HabitRepository
+import io.github.darrindeyoung791.habitpulse.ui.rememberDeviceFormInfo
 import io.github.darrindeyoung791.habitpulse.ui.theme.AccentSeeds
 import io.github.darrindeyoung791.habitpulse.ui.theme.HabitPulseTheme
 import io.github.darrindeyoung791.habitpulse.ui.theme.rememberSeedAccentTint
@@ -588,15 +588,15 @@ fun HabitListContent(
     multiSelectTargetHabitId: UUID? = null,
     entryZone: @Composable () -> Unit = {}
 ) {
-    val configuration = LocalConfiguration.current
-    var screenWidthDp = configuration.screenWidthDp
-    val isLandscape = configuration.orientation == Configuration.ORIENTATION_LANDSCAPE
+    val deviceForm = rememberDeviceFormInfo()
+    val isLandscape = deviceForm.isLandscape
 
-    if (forceTabletLandscape && isLandscape && screenWidthDp < 840) {
-        screenWidthDp = 840
+    // forceTabletLandscape 覆盖：横屏时强制视宽为 840dp 以启用瀑布流
+    val useStaggeredGrid = if (forceTabletLandscape && isLandscape) {
+        true
+    } else {
+        deviceForm.isWideLayout
     }
-
-    val useStaggeredGrid = isLandscape && screenWidthDp >= 840
     val horizontalPadding = 16.dp
 
     val animationsFrozen by rememberAnimationsFrozen(

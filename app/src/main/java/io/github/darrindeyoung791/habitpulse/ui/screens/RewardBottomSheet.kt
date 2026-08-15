@@ -1,6 +1,5 @@
 package io.github.darrindeyoung791.habitpulse.ui.screens
 
-import android.content.res.Configuration
 import android.view.HapticFeedbackConstants
 import android.view.View
 import android.widget.Toast
@@ -44,7 +43,6 @@ import androidx.compose.ui.draw.scale
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Path
 import androidx.compose.ui.graphics.graphicsLayer
-import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalView
 import androidx.compose.ui.res.stringResource
@@ -56,6 +54,7 @@ import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import io.github.darrindeyoung791.habitpulse.R
 import io.github.darrindeyoung791.habitpulse.data.model.Habit
+import io.github.darrindeyoung791.habitpulse.ui.rememberDeviceFormInfo
 import kotlinx.coroutines.launch
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.outlined.Check
@@ -93,13 +92,10 @@ fun RewardBottomSheet(
     val scope = rememberCoroutineScope()
     val context = LocalContext.current
     val view = LocalView.current
-    val configuration = LocalConfiguration.current
-    
+
     // 检测设备和方向（与 HomeScreen 相同的判定逻辑）
-    val isLandscape = configuration.orientation == Configuration.ORIENTATION_LANDSCAPE
-    val smallestScreenWidthDp = configuration.smallestScreenWidthDp
-    val isTabletDevice = smallestScreenWidthDp >= 600
-    val isPhoneLandscape = !isTabletDevice && isLandscape  // 手机横屏模式
+    val deviceForm = rememberDeviceFormInfo()
+    val isPhoneLandscape = deviceForm.isPhoneLandscape  // 手机横屏模式
     
     // Check if habit has supervisors
     val hasSupervisors = habit.hasSupervision

@@ -457,6 +457,8 @@ The project is in **early development stage** (v0.5.19-alpha):
   - `UserPreferences.getAIConfig(id)` 会话内按 id 取明文 key 配置（不写回全局）
   - 系统提示词新增 `assets/prompts/chat_system_prompt.md`（tool-calling 专用，`SystemPrompt.getChatSystemPrompt`）；6 个 strings 文件新增 `ai_chat_*` 文案；新增 `ai_error_guard_blocked`
   - 单元测试：`AIChatConversationManagerTest`（工具循环/暂停点/重试上限/流式降级）、`ConversationGuardTest`（同题拦截/纠错计数）、`ToolRegistryTest`（校验/白名单/状态数据）
+- ✅ **Unified Device Form Factor** - 全应用统一的设备形态判定单一入口 `ui/DeviceFormFactor.kt`：`DeviceFormInfo`（携带 `windowSizeClass`/`windowPosture`）+ 纯函数 `classifyDeviceForm()`（无 Android 依赖可单测）+ `@Composable rememberDeviceFormInfo()`（`currentWindowAdaptiveInfo()`，旋转/分屏/折叠自动重组）。断点：`TABLET_MIN_WIDTH_DP=600`（`isTabletDevice` = `min(宽,高)>=600`，对齐旧 `smallestScreenWidthDp`）、`WIDE_LAYOUT_MIN_WIDTH_DP=840`（`isWideLayout` = 横屏且宽>=840）、`LARGE_SCREEN_MIN_WIDTH_DP=1200`（`isLargeWindow`）。派生标志 `isTabletLandscape`/`isPhoneLandscape`/`isWideLayout`/`isLargeWindow`。迁移调用点：`HomeScreen`（导航模式 `isTabletLandscape`/`isPhoneLandscape`、`isWaterfallMode`→`isWideLayout`）、`HabitScreen`（`useStaggeredGrid` = `isWideLayout || (forceTabletLandscape && isLandscape)`，删除 `screenWidthDp=840` hack）、`RecordsScreen`/`ContactsScreen`（`useTwoColumnLayout`→`isWideLayout`）、`WelcomeScreen`（`shouldUseSplitLayout`→`isLandscape`、`isTablet`→`isLargeWindow`）、`RewardBottomSheet`/`NotificationConfirmDialog`/`NewSettingsGeneralScreen`/`SettingsActivity`/`AIChatScreen`/`AICreateHabitScreen`。约定：页面禁止自行用 `LocalConfiguration`/`smallestScreenWidthDp`/`screenWidthDp`/`orientation` 判定设备形态，一律走 `rememberDeviceFormInfo()`；`@Preview` 的 `uiMode` 可保留 `Configuration.ORIENTATION_LANDSCAPE`
+  - 单元测试：`DeviceFormFactorTest`（19 用例：600/840/1200 边界、手机/平板竖横屏、方形窗口、派生标志）
 
 ### In Progress
 - 🔄 Calendar section
@@ -472,8 +474,8 @@ The project is in **early development stage** (v0.5.19-alpha):
 
 - **Namespace**: `io.github.darrindeyoung791.habitpulse`
 - **Application ID**: `io.github.darrindeyoung791.habitpulse`
-- **Version Code**: 161
-- **Version Name**: 0.8.13-alpha
+- **Version Code**: 194
+- **Version Name**: 0.8.46-alpha
 
 ## Screen Flow
 
@@ -511,14 +513,14 @@ The project is in **early development stage** (v0.5.19-alpha):
 
 ### Responsive Navigation System
 
-The app uses a responsive navigation system that adapts to screen size and orientation:
+The app uses a responsive navigation system that adapts to screen size and orientation. All device-form decisions (tablet/phone, landscape, wide layout) come from the unified `rememberDeviceFormInfo()` in `ui/DeviceFormFactor.kt` — pages must NOT read `LocalConfiguration`/`smallestScreenWidthDp`/`screenWidthDp`/`orientation` directly:
 
-| Device/Orientation | Threshold | Navigation Mode | FAB | Hamburger Menu |
+| Device/Orientation | Derived Flag | Navigation Mode | FAB | Hamburger Menu |
 |---|-----------|---|---|---|
-| Phone Portrait | < 840dp   | Bottom Navigation Bar | ✅ Extended | ❌ |
-| Phone Landscape | < 1200dp  | Navigation Rail | ✅ Extended | ❌ |
-| Tablet Portrait | ≥ 840dp   | Bottom Navigation Bar | ✅ Extended | ❌ |
-| Tablet Landscape | ≥ 1200dp  | Permanent Navigation Drawer | ✅ Extended | ✅ |
+| Phone Portrait | `!isLandscape`   | Bottom Navigation Bar | ✅ Extended | ❌ |
+| Phone Landscape | `isPhoneLandscape` | Navigation Rail | ✅ Extended | ❌ |
+| Tablet Portrait | `isTabletDevice && !isLandscape` | Bottom Navigation Bar | ✅ Extended | ❌ |
+| Tablet Landscape | `isTabletLandscape` | Permanent Navigation Drawer | ✅ Extended | ✅ |
 
 **Permanent Navigation Drawer Behavior (Tablet Landscape)**
 

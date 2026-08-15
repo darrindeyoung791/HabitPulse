@@ -375,9 +375,6 @@ fun HabitPulseNavGraph(
                     onEditHabit = { habit ->
                         navController.navigate(Route.EditHabit.createRoute(habit.id)) {
                             launchSingleTop = true
-                            popUpTo(Route.Home.route) {
-                                inclusive = false
-                            }
                         }
                     },
                     application = context.applicationContext as HabitPulseApplication

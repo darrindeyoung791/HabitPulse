@@ -36,6 +36,7 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import io.github.darrindeyoung791.habitpulse.R
 import io.github.darrindeyoung791.habitpulse.data.preferences.UserPreferences
 import io.github.darrindeyoung791.habitpulse.ui.screens.settings.components.SettingsBetweenGroupGap
+import io.github.darrindeyoung791.habitpulse.ui.screens.settings.components.SettingsSectionHeader
 import io.github.darrindeyoung791.habitpulse.ui.screens.settings.components.SettingsSegmentedBox
 import io.github.darrindeyoung791.habitpulse.ui.utils.PressVibrationDefaultAmplitude
 import io.github.darrindeyoung791.habitpulse.ui.utils.PressVibrationDurationMs
@@ -67,7 +68,7 @@ fun NewSettingsDebugVibrationScreen(
         onBack = onBack,
         onHelp = onOpenHelp
     ) {
-        SectionHeader(text = stringResource(id = R.string.settings_debug_vibration_duration_group))
+        SettingsSectionHeader(text = stringResource(id = R.string.settings_debug_vibration_duration_group))
         SettingsSegmentedBox(index = 0, count = 1) {
             Column(modifier = Modifier.padding(horizontal = 16.dp, vertical = 12.dp)) {
                 Row(
@@ -101,7 +102,7 @@ fun NewSettingsDebugVibrationScreen(
 
         Spacer(modifier = Modifier.height(SettingsBetweenGroupGap))
 
-        SectionHeader(text = stringResource(id = R.string.settings_debug_vibration_amplitude_group))
+        SettingsSectionHeader(text = stringResource(id = R.string.settings_debug_vibration_amplitude_group))
         SettingsSegmentedBox(index = 0, count = 1) {
             Column(modifier = Modifier.padding(horizontal = 16.dp, vertical = 12.dp)) {
                 Row(
@@ -199,16 +200,6 @@ fun NewSettingsDebugVibrationScreen(
             modifier = Modifier.padding(start = 16.dp, end = 16.dp, top = 4.dp, bottom = 8.dp)
         )
     }
-}
-
-@Composable
-private fun SectionHeader(text: String) {
-    Text(
-        text = text,
-        style = MaterialTheme.typography.labelMedium,
-        color = MaterialTheme.colorScheme.primary,
-        modifier = Modifier.padding(start = 16.dp, end = 16.dp, top = 24.dp, bottom = 8.dp)
-    )
 }
 
 private fun snapDuration(value: Float): Float {

@@ -44,7 +44,6 @@ import androidx.compose.ui.platform.LocalWindowInfo
 import androidx.compose.ui.platform.LocalContext
 
 import androidx.compose.ui.res.stringResource
-import android.content.res.Configuration
 import android.widget.Toast
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
@@ -56,6 +55,7 @@ import io.github.darrindeyoung791.habitpulse.R
 import io.github.darrindeyoung791.habitpulse.ai.conversation.PartialHabit
 import io.github.darrindeyoung791.habitpulse.data.preferences.UserPreferences
 import io.github.darrindeyoung791.habitpulse.navigation.Route
+import io.github.darrindeyoung791.habitpulse.ui.rememberDeviceFormInfo
 import io.github.darrindeyoung791.habitpulse.viewmodel.AICreateHabitViewModel
 import io.github.darrindeyoung791.habitpulse.viewmodel.ChatMessageType
 import androidx.compose.animation.core.Spring
@@ -146,8 +146,7 @@ fun AICreateHabitScreen(
     val clickHandler = rememberDebounceClickHandler()
     val hideKeyboardAndNavigateBack = rememberHideKeyboardAndNavigateBack(navController)
 
-    val configuration = LocalConfiguration.current
-    val isLandscape = configuration.orientation == Configuration.ORIENTATION_LANDSCAPE
+    val isLandscape = rememberDeviceFormInfo().isLandscape
     val density = LocalDensity.current
     val imeVisible = WindowInsets.ime.getBottom(density) > 0
 

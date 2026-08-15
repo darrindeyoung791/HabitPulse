@@ -1,6 +1,5 @@
 package io.github.darrindeyoung791.habitpulse.ui.screens
 
-import android.content.res.Configuration
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -32,7 +31,6 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
-import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
@@ -41,6 +39,7 @@ import androidx.compose.ui.window.Dialog
 import androidx.compose.ui.window.DialogProperties
 import io.github.darrindeyoung791.habitpulse.R
 import io.github.darrindeyoung791.habitpulse.data.model.Habit
+import io.github.darrindeyoung791.habitpulse.ui.rememberDeviceFormInfo
 import io.github.darrindeyoung791.habitpulse.utils.NotificationSender
 import java.time.LocalTime
 
@@ -51,11 +50,7 @@ fun NotificationConfirmDialog(
     onDismiss: () -> Unit
 ) {
     val context = LocalContext.current
-    val configuration = LocalConfiguration.current
-    val isLandscape = configuration.orientation == Configuration.ORIENTATION_LANDSCAPE
-    val smallestScreenWidthDp = configuration.smallestScreenWidthDp
-    val isTabletDevice = smallestScreenWidthDp >= 600
-    val isPhoneLandscape = !isTabletDevice && isLandscape
+    val isPhoneLandscape = rememberDeviceFormInfo().isPhoneLandscape
 
     val emails = remember { habit.getSupervisorEmailsList() }
     val phones = remember { habit.getSupervisorPhonesList() }

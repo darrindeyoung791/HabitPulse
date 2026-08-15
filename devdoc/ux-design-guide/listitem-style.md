@@ -11,7 +11,7 @@
 |------|------|------|
 | `SettingsSegmentedItem` | 公共 | 导航 / 动作列表项（可选图标 + 文本 + 可选箭头） |
 | `SettingsSegmentedSwitch` | 公共 | 开关列表项（整行可切换） |
-| `SettingsSegmentedGroup` | 公共 | 竖直分组容器（内部自动加 4dp 间距） |
+| `SettingsSegmentedGroup` | 公共 | 竖直分组容器（内部自动加 2dp 间距） |
 | `SettingsTextLinkButton` | 公共 | 紧凑文本链接按钮（无 48dp 最小触控区，仅文本高度） |
 | `SettingsSegmentedBox` | internal | 非点击分段表面：圆角 / 底色，放置任意内容（如滑块） |
 | `SettingsListSurface` | internal | 共享行表面：圆角 / 底色 / 涟漪 / 点击 |
@@ -45,7 +45,7 @@
 
 | 位置 | 值 |
 |------|-----|
-| 组内项间距 | `SettingsGroupItemGap = 4.dp` |
+| 组内项间距 | `SettingsGroupItemGap = 2.dp` |
 | 组与组之间 | `SettingsBetweenGroupGap = 16.dp` |
 | 行内水平 padding | `16.dp` |
 | 行内垂直 padding | `12.dp` |
@@ -79,7 +79,7 @@
 ### 1.6 分隔线
 
 - **禁止使用 `HorizontalDivider`**。项与组之间靠分段圆角 + 间距分隔。
-- 依赖：行与行之间必须有 4dp 以上的视觉间隙，否则圆角形变会失去分段感。
+- 依赖：行与行之间必须有 2dp 以上的视觉间隙，否则圆角形变会失去分段感。
 
 ### 1.7 禁用态
 

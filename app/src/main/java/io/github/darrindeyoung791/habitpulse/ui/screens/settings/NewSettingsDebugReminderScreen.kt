@@ -41,6 +41,7 @@ import io.github.darrindeyoung791.habitpulse.R
 import io.github.darrindeyoung791.habitpulse.data.preferences.UserPreferences
 import io.github.darrindeyoung791.habitpulse.receiver.ReminderReceiver
 import io.github.darrindeyoung791.habitpulse.service.ForegroundNotificationService
+import io.github.darrindeyoung791.habitpulse.ui.screens.settings.components.SettingsSectionHeader
 import io.github.darrindeyoung791.habitpulse.utils.NotificationHelper
 import io.github.darrindeyoung791.habitpulse.utils.ReminderNotificationBuilder
 import kotlinx.coroutines.launch
@@ -73,7 +74,7 @@ fun NewSettingsDebugReminderScreen(
         onBack = onBack,
         onHelp = onOpenHelp
     ) {
-        SectionHeader(text = stringResource(id = R.string.reminder_settings_keepalive_status))
+        SettingsSectionHeader(text = stringResource(id = R.string.reminder_settings_keepalive_status))
         StatusRow(
             icon = Icons.Outlined.Shield,
             label = stringResource(id = R.string.reminder_settings_keepalive_status),
@@ -92,7 +93,7 @@ fun NewSettingsDebugReminderScreen(
             )
         }
 
-        SectionHeader(text = stringResource(id = R.string.settings_notifications))
+        SettingsSectionHeader(text = stringResource(id = R.string.settings_notifications))
         StatusRow(
             icon = Icons.Outlined.Schedule,
             label = stringResource(id = R.string.reminder_settings_next_alarm),
@@ -202,16 +203,6 @@ fun NewSettingsDebugReminderScreen(
             Text(text = stringResource(id = R.string.reminder_settings_test_notification_delayed))
         }
     }
-}
-
-@Composable
-private fun SectionHeader(text: String) {
-    Text(
-        text = text,
-        style = MaterialTheme.typography.labelMedium,
-        color = MaterialTheme.colorScheme.primary,
-        modifier = Modifier.padding(start = 16.dp, end = 16.dp, top = 24.dp, bottom = 8.dp)
-    )
 }
 
 @Composable
