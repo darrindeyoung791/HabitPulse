@@ -37,15 +37,15 @@ class ReminderReceiver : BroadcastReceiver() {
     }
 
     private suspend fun handleReminder(context: Context) {
-        if (!NotificationHelper.hasNotificationPermission(context)) {
-            ReminderManager.scheduleNextAlarm(context)
-            return
-        }
-
         val userPrefs = UserPreferences.getInstance(context)
 
         if (!userPrefs.reminderEnabledFlow.first()) {
             ReminderManager.cancelAlarm(context)
+            return
+        }
+
+        if (!NotificationHelper.hasNotificationPermission(context)) {
+            ReminderManager.scheduleNextAlarm(context)
             return
         }
 
