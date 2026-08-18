@@ -6,6 +6,7 @@ import androidx.datastore.core.DataStore
 import androidx.datastore.preferences.core.Preferences
 import androidx.datastore.preferences.core.booleanPreferencesKey
 import androidx.datastore.preferences.core.edit
+import androidx.datastore.preferences.core.floatPreferencesKey
 import androidx.datastore.preferences.core.intPreferencesKey
 import androidx.datastore.preferences.core.longPreferencesKey
 import androidx.datastore.preferences.core.stringPreferencesKey
@@ -49,6 +50,17 @@ object PreferencesKeys {
      * 默认值为 true（开启）
      */
     val HAPTIC_FEEDBACK_ENABLED = booleanPreferencesKey("haptic_feedback_enabled")
+
+    /**
+     * 是否跟随系统字体大小
+     * 默认值为 true（跟随系统）
+     */
+    val FONT_SCALE_FOLLOW_SYSTEM = booleanPreferencesKey("font_scale_follow_system")
+
+    /**
+     * 自定义字体大小缩放值（1.0 为标准大小），仅在 FONT_SCALE_FOLLOW_SYSTEM 为 false 时生效
+     */
+    val FONT_SCALE = floatPreferencesKey("font_scale")
 
     /**
      * 是否开启持久通知以保持后台运行
@@ -291,6 +303,44 @@ class UserPreferences(private val context: Context) {
     suspend fun setHapticsEnabled(enabled: Boolean) {
         context.dataStore.edit { preferences ->
             preferences[PreferencesKeys.HAPTIC_FEEDBACK_ENABLED] = enabled
+        }
+    }
+
+    /**
+     * 是否跟随系统字体大小的 Flow
+     * 默认值为 true（跟随系统）
+     */
+    val fontScaleFollowSystemFlow: Flow<Boolean> = context.dataStore.data.map { preferences ->
+        preferences[PreferencesKeys.FONT_SCALE_FOLLOW_SYSTEM] ?: true
+    }
+
+    /**
+     * 设置是否跟随系统字体大小
+     *
+     * @param enabled true 为跟随系统，false 为使用自定义字体大小
+     */
+    suspend fun setFontScaleFollowSystem(enabled: Boolean) {
+        context.dataStore.edit { preferences ->
+            preferences[PreferencesKeys.FONT_SCALE_FOLLOW_SYSTEM] = enabled
+        }
+    }
+
+    /**
+     * 自定义字体大小缩放值的 Flow
+     * 默认值为 1.0f（标准大小）
+     */
+    val fontScaleFlow: Flow<Float> = context.dataStore.data.map { preferences ->
+        preferences[PreferencesKeys.FONT_SCALE] ?: 1.0f
+    }
+
+    /**
+     * 设置自定义字体大小缩放值
+     *
+     * @param value 1.0 为标准大小
+     */
+    suspend fun setFontScale(value: Float) {
+        context.dataStore.edit { preferences ->
+            preferences[PreferencesKeys.FONT_SCALE] = value
         }
     }
 

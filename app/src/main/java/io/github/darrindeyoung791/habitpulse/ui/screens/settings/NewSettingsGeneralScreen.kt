@@ -6,6 +6,7 @@ import android.widget.Toast
 import androidx.compose.foundation.layout.padding
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.outlined.DeleteSweep
+import androidx.compose.material.icons.outlined.FormatSize
 import androidx.compose.material.icons.outlined.Tablet
 import androidx.compose.material.icons.outlined.Translate
 import androidx.compose.material.icons.outlined.Vibration
@@ -41,7 +42,8 @@ import java.io.File
 fun NewSettingsGeneralScreen(
     onBack: () -> Unit,
     onOpenHelp: () -> Unit,
-    onOpenLanguage: () -> Unit
+    onOpenLanguage: () -> Unit,
+    onOpenFontScale: () -> Unit
 ) {
     val context = LocalContext.current
     val scope = rememberCoroutineScope()
@@ -67,9 +69,18 @@ fun NewSettingsGeneralScreen(
         SettingsSectionHeader(text = stringResource(id = R.string.settings_ui_display))
         val showLanguageItem = AppLocaleManager.isPerAppLanguageSupported()
         val uiDisplayItemCount =
-            (if (showLanguageItem) 1 else 0) + (if (showForceTabletLandscapeSwitch) 1 else 0) + 1
+            1 + (if (showLanguageItem) 1 else 0) + (if (showForceTabletLandscapeSwitch) 1 else 0) + 1
         if (uiDisplayItemCount > 0) {
             SettingsSegmentedGroup {
+                SettingsSegmentedItem(
+                    index = 0,
+                    count = uiDisplayItemCount,
+                    headline = stringResource(id = R.string.settings_font_scale),
+                    supportingText = stringResource(id = R.string.settings_font_scale_description),
+                    leadingIcon = Icons.Outlined.FormatSize,
+                    showArrow = true,
+                    onClick = onOpenFontScale
+                )
                 if (showLanguageItem) {
                     val currentLanguageText = AppLocaleManager
                         .getCurrentAppLocale(context)
@@ -77,7 +88,7 @@ fun NewSettingsGeneralScreen(
                         ?.let { AppLocaleManager.labelRes(it) }
                         ?.let { stringResource(id = it) }
                     SettingsSegmentedItem(
-                        index = 0,
+                        index = 1,
                         count = uiDisplayItemCount,
                         headline = stringResource(id = R.string.settings_language),
                         supportingText = currentLanguageText
@@ -98,7 +109,7 @@ fun NewSettingsGeneralScreen(
                 }
                 if (showForceTabletLandscapeSwitch) {
                     SettingsSegmentedSwitch(
-                        index = if (showLanguageItem) 1 else 0,
+                        index = if (showLanguageItem) 2 else 1,
                         count = uiDisplayItemCount,
                         headline = stringResource(id = R.string.settings_force_tablet_landscape),
                         supportingText = stringResource(id = R.string.settings_force_tablet_landscape_description),
@@ -134,7 +145,7 @@ fun NewSettingsGeneralScreen(
         }
 
         SettingsSectionHeader(text = stringResource(id = R.string.settings_storage))
-        SettingsSegmentedGroup(tintOffset = 2) {
+        SettingsSegmentedGroup(tintOffset = 4) {
             SettingsSegmentedItem(
                 index = 0,
                 count = 2,

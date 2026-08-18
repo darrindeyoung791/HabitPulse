@@ -6,7 +6,7 @@
     <string name="settings_category_ai_description">設定 AI 供應商與模型參數</string>
     <string name="settings_category_lan">連接與同步</string>
     <string name="settings_category_general">一般</string>
-    <string name="settings_category_general_description">儲存、顯示與觸感設定</string>
+    <string name="settings_category_general_description">語言、顯示與觸感</string>
     <string name="settings_configure_provider">設定供應商</string>
     <string name="settings_configure_provider_description">設定 AI 供應商、模型與 API 密鑰</string>
     <string name="settings_memory">記憶</string>
@@ -15,6 +15,10 @@
     <string name="settings_haptic_feedback">關閉應用程式內全部震動</string>
     <string name="settings_haptic_feedback_description">關閉列表、按鈕等介面的按壓震動回饋</string>
     <string name="settings_language">語言</string>
+    <string name="settings_font_scale">字型大小</string>
+    <string name="settings_font_scale_description">自訂應用程式內字型大小</string>
+    <string name="settings_font_scale_follow_system">跟隨系統</string>
+    <string name="settings_font_scale_standard">標準</string>
     <string name="settings_language_system_default">跟隨系統</string>
     <string name="language_follow_system_unsupported">%1$s doesn\'t support your language.</string>
     <string name="settings_new_settings_entry">新版設定</string>

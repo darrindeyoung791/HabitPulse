@@ -6,7 +6,7 @@
     <string name="settings_category_ai_description">Configure AI providers and model parameters</string>
     <string name="settings_category_lan">Connect &amp; Sync</string>
     <string name="settings_category_general">General</string>
-    <string name="settings_category_general_description">Storage, display and haptics settings</string>
+    <string name="settings_category_general_description">Language, display and haptics</string>
     <string name="settings_configure_provider">Configure Provider</string>
     <string name="settings_configure_provider_description">Set up the AI provider, model and API key</string>
     <string name="settings_memory">Memory</string>
@@ -15,6 +15,10 @@
     <string name="settings_haptic_feedback">Disable all in-app vibrations</string>
     <string name="settings_haptic_feedback_description">Turn off press vibration feedback for lists, buttons and other UI</string>
     <string name="settings_language">Language</string>
+    <string name="settings_font_scale">Font size</string>
+    <string name="settings_font_scale_description">Customize the in-app font size</string>
+    <string name="settings_font_scale_follow_system">Follow system</string>
+    <string name="settings_font_scale_standard">Standard</string>
     <string name="settings_language_system_default">System default</string>
     <string name="language_follow_system_unsupported">%1$s doesn\'t support your language.</string>
     <string name="settings_new_settings_entry">New Settings</string>
