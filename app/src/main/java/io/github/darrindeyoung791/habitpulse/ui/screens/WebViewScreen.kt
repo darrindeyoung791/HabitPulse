@@ -62,6 +62,7 @@ import androidx.compose.ui.viewinterop.AndroidView
 import io.github.darrindeyoung791.habitpulse.R
 import io.github.darrindeyoung791.habitpulse.navigation.RouteConfig
 import io.github.darrindeyoung791.habitpulse.ui.components.webview.WebViewMenuButton
+import io.github.darrindeyoung791.habitpulse.utils.WebViewUserAgent
 import io.github.darrindeyoung791.habitpulse.ui.components.webview.WebviewAwareSwipeRefreshLayout
 import kotlinx.coroutines.launch
 
@@ -129,6 +130,7 @@ fun WebViewScreen(
             webView.settings.loadWithOverviewMode = true
             webView.settings.useWideViewPort = true
             webView.settings.setSupportZoom(false)
+            webView.settings.userAgentString = WebViewUserAgent.reduced(context)
         }
 
         webView.webViewClient = object : WebViewClient() {

@@ -12,6 +12,7 @@ import androidx.activity.enableEdgeToEdge
 import io.github.darrindeyoung791.habitpulse.navigation.RouteConfig
 import io.github.darrindeyoung791.habitpulse.ui.screens.WebViewScreen
 import io.github.darrindeyoung791.habitpulse.ui.theme.HabitPulseTheme
+import io.github.darrindeyoung791.habitpulse.utils.WebViewUserAgent
 
 class WebViewActivity : ComponentActivity() {
     companion object {
@@ -36,6 +37,7 @@ class WebViewActivity : ComponentActivity() {
             settings.loadWithOverviewMode = true
             settings.useWideViewPort = true
             settings.setSupportZoom(false)
+            settings.userAgentString = WebViewUserAgent.reduced(this@WebViewActivity)
             WebView.setWebContentsDebuggingEnabled(true)
         }
 
