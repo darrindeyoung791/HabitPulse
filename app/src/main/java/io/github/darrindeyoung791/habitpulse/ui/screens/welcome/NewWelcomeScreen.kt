@@ -110,16 +110,12 @@ fun NewWelcomeScreen(
                             reminderEnabled, dndEnabled, dndStart, dndEnd, persistentEnabled
                         )
                     },
-                    onSkip = {
-                        onNotificationsNext(
-                            reminderEnabled, dndEnabled, dndStart, dndEnd, persistentEnabled
-                        )
-                    },
                     onBack = onBack,
                     deviceForm = deviceForm
                 )
                 else -> WelcomeDoneStep(
                     onEnter = onEnter,
+                    onBack = onBack,
                     deviceForm = deviceForm
                 )
             }
@@ -151,7 +147,10 @@ fun NewWelcomeScreen(
             },
             dismissButton = {
                 TextButton(
-                    onClick = { showDisagreeDialog = false }
+                    onClick = {
+                        showDisagreeDialog = false
+                        onAgree()
+                    }
                 ) {
                     Text(stringResource(R.string.welcome_disagree_dialog_agree))
                 }

@@ -31,7 +31,7 @@ import io.github.darrindeyoung791.habitpulse.ui.screens.settings.components.Sett
 /**
  * 第三步：通知设置。提醒 / 免打扰 / 常驻通知 三个分段开关；
  * 免打扰开启且提醒开启时，其下方展开内嵌 DND 时段滑块（与新设置一致）。
- * 「完成」与「跳过，稍后设置」都通过 [onFinish] / [onSkip] 回到调用方。
+ * 底部仅「完成」主按钮（原「跳过」已移除，跳过与完成行为等价）。
  */
 @Composable
 fun WelcomeNotificationsStep(
@@ -46,7 +46,6 @@ fun WelcomeNotificationsStep(
     onDndEndChanged: (String) -> Unit,
     onPersistentChanged: (Boolean) -> Unit,
     onFinish: () -> Unit,
-    onSkip: () -> Unit,
     onBack: () -> Unit,
     deviceForm: DeviceFormInfo,
     modifier: Modifier = Modifier
@@ -110,8 +109,8 @@ fun WelcomeNotificationsStep(
                     )
                     AnimatedVisibility(
                         visible = dndBoxVisible,
-                        enter = expandVertically(expandFrom = Alignment.Top),
-                        exit = shrinkVertically(shrinkTowards = Alignment.Top),
+                        enter = expandVertically(expandFrom = Alignment.Top, clip = false),
+                        exit = shrinkVertically(shrinkTowards = Alignment.Top, clip = false),
                         label = "welcomeDndBox"
                     ) {
                         SettingsSegmentedBox(index = 2, count = 3) {
@@ -136,10 +135,6 @@ fun WelcomeNotificationsStep(
                     WelcomePrimaryButton(
                         text = stringResource(R.string.welcome_step_done),
                         onClick = onFinish
-                    )
-                    WelcomeSecondaryButton(
-                        text = stringResource(R.string.welcome_skip),
-                        onClick = onSkip
                     )
                 }
             }

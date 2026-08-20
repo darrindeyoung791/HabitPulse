@@ -109,13 +109,13 @@ fun WelcomePermissionsStep(
         bottom = {
             WelcomeRiseIn(delayMs = 640) {
                 WelcomeBottomBar(maxWidth = maxWidth) {
-                    WelcomePrimaryButton(
-                        text = stringResource(R.string.welcome_agree_button),
-                        onClick = onAgree
-                    )
                     WelcomeSecondaryButton(
                         text = stringResource(R.string.welcome_disagree_button),
                         onClick = onDisagree
+                    )
+                    WelcomePrimaryButton(
+                        text = stringResource(R.string.welcome_agree_button),
+                        onClick = onAgree
                     )
                 }
             }

@@ -61,9 +61,10 @@ fun NewSettingsAboutDetailScreen(
         try {
             val packageInfo = context.packageManager.getPackageInfo(context.packageName, 0)
             val version = packageInfo.versionName ?: "1.0.0"
+            val versionCode = packageInfo.longVersionCode
             val isDebug = context.applicationInfo.flags and android.content.pm.ApplicationInfo.FLAG_DEBUGGABLE != 0
-            val buildType = if (isDebug) " (Debug)" else " (Release)"
-            "$version$buildType"
+            val buildType = if (isDebug) "Debug" else "Release"
+            "$version ($versionCode) ($buildType)"
         } catch (e: Exception) {
             "1.0.0"
         }
