@@ -696,4 +696,7 @@ obj/
 
 !/gradle/wrapper/gradle-wrapper.jar
 
+# Kotlin compiler work/cache directory
+.kotlin/
+
 # End of https://www.toptal.com/developers/gitignore/api/windows,macos,linux,androidstudio,jetbrains+all,visualstudiocode,android,flutter,web,kotlin,java,dart,python,powershell

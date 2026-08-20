@@ -13,6 +13,7 @@ import io.github.darrindeyoung791.habitpulse.utils.ReminderNotificationBuilder
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.SupervisorJob
+import kotlinx.coroutines.flow.first
 import kotlinx.coroutines.launch
 import java.time.LocalDate
 import java.util.Calendar
@@ -36,6 +37,13 @@ class ReminderReceiver : BroadcastReceiver() {
     }
 
     private suspend fun handleReminder(context: Context) {
+        val userPrefs = UserPreferences.getInstance(context)
+
+        if (!userPrefs.reminderEnabledFlow.first()) {
+            ReminderManager.cancelAlarm(context)
+            return
+        }
+
         if (!NotificationHelper.hasNotificationPermission(context)) {
             ReminderManager.scheduleNextAlarm(context)
             return
@@ -93,7 +101,6 @@ class ReminderReceiver : BroadcastReceiver() {
 
         ReminderManager.scheduleNextAlarm(context)
 
-        val userPrefs = UserPreferences.getInstance(context)
         val todayDateStr = LocalDate.now().toString()
         userPrefs.incrementReminderSentCount(todayDateStr)
     }

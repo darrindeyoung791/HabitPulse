@@ -195,6 +195,14 @@ class MainActivity : ComponentActivity() {
                             // Clear the extra to prevent re-navigation
                             intentForNav.removeExtra(EXTRA_NAVIGATE_TO)
                         }
+                        // 从 AIChatActivity 跳转过来编辑习惯
+                        val editHabitId = intentForNav.getStringExtra(AIChatActivity.EXTRA_EDIT_HABIT_ID)
+                        if (editHabitId != null) {
+                            navController.navigate(Route.EditHabit.createRoute(java.util.UUID.fromString(editHabitId))) {
+                                launchSingleTop = true
+                            }
+                            intentForNav.removeExtra(AIChatActivity.EXTRA_EDIT_HABIT_ID)
+                        }
                     }
                 }
 

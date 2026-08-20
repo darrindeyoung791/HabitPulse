@@ -9,12 +9,21 @@ import androidx.compose.material3.dynamicDarkColorScheme
 import androidx.compose.material3.dynamicLightColorScheme
 import androidx.compose.material3.lightColorScheme
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.SideEffect
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableStateOf
+import androidx.compose.runtime.remember
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.toArgb
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.LocalDensity
+import androidx.compose.ui.platform.LocalInspectionMode
 import androidx.compose.ui.platform.LocalView
+import androidx.compose.ui.unit.Density
 import androidx.core.view.WindowCompat
+import androidx.lifecycle.compose.collectAsStateWithLifecycle
+import io.github.darrindeyoung791.habitpulse.data.preferences.UserPreferences
 
 private val DarkColorScheme = darkColorScheme(
     primary = primaryDark,
@@ -210,9 +219,9 @@ fun HabitPulseTheme(
     dynamicColor: Boolean = true,
     content: @Composable () -> Unit
 ) {
+    val context = LocalContext.current
     val colorScheme = when {
         dynamicColor && Build.VERSION.SDK_INT >= Build.VERSION_CODES.S -> {
-            val context = LocalContext.current
             if (darkTheme) {
                 dynamicDarkColorScheme(context)
             } else {
@@ -222,6 +231,27 @@ fun HabitPulseTheme(
 
         darkTheme -> DarkColorScheme
         else -> LightColorScheme
+    }
+
+    // 应用内字体大小：跟随系统开关关闭时使用滑杆自定义缩放值（1.0 = 标准）。
+    // Preview（LocalInspectionMode）中不访问 DataStore，保持默认系统缩放。
+    val isPreview = LocalInspectionMode.current
+    val userPreferences = remember { if (!isPreview) UserPreferences.getInstance(context) else null }
+    val fontScaleFollowSystem by if (userPreferences != null) {
+        userPreferences.fontScaleFollowSystemFlow.collectAsStateWithLifecycle(initialValue = true)
+    } else {
+        remember { mutableStateOf(true) }
+    }
+    val customFontScale by if (userPreferences != null) {
+        userPreferences.fontScaleFlow.collectAsStateWithLifecycle(initialValue = 1f)
+    } else {
+        remember { mutableStateOf(1f) }
+    }
+
+    val baseDensity = LocalDensity.current
+    val effectiveFontScale = if (fontScaleFollowSystem) baseDensity.fontScale else customFontScale
+    val appDensity = remember(baseDensity, effectiveFontScale) {
+        Density(baseDensity.density, effectiveFontScale)
     }
 
     // Update system bar appearance based on theme
@@ -241,9 +271,11 @@ fun HabitPulseTheme(
         }
     }
 
-    MaterialTheme(
-        colorScheme = colorScheme,
-        typography = Typography,
-        content = content
-    )
+    CompositionLocalProvider(LocalDensity provides appDensity) {
+        MaterialTheme(
+            colorScheme = colorScheme,
+            typography = Typography,
+            content = content
+        )
+    }
 }

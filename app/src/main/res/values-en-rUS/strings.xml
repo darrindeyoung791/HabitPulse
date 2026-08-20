@@ -1,17 +1,41 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
     <string name="settings_title">Settings</string>
+    <string name="settings_coming_soon">Coming soon</string>
+    <string name="settings_category_ai">AI Configuration</string>
+    <string name="settings_category_ai_description">Configure AI providers and model parameters</string>
+    <string name="settings_category_lan">Connect &amp; Sync</string>
+    <string name="settings_category_general">General</string>
+    <string name="settings_category_general_description">Language, display and haptics</string>
+    <string name="settings_configure_provider">Configure Provider</string>
+    <string name="settings_configure_provider_description">Set up the AI provider, model and API key</string>
+    <string name="settings_memory">Memory</string>
+    <string name="settings_memory_description">Let AI remember your habits and preferences</string>
+    <string name="settings_ui_display">Display &amp; Haptics</string>
+    <string name="settings_haptic_feedback">Disable all in-app vibrations</string>
+    <string name="settings_haptic_feedback_description">Turn off press vibration feedback for lists, buttons and other UI</string>
+    <string name="settings_language">Language</string>
+    <string name="settings_font_scale">Font size</string>
+    <string name="settings_font_scale_description">Customize the in-app font size</string>
+    <string name="settings_font_scale_follow_system">Follow system</string>
+    <string name="settings_font_scale_standard">Standard</string>
+    <string name="settings_language_system_default">System default</string>
+    <string name="language_follow_system_unsupported">%1$s doesn\'t support your language.</string>
+    <string name="settings_new_settings_entry">New Settings</string>
+    <string name="settings_new_settings_entry_desc">Try the new categorized settings interface</string>
     <string name="settings_about">About</string>
+    <string name="settings_about_description">Version, developers and open-source licenses</string>
     <string name="settings_app_version">Version</string>
     <string name="settings_developer">Developer</string>
     <string name="settings_back">Back</string>
     <string name="settings_about_section">About</string>
-    <string name="settings_privacy_notice">%1$s takes your privacy seriously. Your data is stored on your device, and %1$s does not transmit your personal information over the internet.</string>
+    <string name="settings_privacy_notice">%1$s takes your privacy seriously. Your data is stored on your device, and %1$s does not transmit your personal information over the Internet.</string>
     <string name="settings_app_version_label">Version</string>
-    <string name="settings_developer_name">The HabitPulse Dev Team</string>
+    <string name="settings_developer_name">The %1$s Dev Team</string>
     <string name="settings_app_info_button">App info…</string>
     <string name="settings_github_button">GitHub repo…</string>
-    <string name="settings_help_button">Help and feedback…</string>
+    <string name="settings_help_button">Help &amp; feedback…</string>
+    <string name="settings_help_button_description">View help documentation or report issues</string>
     <string name="settings_support_habitpulse">Support %1$s</string>
     <string name="settings_support_habitpulse_description">Enable splash ad to support %1$s. Thank you for your support!</string>
     <string name="settings_support_habitpulse_switch">Enable Splash Ad</string>
@@ -125,10 +149,36 @@
     
     <!-- Debug / Developer options -->
     <string name="debug_add_sample_data_dialog_title">Add Sample Data?</string>
+    <string name="debug_add_sample_data_warning">Warning: This will add a large batch of sample habits and completion records at once, which may disrupt your existing habits and trigger many unnecessary reminders.</string>
     <string name="debug_add_sample_data_dialog_message">Add 40 sample habit data entries?\n\nThis feature is for debugging on new devices. It will add habits with different reminder methods, supervision methods, and notes. Some supervisors appear in multiple habits for testing UI scrolling performance.</string>
     <string name="debug_add_sample_data_yes">Add</string>
     <string name="debug_add_sample_data_no">Cancel</string>
     <string name="debug_sample_data_added">Added 40 sample data entries</string>
+    <string name="settings_debug_title">Debug Settings</string>
+    <string name="settings_debug_confirm_title">Enter debug settings?</string>
+    <string name="settings_debug_confirm_message">Enter debug settings? This page contains developer tools.</string>
+    <string name="settings_debug_reminder_title">Reminder Debug</string>
+    <string name="settings_debug_add_sample_habits">Add sample habits</string>
+    <string name="settings_debug_add_sample_habits_description">Add a batch of sample habits and completion records for testing the UI and features</string>
+    <string name="settings_debug_reset_onboarding">Reset onboarding</string>
+    <string name="settings_debug_reset_onboarding_description">Show the welcome onboarding next time the app opens</string>
+    <string name="settings_debug_reset_onboarding_dialog_title">Reset onboarding?</string>
+    <string name="settings_debug_reset_onboarding_dialog_message">The app will show the 4-step welcome onboarding next time it opens.</string>
+    <string name="settings_debug_reset_onboarding_done">Reset. The app will show the welcome onboarding next time.</string>
+    <string name="settings_debug_vibration">Vibration Debug</string>
+    <string name="settings_debug_vibration_description">Adjust press vibration duration and intensity</string>
+    <string name="settings_debug_ai_retry_limit">AI tool retry limit</string>
+    <string name="settings_debug_ai_max_output_tokens">AI max output tokens</string>
+    <string name="settings_debug_ai_max_thinking_tokens">AI thinking budget tokens</string>
+    <string name="settings_debug_vibration_title">Vibration Debug</string>
+    <string name="settings_debug_vibration_duration_group">Duration</string>
+    <string name="settings_debug_vibration_duration">Vibration duration</string>
+    <string name="settings_debug_vibration_amplitude_group">Intensity</string>
+    <string name="settings_debug_vibration_amplitude">Vibration intensity</string>
+    <string name="settings_debug_vibration_test">Test vibration</string>
+    <string name="settings_debug_vibration_reset">Reset to default</string>
+    <string name="settings_debug_vibration_notice_title">Intensity note</string>
+    <string name="settings_debug_vibration_notice_content">Intensity ranges 1-255 and only takes effect when the device hardware supports amplitude control (linear motor). Unsupported devices use the system default intensity and the slider may have no effect. Intensity is independent of duration and can be adjusted separately.</string>
 
     <!-- Accessibility -->
     <string name="accessibility_talkback_splash_ad_disabled">To avoid affecting users with visual impairments, the splash ad feature cannot be enabled</string>
@@ -230,13 +280,31 @@
 
     <!-- Welcome Screen -->
     <string name="welcome_description">A clean and lightweight habit tracker designed to outlast the three-minute enthusiasm.</string>
+    <string name="welcome_greeting_title">Welcome to %1$s</string>
+    <string name="welcome_greeting_continue">Continue</string>
     <string name="welcome_permissions_title">For timely notifications, %1$s may use the following permissions:</string>
+    <string name="welcome_permissions_heading">Permissions</string>
     <string name="welcome_permission_notification_title">Send persistent notifications</string>
+    <string name="welcome_permission_notification_desc">Receive habit reminders on time, never miss one</string>
     <string name="welcome_permission_background_title">Run continuously in the background</string>
+    <string name="welcome_permission_background_desc">Get reminders delivered promptly</string>
     <string name="welcome_agree_button">I Agree, Continue</string>
-    <string name="welcome_disagree_button">Disagree, Enter Limited Mode</string>
+    <string name="welcome_disagree_button">Disagree</string>
     <string name="welcome_limited_mode">Limited Mode</string>
     <string name="welcome_limited_mode_info">You have chosen Limited Mode. Some features will be unavailable.</string>
+    <string name="welcome_consent_prefix">By continuing, you agree to the</string>
+    <string name="welcome_consent_and">and</string>
+    <string name="welcome_terms_of_service">Terms of Service</string>
+    <string name="welcome_privacy_policy_coming_soon">Privacy Policy / Terms of Service coming soon</string>
+    <string name="welcome_skip">Skip, set up later</string>
+    <string name="welcome_enter">Enter %1$s</string>
+    <string name="welcome_step_done">Done</string>
+    <string name="welcome_done_title">All set</string>
+    <string name="welcome_done_desc">Start building your first good habit</string>
+    <string name="welcome_disagree_dialog_title">You can\'t use the app without agreeing</string>
+    <string name="welcome_disagree_dialog_message">%1$s needs your consent to provide reminder features. If you disagree, you can only exit the app.</string>
+    <string name="welcome_disagree_dialog_agree">Agree</string>
+    <string name="welcome_disagree_dialog_disagree_exit">Disagree &amp; Exit</string>
 
     <!-- Onboarding Wizard -->
     <string name="onboarding_step_notification_title">Notification Settings</string>
@@ -254,6 +322,7 @@
 
     <!-- Notification Settings -->
     <string name="settings_notifications">Notifications</string>
+    <string name="settings_notifications_description">Reminders, persistent notifications and templates</string>
     <string name="settings_persistent_notification">Keep running in background</string>
     <string name="settings_persistent_notification_description">Show a persistent notification to keep yourself informed</string>
     <string name="settings_persistent_notification_authorize">Give permission</string>
@@ -315,7 +384,7 @@
     <string name="reminder_settings_next_alarm">Next Reminder</string>
     <string name="reminder_settings_notification_permission">Notification Permission</string>
     <string name="reminder_settings_system_settings">Customize notifications…</string>
-    <string name="reminder_settings_background_keepalive">Keep HabitPulse running in background…</string>
+    <string name="reminder_settings_background_keepalive">Keep %1$s running in background…</string>
     <string name="reminder_settings_test_notification">Send Test Notification</string>
     <string name="reminder_settings_test_notification_sent">Test notification sent</string>
     <string name="reminder_settings_test_notification_scheduled">Test notification will be sent in 1 minute</string>
@@ -371,18 +440,52 @@
     <string name="ai_settings_api_endpoint_label">API Endpoint</string>
     <string name="ai_settings_api_key">API Key</string>
     <string name="ai_settings_api_key_label">API Key</string>
-    <string name="ai_api_key_required_title">API Key Required</string>
-    <string name="ai_api_key_required_message">Please configure an API key in Settings before using AI habit creation.</string>
-    <string name="ai_api_key_required_action">Go to Settings</string>
-    <string name="ai_settings_model">Model</string>
+    <string name="ai_api_key_required_title">Add a Provider</string>
+    <string name="ai_api_key_required_message">Please add an AI provider in Settings before using AI habit creation.</string>
+    <string name="ai_api_key_required_action">Add Provider</string>
     <string name="ai_settings_model_label">Select Model</string>
     <string name="ai_settings_test_connection">Test Connection</string>
+    <string name="ai_settings_test_connection_description">Verify that the API endpoint, key and model are usable</string>
     <string name="ai_settings_connection_success">Connection successful</string>
     <string name="ai_settings_connection_failed">Connection failed</string>
     <string name="ai_settings_notice_title">Configuration Guide</string>
     <string name="ai_settings_notice_content">This app supports OpenAI-compatible LLM APIs (such as Zhipu GLM, DeepSeek, etc.).\n\nAPI Endpoint: Fill in the complete API address ending with a slash.\nAPI Key: Obtain from the respective platform.\nModel: Supports Zhipu glm-4.7-flash (default), glm-4-flash, glm-4, etc.</string>
     <string name="ai_settings_streaming">Streaming Output</string>
     <string name="ai_settings_streaming_description">Display AI thinking process and responses in real-time</string>
+    <string name="ai_settings_model_default_label">%1$s (Default)</string>
+    <string name="ai_settings_model_flagship_label">%1$s (Latest flagship)</string>
+    <string name="ai_config_providers">AI Providers</string>
+    <string name="ai_config_page_hint">Added providers can be switched at any time; you can also keep adding more providers, and tap a row to set it as the active one.</string>
+    <string name="ai_config_add">Add AI config</string>
+    <string name="ai_config_add_openai_hint">Supports OpenAI-compatible APIs</string>
+    <string name="ai_config_tab_presets">Presets</string>
+    <string name="ai_config_tab_custom">Custom</string>
+    <string name="ai_config_presets_hint">Choose a preset to auto-fill provider, model and endpoint</string>
+    <string name="ai_preset_deepseek">DeepSeek</string>
+    <string name="ai_preset_mimo">Xiaomi MiMo</string>
+    <string name="ai_preset_glm">Zhipu GLM</string>
+    <string name="ai_preset_free">Free</string>
+    <string name="ai_config_info_may_change">Note: model names, endpoints and other provider configuration may change over time. If a connection fails, review or reselect a preset.</string>
+    <string name="ai_config_add_title">Add AI config</string>
+    <string name="ai_config_edit_title">Edit config</string>
+    <string name="ai_config_edit">Edit</string>
+    <string name="ai_config_name_label">Config name</string>
+    <string name="ai_config_name_placeholder">e.g. Zhipu GLM</string>
+    <string name="ai_config_name_duplicate">This name is already in use.</string>
+    <string name="ai_config_name_duplicate_fix">Go to Custom</string>
+    <string name="ai_config_delete">Delete config</string>
+    <string name="ai_config_delete_title">Delete this config?</string>
+    <string name="ai_config_delete_message">This cannot be undone.</string>
+    <string name="ai_config_empty">No AI configs yet. Tap \"Add AI config\" below to create one.</string>
+    <string name="ai_config_migrated_name">Default config</string>
+    <string name="ai_settings_save">Save</string>
+    <string name="ai_config_reveal_key">View key</string>
+    <string name="ai_config_reveal_title">Verify identity to view API key</string>
+    <string name="ai_config_reveal_subtitle">Verify with fingerprint, face or device credential</string>
+    <string name="ai_config_reveal_failed">Unable to decrypt the API key. Please re-enter it.</string>
+    <string name="settings_unsaved_changes">You have unsaved changes</string>
+    <string name="ai_settings_thinking">Deep thinking</string>
+    <string name="ai_settings_thinking_description">Let the model reason deeply before answering (supported by some models)</string>
     <string name="clear">Clear</string>
     <string name="show_password">Show password</string>
     <string name="hide_password">Hide password</string>
@@ -426,13 +529,23 @@
     <string name="ai_day_sat">Sat</string>
     <string name="ai_day_sun">Sun</string>
 
+    <!-- AI Chat setting whitelist -->
+    <string name="ai_setting_reminder_enabled">Habit reminders</string>
+    <string name="ai_setting_dnd_enabled">Do not disturb</string>
+    <string name="ai_setting_persistent_notification">Background keep-alive</string>
+    <string name="ai_setting_haptic_feedback_enabled">In-app vibration</string>
+    <string name="ai_setting_show_splash_ad">Splash ad</string>
+    <string name="ai_setting_force_tablet_landscape">Force tablet landscape</string>
+
     <!-- AI Disclaimer -->
     <string name="ai_disclaimer">AI may make mistakes. Please review before saving.</string>
 
     <!-- AI Error Messages -->
     <string name="ai_error_scroll_to_bottom">Scroll to bottom</string>
-    <string name="ai_error_not_configured">Please configure API in settings</string>
+    <string name="ai_error_not_configured">Please add an AI provider in settings</string>
     <string name="ai_error_prefix">Error: %s</string>
+    <string name="ai_error_guard_blocked">AI stopped automatically after repeated errors. Please adjust your instructions and retry</string>
+    <string name="ai_chat_empty_response">The model did not generate a reply (likely the thinking budget was exhausted). Please retry or rephrase your question.</string>
     <string name="ai_error_auth_failed">Authentication failed, check API Key</string>
     <string name="ai_error_access_denied">Access denied, check API Key permissions</string>
     <string name="ai_error_server_error">Server error (HTTP %d), please retry later</string>
@@ -441,6 +554,63 @@
     <string name="ai_error_dns_failed">DNS resolution failed, check API address</string>
     <string name="ai_error_invalid_url">Invalid API URL format</string>
     <string name="ai_error_unknown">Unknown error</string>
+    <!-- AI Chat -->
+    <string name="ai_chat_title">AI Assistant</string>
+    <string name="ai_chat_entry">New AI Chat</string>
+    <string name="ai_chat_manage_providers">Manage providers</string>
+    <string name="ai_chat_not_configured">Not configured</string>
+    <string name="ai_chat_switch_provider_title">Switch provider?</string>
+    <string name="ai_chat_switch_provider_message">Switching will clear the current conversation and unconfirmed content.</string>
+    <string name="ai_chat_switch_config">Switch</string>
+    <string name="ai_chat_edit_habit">Edit</string>
+    <string name="ai_chat_open_settings">Open settings</string>
+    <string name="ai_chat_undo">Undo</string>
+    <string name="ai_chat_habit_created">Created</string>
+    <string name="ai_chat_habit_deleted">Deleted</string>
+    <string name="ai_chat_delete_cancelled">Deletion cancelled</string>
+    <string name="ai_chat_setting_reverted">Reverted</string>
+    <string name="ai_chat_search_hint">Found habits below. Ask me to edit or delete one</string>
+    <string name="ai_chat_usage_empty">—</string>
+    <string name="ai_chat_input_hint">Type a message…</string>
+    <string name="ai_chat_confirm_leave_title">Leave conversation?</string>
+    <string name="ai_chat_confirm_leave_message">The conversation will not be saved.</string>
+    <string name="ai_chat_confirm_leave_unsaved">The conversation will not be saved, and there are unsaved habits.</string>
+    <string name="ai_chat_thinking_title">Deep thinking</string>
+    <string name="ai_chat_thinking_in_progress">Deep thinking…</string>
+    <string name="ai_chat_thinking_elapsed">Deep thinking (%1$s s)</string>
+    <string name="ai_chat_view_thinking">View thinking</string>
+    <string name="ai_chat_hide_thinking">Hide thinking</string>
+    <string name="ai_chat_token_count">%1$s tokens</string>
+    <string name="ai_chat_token_detail_prompt">Input: %1$s</string>
+    <string name="ai_chat_token_detail_completion">Output: %1$s</string>
+    <string name="ai_chat_token_calls">Calls: %1$d</string>
+    <string name="ai_chat_welcome_title">I\'m your AI habit assistant</string>
+    <string name="ai_chat_welcome_subtitle">Ask me to create, find, edit or delete habits, or adjust app settings.</string>
+    <string name="ai_chat_suggestion_create">Help me create a reading habit</string>
+    <string name="ai_chat_suggestion_search">Which habits need attention?</string>
+    <string name="ai_chat_suggestion_setting">Open the notifications settings</string>
+    <string name="ai_chat_setting_change_format">%1$s → %2$s</string>
+    <string name="ai_chat_on">On</string>
+    <string name="ai_chat_off">Off</string>
+    <string name="ai_chat_delete">Delete</string>
+    <string name="ai_chat_delete_confirm_title">Delete this habit?</string>
+    <string name="ai_chat_open_settings_format">Open %s settings</string>
+    <string name="ai_chat_copied">Copied</string>
+    <string name="ai_chat_retry">Retry</string>
+    <string name="ai_chat_add_time">Add time</string>
+    <string name="ai_chat_add_this_time">Add this time</string>
+    <string name="ai_chat_pick_times">Pick times</string>
+    <string name="ai_chat_selected_times">Selected</string>
+    <string name="ai_chat_remove_time">Remove time</string>
+    <string name="ai_chat_manual_fallback_hint">Or type manually</string>
+    <string name="ai_chat_manual_submit">Submit</string>
+    <string name="ai_chat_option_tab">Options</string>
+    <string name="ai_chat_manual_tab">Manual</string>
+    <string name="ai_chat_picker_search">Search habits</string>
+    <string name="ai_chat_picker_no_result">No matching habits</string>
+    <string name="ai_chat_picker_submit">Submit selection</string>
+    <string name="ai_chat_picker_manual_done">Done manually</string>
+    <string name="ai_chat_picker_submitted">Selected: %1$s</string>
     <string name="create_habit_selection_title">New Habit</string>
     <string name="create_habit_selection_manual">Manual</string>
     <string name="create_habit_selection_manual_desc">Fill in all fields yourself</string>
@@ -452,9 +622,6 @@
     <string name="cancel">Cancel</string>
 
     <!-- Thinking Block -->
-    <string name="hide_thinking">Hide thinking</string>
-    <string name="view_thinking">View thinking</string>
-    <string name="thinking_in_progress">Thinking…</string>
     <string name="collapse">Collapse</string>
     <string name="expand">Expand</string>
 
@@ -515,8 +682,8 @@
     <!-- Default notification template (used when no custom template is saved) -->
     <string name="notification_default_template">Completed {habit_name} check-in ({checkin_time}), just so you know.</string>
 
-    <!-- Country code selector -->
-    <string name="country_code_label">Code</string>
+    <!-- Region code selector -->
+    <string name="region_code_label">Code</string>
     <string name="contacts_edit_button">Edit</string>
     <string name="contacts_edit_email_title">Edit Email</string>
     <string name="contacts_edit_phone_title">Edit Phone</string>
@@ -527,49 +694,49 @@
     <string name="contacts_edit_email_invalid">Invalid email format</string>
     <string name="contacts_edit_phone_invalid">Invalid phone number format</string>
     <string name="create_habit_supervisor_phone_sms_cost_warning">SMS reminders may incur charges</string>
-    <string name="country_code_selector">Country/region phone code</string>
+    <string name="region_code_selector">Region phone code</string>
 
-    <!-- Country code names -->
-    <string name="country_cn">Chinese mainland</string>
-    <string name="country_us_ca">USA/Canada</string>
-    <string name="country_uk">UK</string>
-    <string name="country_jp">Japan</string>
-    <string name="country_kr">South Korea</string>
-    <string name="country_au">Australia</string>
-    <string name="country_hk">Hong Kong</string>
-    <string name="country_tw">Taiwan</string>
-    <string name="country_sg">Singapore</string>
-    <string name="country_de">Germany</string>
-    <string name="country_fr">France</string>
-    <string name="country_in">India</string>
-    <string name="country_it">Italy</string>
-    <string name="country_br">Brazil</string>
-    <string name="country_ru">Russia</string>
-    <string name="country_es">Spain</string>
-    <string name="country_nl">Netherlands</string>
-    <string name="country_se">Sweden</string>
-    <string name="country_ch">Switzerland</string>
-    <string name="country_no">Norway</string>
-    <string name="country_dk">Denmark</string>
-    <string name="country_fi">Finland</string>
-    <string name="country_pl">Poland</string>
-    <string name="country_gr">Greece</string>
-    <string name="country_my">Malaysia</string>
-    <string name="country_ph">Philippines</string>
-    <string name="country_id">Indonesia</string>
-    <string name="country_th">Thailand</string>
-    <string name="country_vn">Vietnam</string>
-    <string name="country_np">Nepal</string>
-    <string name="country_lk">Sri Lanka</string>
-    <string name="country_ae">UAE</string>
-    <string name="country_sa">Saudi Arabia</string>
-    <string name="country_il">Israel</string>
-    <string name="country_za">South Africa</string>
-    <string name="country_eg">Egypt</string>
-    <string name="country_ng">Nigeria</string>
-    <string name="country_ar">Argentina</string>
-    <string name="country_cl">Chile</string>
-    <string name="country_co">Colombia</string>
-    <string name="country_mx">Mexico</string>
-    <string name="country_nz">New Zealand</string>
+    <!-- Region code names -->
+    <string name="region_cn">Chinese mainland</string>
+    <string name="region_us_ca">USA/Canada</string>
+    <string name="region_uk">UK</string>
+    <string name="region_jp">Japan</string>
+    <string name="region_kr">South Korea</string>
+    <string name="region_au">Australia</string>
+    <string name="region_hk">Hong Kong</string>
+    <string name="region_tw">Taiwan</string>
+    <string name="region_sg">Singapore</string>
+    <string name="region_de">Germany</string>
+    <string name="region_fr">France</string>
+    <string name="region_in">India</string>
+    <string name="region_it">Italy</string>
+    <string name="region_br">Brazil</string>
+    <string name="region_ru">Russia</string>
+    <string name="region_es">Spain</string>
+    <string name="region_nl">Netherlands</string>
+    <string name="region_se">Sweden</string>
+    <string name="region_ch">Switzerland</string>
+    <string name="region_no">Norway</string>
+    <string name="region_dk">Denmark</string>
+    <string name="region_fi">Finland</string>
+    <string name="region_pl">Poland</string>
+    <string name="region_gr">Greece</string>
+    <string name="region_my">Malaysia</string>
+    <string name="region_ph">Philippines</string>
+    <string name="region_id">Indonesia</string>
+    <string name="region_th">Thailand</string>
+    <string name="region_vn">Vietnam</string>
+    <string name="region_np">Nepal</string>
+    <string name="region_lk">Sri Lanka</string>
+    <string name="region_ae">UAE</string>
+    <string name="region_sa">Saudi Arabia</string>
+    <string name="region_il">Israel</string>
+    <string name="region_za">South Africa</string>
+    <string name="region_eg">Egypt</string>
+    <string name="region_ng">Nigeria</string>
+    <string name="region_ar">Argentina</string>
+    <string name="region_cl">Chile</string>
+    <string name="region_co">Colombia</string>
+    <string name="region_mx">Mexico</string>
+    <string name="region_nz">New Zealand</string>
 </resources>

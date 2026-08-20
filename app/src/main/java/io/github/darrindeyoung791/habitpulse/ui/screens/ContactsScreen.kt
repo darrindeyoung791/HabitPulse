@@ -1,6 +1,5 @@
 package io.github.darrindeyoung791.habitpulse.ui.screens
 
-import android.content.res.Configuration
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.core.spring
 import androidx.compose.animation.core.tween
@@ -82,7 +81,6 @@ import androidx.compose.ui.focus.focusRequester
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.hapticfeedback.HapticFeedbackType
 import androidx.compose.ui.input.nestedscroll.nestedScroll
-import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalHapticFeedback
 import androidx.compose.runtime.LaunchedEffect
@@ -102,6 +100,7 @@ import io.github.darrindeyoung791.habitpulse.data.model.Habit
 import io.github.darrindeyoung791.habitpulse.data.model.HabitCompletion
 import io.github.darrindeyoung791.habitpulse.data.model.RepeatCycle
 import io.github.darrindeyoung791.habitpulse.data.repository.HabitRepository
+import io.github.darrindeyoung791.habitpulse.ui.rememberDeviceFormInfo
 import io.github.darrindeyoung791.habitpulse.ui.theme.HabitPulseTheme
 import io.github.darrindeyoung791.habitpulse.ui.utils.rememberAnimationsFrozen
 import io.github.darrindeyoung791.habitpulse.ui.utils.StaggeredListItem
@@ -181,12 +180,10 @@ fun ContactsScreenContent(
     // Apply nested scroll
     val nestedScrollModifier = scrollBehavior?.let { modifier.nestedScroll(it.nestedScrollConnection) } ?: modifier
 
-    // Get screen configuration for two-column layout
-    val configuration = LocalConfiguration.current
-    val screenWidthDp = configuration.screenWidthDp
-    val isLandscape = configuration.orientation == Configuration.ORIENTATION_LANDSCAPE
+    // Get device form info for two-column layout
+    val deviceForm = rememberDeviceFormInfo()
     // Use two-column layout for tablets in landscape (≥840dp), same as HomeScreen
-    val useTwoColumnLayout = isLandscape && screenWidthDp >= 840
+    val useTwoColumnLayout = deviceForm.isWideLayout
 
     val animationsFrozen by rememberAnimationsFrozen(listState)
 
@@ -745,19 +742,19 @@ fun ContactBottomSheetContent(
     var showEditDialog by remember { mutableStateOf(false) }
     var editError by remember { mutableStateOf(false) }
 
-    // Country code state for phone editing (parse from existing value)
+    // Region code state for phone editing (parse from existing value)
     val isPhoneContact = contact.type == ContactsViewModel.ContactType.PHONE
-    val defaultCountryCode = remember(contact.value) {
-        COUNTRY_CODES.sortedByDescending { it.prefix.length }
+    val defaultRegionCode = remember(contact.value) {
+        REGION_CODES.sortedByDescending { it.prefix.length }
             .firstOrNull { contact.value.startsWith(it.prefix) }
             ?.prefix ?: "+86"
     }
-    var editCountryCode by remember(contact.value) { mutableStateOf(defaultCountryCode) }
+    var editRegionCode by remember(contact.value) { mutableStateOf(defaultRegionCode) }
     var editPrefixExpanded by remember { mutableStateOf(false) }
 
-    // The phone number without country code prefix
+    // The phone number without region code prefix
     val initialEditValue = remember(contact.value) {
-        if (isPhoneContact) contact.value.removePrefix(defaultCountryCode) else contact.value
+        if (isPhoneContact) contact.value.removePrefix(defaultRegionCode) else contact.value
     }
     var editInput by remember(initialEditValue) { mutableStateOf(initialEditValue) }
     val editFocusRequester = remember { FocusRequester() }
@@ -803,13 +800,13 @@ fun ContactBottomSheetContent(
                         ) {
                             Box {
                                 OutlinedTextField(
-                                    value = editCountryCode,
+                                    value = editRegionCode,
                                     onValueChange = {},
                                     modifier = Modifier.width(120.dp),
                                     readOnly = true,
                                     singleLine = true,
                                     textStyle = MaterialTheme.typography.bodyLarge,
-                                    label = { Text(stringResource(R.string.country_code_label)) },
+                                    label = { Text(stringResource(R.string.region_code_label)) },
                                     colors = OutlinedTextFieldDefaults.colors(
                                         unfocusedBorderColor = MaterialTheme.colorScheme.outline,
                                         focusedBorderColor = MaterialTheme.colorScheme.primary
@@ -834,7 +831,7 @@ fun ContactBottomSheetContent(
                                     expanded = editPrefixExpanded,
                                     onDismissRequest = { editPrefixExpanded = false }
                                 ) {
-                                    COUNTRY_CODES.forEach { option ->
+                                    REGION_CODES.forEach { option ->
                                         DropdownMenuItem(
                                             text = {
                                                 Text(
@@ -843,7 +840,7 @@ fun ContactBottomSheetContent(
                                                 )
                                             },
                                             onClick = {
-                                                editCountryCode = option.prefix
+                                                editRegionCode = option.prefix
                                                 editPrefixExpanded = false
                                             }
                                         )
@@ -896,7 +893,7 @@ fun ContactBottomSheetContent(
                                 editError = true
                             }
                         } else {
-                            val fullPhone = "$editCountryCode$editInput"
+                            val fullPhone = "$editRegionCode$editInput"
                             if (VALID_PHONE.matches(fullPhone)) {
                                 onEditContact?.invoke(fullPhone)
                                 showEditDialog = false
@@ -907,7 +904,7 @@ fun ContactBottomSheetContent(
                     },
                     enabled = editInput.isNotBlank() && (
                         if (isEmail) editInput != contact.value
-                        else "$editCountryCode$editInput" != contact.value
+                        else "$editRegionCode$editInput" != contact.value
                     )
                 ) {
                     Text(stringResource(R.string.create_habit_save_button))
@@ -952,8 +949,8 @@ fun ContactBottomSheetContent(
                 IconButton(
                     onClick = {
                         if (isPhoneContact) {
-                            editCountryCode = defaultCountryCode
-                            editInput = contact.value.removePrefix(defaultCountryCode)
+                            editRegionCode = defaultRegionCode
+                            editInput = contact.value.removePrefix(defaultRegionCode)
                         } else {
                             editInput = contact.value
                         }

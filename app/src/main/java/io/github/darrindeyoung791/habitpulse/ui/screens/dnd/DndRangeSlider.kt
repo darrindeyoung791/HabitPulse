@@ -9,6 +9,9 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import io.github.darrindeyoung791.habitpulse.R
+import io.github.darrindeyoung791.habitpulse.ui.utils.rememberHapticsEnabled
+import io.github.darrindeyoung791.habitpulse.ui.utils.rememberPressVibrationParams
+import io.github.darrindeyoung791.habitpulse.ui.utils.vibrateShort
 
 @Composable
 fun DndRangeSlider(
@@ -22,6 +25,8 @@ fun DndRangeSlider(
     val rangeStart = 1260f
     val rangeEnd = 1920f
     val stepCount = 21
+    val hapticsEnabled = rememberHapticsEnabled()
+    val (vibrationDurationMs, vibrationAmplitude) = rememberPressVibrationParams()
 
     var curStart by remember(startTime) { mutableFloatStateOf(snapToStep(toLinear(startTime))) }
     var curEnd by remember(endTime) { mutableFloatStateOf(snapToStep(toLinear(endTime))) }
@@ -29,7 +34,7 @@ fun DndRangeSlider(
     Column(
         modifier = modifier
             .fillMaxWidth()
-            .padding(start = 72.dp, end = 16.dp, top = 8.dp, bottom = 12.dp)
+            .padding(top = 8.dp, bottom = 12.dp)
     ) {
         Row(
             modifier = Modifier.fillMaxWidth(),
@@ -73,8 +78,13 @@ fun DndRangeSlider(
         RangeSlider(
             value = curStart..curEnd,
             onValueChange = { range ->
-                curStart = range.start
-                curEnd = range.endInclusive
+                val newStart = snapToStep(range.start)
+                val newEnd = snapToStep(range.endInclusive)
+                if (hapticsEnabled && (newStart != curStart || newEnd != curEnd)) {
+                    vibrateShort(context, vibrationDurationMs, vibrationAmplitude)
+                }
+                curStart = newStart
+                curEnd = newEnd
             },
             onValueChangeFinished = {
                 val snappedStart = snapToStep(curStart)

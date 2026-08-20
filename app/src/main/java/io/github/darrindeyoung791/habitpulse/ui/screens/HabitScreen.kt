@@ -1,6 +1,5 @@
 package io.github.darrindeyoung791.habitpulse.ui.screens
 
-import android.content.res.Configuration
 import androidx.activity.compose.BackHandler
 import androidx.compose.animation.AnimatedContent
 import androidx.compose.animation.AnimatedVisibility
@@ -96,7 +95,11 @@ import io.github.darrindeyoung791.habitpulse.data.model.HabitWithStatus
 import io.github.darrindeyoung791.habitpulse.data.model.RepeatCycle
 import io.github.darrindeyoung791.habitpulse.data.preferences.UserPreferences
 import io.github.darrindeyoung791.habitpulse.data.repository.HabitRepository
+import io.github.darrindeyoung791.habitpulse.ui.rememberDeviceFormInfo
+import io.github.darrindeyoung791.habitpulse.ui.theme.AccentSeeds
 import io.github.darrindeyoung791.habitpulse.ui.theme.HabitPulseTheme
+import io.github.darrindeyoung791.habitpulse.ui.theme.rememberSeedAccentTint
+import io.github.darrindeyoung791.habitpulse.ui.utils.rememberHapticsEnabled
 import io.github.darrindeyoung791.habitpulse.ui.utils.rememberAnimationsFrozen
 import io.github.darrindeyoung791.habitpulse.ui.utils.rememberDebounceClickHandler
 import io.github.darrindeyoung791.habitpulse.ui.utils.StaggeredListItem
@@ -198,14 +201,18 @@ fun HabitScreenContent(
     val overdueTitle = stringResource(id = R.string.entry_zone_overdue)
     val lanTitle = stringResource(id = R.string.entry_zone_lan_sync)
     val statsTitle = stringResource(id = R.string.entry_zone_stats)
-    val disabledTint = MaterialTheme.colorScheme.onSurface.copy(alpha = 0.38f)
-    val tertiaryColor = MaterialTheme.colorScheme.tertiary
-    val errorColor = MaterialTheme.colorScheme.error
-    val todayCardColor = MaterialTheme.colorScheme.primaryContainer.copy(alpha = 0.5f)
-    val aboutToStartCardColor = MaterialTheme.colorScheme.tertiaryContainer.copy(alpha = 0.5f)
-    val overdueCardColor = MaterialTheme.colorScheme.errorContainer.copy(alpha = 0.5f)
+    // Entry card colors derived from seed colors via Material color extraction,
+    // guaranteeing correct on/container contrast in both light and dark themes.
+    val disabledTint = MaterialTheme.colorScheme.onSurfaceVariant
+    val lanContentColor = MaterialTheme.colorScheme.onSurface
+    val todayTint = rememberSeedAccentTint(AccentSeeds[0])      // blue
+    val aboutTint = rememberSeedAccentTint(AccentSeeds[3])      // purple
+    val overdueTint = rememberSeedAccentTint(AccentSeeds[4])    // red
+    val statsTint = rememberSeedAccentTint(AccentSeeds[5])      // teal
+    val neutralCardColor = MaterialTheme.colorScheme.surfaceContainerHigh
+    val neutralChipColor = MaterialTheme.colorScheme.surfaceContainerHighest
 
-    val entryItems = remember(pendingTodayCount, aboutToStartCount, overdueCount, todayTitle, aboutToStartTitle, overdueTitle, lanTitle, statsTitle, disabledTint, tertiaryColor, errorColor, todayCardColor, aboutToStartCardColor, overdueCardColor, onViewAboutToStart, onViewTodayHabits, onViewOverdue, onViewLanSync, onViewStats) {
+    val entryItems = remember(pendingTodayCount, aboutToStartCount, overdueCount, todayTitle, aboutToStartTitle, overdueTitle, lanTitle, statsTitle, disabledTint, lanContentColor, todayTint, aboutTint, overdueTint, statsTint, neutralCardColor, neutralChipColor, onViewAboutToStart, onViewTodayHabits, onViewOverdue, onViewLanSync, onViewStats) {
         buildList {
             if (aboutToStartCount > 0) {
                 add(EntryItem(
@@ -213,9 +220,10 @@ fun HabitScreenContent(
                     icon = Icons.Filled.Notifications,
                     title = aboutToStartTitle,
                     badgeText = null,
-                    iconTint = tertiaryColor,
-                    containerColor = tertiaryColor.copy(alpha = 0.15f),
-                    cardColor = aboutToStartCardColor,
+                    contentColor = aboutTint.content,
+                    iconTint = aboutTint.content,
+                    containerColor = aboutTint.content.copy(alpha = 0.12f),
+                    cardColor = aboutTint.container,
                     onClick = onViewAboutToStart
                 ))
             }
@@ -226,7 +234,10 @@ fun HabitScreenContent(
                     title = todayTitle,
                     badgeText = null,
                     iconContent = pendingTodayCount.toString(),
-                    cardColor = todayCardColor,
+                    contentColor = todayTint.content,
+                    iconTint = todayTint.content,
+                    containerColor = todayTint.content.copy(alpha = 0.12f),
+                    cardColor = todayTint.container,
                     onClick = onViewTodayHabits
                 ))
             }
@@ -237,9 +248,10 @@ fun HabitScreenContent(
                     title = overdueTitle,
                     badgeText = null,
                     iconContent = overdueCount.toString(),
-                    iconTint = errorColor,
-                    containerColor = errorColor.copy(alpha = 0.15f),
-                    cardColor = overdueCardColor,
+                    contentColor = overdueTint.content,
+                    iconTint = overdueTint.content,
+                    containerColor = overdueTint.content.copy(alpha = 0.12f),
+                    cardColor = overdueTint.container,
                     onClick = onViewOverdue
                 ))
             }
@@ -248,8 +260,10 @@ fun HabitScreenContent(
                 icon = Icons.Filled.Sync,
                 title = lanTitle,
                 badgeText = null,
+                contentColor = lanContentColor,
                 iconTint = disabledTint,
-                cardColor = todayCardColor,
+                containerColor = neutralChipColor,
+                cardColor = neutralCardColor,
                 onClick = onViewLanSync
             ))
             add(EntryItem(
@@ -257,7 +271,10 @@ fun HabitScreenContent(
                 icon = Icons.Filled.BarChart,
                 title = statsTitle,
                 badgeText = null,
-                cardColor = todayCardColor,
+                contentColor = statsTint.content,
+                iconTint = statsTint.content,
+                containerColor = statsTint.content.copy(alpha = 0.12f),
+                cardColor = statsTint.container,
                 onClick = onViewStats
             ))
         }
@@ -571,15 +588,15 @@ fun HabitListContent(
     multiSelectTargetHabitId: UUID? = null,
     entryZone: @Composable () -> Unit = {}
 ) {
-    val configuration = LocalConfiguration.current
-    var screenWidthDp = configuration.screenWidthDp
-    val isLandscape = configuration.orientation == Configuration.ORIENTATION_LANDSCAPE
+    val deviceForm = rememberDeviceFormInfo()
+    val isLandscape = deviceForm.isLandscape
 
-    if (forceTabletLandscape && isLandscape && screenWidthDp < 840) {
-        screenWidthDp = 840
+    // forceTabletLandscape 覆盖：横屏时强制视宽为 840dp 以启用瀑布流
+    val useStaggeredGrid = if (forceTabletLandscape && isLandscape) {
+        true
+    } else {
+        deviceForm.isWideLayout
     }
-
-    val useStaggeredGrid = isLandscape && screenWidthDp >= 840
     val horizontalPadding = 16.dp
 
     val animationsFrozen by rememberAnimationsFrozen(
@@ -1482,15 +1499,18 @@ fun CheckInButton(
     )
     val context = LocalContext.current
     val vibrator = remember { context.getSystemService(android.content.Context.VIBRATOR_SERVICE) as android.os.Vibrator }
+    val hapticsEnabled = rememberHapticsEnabled()
 
     Button(
         onClick = {
             isPressed = true
-            if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.O) {
-                vibrator.vibrate(android.os.VibrationEffect.createOneShot(50, android.os.VibrationEffect.DEFAULT_AMPLITUDE))
-            } else {
-                @Suppress("DEPRECATION")
-                vibrator.vibrate(50)
+            if (hapticsEnabled) {
+                if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.O) {
+                    vibrator.vibrate(android.os.VibrationEffect.createOneShot(50, android.os.VibrationEffect.DEFAULT_AMPLITUDE))
+                } else {
+                    @Suppress("DEPRECATION")
+                    vibrator.vibrate(50)
+                }
             }
             onClick()
         },

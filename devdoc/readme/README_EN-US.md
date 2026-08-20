@@ -163,7 +163,7 @@ HabitPulse/
 │   │   │   ├── MainActivity.kt              # Main entry (NavHost)
 │   │   │   ├── SettingsActivity.kt          # Settings screen
 │   │   │   ├── LauncherActivity.kt          # Launcher router (Welcome / Main)
-│   │   │   ├── WelcomeActivity.kt           # New user onboarding
+│   │   │   ├── WelcomeActivity.kt           # New user onboarding (4 steps)
 │   │   │   ├── OpenSourceLicensesActivity.kt # Open source licenses
 │   │   │   ├── HabitPulseApplication.kt     # Application class
 │   │   │   ├── navigation/                  # Navigation graph & routes

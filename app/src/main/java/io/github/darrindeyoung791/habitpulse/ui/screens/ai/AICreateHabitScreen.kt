@@ -4,6 +4,8 @@ import androidx.compose.animation.*
 import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.combinedClickable
+import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.*
 import androidx.compose.material.icons.filled.CheckCircle
 import androidx.compose.material.icons.filled.Edit
@@ -19,6 +21,8 @@ import androidx.compose.foundation.text.BasicTextField
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.automirrored.filled.Send
+import androidx.compose.material.icons.filled.ArrowUpward
+import androidx.compose.material.icons.filled.Chat
 
 import androidx.compose.material.icons.filled.Delete
 import androidx.compose.material.icons.filled.ExpandLess
@@ -32,13 +36,18 @@ import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.platform.LocalClipboardManager
 import androidx.compose.ui.platform.LocalConfiguration
-import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalDensity
+import androidx.compose.ui.platform.LocalWindowInfo
+
+import androidx.compose.ui.platform.LocalContext
+
 import androidx.compose.ui.res.stringResource
-import android.content.res.Configuration
+import android.widget.Toast
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
+import androidx.compose.ui.unit.Dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
 import io.github.darrindeyoung791.habitpulse.HabitPulseApplication
@@ -46,8 +55,8 @@ import io.github.darrindeyoung791.habitpulse.R
 import io.github.darrindeyoung791.habitpulse.ai.conversation.PartialHabit
 import io.github.darrindeyoung791.habitpulse.data.preferences.UserPreferences
 import io.github.darrindeyoung791.habitpulse.navigation.Route
+import io.github.darrindeyoung791.habitpulse.ui.rememberDeviceFormInfo
 import io.github.darrindeyoung791.habitpulse.viewmodel.AICreateHabitViewModel
-import io.github.darrindeyoung791.habitpulse.viewmodel.AIPrefillHabitHolder
 import io.github.darrindeyoung791.habitpulse.viewmodel.ChatMessageType
 import androidx.compose.animation.core.Spring
 import androidx.compose.animation.core.animateFloatAsState
@@ -57,15 +66,14 @@ import androidx.compose.ui.focus.FocusRequester
 import androidx.compose.ui.focus.focusRequester
 import androidx.compose.ui.graphics.SolidColor
 import androidx.compose.ui.platform.LocalSoftwareKeyboardController
-import kotlinx.coroutines.launch
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import androidx.navigation.NavHostController
-import kotlinx.coroutines.flow.first
 import androidx.activity.compose.BackHandler
 import io.github.darrindeyoung791.habitpulse.ui.screens.TimePickerDialog
 import io.github.darrindeyoung791.habitpulse.ui.utils.rememberDebounceClickHandler
 import io.github.darrindeyoung791.habitpulse.ui.utils.rememberHideKeyboardAndNavigateBack
+import io.github.darrindeyoung791.habitpulse.ui.utils.PressVibrationFeedback
 import java.time.LocalTime
 import java.time.format.DateTimeFormatter
 import java.util.Locale
@@ -138,8 +146,7 @@ fun AICreateHabitScreen(
     val clickHandler = rememberDebounceClickHandler()
     val hideKeyboardAndNavigateBack = rememberHideKeyboardAndNavigateBack(navController)
 
-    val configuration = LocalConfiguration.current
-    val isLandscape = configuration.orientation == Configuration.ORIENTATION_LANDSCAPE
+    val isLandscape = rememberDeviceFormInfo().isLandscape
     val density = LocalDensity.current
     val imeVisible = WindowInsets.ime.getBottom(density) > 0
 
@@ -174,9 +181,9 @@ fun AICreateHabitScreen(
     }
 
     val userPreferences = remember { UserPreferences.getInstance(context) }
-    val apiKey by userPreferences.llmApiKeyFlow.collectAsStateWithLifecycle(initialValue = "")
+    val activeConfig by userPreferences.activeConfigFlow.collectAsStateWithLifecycle(initialValue = null)
 
-    if (apiKey.isBlank()) {
+    if (activeConfig?.hasApiKeyConfigured() != true) {
         NoApiKeyPrompt(
             onGoToSettings = onNavigateToSettings,
             onNavigateBack = onNavigateBack
@@ -257,6 +264,19 @@ fun AICreateHabitScreen(
                         },
                         actions = {
                             IconButton(onClick = {
+                                context.startActivity(
+                                    android.content.Intent(
+                                        context,
+                                        io.github.darrindeyoung791.habitpulse.AIChatActivity::class.java
+                                    )
+                                )
+                            }) {
+                                Icon(
+                                    imageVector = Icons.Default.Chat,
+                                    contentDescription = stringResource(R.string.ai_chat_entry)
+                                )
+                            }
+                            IconButton(onClick = {
                                 if (hasMessages) {
                                     viewModel.showSettingsConfirmation()
                                 } else {
@@ -278,6 +298,7 @@ fun AICreateHabitScreen(
             modifier = Modifier
                 .fillMaxSize()
                 .padding(innerPadding)
+                .windowInsetsPadding(WindowInsets.displayCutout.only(androidx.compose.foundation.layout.WindowInsetsSides.Horizontal + androidx.compose.foundation.layout.WindowInsetsSides.Bottom))
                 .windowInsetsPadding(WindowInsets.ime)
         ) {
             if (hasMessages) {
@@ -325,9 +346,9 @@ fun AICreateHabitScreen(
                                             onEditClick = {
                                                 scope.launch {
                                                     viewModel.saveHabitAndGetId(habit.tempId) { dbId ->
-                                                        AIPrefillHabitHolder.prefillHabit = habit
-                                                        AIPrefillHabitHolder.editingHabitDbId = dbId
-                                                        navController.navigate(Route.CreateHabit.route)
+                                                        if (dbId != null) {
+                                                            navController.navigate(Route.EditHabit.createRoute(dbId))
+                                                        }
                                                     }
                                                 }
                                             },
@@ -439,9 +460,9 @@ fun AICreateHabitScreen(
                         focusRequester = focusRequester,
                         onSendClick = {
                             scope.launch {
-                                val apiKey = userPreferences.llmApiKeyFlow.first()
+                                val active = userPreferences.getActiveAIConfig()
 
-                                if (apiKey.isBlank()) {
+                                if (active?.hasApiKeyConfigured() != true) {
                                     viewModel.updateInputText("")
                                     return@launch
                                 }
@@ -452,7 +473,6 @@ fun AICreateHabitScreen(
                         },
                         onStopClick = { viewModel.stopGeneration() },
                         isLoading = uiState.isLoading,
-                        isLandscape = isLandscape,
                         modifier = Modifier.fillMaxWidth()
                     )
                 }
@@ -618,6 +638,8 @@ fun AIChatBubble(
     isStreaming: Boolean = false,
     modifier: Modifier = Modifier
 ) {
+    val context = LocalContext.current
+    val clipboard = LocalClipboardManager.current
     Column(
         modifier = modifier
             .fillMaxWidth()
@@ -626,74 +648,24 @@ fun AIChatBubble(
         if (thoughts.isNotEmpty()) {
             ThinkingBlock(
                 thoughts = thoughts,
-                isStreaming = isStreaming
+                isLoading = isStreaming
             )
             Spacer(modifier = Modifier.height(8.dp))
         }
         if (text.isNotEmpty()) {
             Text(
                 text = text,
-                style = MaterialTheme.typography.bodyLarge
+                style = MaterialTheme.typography.bodyLarge,
+                modifier = Modifier.combinedClickable(
+                    interactionSource = remember { MutableInteractionSource() },
+                    indication = null,
+                    onLongClick = {
+                        clipboard.setText(androidx.compose.ui.text.AnnotatedString(text))
+                        Toast.makeText(context, R.string.ai_chat_copied, Toast.LENGTH_SHORT).show()
+                    },
+                    onClick = {}
+                )
             )
-        }
-    }
-}
-
-@Composable
-fun ThinkingBlock(
-    thoughts: String,
-    isStreaming: Boolean = false,
-    modifier: Modifier = Modifier
-) {
-    var isExpanded by remember { mutableStateOf(false) }
-
-    val borderColor = MaterialTheme.colorScheme.outline.copy(alpha = 0.3f)
-    val containerColor = MaterialTheme.colorScheme.surfaceContainerHigh
-
-    Card(
-        modifier = modifier,
-        colors = CardDefaults.cardColors(containerColor = containerColor),
-        border = CardDefaults.outlinedCardBorder().copy(brush = androidx.compose.ui.graphics.SolidColor(borderColor))
-    ) {
-        Column(modifier = Modifier.padding(12.dp)) {
-            Row(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .clickable { isExpanded = !isExpanded },
-                verticalAlignment = Alignment.CenterVertically
-            ) {
-                if (isStreaming) {
-                    CircularProgressIndicator(
-                        modifier = Modifier.size(16.dp),
-                        strokeWidth = 2.dp,
-                        color = MaterialTheme.colorScheme.primary
-                    )
-                } else {
-                    Icon(
-                        imageVector = if (isExpanded) Icons.Default.ExpandLess else Icons.Default.ExpandMore,
-                        contentDescription = null,
-                        tint = MaterialTheme.colorScheme.primary
-                    )
-                }
-                Spacer(modifier = Modifier.width(8.dp))
-                Text(
-                    text = if (isStreaming) stringResource(R.string.thinking_in_progress) else stringResource(R.string.view_thinking),
-                    style = MaterialTheme.typography.labelMedium,
-                    color = MaterialTheme.colorScheme.primary
-                )
-                Spacer(modifier = Modifier.weight(1f))
-            }
-
-            if (isExpanded) {
-                Spacer(modifier = Modifier.height(8.dp))
-                HorizontalDivider(color = borderColor)
-                Spacer(modifier = Modifier.height(8.dp))
-                Text(
-                    text = thoughts,
-                    style = MaterialTheme.typography.bodySmall,
-                    color = MaterialTheme.colorScheme.onSurfaceVariant
-                )
-            }
         }
     }
 }
@@ -736,34 +708,60 @@ fun AIChatInputBox(
     onSendClick: () -> Unit,
     onStopClick: () -> Unit,
     isLoading: Boolean,
-    isLandscape: Boolean = false,
+    placeholderRes: Int = R.string.ai_input_placeholder,
+    containerCornerRadius: Dp = 24.dp,
     modifier: Modifier = Modifier
 ) {
+    val containerShape = RoundedCornerShape(containerCornerRadius)
+    // 发送/停止按钮：尺寸更小，贴右下角；按钮圆角 + 内边距 = 输入框外圆角，
+    // 使按钮像「嵌」在圆角里，观感更现代。
+    val buttonSize = 32.dp
+    val buttonCornerRadius = 10.dp
+    val cornerInset = (containerCornerRadius - buttonCornerRadius).coerceAtLeast(8.dp)
+
+    // 默认约 3 行高；随输入增长最多约半屏，之后在输入框内部上下滚动。
+    // 横屏点击输入框时由系统 IME 进入原生全屏编辑（不在此手搓）。
+    val textStyle = MaterialTheme.typography.bodyLarge
+    // 用当前窗口实际高度计算半屏上限，避免 configuration.screenHeightDp
+    // 在 configChanges(orientation) 下未重建 Activity 时返回旧方向的屏高。
+    // containerDpSize 排除系统栏内边距，随窗口尺寸变化自动重组。
+    val configuration = LocalConfiguration.current
+    val windowHeightDp = run {
+        val windowHeight = LocalWindowInfo.current.containerDpSize.height
+        if (windowHeight != Dp.Unspecified && windowHeight > 0.dp) windowHeight
+        else configuration.screenHeightDp.dp
+    }
+    val maxInputHeightDp = (windowHeightDp * 0.5f)
+    // 用约 24dp 行高估算最大行数；仅作软上限，实际高度由下方 heightIn(max) 封顶
+    val maxLines = (((maxInputHeightDp.value - 40.dp.value) / 24.dp.value).toInt()).coerceAtLeast(3)
+
     Surface(
         modifier = modifier
             .fillMaxWidth()
             .padding(horizontal = 16.dp, vertical = 8.dp),
-        shape = RoundedCornerShape(24.dp),
-        color = MaterialTheme.colorScheme.surfaceContainerHigh,
-        border = BorderStroke(1.dp, MaterialTheme.colorScheme.outline.copy(alpha = 0.5f))
+        shape = containerShape,
+        color = MaterialTheme.colorScheme.background,
+        border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant),
+        shadowElevation = 4.dp
     ) {
-        Row(
-            modifier = Modifier
-                .fillMaxWidth()
-                .padding(start = 4.dp, end = 4.dp, top = 4.dp, bottom = 4.dp),
-            verticalAlignment = Alignment.CenterVertically
-        ) {
+        Box(modifier = Modifier.fillMaxWidth()) {
             BasicTextField(
                 value = inputText,
                 onValueChange = onTextChange,
-                maxLines = if (isLandscape) 2 else Int.MAX_VALUE,
+                minLines = 3,
+                maxLines = maxLines,
                 modifier = Modifier
-                    .weight(1f)
-                    .defaultMinSize(minHeight = if (isLandscape) 64.dp else 72.dp)
-                    .padding(horizontal = 12.dp, vertical = 8.dp)
+                    .fillMaxWidth()
+                    .heightIn(max = maxInputHeightDp)
+                    .padding(
+                        start = 16.dp,
+                        end = buttonSize + 10.dp,
+                        top = 12.dp,
+                        bottom = 12.dp
+                    )
                     .focusRequester(focusRequester),
                 cursorBrush = SolidColor(MaterialTheme.colorScheme.onSurface),
-                textStyle = MaterialTheme.typography.bodyLarge.copy(
+                textStyle = textStyle.copy(
                     color = MaterialTheme.colorScheme.onSurface
                 ),
                 enabled = !isLoading,
@@ -771,7 +769,7 @@ fun AIChatInputBox(
                     Box {
                         if (inputText.isEmpty()) {
                             Text(
-                                text = stringResource(R.string.ai_input_placeholder),
+                                text = stringResource(placeholderRes),
                                 style = MaterialTheme.typography.bodyLarge,
                                 color = MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.6f)
                             )
@@ -782,33 +780,56 @@ fun AIChatInputBox(
             )
 
             if (isLoading) {
-                IconButton(
-                    onClick = onStopClick,
-                    modifier = Modifier.size(48.dp)
+                val stopInteractionSource = remember { MutableInteractionSource() }
+                PressVibrationFeedback(interactionSource = stopInteractionSource)
+                Box(
+                    modifier = Modifier
+                        .align(Alignment.BottomEnd)
+                        .padding(end = cornerInset, bottom = cornerInset)
+                        .size(buttonSize)
+                        .clip(RoundedCornerShape(buttonCornerRadius))
+                        .background(MaterialTheme.colorScheme.primary)
+                        .clickable(
+                            interactionSource = stopInteractionSource,
+                            indication = null,
+                            onClick = { onStopClick() }
+                        ),
+                    contentAlignment = Alignment.Center
                 ) {
                     Icon(
                         imageVector = Icons.Default.Stop,
                         contentDescription = stringResource(R.string.ai_stop_button),
-                        tint = MaterialTheme.colorScheme.error
+                        tint = MaterialTheme.colorScheme.onPrimary,
+                        modifier = Modifier.size(18.dp)
                     )
                 }
             } else {
-                IconButton(
-                    onClick = {
-                        if (inputText.isNotBlank()) {
-                            onSendClick()
-                        }
-                    },
-                    modifier = Modifier.size(48.dp)
+                val sendEnabled = inputText.isNotBlank()
+                val sendInteractionSource = remember { MutableInteractionSource() }
+                PressVibrationFeedback(interactionSource = sendInteractionSource)
+                Box(
+                    modifier = Modifier
+                        .align(Alignment.BottomEnd)
+                        .padding(end = cornerInset, bottom = cornerInset)
+                        .size(buttonSize)
+                        .clip(RoundedCornerShape(buttonCornerRadius))
+                        .background(
+                            if (sendEnabled) MaterialTheme.colorScheme.primary
+                            else MaterialTheme.colorScheme.primary.copy(alpha = 0.38f)
+                        )
+                        .clickable(
+                            interactionSource = sendInteractionSource,
+                            indication = null,
+                            enabled = sendEnabled
+                        ) { onSendClick() },
+                    contentAlignment = Alignment.Center
                 ) {
                     Icon(
-                        imageVector = Icons.AutoMirrored.Filled.Send,
+                        imageVector = Icons.Filled.ArrowUpward,
                         contentDescription = stringResource(R.string.ai_send_button),
-                        tint = if (inputText.isNotBlank()) {
-                            MaterialTheme.colorScheme.primary
-                        } else {
-                            MaterialTheme.colorScheme.onSurfaceVariant
-                        }
+                        tint = if (sendEnabled) MaterialTheme.colorScheme.onPrimary
+                        else MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.9f),
+                        modifier = Modifier.size(18.dp)
                     )
                 }
             }

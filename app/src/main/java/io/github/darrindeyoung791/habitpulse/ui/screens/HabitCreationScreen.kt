@@ -149,7 +149,7 @@ private val VALID_PHONE = Regex("^[+]?[0-9\\s-]{7,20}$")
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 private fun AddSupervisorDialog(
-    initialCountryCode: String,
+    initialRegionCode: String,
     hasAddedEmail: Boolean,
     hasAddedPhone: Boolean,
     onDismiss: () -> Unit,
@@ -161,7 +161,7 @@ private fun AddSupervisorDialog(
     var emailError by remember { mutableStateOf(false) }
     var phoneInput by remember { mutableStateOf("") }
     var phoneError by remember { mutableStateOf(false) }
-    var currentCountryCode by remember { mutableStateOf(initialCountryCode) }
+    var currentRegionCode by remember { mutableStateOf(initialRegionCode) }
     var prefixExpanded by remember { mutableStateOf(false) }
     val emailFocusRequester = remember { FocusRequester() }
     val phoneFocusRequester = remember { FocusRequester() }
@@ -192,7 +192,7 @@ private fun AddSupervisorDialog(
                             emailError = true
                         }
                     } else {
-                        val fullPhone = "${currentCountryCode.substringBefore(" ")}$phoneInput"
+                        val fullPhone = "${currentRegionCode.substringBefore(" ")}$phoneInput"
                         if (VALID_PHONE.matches(fullPhone)) {
                             onAddPhone(fullPhone)
                         } else {
@@ -302,16 +302,16 @@ private fun AddSupervisorDialog(
                             verticalAlignment = Alignment.CenterVertically,
                             horizontalArrangement = Arrangement.spacedBy(8.dp)
                         ) {
-                            val countryCodeSelector = stringResource(R.string.country_code_selector)
+                            val regionCodeSelector = stringResource(R.string.region_code_selector)
                             Box {
                                 OutlinedTextField(
-                                    value = currentCountryCode,
+                                    value = currentRegionCode,
                                     onValueChange = {},
-                                    modifier = Modifier.width(120.dp).semantics { contentDescription = "$currentCountryCode $countryCodeSelector" },
+                                    modifier = Modifier.width(120.dp).semantics { contentDescription = "$currentRegionCode $regionCodeSelector" },
                                     readOnly = true,
                                     singleLine = true,
                                     textStyle = MaterialTheme.typography.bodyLarge,
-                                    label = { Text(stringResource(R.string.country_code_label)) },
+                                    label = { Text(stringResource(R.string.region_code_label)) },
                                     colors = OutlinedTextFieldDefaults.colors(
                                         unfocusedBorderColor = MaterialTheme.colorScheme.outline,
                                         focusedBorderColor = MaterialTheme.colorScheme.primary
@@ -325,10 +325,10 @@ private fun AddSupervisorDialog(
                                     ) { prefixExpanded = true }
                                 )
                                 DropdownMenu(expanded = prefixExpanded, onDismissRequest = { prefixExpanded = false }) {
-                                    COUNTRY_CODES.forEach { option ->
+                                    REGION_CODES.forEach { option ->
                                         DropdownMenuItem(
                                             text = { Text("${option.prefix} ${stringResource(option.displayNameRes)}", style = MaterialTheme.typography.bodyMedium) },
-                                            onClick = { currentCountryCode = option.prefix; prefixExpanded = false }
+                                            onClick = { currentRegionCode = option.prefix; prefixExpanded = false }
                                         )
                                     }
                                 }
@@ -375,8 +375,7 @@ fun HabitCreationScreen(
     editMode: EditMode = EditMode.CREATE,
     habitId: UUID? = null,
     navController: androidx.navigation.NavHostController? = null,
-    application: HabitPulseApplication? = null,
-    prefillHabit: io.github.darrindeyoung791.habitpulse.ai.conversation.PartialHabit? = null
+    application: HabitPulseApplication? = null
 ) {
     val context = LocalContext.current
     val hapticFeedback = LocalHapticFeedback.current
@@ -422,25 +421,20 @@ fun HabitCreationScreen(
         initialAnimationComplete = true
     }
 
-    // UI 状态变量 - 支持预填数据
-    var habitName by remember(prefillHabit) { mutableStateOf(prefillHabit?.title ?: "") }
-    var repeatCycle by remember(prefillHabit) { mutableStateOf(
-        when (prefillHabit?.repeatCycle?.uppercase()) {
-            "WEEKLY" -> RepeatCycle.WEEKLY
-            else -> RepeatCycle.DAILY
-        }
-    ) }
-    var reminderTimes by remember(prefillHabit) { mutableStateOf(prefillHabit?.reminderTimes ?: emptyList()) }
+    // UI 状态变量
+    var habitName by remember { mutableStateOf("") }
+    var repeatCycle by remember { mutableStateOf(RepeatCycle.DAILY) }
+    var reminderTimes by remember { mutableStateOf<List<String>>(emptyList()) }
     var showTimePicker by remember { mutableStateOf(false) }
     var currentTimePickerTime by remember { mutableStateOf(java.time.LocalTime.now()) }
     var isReminderExpanded by remember { mutableStateOf(false) }
     var showMaxLengthToast by remember { mutableStateOf(false) }
 
     // Supervision contact state
-    var supervisorEmails by remember(prefillHabit) { mutableStateOf<List<String>>(emptyList()) }
-    var supervisorPhones by remember(prefillHabit) { mutableStateOf<List<String>>(emptyList()) }
+    var supervisorEmails by remember { mutableStateOf<List<String>>(emptyList()) }
+    var supervisorPhones by remember { mutableStateOf<List<String>>(emptyList()) }
     var showAddSupervisorDialog by remember { mutableStateOf(false) }
-    var countryCode by remember { mutableStateOf("+86") }
+    var regionCode by remember { mutableStateOf("+86") }
     var showDuplicateEmailToast by remember { mutableStateOf(false) }
     var showDuplicatePhoneToast by remember { mutableStateOf(false) }
     var isSupervisorExpanded by remember { mutableStateOf(false) }
@@ -448,10 +442,10 @@ fun HabitCreationScreen(
     var hasAddedSupervisorPhone by remember { mutableStateOf(false) }
 
     // Repeat days state (for weekly cycle)
-    var selectedRepeatDays by remember(prefillHabit) { mutableStateOf<Set<Int>>(prefillHabit?.repeatDays?.toSet() ?: setOf()) }
+    var selectedRepeatDays by remember { mutableStateOf<Set<Int>>(setOf()) }
 
     // Notes state
-    var notes by remember(prefillHabit) { mutableStateOf(prefillHabit?.notes ?: "") }
+    var notes by remember { mutableStateOf("") }
     var showNotesMaxToast by remember { mutableStateOf(false) }
 
     // Focus requester for habit name field (only for CREATE mode)
@@ -964,7 +958,7 @@ fun HabitCreationScreen(
             // Supervisor add dialog (tabbed: email + phone)
             if (showAddSupervisorDialog) {
                 AddSupervisorDialog(
-                    initialCountryCode = countryCode,
+                    initialRegionCode = regionCode,
                     hasAddedEmail = hasAddedSupervisorEmail,
                     hasAddedPhone = hasAddedSupervisorPhone,
                     onDismiss = { showAddSupervisorDialog = false },
@@ -1014,52 +1008,52 @@ fun HabitCreationScreenDarkPreview() {
     }
 }
 
-data class CountryCodeOption(val prefix: String, val displayNameRes: Int)
+data class RegionCodeOption(val prefix: String, val displayNameRes: Int)
 
 @Suppress("unused")
-val COUNTRY_CODES = listOf(
-    CountryCodeOption("+86", R.string.country_cn),
-    CountryCodeOption("+1", R.string.country_us_ca),
-    CountryCodeOption("+44", R.string.country_uk),
-    CountryCodeOption("+81", R.string.country_jp),
-    CountryCodeOption("+82", R.string.country_kr),
-    CountryCodeOption("+61", R.string.country_au),
-    CountryCodeOption("+852", R.string.country_hk),
-    CountryCodeOption("+886", R.string.country_tw),
-    CountryCodeOption("+65", R.string.country_sg),
-    CountryCodeOption("+49", R.string.country_de),
-    CountryCodeOption("+33", R.string.country_fr),
-    CountryCodeOption("+91", R.string.country_in),
-    CountryCodeOption("+39", R.string.country_it),
-    CountryCodeOption("+55", R.string.country_br),
-    CountryCodeOption("+7", R.string.country_ru),
-    CountryCodeOption("+34", R.string.country_es),
-    CountryCodeOption("+31", R.string.country_nl),
-    CountryCodeOption("+46", R.string.country_se),
-    CountryCodeOption("+41", R.string.country_ch),
-    CountryCodeOption("+47", R.string.country_no),
-    CountryCodeOption("+45", R.string.country_dk),
-    CountryCodeOption("+358", R.string.country_fi),
-    CountryCodeOption("+48", R.string.country_pl),
-    CountryCodeOption("+30", R.string.country_gr),
-    CountryCodeOption("+60", R.string.country_my),
-    CountryCodeOption("+63", R.string.country_ph),
-    CountryCodeOption("+62", R.string.country_id),
-    CountryCodeOption("+66", R.string.country_th),
-    CountryCodeOption("+84", R.string.country_vn),
-    CountryCodeOption("+977", R.string.country_np),
-    CountryCodeOption("+94", R.string.country_lk),
-    CountryCodeOption("+971", R.string.country_ae),
-    CountryCodeOption("+966", R.string.country_sa),
-    CountryCodeOption("+972", R.string.country_il),
-    CountryCodeOption("+27", R.string.country_za),
-    CountryCodeOption("+20", R.string.country_eg),
-    CountryCodeOption("+234", R.string.country_ng),
-    CountryCodeOption("+54", R.string.country_ar),
-    CountryCodeOption("+56", R.string.country_cl),
-    CountryCodeOption("+57", R.string.country_co),
-    CountryCodeOption("+52", R.string.country_mx),
-    CountryCodeOption("+64", R.string.country_nz),
+val REGION_CODES = listOf(
+    RegionCodeOption("+86", R.string.region_cn),
+    RegionCodeOption("+1", R.string.region_us_ca),
+    RegionCodeOption("+44", R.string.region_uk),
+    RegionCodeOption("+81", R.string.region_jp),
+    RegionCodeOption("+82", R.string.region_kr),
+    RegionCodeOption("+61", R.string.region_au),
+    RegionCodeOption("+852", R.string.region_hk),
+    RegionCodeOption("+886", R.string.region_tw),
+    RegionCodeOption("+65", R.string.region_sg),
+    RegionCodeOption("+49", R.string.region_de),
+    RegionCodeOption("+33", R.string.region_fr),
+    RegionCodeOption("+91", R.string.region_in),
+    RegionCodeOption("+39", R.string.region_it),
+    RegionCodeOption("+55", R.string.region_br),
+    RegionCodeOption("+7", R.string.region_ru),
+    RegionCodeOption("+34", R.string.region_es),
+    RegionCodeOption("+31", R.string.region_nl),
+    RegionCodeOption("+46", R.string.region_se),
+    RegionCodeOption("+41", R.string.region_ch),
+    RegionCodeOption("+47", R.string.region_no),
+    RegionCodeOption("+45", R.string.region_dk),
+    RegionCodeOption("+358", R.string.region_fi),
+    RegionCodeOption("+48", R.string.region_pl),
+    RegionCodeOption("+30", R.string.region_gr),
+    RegionCodeOption("+60", R.string.region_my),
+    RegionCodeOption("+63", R.string.region_ph),
+    RegionCodeOption("+62", R.string.region_id),
+    RegionCodeOption("+66", R.string.region_th),
+    RegionCodeOption("+84", R.string.region_vn),
+    RegionCodeOption("+977", R.string.region_np),
+    RegionCodeOption("+94", R.string.region_lk),
+    RegionCodeOption("+971", R.string.region_ae),
+    RegionCodeOption("+966", R.string.region_sa),
+    RegionCodeOption("+972", R.string.region_il),
+    RegionCodeOption("+27", R.string.region_za),
+    RegionCodeOption("+20", R.string.region_eg),
+    RegionCodeOption("+234", R.string.region_ng),
+    RegionCodeOption("+54", R.string.region_ar),
+    RegionCodeOption("+56", R.string.region_cl),
+    RegionCodeOption("+57", R.string.region_co),
+    RegionCodeOption("+52", R.string.region_mx),
+    RegionCodeOption("+64", R.string.region_nz),
 )
 
 /**

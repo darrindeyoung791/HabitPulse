@@ -100,7 +100,7 @@ class ConversationManager(
         _state.value = _state.value.copy(isStopped = false)
         var streamingText = ""
         var alreadyProcessed = false
-        val completeJsonBlock = Regex("```json\\s*\\{[\\s\\S]*?\\}\\s*```")
+        val completeJsonBlock = Regex("```json[\\s\\S]*?```")
 
         streamJob = scope.launch(Dispatchers.IO) {
             try {
@@ -123,6 +123,10 @@ class ConversationManager(
                         is LLMClient.StreamChunk.Done -> {
                             processResponse(chunk.fullContent)
                         }
+                        is LLMClient.StreamChunk.ToolCallFragment -> {}
+                        is LLMClient.StreamChunk.ToolCallComplete -> {}
+                        is LLMClient.StreamChunk.Reasoning -> {}
+                        is LLMClient.StreamChunk.Usage -> {}
                         is LLMClient.StreamChunk.Error -> {
                             _events.value = ConversationEvent.Error(chunk.message)
                         }

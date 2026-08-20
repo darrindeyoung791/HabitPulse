@@ -64,9 +64,98 @@
             android:resizeableActivity="true"
             android:configChanges="uiMode|orientation|screenSize|screenLayout|smallestScreenSize" />
         <activity
-            android:name=".AISettingsActivity"
+            android:name=".SettingsAIActivity"
             android:exported="false"
-            android:label="@string/ai_settings_title"
+            android:label="@string/settings_category_ai"
+            android:theme="@style/Theme.HabitPulse"
+            android:enableOnBackInvokedCallback="true"
+            android:resizeableActivity="true"
+            android:configChanges="uiMode|orientation|screenSize|screenLayout|smallestScreenSize" />
+        <activity
+            android:name=".SettingsAIEditActivity"
+            android:exported="false"
+            android:label="@string/ai_config_add_title"
+            android:theme="@style/Theme.HabitPulse"
+            android:enableOnBackInvokedCallback="true"
+            android:resizeableActivity="true"
+            android:configChanges="uiMode|orientation|screenSize|screenLayout|smallestScreenSize" />
+        <activity
+            android:name=".AIChatActivity"
+            android:exported="false"
+            android:label="@string/ai_chat_title"
+            android:theme="@style/Theme.HabitPulse"
+            android:enableOnBackInvokedCallback="true"
+            android:resizeableActivity="true"
+            android:windowSoftInputMode="adjustResize"
+            android:configChanges="uiMode|orientation|screenSize|screenLayout|smallestScreenSize" />
+        <activity
+            android:name=".SettingsNotificationsActivity"
+            android:exported="false"
+            android:label="@string/settings_notifications"
+            android:theme="@style/Theme.HabitPulse"
+            android:enableOnBackInvokedCallback="true"
+            android:resizeableActivity="true"
+            android:configChanges="uiMode|orientation|screenSize|screenLayout|smallestScreenSize" />
+        <activity
+            android:name=".SettingsTemplateActivity"
+            android:exported="false"
+            android:label="@string/notification_template_settings_title"
+            android:theme="@style/Theme.HabitPulse"
+            android:enableOnBackInvokedCallback="true"
+            android:resizeableActivity="true"
+            android:configChanges="uiMode|orientation|screenSize|screenLayout|smallestScreenSize" />
+        <activity
+            android:name=".SettingsGeneralActivity"
+            android:exported="false"
+            android:label="@string/settings_category_general"
+            android:theme="@style/Theme.HabitPulse"
+            android:enableOnBackInvokedCallback="true"
+            android:resizeableActivity="true"
+            android:configChanges="uiMode|orientation|screenSize|screenLayout|smallestScreenSize" />
+        <activity
+            android:name=".SettingsLanguageActivity"
+            android:exported="false"
+            android:label="@string/settings_language"
+            android:theme="@style/Theme.HabitPulse"
+            android:enableOnBackInvokedCallback="true"
+            android:resizeableActivity="true"
+            android:configChanges="uiMode|orientation|screenSize|screenLayout|smallestScreenSize" />
+        <activity
+            android:name=".SettingsFontScaleActivity"
+            android:exported="false"
+            android:label="@string/settings_font_scale"
+            android:theme="@style/Theme.HabitPulse"
+            android:enableOnBackInvokedCallback="true"
+            android:resizeableActivity="true"
+            android:configChanges="uiMode|orientation|screenSize|screenLayout|smallestScreenSize" />
+        <activity
+            android:name=".SettingsAboutActivity"
+            android:exported="false"
+            android:label="@string/settings_about"
+            android:theme="@style/Theme.HabitPulse"
+            android:enableOnBackInvokedCallback="true"
+            android:resizeableActivity="true"
+            android:configChanges="uiMode|orientation|screenSize|screenLayout|smallestScreenSize" />
+        <activity
+            android:name=".SettingsDebugActivity"
+            android:exported="false"
+            android:label="@string/settings_debug_title"
+            android:theme="@style/Theme.HabitPulse"
+            android:enableOnBackInvokedCallback="true"
+            android:resizeableActivity="true"
+            android:configChanges="uiMode|orientation|screenSize|screenLayout|smallestScreenSize" />
+        <activity
+            android:name=".SettingsDebugReminderActivity"
+            android:exported="false"
+            android:label="@string/settings_debug_reminder_title"
+            android:theme="@style/Theme.HabitPulse"
+            android:enableOnBackInvokedCallback="true"
+            android:resizeableActivity="true"
+            android:configChanges="uiMode|orientation|screenSize|screenLayout|smallestScreenSize" />
+        <activity
+            android:name=".SettingsDebugVibrationActivity"
+            android:exported="false"
+            android:label="@string/settings_debug_vibration_title"
             android:theme="@style/Theme.HabitPulse"
             android:enableOnBackInvokedCallback="true"
             android:resizeableActivity="true"
@@ -83,14 +172,6 @@
             android:name=".OpenSourceLicensesActivity"
             android:exported="false"
             android:label="@string/settings_open_source_licenses"
-            android:theme="@style/Theme.HabitPulse"
-            android:enableOnBackInvokedCallback="true"
-            android:resizeableActivity="true"
-            android:configChanges="uiMode|orientation|screenSize|screenLayout|smallestScreenSize" />
-        <activity
-            android:name=".ReminderSettingsActivity"
-            android:exported="false"
-            android:label="@string/reminder_settings_title"
             android:theme="@style/Theme.HabitPulse"
             android:enableOnBackInvokedCallback="true"
             android:resizeableActivity="true"

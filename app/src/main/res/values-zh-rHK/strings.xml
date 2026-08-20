@@ -1,17 +1,41 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
     <string name="settings_title">設定</string>
+    <string name="settings_coming_soon">即將推出</string>
+    <string name="settings_category_ai">AI 設定</string>
+    <string name="settings_category_ai_description">設定 AI 供應商與模型參數</string>
+    <string name="settings_category_lan">連接與同步</string>
+    <string name="settings_category_general">一般</string>
+    <string name="settings_category_general_description">語言、顯示與觸感</string>
+    <string name="settings_configure_provider">設定供應商</string>
+    <string name="settings_configure_provider_description">設定 AI 供應商、模型與 API 密鑰</string>
+    <string name="settings_memory">記憶</string>
+    <string name="settings_memory_description">讓 AI 記住你的習慣與偏好</string>
+    <string name="settings_ui_display">顯示與觸感</string>
+    <string name="settings_haptic_feedback">關閉應用程式內全部震動</string>
+    <string name="settings_haptic_feedback_description">關閉列表、按鈕等介面的按壓震動回饋</string>
+    <string name="settings_language">語言</string>
+    <string name="settings_font_scale">字型大小</string>
+    <string name="settings_font_scale_description">自訂應用程式內字型大小</string>
+    <string name="settings_font_scale_follow_system">跟隨系統</string>
+    <string name="settings_font_scale_standard">標準</string>
+    <string name="settings_language_system_default">跟隨系統</string>
+    <string name="language_follow_system_unsupported">%1$s doesn\'t support your language.</string>
+    <string name="settings_new_settings_entry">新版設定</string>
+    <string name="settings_new_settings_entry_desc">體驗全新的分類式設定介面</string>
     <string name="settings_about">關於</string>
+    <string name="settings_about_description">版本、開發者與開放原始碼授權</string>
     <string name="settings_app_version">應用程式版本</string>
     <string name="settings_developer">開發者</string>
     <string name="settings_back">返回</string>
     <string name="settings_about_section">關於</string>
     <string name="settings_privacy_notice">%1$s 高度重視你的私隱。你的數據始終保留在你的裝置上，並且 %1$s 不會聯網傳輸你的個人資訊。</string>
     <string name="settings_app_version_label">應用程式版本</string>
-    <string name="settings_developer_name">HabitPulse 開發組</string>
+    <string name="settings_developer_name">%1$s 開發組</string>
     <string name="settings_app_info_button">前往「設定」查看 %1$s 應用程式資訊…</string>
     <string name="settings_github_button">前往 GitHub 查看此開源項目…</string>
     <string name="settings_help_button">幫助與反饋…</string>
+    <string name="settings_help_button_description">查看說明文件或反映問題</string>
     <string name="settings_support_habitpulse">支援 %1$s</string>
     <string name="settings_support_habitpulse_description">開啟啟動廣告，以支援 %1$s。感謝你的支援！</string>
     <string name="settings_support_habitpulse_switch">開啟啟動廣告</string>
@@ -125,10 +149,36 @@
 
     <!-- Debug / Developer options -->
     <string name="debug_add_sample_data_dialog_title">新增樣本數據？</string>
+    <string name="debug_add_sample_data_warning">警告：此操作會一次性新增大量樣本習慣與完成記錄，可能打亂你已有的習慣，並產生大量不必要的提醒。</string>
     <string name="debug_add_sample_data_dialog_message">是否新增 40 條樣本習慣數據？\n\n此功能用於新機調試，將新增包含不同提醒方式、監督方式和備註的習慣數據。部分監督人會在多個習慣中出現，用於測試界面滾動效能。</string>
     <string name="debug_add_sample_data_yes">新增</string>
     <string name="debug_add_sample_data_no">取消</string>
     <string name="debug_sample_data_added">已新增 40 條樣本數據</string>
+    <string name="settings_debug_title">調試設置</string>
+    <string name="settings_debug_confirm_title">進入調試設置？</string>
+    <string name="settings_debug_confirm_message">確認要進入調試設置嗎？該頁面包含開發者調試工具。</string>
+    <string name="settings_debug_reminder_title">提醒調試</string>
+    <string name="settings_debug_add_sample_habits">添加示例習慣</string>
+    <string name="settings_debug_add_sample_habits_description">添加一批示例習慣與完成記錄，便於測試界面與功能</string>
+    <string name="settings_debug_reset_onboarding">重設引導狀態</string>
+    <string name="settings_debug_reset_onboarding_description">下次開啟應用程式將進入歡迎引導頁</string>
+    <string name="settings_debug_reset_onboarding_dialog_title">重設引導狀態？</string>
+    <string name="settings_debug_reset_onboarding_dialog_message">下次開啟應用程式將進入歡迎引導頁，需要重新完成 4 步引導。</string>
+    <string name="settings_debug_reset_onboarding_done">已重設，下次開啟應用程式進入歡迎引導</string>
+    <string name="settings_debug_vibration">震動調試</string>
+    <string name="settings_debug_vibration_description">調整按壓震動時長與強度</string>
+    <string name="settings_debug_ai_retry_limit">AI 工具重試上限</string>
+    <string name="settings_debug_ai_max_output_tokens">AI 最大輸出 Token</string>
+    <string name="settings_debug_ai_max_thinking_tokens">AI 思考預算 Token</string>
+    <string name="settings_debug_vibration_title">震動調試</string>
+    <string name="settings_debug_vibration_duration_group">時長</string>
+    <string name="settings_debug_vibration_duration">震動時長</string>
+    <string name="settings_debug_vibration_amplitude_group">強度</string>
+    <string name="settings_debug_vibration_amplitude">震動強度</string>
+    <string name="settings_debug_vibration_test">測試震動</string>
+    <string name="settings_debug_vibration_reset">恢復預設</string>
+    <string name="settings_debug_vibration_notice_title">強度說明</string>
+    <string name="settings_debug_vibration_notice_content">強度為 1-255，僅當裝置硬體支援幅度控制（線性馬達）時才生效；不支援的裝置會使用系統預設強度，滑桿調節可能無效。與時長無關，可獨立調節。</string>
 
     <!-- Accessibility -->
     <string name="accessibility_talkback_splash_ad_disabled">為了不影響視障用戶，啟動廣告功能無法開啟</string>
@@ -230,13 +280,31 @@
 
     <!-- Welcome Screen -->
     <string name="welcome_description">小巧清爽的習慣跟蹤軟件，專為攻克三分鐘熱度打造。</string>
+    <string name="welcome_greeting_title">歡迎使用 %1$s</string>
+    <string name="welcome_greeting_continue">繼續</string>
     <string name="welcome_permissions_title">為了及時通知，%1$s 可能使用下列權限：</string>
+    <string name="welcome_permissions_heading">權限聲明</string>
     <string name="welcome_permission_notification_title">發送持久通知</string>
+    <string name="welcome_permission_notification_desc">準時接收習慣提醒，不會遺漏</string>
     <string name="welcome_permission_background_title">在後台持續運行</string>
+    <string name="welcome_permission_background_desc">及時收到提醒通知</string>
     <string name="welcome_agree_button">我同意，繼續</string>
-    <string name="welcome_disagree_button">不同意，進入受限模式</string>
+    <string name="welcome_disagree_button">不同意</string>
     <string name="welcome_limited_mode">受限模式</string>
     <string name="welcome_limited_mode_info">你已選擇受限模式，部分功能將不可用</string>
+    <string name="welcome_consent_prefix">繼續即代表你同意</string>
+    <string name="welcome_consent_and">與</string>
+    <string name="welcome_terms_of_service">服務條款</string>
+    <string name="welcome_privacy_policy_coming_soon">私隱政策 / 服務條款即將上線</string>
+    <string name="welcome_skip">跳過，稍後設定</string>
+    <string name="welcome_enter">進入 %1$s</string>
+    <string name="welcome_step_done">完成</string>
+    <string name="welcome_done_title">一切就緒</string>
+    <string name="welcome_done_desc">開始養成你的第一個好習慣吧</string>
+    <string name="welcome_disagree_dialog_title">不同意將無法使用</string>
+    <string name="welcome_disagree_dialog_message">%1$s 需要你的同意才能正常提供提醒功能。如果你不同意，將只能退出應用程式。</string>
+    <string name="welcome_disagree_dialog_agree">同意</string>
+    <string name="welcome_disagree_dialog_disagree_exit">不同意，退出</string>
 
     <!-- Onboarding Wizard -->
     <string name="onboarding_step_notification_title">通知設定</string>
@@ -253,7 +321,8 @@
     <string name="onboarding_privacy_placeholder">私隱政策即將推出</string>
 
     <!-- Notification Settings -->
-    <string name="settings_notifications">通知</string>
+    <string name="settings_notifications">通知提醒</string>
+    <string name="settings_notifications_description">提醒、常駐通知與通知範本</string>
     <string name="settings_persistent_notification">保持後台運行</string>
     <string name="settings_persistent_notification_description">顯示持久通知，保持應用程式及時提醒</string>
     <string name="settings_persistent_notification_authorize">去授權</string>
@@ -315,7 +384,7 @@
     <string name="reminder_settings_next_alarm">下次提醒</string>
     <string name="reminder_settings_notification_permission">通知權限</string>
     <string name="reminder_settings_system_settings">去「設定」自訂通知…</string>
-    <string name="reminder_settings_background_keepalive">保持 HabitPulse 後台運行…</string>
+    <string name="reminder_settings_background_keepalive">保持 %1$s 後台運行…</string>
     <string name="reminder_settings_test_notification">發送測試通知</string>
     <string name="reminder_settings_test_notification_sent">測試通知已發送</string>
     <string name="reminder_settings_test_notification_scheduled">1 分鐘後將發送測試通知</string>
@@ -371,18 +440,52 @@
     <string name="ai_settings_api_endpoint_label">API 端點</string>
     <string name="ai_settings_api_key">API 密鑰</string>
     <string name="ai_settings_api_key_label">API 密鑰</string>
-    <string name="ai_api_key_required_title">需要配置 API 密鑰</string>
-    <string name="ai_api_key_required_message">請先在設定中配置 API 密鑰，然後才能使用 AI 建立習慣功能。</string>
-    <string name="ai_api_key_required_action">前往設定</string>
-    <string name="ai_settings_model">模型</string>
+    <string name="ai_api_key_required_title">需要新增供應商</string>
+    <string name="ai_api_key_required_message">請先在設定中新增 AI 供應商，然後才能使用 AI 建立習慣功能。</string>
+    <string name="ai_api_key_required_action">新增供應商</string>
     <string name="ai_settings_model_label">選擇模型</string>
     <string name="ai_settings_test_connection">測試連接</string>
+    <string name="ai_settings_test_connection_description">驗證 API 端點、密鑰與模型是否可用</string>
     <string name="ai_settings_connection_success">連接成功</string>
     <string name="ai_settings_connection_failed">連接失敗</string>
     <string name="ai_settings_notice_title">配置說明</string>
     <string name="ai_settings_notice_content">本應用支持兼容 OpenAI 格式的 LLM API（如智譜 GLM、DeepSeek 等）。\n\nAPI 端點：請填寫完整的 API 地址，以斜槓結尾。\nAPI 密鑰：請從相應平台獲取。\n模型名稱：支持智譜 glm-4.7-flash（預設）、glm-4-flash、glm-4 等。</string>
     <string name="ai_settings_streaming">串流輸出</string>
     <string name="ai_settings_streaming_description">即時顯示 AI 思考過程和回覆</string>
+    <string name="ai_settings_model_default_label">%1$s（預設）</string>
+    <string name="ai_settings_model_flagship_label">%1$s（最新旗艦）</string>
+    <string name="ai_config_providers">AI 供應商</string>
+    <string name="ai_config_page_hint">已新增的供應商可以隨時切換使用；也可以繼續新增更多供應商，按行選取即可設為目前使用。</string>
+    <string name="ai_config_add">新增 AI 配置</string>
+    <string name="ai_config_add_openai_hint">支援 OpenAI 相容格式的介面</string>
+    <string name="ai_config_tab_presets">預設方案</string>
+    <string name="ai_config_tab_custom">自訂</string>
+    <string name="ai_config_presets_hint">選擇預設方案，自動填入提供商、模型與端點</string>
+    <string name="ai_preset_deepseek">DeepSeek</string>
+    <string name="ai_preset_mimo">小米 MiMo</string>
+    <string name="ai_preset_glm">智譜 GLM</string>
+    <string name="ai_preset_free">免費</string>
+    <string name="ai_config_info_may_change">提示：AI 服務商的模型名稱、端點等配置資訊可能隨時間調整，如遇連線失敗，請核對或重新選擇預設方案。</string>
+    <string name="ai_config_add_title">新增 AI 配置</string>
+    <string name="ai_config_edit_title">編輯配置</string>
+    <string name="ai_config_edit">編輯</string>
+    <string name="ai_config_name_label">配置名稱</string>
+    <string name="ai_config_name_placeholder">例如：智譜 GLM</string>
+    <string name="ai_config_name_duplicate">此名稱已被使用</string>
+    <string name="ai_config_name_duplicate_fix">去自訂</string>
+    <string name="ai_config_delete">刪除配置</string>
+    <string name="ai_config_delete_title">刪除該配置？</string>
+    <string name="ai_config_delete_message">刪除後此配置將無法恢復。</string>
+    <string name="ai_config_empty">目前沒有 AI 配置，請點選下方「新增 AI 配置」建立。</string>
+    <string name="ai_config_migrated_name">預設配置</string>
+    <string name="ai_settings_save">儲存</string>
+    <string name="ai_config_reveal_key">查看金鑰</string>
+    <string name="ai_config_reveal_title">驗證身份以查看 API 金鑰</string>
+    <string name="ai_config_reveal_subtitle">使用指紋、面容或鎖屏密碼驗證</string>
+    <string name="ai_config_reveal_failed">無法解密 API 金鑰，請重新輸入</string>
+    <string name="settings_unsaved_changes">有未儲存的變更</string>
+    <string name="ai_settings_thinking">深度思考</string>
+    <string name="ai_settings_thinking_description">讓模型先進行深度推理再給出回答（部分模型支援）</string>
     <string name="clear">清除</string>
     <string name="show_password">顯示密碼</string>
     <string name="hide_password">隱藏密碼</string>
@@ -426,21 +529,88 @@
     <string name="ai_day_sat">六</string>
     <string name="ai_day_sun">日</string>
 
+    <!-- AI Chat 設置白名單 -->
+    <string name="ai_setting_reminder_enabled">習慣提醒</string>
+    <string name="ai_setting_dnd_enabled">請勿打擾</string>
+    <string name="ai_setting_persistent_notification">保持背景執行</string>
+    <string name="ai_setting_haptic_feedback_enabled">應用程式內震動</string>
+    <string name="ai_setting_show_splash_ad">開屏廣告</string>
+    <string name="ai_setting_force_tablet_landscape">平板強制橫屏</string>
+
     <!-- AI Disclaimer -->
     <string name="ai_disclaimer">AI 可能會犯錯，請核對資訊後儲存。</string>
 
     <!-- AI Error Messages -->
     <string name="ai_error_scroll_to_bottom">滾動到底部</string>
-    <string name="ai_error_not_configured">請先在設定中配置 API</string>
+    <string name="ai_error_not_configured">請先在設定中新增 AI 供應商</string>
     <string name="ai_error_prefix">錯誤：%s</string>
-    <string name="ai_error_auth_failed">認證失敗，請檢查 API Key 是否正確</string>
-    <string name="ai_error_access_denied">存取被拒絕，請檢查 API Key 權限</string>
+    <string name="ai_error_guard_blocked">AI 連續出錯已被自動停止，請調整指令後重試</string>
+    <string name="ai_chat_empty_response">模型沒有產生回答（可能是思考預算已耗盡）。請重試或換一種問法。</string>
+    <string name="ai_error_auth_failed">認證失敗，請檢查 API 密鑰是否正確</string>
+    <string name="ai_error_access_denied">存取被拒絕，請檢查 API 密鑰權限</string>
     <string name="ai_error_server_error">伺服器錯誤（HTTP %d），請稍後重試</string>
     <string name="ai_error_timeout">連線逾時，請檢查網路或 API 地址</string>
     <string name="ai_error_connection_failed">無法連線到伺服器，請檢查 API 地址</string>
     <string name="ai_error_dns_failed">無法解析網域名稱，請檢查 API 地址</string>
     <string name="ai_error_invalid_url">API 地址格式不正確</string>
     <string name="ai_error_unknown">未知錯誤</string>
+    <!-- AI Chat -->
+    <string name="ai_chat_title">AI 助手</string>
+    <string name="ai_chat_entry">新版 AI 對話</string>
+    <string name="ai_chat_manage_providers">管理供應商</string>
+    <string name="ai_chat_not_configured">未設定</string>
+    <string name="ai_chat_switch_provider_title">切換供應商？</string>
+    <string name="ai_chat_switch_provider_message">切換後將清空目前對話與未確認內容。</string>
+    <string name="ai_chat_switch_config">切換</string>
+    <string name="ai_chat_edit_habit">前往編輯</string>
+    <string name="ai_chat_open_settings">開啟設定</string>
+    <string name="ai_chat_undo">復原</string>
+    <string name="ai_chat_habit_created">已建立</string>
+    <string name="ai_chat_habit_deleted">已刪除</string>
+    <string name="ai_chat_delete_cancelled">已取消刪除</string>
+    <string name="ai_chat_setting_reverted">已恢復</string>
+    <string name="ai_chat_search_hint">找到以下習慣，可讓我編輯或刪除其中一個</string>
+    <string name="ai_chat_usage_empty">—</string>
+    <string name="ai_chat_input_hint">輸入訊息…</string>
+    <string name="ai_chat_confirm_leave_title">確認離開？</string>
+    <string name="ai_chat_confirm_leave_message">離開後對話將不保留。</string>
+    <string name="ai_chat_confirm_leave_unsaved">離開後對話將不保留，仍有習慣尚未儲存。</string>
+    <string name="ai_chat_thinking_title">深度思考</string>
+    <string name="ai_chat_thinking_in_progress">深度思考中…</string>
+    <string name="ai_chat_thinking_elapsed">已深度思考（%1$s秒）</string>
+    <string name="ai_chat_view_thinking">查看思考過程</string>
+    <string name="ai_chat_hide_thinking">收起思考過程</string>
+    <string name="ai_chat_token_count">%1$s tokens</string>
+    <string name="ai_chat_token_detail_prompt">輸入：%1$s</string>
+    <string name="ai_chat_token_detail_completion">輸出：%1$s</string>
+    <string name="ai_chat_token_calls">呼叫：%1$d 次</string>
+    <string name="ai_chat_welcome_title">我是你的 AI 習慣助手</string>
+    <string name="ai_chat_welcome_subtitle">可以讓我建立、查詢、修改或刪除習慣，也可以幫你調整應用程式設定。</string>
+    <string name="ai_chat_suggestion_create">幫我建立一個閱讀習慣</string>
+    <string name="ai_chat_suggestion_search">有哪些習慣需要我處理？</string>
+    <string name="ai_chat_suggestion_setting">幫我開啟通知設定</string>
+    <string name="ai_chat_setting_change_format">%1$s → %2$s</string>
+    <string name="ai_chat_on">開</string>
+    <string name="ai_chat_off">關</string>
+    <string name="ai_chat_delete">刪除</string>
+    <string name="ai_chat_delete_confirm_title">刪除這個習慣？</string>
+    <string name="ai_chat_open_settings_format">開啟%s設定</string>
+    <string name="ai_chat_copied">已複製</string>
+    <string name="ai_chat_retry">重試</string>
+    <string name="ai_chat_add_time">新增時間</string>
+    <string name="ai_chat_add_this_time">新增此時間</string>
+    <string name="ai_chat_pick_times">選擇時間</string>
+    <string name="ai_chat_selected_times">已選擇</string>
+    <string name="ai_chat_remove_time">移除該時間</string>
+    <string name="ai_chat_manual_fallback_hint">或手動輸入</string>
+    <string name="ai_chat_manual_submit">手動提交</string>
+    <string name="ai_chat_option_tab">選項</string>
+    <string name="ai_chat_manual_tab">手動輸入</string>
+    <string name="ai_chat_picker_search">搜尋習慣</string>
+    <string name="ai_chat_picker_no_result">未找到符合的習慣</string>
+    <string name="ai_chat_picker_submit">提交選擇</string>
+    <string name="ai_chat_picker_manual_done">我已手動操作</string>
+    <string name="ai_chat_picker_submitted">已選擇：%1$s</string>
     <string name="create_habit_selection_title">新建習慣</string>
     <string name="create_habit_selection_manual">手動填寫</string>
     <string name="create_habit_selection_manual_desc">自己填寫所有欄位</string>
@@ -452,9 +622,6 @@
     <string name="cancel">取消</string>
 
     <!-- Thinking Block -->
-    <string name="hide_thinking">收起思考</string>
-    <string name="view_thinking">查看思考</string>
-    <string name="thinking_in_progress">思考中…</string>
     <string name="collapse">折叠</string>
     <string name="expand">展開</string>
 
@@ -513,8 +680,8 @@
     <!-- Default notification template (used when no custom template is saved) -->
     <string name="notification_default_template">已完成 {habit_name} 打卡（{checkin_time}），特此通知。</string>
 
-    <!-- Country code selector -->
-    <string name="country_code_label">區號</string>
+    <!-- Region code selector -->
+    <string name="region_code_label">區號</string>
     <string name="contacts_edit_button">編輯</string>
     <string name="contacts_edit_email_title">編輯電郵</string>
     <string name="contacts_edit_phone_title">編輯電話</string>
@@ -525,49 +692,49 @@
     <string name="contacts_edit_email_invalid">電郵格式無效</string>
     <string name="contacts_edit_phone_invalid">電話號碼格式無效</string>
     <string name="create_habit_supervisor_phone_sms_cost_warning">短訊提醒可能產生費用</string>
-    <string name="country_code_selector">國家與地區電話區號</string>
+    <string name="region_code_selector">地區電話區號</string>
 
-    <!-- Country code names -->
-    <string name="country_cn">中國大陸</string>
-    <string name="country_us_ca">美國/加拿大</string>
-    <string name="country_uk">英國</string>
-    <string name="country_jp">日本</string>
-    <string name="country_kr">韓國</string>
-    <string name="country_au">澳洲</string>
-    <string name="country_hk">香港</string>
-    <string name="country_tw">台灣</string>
-    <string name="country_sg">新加坡</string>
-    <string name="country_de">德國</string>
-    <string name="country_fr">法國</string>
-    <string name="country_in">印度</string>
-    <string name="country_it">意大利</string>
-    <string name="country_br">巴西</string>
-    <string name="country_ru">俄羅斯</string>
-    <string name="country_es">西班牙</string>
-    <string name="country_nl">荷蘭</string>
-    <string name="country_se">瑞典</string>
-    <string name="country_ch">瑞士</string>
-    <string name="country_no">挪威</string>
-    <string name="country_dk">丹麥</string>
-    <string name="country_fi">芬蘭</string>
-    <string name="country_pl">波蘭</string>
-    <string name="country_gr">希臘</string>
-    <string name="country_my">馬來西亞</string>
-    <string name="country_ph">菲律賓</string>
-    <string name="country_id">印尼</string>
-    <string name="country_th">泰國</string>
-    <string name="country_vn">越南</string>
-    <string name="country_np">尼泊爾</string>
-    <string name="country_lk">斯里蘭卡</string>
-    <string name="country_ae">阿聯酋</string>
-    <string name="country_sa">沙特阿拉伯</string>
-    <string name="country_il">以色列</string>
-    <string name="country_za">南非</string>
-    <string name="country_eg">埃及</string>
-    <string name="country_ng">尼日利亞</string>
-    <string name="country_ar">阿根廷</string>
-    <string name="country_cl">智利</string>
-    <string name="country_co">哥倫比亞</string>
-    <string name="country_mx">墨西哥</string>
-    <string name="country_nz">新西蘭</string>
+    <!-- Region code names -->
+    <string name="region_cn">中國大陸</string>
+    <string name="region_us_ca">美國/加拿大</string>
+    <string name="region_uk">英國</string>
+    <string name="region_jp">日本</string>
+    <string name="region_kr">韓國</string>
+    <string name="region_au">澳洲</string>
+    <string name="region_hk">香港</string>
+    <string name="region_tw">台灣</string>
+    <string name="region_sg">新加坡</string>
+    <string name="region_de">德國</string>
+    <string name="region_fr">法國</string>
+    <string name="region_in">印度</string>
+    <string name="region_it">意大利</string>
+    <string name="region_br">巴西</string>
+    <string name="region_ru">俄羅斯</string>
+    <string name="region_es">西班牙</string>
+    <string name="region_nl">荷蘭</string>
+    <string name="region_se">瑞典</string>
+    <string name="region_ch">瑞士</string>
+    <string name="region_no">挪威</string>
+    <string name="region_dk">丹麥</string>
+    <string name="region_fi">芬蘭</string>
+    <string name="region_pl">波蘭</string>
+    <string name="region_gr">希臘</string>
+    <string name="region_my">馬來西亞</string>
+    <string name="region_ph">菲律賓</string>
+    <string name="region_id">印尼</string>
+    <string name="region_th">泰國</string>
+    <string name="region_vn">越南</string>
+    <string name="region_np">尼泊爾</string>
+    <string name="region_lk">斯里蘭卡</string>
+    <string name="region_ae">阿聯酋</string>
+    <string name="region_sa">沙特阿拉伯</string>
+    <string name="region_il">以色列</string>
+    <string name="region_za">南非</string>
+    <string name="region_eg">埃及</string>
+    <string name="region_ng">尼日利亞</string>
+    <string name="region_ar">阿根廷</string>
+    <string name="region_cl">智利</string>
+    <string name="region_co">哥倫比亞</string>
+    <string name="region_mx">墨西哥</string>
+    <string name="region_nz">新西蘭</string>
 </resources>

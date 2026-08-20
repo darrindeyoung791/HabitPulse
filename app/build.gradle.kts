@@ -17,8 +17,8 @@ android {
         applicationId = "io.github.darrindeyoung791.habitpulse"
         minSdk = 26
         targetSdk = 37
-        versionCode = 181
-        versionName = "0.8.33-alpha"
+        versionCode = 198
+        versionName = "0.8.50-alpha"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
     }
@@ -48,11 +48,12 @@ android {
     }
     androidResources {
         generateLocaleConfig = true
-        localeFilters += listOf("zh-rCN", "zh-rTW", "zh-rHK", "en-rUS")
+        localeFilters += listOf("zh-rCN", "zh-rTW", "zh-rHK", "en-rUS", "en-rGB")
     }
     lint {
         abortOnError = false
     }
+    compileSdkMinor = 0
     ksp {
         arg("room.schemaLocation", "$projectDir/schemas")
         arg("room.incremental", "true")
@@ -96,17 +97,17 @@ dependencies {
     ksp("androidx.room:room-compiler:$roomVersion")
 
     // Lifecycle and ViewModel
-    implementation("androidx.lifecycle:lifecycle-viewmodel-compose:2.10.0")
-    implementation("androidx.lifecycle:lifecycle-runtime-compose:2.10.0")
+    implementation("androidx.lifecycle:lifecycle-viewmodel-compose:2.11.0")
+    implementation("androidx.lifecycle:lifecycle-runtime-compose:2.11.0")
 
     // DataStore for preferences
     implementation("androidx.datastore:datastore-preferences:1.2.1")
 
     implementation("androidx.compose.material:material-icons-core")
     implementation("androidx.compose.material:material-icons-extended")
-    implementation("androidx.compose.material3:material3")
     implementation("androidx.core:core-splashscreen:1.2.0")
     // Material library required for DynamicColors.applyToActivitiesIfAvailable
+    // (also bundles com.google.android.material.color.utilities used for seed-based accent palettes)
     implementation("com.google.android.material:material:1.14.0")
     implementation(libs.androidx.core.ktx)
     implementation(libs.androidx.lifecycle.runtime.ktx)
@@ -118,6 +119,8 @@ dependencies {
     implementation(libs.androidx.compose.ui.graphics)
     implementation(libs.androidx.compose.ui.tooling.preview)
     implementation(libs.androidx.compose.material3)
+    implementation(libs.androidx.compose.material3.adaptive)
+    implementation(libs.androidx.window.core)
     implementation(libs.androidx.compose.material.icons.core)
     implementation(libs.androidx.compose.material.icons.extended)
     testImplementation(libs.junit)
@@ -140,4 +143,8 @@ dependencies {
 
     // Gson for JSON parsing
     implementation("com.google.code.gson:gson:2.14.0")
+
+    // Biometric for gated API key reveal (CryptoObject + BiometricPrompt)
+    implementation("androidx.biometric:biometric:1.1.0")
+    implementation("androidx.fragment:fragment-ktx:1.8.5")
 }

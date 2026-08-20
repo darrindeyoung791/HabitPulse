@@ -85,7 +85,7 @@ class HabitPulseApplication : Application() {
         // Apply Material Dynamic Colors (Monet) to activities when available (Android 12+)
         DynamicColors.applyToActivitiesIfAvailable(this)
 
-        // Initialize reminder notification channel and schedule first alarm on cold start
+        // One-time migration of the legacy single LLM config to the multi-config storage
         initializeReminderOnColdStart()
     }
 
@@ -101,6 +101,17 @@ class HabitPulseApplication : Application() {
         scope.launch {
             try {
                 val userPreferences = UserPreferences.getInstance(applicationContext)
+                try {
+                    userPreferences.migrateLegacyAiConfig()
+                } catch (e: Exception) {
+                    android.util.Log.e("HabitPulseApplication", "Failed to migrate legacy AI config", e)
+                }
+                // LLM API key 加密迁移：把存量明文 apiKey 一次性加密为密文（幂等）
+                try {
+                    userPreferences.encryptAndPersistConfigs()
+                } catch (e: Exception) {
+                    android.util.Log.e("HabitPulseApplication", "Failed to encrypt persisted AI configs", e)
+                }
                 val isReminderEnabled = userPreferences.reminderEnabledFlow.first()
                 val hasPermission = NotificationHelper.hasNotificationPermission(applicationContext)
 

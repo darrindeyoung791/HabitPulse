@@ -18,7 +18,7 @@
 - **Responsive Layout**: Adaptive navigation (Bottom Bar, Rail, Drawer) based on screen size
 - **Split-screen Support**: Multi-window support enabled
 - **Predictive Back Gesture**: Android 13+ predictive back gesture support
-- **Localization**: Chinese (Simplified/Traditional) and English (US) support
+- **Localization**: Chinese (Simplified/Traditional) and English (US/UK) support
 - **Accessibility**: TalkBack support for all navigation elements
 
 ### Tech Stack
@@ -42,9 +42,19 @@ HabitPulse/
 │   │   ├── main/
 │   │   │   ├── java/io/github/darrindeyoung791/habitpulse/
 │   │   │   │   ├── MainActivity.kt              # Main entry point with NavHost
-│   │   │   │   ├── SettingsActivity.kt          # Settings screen
-│   │   │   │   ├── LauncherActivity.kt          # Launcher that routes to Welcome or MainActivity
-│   │   │   │   ├── WelcomeActivity.kt           # Onboarding/welcome flow
+│   │   │   │   ├── SettingsActivity.kt       # Settings home (segmented list UI)
+│   │   │   │   ├── SettingsAIActivity.kt     # Settings: AI config list
+│   │   │   │   ├── SettingsAIEditActivity.kt # Settings: AI config add/edit
+│   │   │   │   ├── SettingsNotificationsActivity.kt # Settings: notifications
+│   │   │   │   ├── SettingsDebugReminderActivity.kt # Settings: debug reminders
+│   │   │   │   ├── SettingsTemplateActivity.kt # Settings: notification template
+│   │   │   │   ├── SettingsGeneralActivity.kt # Settings: general
+│   │   │   │   ├── SettingsAboutActivity.kt  # Settings: about
+│   │   │   │   ├── SettingsLanguageActivity.kt # Settings: language (app language switcher)
+│   │   │   │   ├── SettingsDebugActivity.kt  # Settings: debug (hidden, 5-tap on version)
+│   │   │   │   ├── SampleDataGenerator.kt    # Debug sample data generation (moved from legacy SettingsActivity)
+│   │   │   │   ├── LauncherActivity.kt       # Launcher that routes to Welcome or MainActivity
+│   │   │   │   ├── WelcomeActivity.kt        # Onboarding/welcome flow (4 steps)
 │   │   │   │   ├── OpenSourceLicensesActivity.kt # Open source licenses display
 │   │   │   │   ├── HabitPulseApplication.kt     # Application class with singleton init
 │   │   │   │   ├── navigation/
@@ -54,8 +64,9 @@ HabitPulse/
 │   │   │   │   │   ├── model/
 │   │   │   │   │   │   ├── Habit.kt             # Habit entity with Room annotations
 │   │   │   │   │   │   ├── HabitCompletion.kt   # Habit completion record entity
-│   │   │   │   │   │   ├── HabitStatus.kt       # Habit status enum + HabitWithStatus data class
+│   │   │   │   │   │   ├── HabitStatus.kt       # Habit status enum + HabitWithStatus
 │   │   │   │   │   │   ├── SlotCheckInEngine.kt # Pure slot check-in & status calculation logic
+│   │   │   │   │   │   ├── AIConfig.kt          # Multi-config LLM settings (Gson-serialized)
 │   │   │   │   │   │   └── CheckInResult.kt     # (defined in SlotCheckInEngine)
 │   │   │   │   │   ├── database/
 │   │   │   │   │   ├── database/
@@ -82,8 +93,35 @@ HabitPulse/
 │   │   │   │   │   │   ├── MultiSelectSortScreen.kt # Drag-and-drop reorder screen
 │   │   │   │   │   │   ├── RecordsScreen.kt     # Completion records screen
 │   │   │   │   │   │   ├── ContactsScreen.kt    # Supervisor contacts list
-│   │   │   │   │   │   ├── WelcomeScreen.kt     # Onboarding/consent screen
 │   │   │   │   │   │   └── AdScreen.kt          # Splash ad screen
+│   │   │   │   │   ├── screens/welcome/
+│   │   │   │   │   │   ├── WelcomeScreen.kt  # Onboarding container (4-step AnimatedContent)
+│   │   │   │   │   │   ├── WelcomeStepLayout.kt # Shared step skeleton + bottom bar + buttons
+│   │   │   │   │   │   ├── WelcomeTopBar.kt     # Back-button-only top bar (no progress dots/label)
+│   │   │   │   │   │   ├── WelcomeRiseIn.kt     # Stagger rise-in entrance animation
+│   │   │   │   │   │   ├── WelcomeGreetingStep.kt # Step 1: welcome + continue
+│   │   │   │   │   │   ├── WelcomePermissionsStep.kt # Step 2: permission rows + consent links
+│   │   │   │   │   │   ├── WelcomeNotificationsStep.kt # Step 3: reminder/DND/persistent switches
+│   │   │   │   │   │   └── WelcomeDoneStep.kt   # Step 4: done + enter app
+│   │   │   │   │   ├── screens/settings/
+│   │   │   │   │   │   ├── SettingsScaffold.kt       # Shared scaffold for settings screens
+│   │   │   │   │   │   ├── SettingsHomeScreen.kt     # Settings home
+│   │   │   │   │   │   ├── SettingsAIScreen.kt       # AI settings (config list, selection)
+│   │   │   │   │   │   ├── SettingsAIEditScreen.kt   # AI config add/edit form
+│   │   │   │   │   │   ├── SettingsNotificationsScreen.kt # Notifications
+│   │   │   │   │   │   ├── SettingsDebugReminderScreen.kt # Debug reminders
+│   │   │   │   │   │   ├── SettingsTemplateScreen.kt # Notification template
+│   │   │   │   │   │   ├── SettingsGeneralScreen.kt # General
+│   │   │   │   │   │   ├── SettingsLanguageScreen.kt # Language (radio list)
+│   │   │   │   │   │   ├── SettingsAboutDetailScreen.kt # About detail (5-tap on version opens debug)
+│   │   │   │   │   │   ├── SettingsDebugScreen.kt     # Debug settings (add sample habits)
+│   │   │   │   │   │   └── components/
+│   │   │   │   │   │       ├── SettingsSegmentedItem.kt # Segmented list item + icon chip + surface
+│   │   │   │   │   │       ├── SettingsSegmentedSwitch.kt # Segmented switch row
+│   │   │   │   │   │       ├── SettingsSegmentedGroup.kt # Vertical group wrapper
+│   │   │   │   │   │       ├── SettingsSectionHeader.kt # Segment section header text
+│   │   │   │   │   │       ├── SettingsIconTint.kt     # Accent tint palette for icon chips
+│   │   │   │   │   │       └── SettingsComponentsPreviews.kt # Compose previews
 │   │   │   │   │   ├── theme/
 │   │   │   │   │   │   ├── Color.kt             # Color definitions
 │   │   │   │   │   │   ├── Theme.kt             # Material theme setup
@@ -99,10 +137,12 @@ HabitPulse/
 │   │   │   │       ├── NotificationHelper.kt          # Notification creation & management
 │   │   │   │       ├── NotificationPermissionHelper.kt # Permission request helper
 │   │   │   │       ├── AccessibilityUtils.kt          # TalkBack detection
+│   │   │   │       ├── AppLocaleManager.kt            # Android 13+ per-app language (LocaleManager)
 │   │   │   │       └── OnboardingPreferences.kt       # SharedPreferences for onboarding state
 │   │   │   ├── res/                             # Android resources
 │   │   │   │   ├── values/strings.xml           # Chinese strings
-│   │   │   │   ├── values-en-rUS/strings.xml    # English strings
+│   │   │   │   ├── values-en-rUS/strings.xml    # English (US) strings
+│   │   │   │   ├── values-en-rGB/strings.xml    # English (UK) strings
 │   │   │   │   ├── values-zh-rCN/               # Chinese (Simplified)
 │   │   │   │   ├── values-zh-rHK/               # Chinese (Traditional, Hong Kong)
 │   │   │   │   ├── values-zh-rTW/               # Chinese (Traditional, Taiwan)
@@ -110,7 +150,7 @@ HabitPulse/
 │   │   │   └── AndroidManifest.xml
 │   │   ├── test/
 │   │   │   └── java/io/github/darrindeyoung791/habitpulse/
-│   │   │       ├── ExampleUnitTest.kt              # Example test
+│   │   │       ├── ExampleUnitTest.kt
 │   │   │       └── data/model/
 │   │   │           ├── HabitTest.kt              # Habit JSON parsing helper tests
 │   │   │           ├── HabitCompletionTest.kt    # HabitCompletion unit tests
@@ -142,8 +182,7 @@ HabitPulse/
 | repeatDays | TEXT | Days to repeat (JSON format, e.g., [1,3,5]) |
 | reminderTimes | TEXT | Reminder times (JSON format, e.g., ["08:00","20:00"]) |
 | notes | TEXT | Habit notes |
-| supervisionMethod | TEXT | NONE, EMAIL, or SMS |
-| supervisorEmails | TEXT | Supervisor emails (JSON format) |
+| supervisorEmails | TEXT | Supervisor emails (JSON format); supports mixed email + phone per habit |
 | supervisorPhones | TEXT | Supervisor phones (JSON format) |
 | completedToday | INTEGER (BOOLEAN) | Today's completion status (0/1) |
 | completionCount | INTEGER | Total completion count |
@@ -249,7 +288,7 @@ Records every habit completion with timestamp.
 - **Kotlin style**: Official (as per `gradle.properties`)
 - **JVM target**: Java 17
 - **Compose**: Enabled with Material Design 3
-- **i18n**: Simplified Chinese, Traditional Chinese, and English(US)
+- **i18n**: Simplified Chinese, Traditional Chinese, and English (US/UK)
 
 ### Architecture Patterns
 - Single Activity architecture with Navigation Compose
@@ -283,29 +322,33 @@ Records every habit completion with timestamp.
 - **No hardcoded strings**: All user-visible strings must be stored in `strings.xml` resource files
 - **String resource location**:
   - Default (Chinese): `res/values/strings.xml`
-  - English: `res/values-en-rUS/strings.xml`
+  - English (US): `res/values-en-rUS/strings.xml`
+  - English (UK): `res/values-en-rGB/strings.xml`
 - **Usage in Compose**: Use `stringResource(R.string.resource_name)` to retrieve localized strings
 - **Naming convention**: Use snake_case for string resource names (e.g., `habit_creation_title`)
 - **Supported languages**:
   - Chinese (Simplified) - Default
   - Chinese (Traditional, Hong Kong) - `res/values-zh-rHK/`
   - Chinese (Traditional, Taiwan) - `res/values-zh-rTW/`
-  - English (US)
+  - English (US) - `res/values-en-rUS/`
+  - English (UK) - `res/values-en-rGB/`
 - **Auto-mirrored icons**: Icons with directional meaning (e.g., arrows, back/forward) should use `autoMirrored="true"` in drawable resources for RTL support
 - **Agent requirement**: When adding new UI text, always:
-  1. Add string resources to `values/strings.xml` and all locale-specific `strings.xml` files (`values-en-rUS/strings.xml`, `values-zh-rHK/strings.xml`, `values-zh-rTW/strings.xml`)
+  1. Add string resources to `values/strings.xml` and all locale-specific `strings.xml` files (`values-en-rUS/strings.xml`, `values-en-rGB/strings.xml`, `values-zh-rHK/strings.xml`, `values-zh-rTW/strings.xml`)
   2. Reference via `R.string.*` in code, never inline string literals
+- **IMPORTANT — localeFilters**: `app/build.gradle.kts` limits packaged locales via `androidResources { localeFilters += listOf(...) }`. When adding a new locale, you MUST also add it to `localeFilters`, otherwise its resources are stripped from the APK at link time (merged res contains it, but `aapt2 dump resources` shows no entry) and the device silently falls back to another locale. Debugging symptom: adding `values-en-rGB/` alone did nothing on an en-GB device because `en-rGB` was missing from `localeFilters`.
+- **Locale resolution**: Runtime locale resolution follows the packaged resource configs, NOT `Locale.getDefault()`. Use `LocalConfiguration.current.locales[0]` for date/time formatters so they match the app's actual resource language (see `RecordsScreen.kt`).
 
 ## Current Status
 
-The project is in **early development stage** (v0.7.11-alpha):
+The project is in **early development stage** (v0.5.19-alpha):
 
 ### Completed
 - ✅ Project structure set up
 - ✅ Basic Compose theme configured with Monet dynamic colors
 - ✅ Navigation Compose integrated with custom animations and shared transitions
 - ✅ LauncherActivity for routing between Welcome and MainActivity
-- ✅ WelcomeActivity with onboarding/consent flow and permission requests
+- ✅ WelcomeActivity + WelcomeScreen with 4-step onboarding flow (greeting → permissions → notifications → done)
 - ✅ AdScreen with countdown skip for splash ads
 - ✅ Home screen with 3 tabs: Habits, Contacts, Records
 - ✅ **HomeScreen Refactoring** - Split into layout shell (HomeScreen.kt) and content screens (HabitScreen.kt, etc.) for better maintainability (~1100 lines vs original 2900+)
@@ -316,7 +359,7 @@ The project is in **early development stage** (v0.7.11-alpha):
 - ✅ Device corner radius support (Android 12+)
 - ✅ Predictive back gesture support
 - ✅ Split-screen support
-- ✅ Localization (Simplified Chinese, Traditional Chinese, English) with values-zh-rCN, values-zh-rHK, values-zh-rTW, values-en-rUS, values-night
+- ✅ Localization (Simplified Chinese, Traditional Chinese, English US/UK) with values-zh-rCN, values-zh-rHK, values-zh-rTW, values-en-rUS, values-en-rGB, values-night
 - ✅ Room database integration (v2.8.4, v3 schema)
 - ✅ Habit entity with UUID primary key
 - ✅ HabitDao with CRUD operations and Flow support
@@ -366,15 +409,67 @@ The project is in **early development stage** (v0.7.11-alpha):
 - ✅ WebView in Settings - GitHub link opens in WebView instead of external browser
 - ✅ URL Variables - Domain allowlist uses RouteConfig variables for easy renaming
 - ✅ Predictive Back Gesture Fix - 修复返回手势与系统预测性返回动画冲突导致的杀后台问题
+- ✅ Check-in Status System (Phase 1-4) - Slot-based check-in with DAO v4 migration, status engine, `HabitWithStatus` data class, ViewModel flows, and UI integration:
+  - ✅ DB v4 migration (`slotTime`, `isLate` columns in habit_completions; `MIGRATION_3_4`)
+  - ✅ DAO methods: `getCompletionsByDate()`, `getCompletionByHabitIdDateAndSlot()`
+  - ✅ Repository: `performSlotCheckIn()`, `undoSlotCompletion()`, `getTodayCompletions()`
+  - ✅ `HabitStatus` enum + `HabitWithStatus` data class with `pendingCount` / `isCompletelyOverdue`
+  - ✅ Status engine: `calculateHabitStatus()` with ABOUT_TO_START / OVERDUE / COMPLETED_TODAY detection
+  - ✅ Count flows: `pendingTodayCount`, `aboutToStartCount`, `overdueCount`
+  - ✅ 60s day-change polling with ProcessLifecycleOwner
+  - ✅ Slot-based check-in: `findTargetSlot` (earliest incomplete), 1h window, overdue detection
+  - ✅ `CheckInResult` sealed class for feedback (Success/AlreadyCompleted/TooEarly)
+  - ✅ Undo: deletes most recent completion record
+  - ✅ RewardSheet gated to on-time full completion only
+  - ✅ HabitCard status badges (已完成/即将开始/逾期) with colored chips
+  - ✅ HabitCard progress display (x/y for multi-reminder habits)
+  - ✅ EntryZone dynamic cards (今日提醒/即将开始/逾期) with auto-hide on zero count
+- ✅ `filteredHabitsWithStatus` StateFlow for search with status data
+- ✅ TodayHabitsScreen migrated to `habitsWithStatusForDisplay`
 - ✅ **SlotCheckInEngine Extraction** - Pure business logic (`calculateHabitStatus`, `isApplicableToday`, `executeSlotCheckIn`, `CheckInResult`) extracted from HabitViewModel into testable standalone `SlotCheckInEngine` object in `data/model/`
+- ✅ **Mixed Contact Supervision** - Removed `SupervisionMethod` enum, DB v5 migration (DROP COLUMN), independent email/phone input sections in creation UI, unified contact aggregation
 - ✅ **Unit Test Setup** - 65 unit tests across 4 test classes:
   - `SlotCheckInEngineTest` (31 tests) - covers status calculation, slot check-in logic, applicable day detection, edge cases (empty slots, midnight, boundary conditions, old-style completions)
-  - `HabitTest` (17 tests) - covers JSON parsing helper methods, `copyWith*` methods, edge cases (all 7 days, duplicates, empty strings)
+  - `HabitTest` (21 tests) - covers JSON parsing helper methods, `copyWith*` methods, `hasSupervision`, edge cases (all 7 days, duplicates, empty strings)
   - `HabitStatusTest` (12 tests) - covers `pendingCount`, `isCompletelyOverdue`, negative pendingCount, old-style completion compatibility
   - `HabitCompletionTest` (5 tests) - covers `getTodayDate()`, `getFormattedDate()`, and default values
+- ✅ **New Settings Redesign** - Segmented list settings UI with grouped items, leading icon chips, switches, and per-screen scaffolds
+- ✅ **Debug Settings Page** - Hidden debug page reached by tapping the version item 5 times within 5 seconds on the new About screen; hosts developer tools (add sample habits, reset onboarding to show the welcome flow on next launch), icon-less list items; sample-data dialog shows a warning that adding a large batch may disrupt existing habits and trigger many unnecessary reminders (6 locale `debug_add_sample_data_warning`); reset-onboarding item asks for confirmation then calls `HabitViewModel.resetOnboarding()` (writes `hasCompletedOnboarding=false` so `LauncherActivity` routes to `WelcomeActivity`)
+- ✅ **AI Config Provider Merge (superseded)** - AI provider config form was merged directly into the AI config page (second-level page); `SettingsAIProviderScreen.kt` / `SettingsAIProviderActivity.kt` deleted. Superseded by **Multi-AI-Config Settings** below, which moved the form out into a separate add/edit page (`SettingsAIEditActivity`)
+- ✅ **AI Config Page Layout** - Provider config form (endpoint/key/model/test connection), streaming output switch + memory entry grouped as segmented list items; notice shown as standalone text (same style as About screen), no horizontal divider
+- ✅ **Model Label Localization** - Preset model labels (`glm-4-flash-250414（默认）`, `glm-5.1（最新旗舰）`) resource-ized via `ai_settings_model_default_label` / `ai_settings_model_flagship_label` format strings in all 4 locale files
+- ✅ **Old Settings Interface Migration** - Entry points to legacy settings migrated to new settings: Home settings button → `SettingsActivity`, AI Create Habit settings button → `SettingsAIActivity` (both in `HabitPulseNavGraph.kt`)
+- ✅ **In-App Language Switching** - Settings → General → Language entry (Android 13+ per-app language via platform `LocaleManager`; `LocaleManagerCompat` getter + reflection fallback for API 33 `@SystemApi` setter); dedicated `SettingsLanguageActivity` sub-page: "跟随系统" in its own group with system-language supporting text + fixed self-named labels (中文（简体，中国大陆）/ 中文（繁体，台湾）/ 中文（繁体，香港）/ English (US) / English (UK), `translatable="false"`), radio-button rows; selecting a language returns to the previous page with a single refresh; option hidden on API < 33; managed by `utils/AppLocaleManager.kt`
+- ✅ **Settings Press Haptics** - Non-disabled settings list items (`SettingsListSurface`), text link buttons (`SettingsTextLinkButton`), and scaffold back/help `IconButton`s vibrate 25ms on press-down and 25ms on release (half of the 50ms home check-in button) via `ui/utils/PressVibrationFeedback.kt` (`PressVibrationFeedback` composable + `vibrateShort` + `rememberHapticsEnabled`); new General toggle "关闭应用内全部震动" (`HAPTIC_FEEDBACK_ENABLED` in `UserPreferences.kt`, default on, with the "关闭" switch showing off by default so the phone vibrates by default) gates all in-app vibration including the check-in button; "界面与显示" group renamed to "显示与触感" (all 6 string files)
+- ✅ **Vibration Debug Sub-page** - 调试 → 震动调试子页 (`SettingsDebugVibrationActivity`/`SettingsDebugVibrationScreen`): sliders for press-vibration duration (5-200ms) and amplitude (1-255) with immediate test button and reset-to-default; stored in DataStore (`PRESS_VIBRATION_DURATION_MS` / `PRESS_VIBRATION_AMPLITUDE` in `UserPreferences.kt`); `vibrateShort`/`PressVibrationFeedback`/`DndRangeSlider` now read configurable params via `rememberPressVibrationParams()`, amplitude only applies when hardware supports amplitude control (`hasAmplitudeControl()`, fallback `DEFAULT_AMPLITUDE`); settings scaffold (`SettingsScaffold`) also vibrates once when scrolling to top/bottom edge via `snapshotFlow` on scrollState (no vibration on non-scrollable short pages); devdoc `listitem-style.md` §7 updated
+- ✅ **Multi-AI-Config Settings** - AI settings upgraded from a single provider config to a managed list: AI config list page (`SettingsAIScreen`) shows all configs (tap row = set active, trailing edit pencil = edit page, radio shows active), "添加 AI 配置" opens `SettingsAIEditActivity`; edit page (`SettingsAIEditScreen`) has name/endpoint/key/model fields + per-config streaming & deep-thinking switches + test connection + save/delete; storage migrated to DataStore `llm_ai_configs` (JSON array of `AIConfig`, Gson + `@SerializedName`) + `llm_active_config_id`; legacy `llm_api_endpoint/llm_api_key/llm_model_name/llm_streaming_response` keys are deprecated and one-time migrated into a "默认配置" (via `migrateLegacyAiConfig()` on cold start, then physically removed); consumers (`AICreateHabitViewModel`, `AICreateHabitScreen`, welcome flow) read the active config through `getActiveAIConfig()`/`activeConfigFlow`; shared `AiConnectionTester` for test-connection; `SettingsSectionHeader` extracted as a shared component; legacy `AISettingsScreen`/`AISettingsActivity` deleted, legacy `SettingsActivity` AI entry repointed to `SettingsAIActivity`; welcome flow kept compiling with minimal changes (full welcome/AI feature refactor deferred)
+- ✅ **LLM API Key 加密** - API key 在 DataStore 中以密文存放，运行时静默解密，查看需生物识别：
+  - 双密钥 AES-256-GCM：`llm_config_runtime`（无认证，静默解密）/ `llm_config_reveal`（`setUserAuthenticationParameters(0, AUTH_BIOMETRIC_STRONG | AUTH_DEVICE_CREDENTIAL)`），由 `data/security/KeystoreManager.kt` 管理
+  - `data/security/AesGcmCipher.kt`：密文格式 `Base64(IV + ciphertext)`，每次新 12 字节随机 IV，解密失败抛 `AesGcmCipherException`（可恢复）
+  - `data/security/ApiKeyCrypto.kt`：`encryptConfig`（运行时+展示双密文）、`decryptRuntime`（发请求用）、`createRevealDecryptCipher`/`finishRevealDecrypt`（BiometricPrompt CryptoObject 门控）、`hasAuthenticationMethod`/`createRevealPromptInfo`；`AesGcmCipher` 纯 JCA 无 Android 依赖便于 JVM 测试
+  - **BiometricPrompt API 契约**：`PromptInfo.Builder.build()` 在允许 `DEVICE_CREDENTIAL` 时**禁止**设置 negative button（否则抛 `IllegalArgumentException: Negative text must not be set if device credential authentication is allowed`，真机点击「查看密钥」即崩溃）。因展示密钥恒为 `AUTH_BIOMETRIC_STRONG | AUTH_DEVICE_CREDENTIAL`，`createRevealPromptInfo` 在 API 30+ 不设负按钮（系统自带「使用设备凭据」兜底），仅 API ≤ 29 才设 `negativeButtonText`
+  - `data/security/ApiKeyMigration.kt`：明文判定 / 幂等加密 / 安全解密的纯逻辑，注入 fake 加密层可单测
+  - `AIConfig` 新增 `displayCipher`（展示密文）与 `keyVersion: Int = 0`（0 = 明文遗留）字段（`@SerializedName`）；`hasApiKeyConfigured()` 基于密文判空
+  - 迁移：冷启动（`HabitPulseApplication.onCreate` 调 `encryptAndPersistConfigs()`）+ 惰性兜底（`getActiveAIConfig()` 读到明文先迁移）；`decodeConfigs` 经 `normalizeForStorage()` 兼容缺 `displayCipher` 的旧 JSON
+  - 运行时链路：`getActiveAIConfig()` 解密后返回明文版配置供 `toLLMConfig()`/`LLMClient` 发请求；`aiConfigsFlow`/`activeConfigFlow` 保持密文，UI 判空改用 `hasApiKeyConfigured()`（`AICreateHabitScreen`）
+  - 查看门控：`SettingsAIEditActivity` 改为 `FragmentActivity`；编辑页 API key 输入框加密态以不可选中的圆点 `•••` 展示（`enabled = false` + `OutlinedTextFieldDefaults` disabled 配色，尾图标仍可点击，示意「已填写但已加密」），`PasswordVisualTransformation` 仅在未展示明文时生效，点击查看 → BiometricPrompt（`canAuthenticate` 检测，无生物识别/设备凭据时按钮禁用）→ CryptoObject 解密填入明文；离开页面/60s 超时自动隐藏，每次查看重新验证；解密失败引导重新录入不崩溃
+  - 测试连接（`AiConnectionTester`）在编辑已配置 key 时用 `decryptRuntime` 静默解密后测试
+  - 依赖：`androidx.biometric:biometric:1.1.0` + `androidx.fragment:fragment-ktx:1.8.5`
+  - 单元测试：`AesGcmCipherTest`（9 用例：往返/IV 唯一/Base64/篡改/错误密钥）、`ApiKeyMigrationTest`（11 用例：明文判定/迁移幂等/失败保底）、`AIConfigCompatTest`（5 用例：密文判空/旧 JSON 兼容）
+- ✅ **AI Chat 全场景助手（tool-calling，与旧 AI 并存）** - 原生 function-calling 新版对话界面 `AIChatScreen` + `Route.AIChat`（旧 `AICreateHabitScreen`/`Route.AICreateHabit`/首页 FAB「AI 创建」全部保留，旧界面顶栏新增「新版 AI 对话」入口图标）：
+  - 协议层：`ToolDef`（JSON Schema）/`ChatRequest.tools`/`ChatMessage.role="tool"`+`toolCallId`；`LLMClient.chatStream` 累积 `delta.tool_calls` 分片（id/name/arguments），`StreamChunk.Usage` 捕获 `[DONE]` 前末 chunk 的 usage；捕获 `delta.reasoning_content`
+  - 引擎 `AIChatConversationManager`（`ai/conversation/`，与旧 `ConversationManager` 并存）：单轮 while 循环执行全部 tool_calls 并以 `role=tool` 回灌，直到无工具或命中暂停点（ask_question / create_habit / delete_habit）；`ToolResult.Error` ≥ MAX_RETRIES 触发错误事件；流式空内容/无工具回退一次非流式；`ConversationGuard` 扩展 `invalidSettingTries`（设置类连续报错 ≥3 触发 GuardBlocked）；`retryLastTurn` 删除最后一个 assistant 轮后重发
+  - 工具注册表 `ai/tools/chat/`（`ChatTool`/`ChatToolRegistry`/`functionSpec`）：9 个工具 - `create_habit`（HH:mm 去重、repeat_days 0..6 去重、WEEKLY 缺天报错提问、title≤30/notes≤200 截断）、`search_habits`（`HabitRepository.searchHabitsFlow` first()，无关键字返回全部习惯按 sortOrder；`habitToBrief` 共享转换函数，含主键+打卡统计）、`edit_habit`/`delete_habit`（校验 id+title 回显）、`get_settings_status`/`update_setting`/`open_settings_page`（`ControllableSetting` 6 开关白名单映射 `UserPreferences` setter 与 Activity）、`ask_question`/`reply`
+  - ViewModel `AIChatViewModel`（`viewmodel/`）：`messages` 单一数据源 + `usage: SessionUsage` 精确统计；`selectedConfigId` 会话级切换（默认读 `activeConfigFlow`，**不写回全局** `setActiveAIConfig`）；确认才 `insertHabit`/`deleteHabit`（无孤儿行）；未确认新习惯仅内存卡片；`HabitPickerCard` 带 `cardId`，支持 `searchHabitsInPicker`（卡内搜索全部习惯）/`submitPickerSelection`（多选提交给 AI）/`manualPickerDone`（我已手动操作继续会话）
+  - UI `AIChatScreen`（`ui/screens/ai/`）：TopAppBar（标题输出中变化、返回确认、`ProviderSwitcher` AssistChip→DropdownMenu 底部「管理提供商」、清除对话确认、Token 小字）；`ProviderSwitcher` 无配置时显「未配置」直接进 `SettingsAIActivity`；消息列表渲染气泡/`ThinkingBlock`/提问卡（choice/time/day_of_week/multi_choice/text/confirm）/新建习惯卡（确认/编辑/删除）/选择卡/编辑跳转卡/删除确认卡/设置状态与变更卡（撤销）/设置导航卡；底部输入栏横屏压缩 2 行 + 免责声明（横屏+键盘隐藏）；`HabitPickerCard` 含顶部搜索框（300ms 防抖）、多选高亮、行内编辑/删除、底部「提交选择」+「我已手动操作」
+  - `UserPreferences.getAIConfig(id)` 会话内按 id 取明文 key 配置（不写回全局）
+  - 系统提示词新增 `assets/prompts/chat_system_prompt.md`（tool-calling 专用，`SystemPrompt.getChatSystemPrompt`）；6 个 strings 文件新增 `ai_chat_*` 文案；新增 `ai_error_guard_blocked`
+  - 单元测试：`AIChatConversationManagerTest`（工具循环/暂停点/重试上限/流式降级）、`ConversationGuardTest`（同题拦截/纠错计数）、`ToolRegistryTest`（校验/白名单/状态数据）
+- ✅ **Unified Device Form Factor** - 全应用统一的设备形态判定单一入口 `ui/DeviceFormFactor.kt`：`DeviceFormInfo`（携带 `windowSizeClass`/`windowPosture`）+ 纯函数 `classifyDeviceForm()`（无 Android 依赖可单测）+ `@Composable rememberDeviceFormInfo()`（`currentWindowAdaptiveInfo()`，旋转/分屏/折叠自动重组）。断点：`TABLET_MIN_WIDTH_DP=600`（`isTabletDevice` = `min(宽,高)>=600`，对齐旧 `smallestScreenWidthDp`）、`WIDE_LAYOUT_MIN_WIDTH_DP=840`（`isWideLayout` = 横屏且宽>=840）、`LARGE_SCREEN_MIN_WIDTH_DP=1200`（`isLargeWindow`）。派生标志 `isTabletLandscape`/`isPhoneLandscape`/`isWideLayout`/`isLargeWindow`。迁移调用点：`HomeScreen`（导航模式 `isTabletLandscape`/`isPhoneLandscape`、`isWaterfallMode`→`isWideLayout`）、`HabitScreen`（`useStaggeredGrid` = `isWideLayout || (forceTabletLandscape && isLandscape)`，删除 `screenWidthDp=840` hack）、`RecordsScreen`/`ContactsScreen`（`useTwoColumnLayout`→`isWideLayout`）、`WelcomeScreen`（`shouldUseSplitLayout`→`isLandscape`、`isTablet`→`isLargeWindow`）、`RewardBottomSheet`/`NotificationConfirmDialog`/`SettingsGeneralScreen`/`SettingsActivity`/`AIChatScreen`/`AICreateHabitScreen`。约定：页面禁止自行用 `LocalConfiguration`/`smallestScreenWidthDp`/`screenWidthDp`/`orientation` 判定设备形态，一律走 `rememberDeviceFormInfo()`；`@Preview` 的 `uiMode` 可保留 `Configuration.ORIENTATION_LANDSCAPE`
+  - 单元测试：`DeviceFormFactorTest`（19 用例：600/840/1200 边界、手机/平板竖横屏、方形窗口、派生标志）
+- ✅ **In-App Font Size** - 应用内字体大小自定义（通用 → 字体大小，入口在「语言」上方、同一「显示与触感」组）：DataStore 新增 `FONT_SCALE_FOLLOW_SYSTEM`（默认 true）/ `FONT_SCALE`（默认 1.0f）；`HabitPulseTheme` 通过 `CompositionLocalProvider(LocalDensity provides Density(density, effectiveFontScale))` 全局覆盖字体缩放（跟随系统=系统 `fontScale`，关闭=自定义值；`@Preview` 用 `LocalInspectionMode` 跳过 DataStore 访问）。字体大小页 `SettingsFontScaleScreen`/`SettingsFontScaleActivity`（已注册 manifest）：跟随系统开关 = 单行 listitem 开关（无图标无说明，走标准按压/长按/震动）；滑杆档位 = Android 系统字体缩放预设 `[0.85, 1.0, 1.15, 1.3, 1.45, 1.6, 1.75, 1.9, 2.0]`（索引用 0..8，标准 1.0 刻度标记 + 最小/最大大小 A 字母）；开关打开时滑杆滚动到 `LocalConfiguration.current.fontScale` 最近档位并呈禁用灰化样式（仍可拖动，首次拖动自动关闭跟随系统），滑动按档位震动（`rememberHapticsEnabled`/`rememberPressVibrationParams`/`vibrateShort`，遵循全局震动开关）；设置离开页面时一次性写入生效（`BackHandler` + commit 标志）。通用页入口图标 `Icons.Outlined.FormatSize`（index 0 → 蓝），存储分组 `tintOffset` 2→4 避免同页图标颜色重复；通用首页入口描述改为「语言、显示与触感」（6 个 strings.xml）
 
 ### In Progress
-- 🔄 Count section (track unplanned events, such as game scores)
 - 🔄 Calendar section
 
 ### Planned
@@ -388,8 +483,8 @@ The project is in **early development stage** (v0.7.11-alpha):
 
 - **Namespace**: `io.github.darrindeyoung791.habitpulse`
 - **Application ID**: `io.github.darrindeyoung791.habitpulse`
-- **Version Code**: 144
-- **Version Name**: 0.7.11-alpha
+- **Version Code**: 194
+- **Version Name**: 0.8.46-alpha
 
 ## Screen Flow
 
@@ -397,8 +492,8 @@ The project is in **early development stage** (v0.7.11-alpha):
 ┌──────────────┐      ┌──────────────┐      ┌─────────────────┐
 │              │      │              │      │                 │
 │LauncherActivity│───▶│WelcomeActivity│      │SettingsActivity │
-│              │      │              │      │                 │
-│  Route logic │      │  Consent     │      │  - App info     │
+│              │      │                  │      │                 │
+│  Route logic │      │  4-step guide   │      │  - App info     │
 └──────┬───────┘      └──────┬───────┘      │  - Visual opts  │
        │                     │              │  - About        │
        │                     ▼              │  - GitHub link  │
@@ -427,14 +522,14 @@ The project is in **early development stage** (v0.7.11-alpha):
 
 ### Responsive Navigation System
 
-The app uses a responsive navigation system that adapts to screen size and orientation:
+The app uses a responsive navigation system that adapts to screen size and orientation. All device-form decisions (tablet/phone, landscape, wide layout) come from the unified `rememberDeviceFormInfo()` in `ui/DeviceFormFactor.kt` — pages must NOT read `LocalConfiguration`/`smallestScreenWidthDp`/`screenWidthDp`/`orientation` directly:
 
-| Device/Orientation | Threshold | Navigation Mode | FAB | Hamburger Menu |
+| Device/Orientation | Derived Flag | Navigation Mode | FAB | Hamburger Menu |
 |---|-----------|---|---|---|
-| Phone Portrait | < 840dp   | Bottom Navigation Bar | ✅ Extended | ❌ |
-| Phone Landscape | < 1200dp  | Navigation Rail | ✅ Extended | ❌ |
-| Tablet Portrait | ≥ 840dp   | Bottom Navigation Bar | ✅ Extended | ❌ |
-| Tablet Landscape | ≥ 1200dp  | Permanent Navigation Drawer | ✅ Extended | ✅ |
+| Phone Portrait | `!isLandscape`   | Bottom Navigation Bar | ✅ Extended | ❌ |
+| Phone Landscape | `isPhoneLandscape` | Navigation Rail | ✅ Extended | ❌ |
+| Tablet Portrait | `isTabletDevice && !isLandscape` | Bottom Navigation Bar | ✅ Extended | ❌ |
+| Tablet Landscape | `isTabletLandscape` | Permanent Navigation Drawer | ✅ Extended | ✅ |
 
 **Permanent Navigation Drawer Behavior (Tablet Landscape)**
 
