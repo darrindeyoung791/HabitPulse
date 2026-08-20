@@ -63,6 +63,7 @@ fun SettingsSegmentedItem(
     showArrow: Boolean = true,
     tintIndex: Int = index,
     selected: Boolean = false,
+    clickable: Boolean = true,
     onClick: () -> Unit,
     trailing: @Composable () -> Unit = {
         if (showArrow) {
@@ -82,6 +83,7 @@ fun SettingsSegmentedItem(
         count = count,
         enabled = enabled,
         selected = selected,
+        clickable = clickable,
         onClick = onClick,
         leading = {
             if (leadingIcon != null) {
@@ -139,12 +141,15 @@ internal fun SettingsListSurface(
     supportingText: String?,
     trailing: @Composable () -> Unit,
     selected: Boolean = false,
+    clickable: Boolean = true,
     interactionSource: MutableInteractionSource = remember { MutableInteractionSource() }
 ) {
     val pressed = interactionSource.collectIsPressedAsState().value
     val isPressed = pressed && enabled
 
-    PressVibrationFeedback(interactionSource = interactionSource, enabled = enabled)
+    if (clickable) {
+        PressVibrationFeedback(interactionSource = interactionSource, enabled = enabled)
+    }
 
     val topStart by animateDpAsState(if (isPressed) PressedCorner else if (index == 0) LargeCorner else SmallCorner)
     val topEnd by animateDpAsState(if (isPressed) PressedCorner else if (index == 0) LargeCorner else SmallCorner)
@@ -169,12 +174,18 @@ internal fun SettingsListSurface(
             .fillMaxWidth()
             .clip(shape)
             .background(containerColor)
-            .combinedClickable(
-                interactionSource = interactionSource,
-                indication = LocalIndication.current,
-                enabled = enabled,
-                onClick = onClick,
-                onLongClick = onLongClick
+            .then(
+                if (clickable) {
+                    Modifier.combinedClickable(
+                        interactionSource = interactionSource,
+                        indication = LocalIndication.current,
+                        enabled = enabled,
+                        onClick = onClick,
+                        onLongClick = onLongClick
+                    )
+                } else {
+                    Modifier
+                }
             )
     ) {
         Row(
@@ -213,7 +224,7 @@ internal fun SettingsListSurface(
  * [SettingsListSurface], but without ripple, press animation, or click handling.
  */
 @Composable
-internal fun SettingsSegmentedBox(
+fun SettingsSegmentedBox(
     index: Int,
     count: Int,
     modifier: Modifier = Modifier,

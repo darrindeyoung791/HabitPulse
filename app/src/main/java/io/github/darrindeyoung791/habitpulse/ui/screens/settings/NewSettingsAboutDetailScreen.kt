@@ -123,7 +123,7 @@ fun NewSettingsAboutDetailScreen(
                 index = 1,
                 count = 3,
                 headline = stringResource(id = R.string.settings_developer),
-                supportingText = stringResource(id = R.string.settings_developer_name),
+                supportingText = stringResource(id = R.string.settings_developer_name, stringResource(R.string.app_name)),
                 leadingIcon = Icons.Outlined.Person,
                 onClick = {
                     val intent = Intent(context, WebViewActivity::class.java).apply {

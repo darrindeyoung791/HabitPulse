@@ -31,7 +31,7 @@
     <string name="settings_about_section">About</string>
     <string name="settings_privacy_notice">%1$s takes your privacy seriously. Your data is stored on your device, and %1$s does not transmit your personal information over the Internet.</string>
     <string name="settings_app_version_label">Version</string>
-    <string name="settings_developer_name">The HabitPulse Dev Team</string>
+    <string name="settings_developer_name">The %1$s Dev Team</string>
     <string name="settings_app_info_button">App info…</string>
     <string name="settings_github_button">GitHub repo…</string>
     <string name="settings_help_button">Help &amp; feedback…</string>
@@ -160,6 +160,11 @@
     <string name="settings_debug_reminder_title">Reminder Debug</string>
     <string name="settings_debug_add_sample_habits">Add sample habits</string>
     <string name="settings_debug_add_sample_habits_description">Add a batch of sample habits and completion records for testing the UI and features</string>
+    <string name="settings_debug_reset_onboarding">Reset onboarding</string>
+    <string name="settings_debug_reset_onboarding_description">Show the welcome onboarding next time the app opens</string>
+    <string name="settings_debug_reset_onboarding_dialog_title">Reset onboarding?</string>
+    <string name="settings_debug_reset_onboarding_dialog_message">The app will show the 4-step welcome onboarding next time it opens.</string>
+    <string name="settings_debug_reset_onboarding_done">Reset. The app will show the welcome onboarding next time.</string>
     <string name="settings_debug_vibration">Vibration Debug</string>
     <string name="settings_debug_vibration_description">Adjust press vibration duration and intensity</string>
     <string name="settings_debug_ai_retry_limit">AI tool retry limit</string>
@@ -275,13 +280,31 @@
 
     <!-- Welcome Screen -->
     <string name="welcome_description">A clean and lightweight habit tracker designed to outlast the three-minute enthusiasm.</string>
+    <string name="welcome_greeting_title">Welcome to %1$s</string>
+    <string name="welcome_greeting_continue">Continue</string>
     <string name="welcome_permissions_title">For timely notifications, %1$s may use the following permissions:</string>
+    <string name="welcome_permissions_heading">Permissions</string>
     <string name="welcome_permission_notification_title">Send persistent notifications</string>
+    <string name="welcome_permission_notification_desc">Receive habit reminders on time, never miss one</string>
     <string name="welcome_permission_background_title">Run continuously in the background</string>
+    <string name="welcome_permission_background_desc">Get reminders delivered promptly</string>
     <string name="welcome_agree_button">I Agree, Continue</string>
-    <string name="welcome_disagree_button">Disagree, Enter Limited Mode</string>
+    <string name="welcome_disagree_button">Disagree</string>
     <string name="welcome_limited_mode">Limited Mode</string>
     <string name="welcome_limited_mode_info">You have chosen Limited Mode. Some features will be unavailable.</string>
+    <string name="welcome_consent_prefix">By continuing, you agree to the</string>
+    <string name="welcome_consent_and">and</string>
+    <string name="welcome_terms_of_service">Terms of Service</string>
+    <string name="welcome_privacy_policy_coming_soon">Privacy Policy / Terms of Service coming soon</string>
+    <string name="welcome_skip">Skip, set up later</string>
+    <string name="welcome_enter">Enter %1$s</string>
+    <string name="welcome_step_done">Done</string>
+    <string name="welcome_done_title">All set</string>
+    <string name="welcome_done_desc">Start building your first good habit</string>
+    <string name="welcome_disagree_dialog_title">You can\'t use the app without agreeing</string>
+    <string name="welcome_disagree_dialog_message">%1$s needs your consent to provide reminder features. If you disagree, you can only exit the app.</string>
+    <string name="welcome_disagree_dialog_agree">Agree</string>
+    <string name="welcome_disagree_dialog_disagree_exit">Disagree &amp; Exit</string>
 
     <!-- Onboarding Wizard -->
     <string name="onboarding_step_notification_title">Notification Settings</string>
@@ -361,7 +384,7 @@
     <string name="reminder_settings_next_alarm">Next Reminder</string>
     <string name="reminder_settings_notification_permission">Notification Permission</string>
     <string name="reminder_settings_system_settings">Customise notifications…</string>
-    <string name="reminder_settings_background_keepalive">Keep HabitPulse running in background…</string>
+    <string name="reminder_settings_background_keepalive">Keep %1$s running in background…</string>
     <string name="reminder_settings_test_notification">Send Test Notification</string>
     <string name="reminder_settings_test_notification_sent">Test notification sent</string>
     <string name="reminder_settings_test_notification_scheduled">Test notification will be sent in 1 minute</string>

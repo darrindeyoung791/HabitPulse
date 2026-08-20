@@ -32,7 +32,7 @@
     <string name="settings_about_section">關於</string>
     <string name="settings_privacy_notice">%1$s 高度重視你的隱私。你的資料始終保留在你的裝置上，而且 %1$s 不會透過網路傳輸你的個人資訊。</string>
     <string name="settings_app_version_label">應用程式版本</string>
-    <string name="settings_developer_name">HabitPulse 開發團隊</string>
+    <string name="settings_developer_name">%1$s 開發團隊</string>
     <string name="settings_app_info_button">前往「設定」查看 %1$s 應用程式資訊…</string>
     <string name="settings_github_button">前往 GitHub 查看本開源專案…</string>
     <string name="settings_help_button">幫助與回饋…</string>
@@ -161,6 +161,11 @@
     <string name="settings_debug_reminder_title">提醒調試</string>
     <string name="settings_debug_add_sample_habits">新增範例習慣</string>
     <string name="settings_debug_add_sample_habits_description">新增一批範例習慣與完成記錄，便於測試介面與功能</string>
+    <string name="settings_debug_reset_onboarding">重設引導狀態</string>
+    <string name="settings_debug_reset_onboarding_description">下次開啟應用程式將進入歡迎引導頁</string>
+    <string name="settings_debug_reset_onboarding_dialog_title">重設引導狀態？</string>
+    <string name="settings_debug_reset_onboarding_dialog_message">下次開啟應用程式將進入歡迎引導頁，需要重新完成 4 步引導。</string>
+    <string name="settings_debug_reset_onboarding_done">已重設，下次開啟應用程式進入歡迎引導</string>
     <string name="settings_debug_vibration">震動除錯</string>
     <string name="settings_debug_vibration_description">調整按壓震動時長與強度</string>
     <string name="settings_debug_ai_retry_limit">AI 工具重試上限</string>
@@ -276,13 +281,31 @@
 
     <!-- Welcome Screen -->
     <string name="welcome_description">小巧清爽的習慣追蹤軟體，專為攻克三分鐘熱度打造。</string>
+    <string name="welcome_greeting_title">歡迎使用 %1$s</string>
+    <string name="welcome_greeting_continue">繼續</string>
     <string name="welcome_permissions_title">為了即時通知，%1$s 可能使用下列權限：</string>
+    <string name="welcome_permissions_heading">權限聲明</string>
     <string name="welcome_permission_notification_title">傳送持續通知</string>
+    <string name="welcome_permission_notification_desc">準時接收習慣提醒，不會遺漏</string>
     <string name="welcome_permission_background_title">在背景持續執行</string>
+    <string name="welcome_permission_background_desc">即時收到提醒通知</string>
     <string name="welcome_agree_button">我同意，繼續</string>
-    <string name="welcome_disagree_button">不同意，進入受限模式</string>
+    <string name="welcome_disagree_button">不同意</string>
     <string name="welcome_limited_mode">受限模式</string>
     <string name="welcome_limited_mode_info">你已選擇受限模式，部分功能將無法使用</string>
+    <string name="welcome_consent_prefix">繼續即代表你同意</string>
+    <string name="welcome_consent_and">與</string>
+    <string name="welcome_terms_of_service">服務條款</string>
+    <string name="welcome_privacy_policy_coming_soon">隱私權政策 / 服務條款即將上線</string>
+    <string name="welcome_skip">跳過，稍後設定</string>
+    <string name="welcome_enter">進入 %1$s</string>
+    <string name="welcome_step_done">完成</string>
+    <string name="welcome_done_title">一切就緒</string>
+    <string name="welcome_done_desc">開始養成你的第一個好習慣吧</string>
+    <string name="welcome_disagree_dialog_title">不同意將無法使用</string>
+    <string name="welcome_disagree_dialog_message">%1$s 需要你的同意才能正常提供提醒功能。如果你不同意，將只能退出應用程式。</string>
+    <string name="welcome_disagree_dialog_agree">同意</string>
+    <string name="welcome_disagree_dialog_disagree_exit">不同意，退出</string>
 
     <!-- Onboarding Wizard -->
     <string name="onboarding_step_notification_title">通知設定</string>
@@ -362,7 +385,7 @@
     <string name="reminder_settings_next_alarm">下次提醒</string>
     <string name="reminder_settings_notification_permission">通知權限</string>
     <string name="reminder_settings_system_settings">去「設定」自訂通知…</string>
-    <string name="reminder_settings_background_keepalive">保持 HabitPulse 後台運行…</string>
+    <string name="reminder_settings_background_keepalive">保持 %1$s 後台運行…</string>
     <string name="reminder_settings_test_notification">發送測試通知</string>
     <string name="reminder_settings_test_notification_sent">測試通知已發送</string>
     <string name="reminder_settings_test_notification_scheduled">1 分鐘後將發送測試通知</string>

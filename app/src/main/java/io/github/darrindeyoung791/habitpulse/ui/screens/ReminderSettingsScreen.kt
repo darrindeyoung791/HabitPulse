@@ -361,7 +361,7 @@ fun ReminderSettingsScreen(
                         contentPadding = PaddingValues(0.dp)
                     ) {
                         Text(
-                            text = stringResource(id = R.string.reminder_settings_background_keepalive),
+                            text = stringResource(id = R.string.reminder_settings_background_keepalive, stringResource(R.string.app_name)),
                             style = MaterialTheme.typography.bodyMedium
                         )
                     }

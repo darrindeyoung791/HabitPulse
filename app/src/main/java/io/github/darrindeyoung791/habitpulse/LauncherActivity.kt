@@ -6,7 +6,7 @@ import androidx.activity.ComponentActivity
 /**
  * 应用启动器 Activity
  * 
- * 根据 onboarding 状态决定启动 WelcomeActivity 还是 MainActivity
+ * 根据 onboarding 状态决定启动 NewWelcomeActivity 还是 MainActivity
  */
 class LauncherActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -19,7 +19,7 @@ class LauncherActivity : ComponentActivity() {
         val targetActivity = if (hasCompletedOnboarding) {
             MainActivity::class.java
         } else {
-            WelcomeActivity::class.java
+            NewWelcomeActivity::class.java
         }
 
         startActivity(

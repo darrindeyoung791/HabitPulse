@@ -643,6 +643,16 @@ class HabitViewModel(
     }
 
     /**
+     * 重置引导状态（调试用）：下次打开应用将进入欢迎引导。
+     */
+    fun resetOnboarding() {
+        _hasCompletedOnboarding.value = false
+        _isLimitedMode.value = false
+        onboardingPreferences.hasCompletedOnboarding = false
+        onboardingPreferences.isLimitedMode = false
+    }
+
+    /**
      * ViewModel Provider Factory
      */
     class Factory(private val application: HabitPulseApplication) : ViewModelProvider.Factory {

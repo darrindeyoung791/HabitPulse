@@ -25,10 +25,11 @@ fun SettingsSegmentedSwitch(
     leadingIcon: ImageVector? = null,
     checked: Boolean,
     enabled: Boolean = true,
+    tintIndex: Int = index,
     onCheckedChange: (Boolean) -> Unit
 ) {
     val effectiveSupporting = supportingText ?: if (!enabled) stringResource(R.string.settings_coming_soon) else null
-    val tint = rememberAccentTint(index)
+    val tint = rememberAccentTint(tintIndex)
     val interactionSource = remember { MutableInteractionSource() }
 
     SettingsListSurface(

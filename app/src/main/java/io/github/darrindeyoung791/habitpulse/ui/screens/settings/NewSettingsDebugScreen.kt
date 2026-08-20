@@ -45,6 +45,7 @@ fun NewSettingsDebugScreen(
     val prefs = remember { UserPreferences.getInstance(context) }
 
     var showAddSampleDialog by remember { mutableStateOf(false) }
+    var showResetOnboardingDialog by remember { mutableStateOf(false) }
 
     val toolRetryLimit by prefs.aiToolRetryLimitFlow.collectAsStateWithLifecycle(initialValue = 20)
     val maxOutputTokens by prefs.aiMaxOutputTokensFlow.collectAsStateWithLifecycle(initialValue = 5000)
@@ -60,11 +61,19 @@ fun NewSettingsDebugScreen(
         SettingsSegmentedGroup {
             SettingsSegmentedItem(
                 index = 0,
-                count = 1,
+                count = 2,
                 headline = stringResource(id = R.string.settings_debug_add_sample_habits),
                 supportingText = stringResource(id = R.string.settings_debug_add_sample_habits_description),
                 showArrow = false,
                 onClick = { showAddSampleDialog = true }
+            )
+            SettingsSegmentedItem(
+                index = 1,
+                count = 2,
+                headline = stringResource(id = R.string.settings_debug_reset_onboarding),
+                supportingText = stringResource(id = R.string.settings_debug_reset_onboarding_description),
+                showArrow = false,
+                onClick = { showResetOnboardingDialog = true }
             )
         }
 
@@ -151,6 +160,31 @@ fun NewSettingsDebugScreen(
             dismissButton = {
                 TextButton(onClick = { showAddSampleDialog = false }) {
                     Text(stringResource(id = R.string.debug_add_sample_data_no))
+                }
+            }
+        )
+    }
+
+    if (showResetOnboardingDialog) {
+        AlertDialog(
+            onDismissRequest = { showResetOnboardingDialog = false },
+            title = { Text(stringResource(id = R.string.settings_debug_reset_onboarding_dialog_title)) },
+            text = { Text(stringResource(id = R.string.settings_debug_reset_onboarding_dialog_message)) },
+            confirmButton = {
+                TextButton(onClick = {
+                    showResetOnboardingDialog = false
+                    val application = context.applicationContext as HabitPulseApplication
+                    application.habitViewModel.resetOnboarding()
+                    Toast.makeText(
+                        context,
+                        context.getString(R.string.settings_debug_reset_onboarding_done),
+                        Toast.LENGTH_SHORT
+                    ).show()
+                }) { Text(stringResource(id = R.string.confirm)) }
+            },
+            dismissButton = {
+                TextButton(onClick = { showResetOnboardingDialog = false }) {
+                    Text(stringResource(id = R.string.cancel))
                 }
             }
         )

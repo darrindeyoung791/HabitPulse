@@ -162,8 +162,8 @@ HabitPulse/
 │   │   ├── java/io/github/darrindeyoung791/habitpulse/
 │   │   │   ├── MainActivity.kt              # 主入口 (NavHost)
 │   │   │   ├── SettingsActivity.kt          # 设置页面
-│   │   │   ├── LauncherActivity.kt          # 启动路由 (Welcome / Main)
-│   │   │   ├── WelcomeActivity.kt           # 新用户引导页
+│   │   │   ├── LauncherActivity.kt          # 启动路由 (NewWelcome / Main)
+│   │   │   ├── NewWelcomeActivity.kt        # 新用户引导页 (4 步)
 │   │   │   ├── OpenSourceLicensesActivity.kt # 开源许可证
 │   │   │   ├── HabitPulseApplication.kt     # Application 类
 │   │   │   ├── navigation/                  # 导航图与路由定义

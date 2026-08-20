@@ -924,7 +924,7 @@ fun SettingsScreen() {
 
                 SettingsListItem(
                     headline = stringResource(id = R.string.settings_developer),
-                    supportingText = stringResource(id = R.string.settings_developer_name),
+                    supportingText = stringResource(id = R.string.settings_developer_name, stringResource(R.string.app_name)),
                     leadingIcon = {
                         Icon(
                             imageVector = Icons.Outlined.Person,

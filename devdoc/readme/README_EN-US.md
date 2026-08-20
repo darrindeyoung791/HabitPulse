@@ -162,8 +162,8 @@ HabitPulse/
 │   │   ├── java/io/github/darrindeyoung791/habitpulse/
 │   │   │   ├── MainActivity.kt              # Main entry (NavHost)
 │   │   │   ├── SettingsActivity.kt          # Settings screen
-│   │   │   ├── LauncherActivity.kt          # Launcher router (Welcome / Main)
-│   │   │   ├── WelcomeActivity.kt           # New user onboarding
+│   │   │   ├── LauncherActivity.kt          # Launcher router (NewWelcome / Main)
+│   │   │   ├── NewWelcomeActivity.kt        # New user onboarding (4 steps)
 │   │   │   ├── OpenSourceLicensesActivity.kt # Open source licenses
 │   │   │   ├── HabitPulseApplication.kt     # Application class
 │   │   │   ├── navigation/                  # Navigation graph & routes

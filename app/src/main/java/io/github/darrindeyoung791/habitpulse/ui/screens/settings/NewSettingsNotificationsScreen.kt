@@ -223,7 +223,7 @@ fun NewSettingsNotificationsScreen(
             }
         )
         SettingsTextLinkButton(
-            text = stringResource(id = R.string.reminder_settings_background_keepalive),
+            text = stringResource(id = R.string.reminder_settings_background_keepalive, stringResource(R.string.app_name)),
             onClick = {
                 val intent = Intent(context, WebViewActivity::class.java).apply {
                     putExtra(WebViewActivity.EXTRA_INITIAL_URL, RouteConfig.REMINDER_HELP_URL)

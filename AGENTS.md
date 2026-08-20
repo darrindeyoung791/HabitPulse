@@ -53,8 +53,8 @@ HabitPulse/
 │   │   │   │   ├── NewSettingsAboutActivity.kt  # New settings: about
 │   │   │   │   ├── NewSettingsLanguageActivity.kt # New settings: language (app language switcher)
 │   │   │   │   ├── NewSettingsDebugActivity.kt  # New settings: debug (hidden, 5-tap on version)
-│   │   │   │   ├── LauncherActivity.kt          # Launcher that routes to Welcome or MainActivity
-│   │   │   │   ├── WelcomeActivity.kt           # Onboarding/welcome flow
+│   │   │   │   ├── LauncherActivity.kt          # Launcher that routes to NewWelcome or MainActivity
+│   │   │   │   ├── NewWelcomeActivity.kt        # New onboarding/welcome flow (4 steps)
 │   │   │   │   ├── OpenSourceLicensesActivity.kt # Open source licenses display
 │   │   │   │   ├── HabitPulseApplication.kt     # Application class with singleton init
 │   │   │   │   ├── navigation/
@@ -93,8 +93,16 @@ HabitPulse/
 │   │   │   │   │   │   ├── MultiSelectSortScreen.kt # Drag-and-drop reorder screen
 │   │   │   │   │   │   ├── RecordsScreen.kt     # Completion records screen
 │   │   │   │   │   │   ├── ContactsScreen.kt    # Supervisor contacts list
-│   │   │   │   │   │   ├── WelcomeScreen.kt     # Onboarding/consent screen
 │   │   │   │   │   │   └── AdScreen.kt          # Splash ad screen
+│   │   │   │   │   ├── screens/welcome/
+│   │   │   │   │   │   ├── NewWelcomeScreen.kt  # New onboarding container (4-step AnimatedContent)
+│   │   │   │   │   │   ├── WelcomeStepLayout.kt # Shared step skeleton + bottom bar + buttons
+│   │   │   │   │   │   ├── WelcomeTopBar.kt     # Back-button-only top bar (no progress dots/label)
+│   │   │   │   │   │   ├── WelcomeRiseIn.kt     # Stagger rise-in entrance animation
+│   │   │   │   │   │   ├── WelcomeGreetingStep.kt # Step 1: welcome + continue
+│   │   │   │   │   │   ├── WelcomePermissionsStep.kt # Step 2: permission rows + consent links
+│   │   │   │   │   │   ├── WelcomeNotificationsStep.kt # Step 3: reminder/DND/persistent switches
+│   │   │   │   │   │   └── WelcomeDoneStep.kt   # Step 4: done + enter app
 │   │   │   │   │   ├── screens/settings/
 │   │   │   │   │   │   ├── NewSettingsScaffold.kt       # Shared scaffold for new settings screens
 │   │   │   │   │   │   ├── NewSettingsHomeScreen.kt     # New settings home
@@ -339,8 +347,8 @@ The project is in **early development stage** (v0.5.19-alpha):
 - ✅ Project structure set up
 - ✅ Basic Compose theme configured with Monet dynamic colors
 - ✅ Navigation Compose integrated with custom animations and shared transitions
-- ✅ LauncherActivity for routing between Welcome and MainActivity
-- ✅ WelcomeActivity with onboarding/consent flow and permission requests
+- ✅ LauncherActivity for routing between NewWelcome and MainActivity
+- ✅ NewWelcomeActivity + NewWelcomeScreen with 4-step onboarding flow (greeting → permissions → notifications → done)
 - ✅ AdScreen with countdown skip for splash ads
 - ✅ Home screen with 3 tabs: Habits, Contacts, Records
 - ✅ **HomeScreen Refactoring** - Split into layout shell (HomeScreen.kt) and content screens (HabitScreen.kt, etc.) for better maintainability (~1100 lines vs original 2900+)
@@ -426,7 +434,7 @@ The project is in **early development stage** (v0.5.19-alpha):
   - `HabitStatusTest` (12 tests) - covers `pendingCount`, `isCompletelyOverdue`, negative pendingCount, old-style completion compatibility
   - `HabitCompletionTest` (5 tests) - covers `getTodayDate()`, `getFormattedDate()`, and default values
 - ✅ **New Settings Redesign** - Segmented list settings UI with grouped items, leading icon chips, switches, and per-screen scaffolds
-- ✅ **Debug Settings Page** - Hidden debug page reached by tapping the version item 5 times within 5 seconds on the new About screen; hosts developer tools (add sample habits), icon-less list items; sample-data dialog shows a warning that adding a large batch may disrupt existing habits and trigger many unnecessary reminders (6 locale `debug_add_sample_data_warning`)
+- ✅ **Debug Settings Page** - Hidden debug page reached by tapping the version item 5 times within 5 seconds on the new About screen; hosts developer tools (add sample habits, reset onboarding to show the welcome flow on next launch), icon-less list items; sample-data dialog shows a warning that adding a large batch may disrupt existing habits and trigger many unnecessary reminders (6 locale `debug_add_sample_data_warning`); reset-onboarding item asks for confirmation then calls `HabitViewModel.resetOnboarding()` (writes `hasCompletedOnboarding=false` so `LauncherActivity` routes to `NewWelcomeActivity`)
 - ✅ **AI Config Provider Merge (superseded)** - AI provider config form was merged directly into the AI config page (second-level page); `NewSettingsAIProviderScreen.kt` / `NewSettingsAIProviderActivity.kt` deleted. Superseded by **Multi-AI-Config Settings** below, which moved the form out into a separate add/edit page (`NewSettingsAIEditActivity`)
 - ✅ **AI Config Page Layout** - Provider config form (endpoint/key/model/test connection), streaming output switch + memory entry grouped as segmented list items; notice shown as standalone text (same style as About screen), no horizontal divider
 - ✅ **Model Label Localization** - Preset model labels (`glm-4-flash-250414（默认）`, `glm-5.1（最新旗舰）`) resource-ized via `ai_settings_model_default_label` / `ai_settings_model_flagship_label` format strings in all 4 locale files
@@ -483,9 +491,9 @@ The project is in **early development stage** (v0.5.19-alpha):
 ```
 ┌──────────────┐      ┌──────────────┐      ┌─────────────────┐
 │              │      │              │      │                 │
-│LauncherActivity│───▶│WelcomeActivity│      │SettingsActivity │
-│              │      │              │      │                 │
-│  Route logic │      │  Consent     │      │  - App info     │
+│LauncherActivity│───▶│NewWelcomeActivity│      │SettingsActivity │
+│              │      │                  │      │                 │
+│  Route logic │      │  4-step guide   │      │  - App info     │
 └──────┬───────┘      └──────┬───────┘      │  - Visual opts  │
        │                     │              │  - About        │
        │                     ▼              │  - GitHub link  │
