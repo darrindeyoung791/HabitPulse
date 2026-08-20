@@ -5,7 +5,7 @@
 
 ## 概览
 
-列表项体系位于 `ui/screens/settings/components/` 包，由 5 个公共组件 + 3 个内部实现组成：
+列表项体系位于 `ui/screens/settings/components/` 包，由 6 个公共组件 + 3 个内部实现组成：
 
 | 组件 | 类型 | 用途 |
 |------|------|------|
@@ -13,6 +13,7 @@
 | `SettingsSegmentedSwitch` | 公共 | 开关列表项（整行可切换） |
 | `SettingsSegmentedGroup` | 公共 | 竖直分组容器（内部自动加 2dp 间距） |
 | `SettingsTextLinkButton` | 公共 | 紧凑文本链接按钮（无 48dp 最小触控区，仅文本高度） |
+| `SettingsExpandableListSurface` | 公共 | 可展开列表项：点击表头展开/收起（表头文本 + chevron 旋转 + 展开内容同一表面） |
 | `SettingsSegmentedBox` | internal | 非点击分段表面：圆角 / 底色，放置任意内容（如滑块） |
 | `SettingsListSurface` | internal | 共享行表面：圆角 / 底色 / 涟漪 / 点击 |
 | `SettingsIconChip` | internal | 前置图标圆角方块 chip |
@@ -175,6 +176,22 @@ Box(
   一起决定圆角；内部内容自带 padding（如滑块 `padding(horizontal = 16.dp)`）。
 - 参考实现：`NewSettingsReminderScreen.kt`（免打扰时段滑块作为组内第三项，`index=2, count=3`）。
 - 注意：当滑块随开关隐藏时，组内可见项数变化，`count` 需随之调整（滑块可见 = 3，隐藏 = 2）。
+
+## 4.7 可展开列表项（SettingsExpandableListSurface）
+
+- 用途：点击表头在「展开 / 收起」之间切换的列表项（如开放源代码许可页每个开源库）。
+  表头 = 标题 + 可选副标题 + 可选 `badgeContent` 槽位 + 尾部 chevron；展开内容与表头位于
+  **同一块** `surfaceContainer` 表面内（`AnimatedVisibility` + spring 动画），保持分段观感。
+- `badgeContent`：常驻表头槽位（如 license pill badge），在标题/副标题下方渲染，
+  **与展开状态无关，始终可见**。
+- 表头点击走标准列表项交互：涟漪裁剪到当前圆角、按下四角动画到 `PressedCorner`、
+  `PressVibrationFeedback` 震动；chevron 用 `Icons.Filled.KeyboardArrowDown` 随展开态
+  180° 旋转（`animateFloatAsState`）。
+- 参数：`index` / `count` 与组内其他项一起决定圆角；`expanded` / `onToggle` 由调用方持有；
+  `content` 为展开区（自带水平 padding，底部留 12dp 以上呼吸空间）。
+- 参考实现：`OpenSourceLicensesActivity.kt`（无前置图标 listitem，badge 常驻表头，展开区
+  显示原版 Source/Website/License 功能按钮，有 URL 走应用内 `WebViewActivity` 打开）。
+- 注意：展开态切换不会改变 `index` / `count`，末项展开时底部圆角仍保持 `LargeCorner`。
 
 ## 4.6 紧凑文本链接按钮（SettingsTextLinkButton）
 

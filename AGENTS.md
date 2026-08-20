@@ -241,17 +241,18 @@ Records every habit completion with timestamp.
 ```
 
 ### Gradle Version
-- **Gradle**: 9.5.1
-- **Android Gradle Plugin**: 9.1.0
+- **Gradle**: 9.7.0-rc-2
+- **Android Gradle Plugin**: 9.3.0
 - **Kotlin**: 2.4.0
-- **KSP**: 2.3.9
+- **KSP**: 2.3.11
 
 ## Dependencies
 
 ### Core
-- `androidx.core.ktx` (1.18.0) - Kotlin extensions for Android
-- `androidx.lifecycle.runtime.ktx` (2.10.0) - Lifecycle components
-- `androidx.lifecycle.viewmodel.compose` (2.10.0) - ViewModel Compose integration
+- `androidx.core.ktx` (1.19.0) - Kotlin extensions for Android
+- `androidx.lifecycle.runtime.ktx` (2.11.0) - Lifecycle components
+- `androidx.lifecycle.viewmodel.compose` (2.11.0) - ViewModel Compose integration
+- `androidx.lifecycle.runtime.compose` (2.11.0) - Lifecycle Compose integration
 - `androidx.activity.compose` (1.13.0) - Compose integration with Activity
 - `androidx.activity.ktx` (1.13.0) - Kotlin extensions for Activity
 - `androidx.navigation.compose` (2.9.8) - Navigation Compose
@@ -262,7 +263,7 @@ Records every habit completion with timestamp.
 - `androidx.room:room-compiler` (2.8.4) - Room annotation processor (KSP)
 
 ### Compose UI
-- `androidx.compose.bom` (2026.05.01) - Compose Bill of Materials
+- `androidx.compose.bom` (2026.06.01) - Compose Bill of Materials
 - `androidx.compose.ui` - Core Compose UI
 - `androidx.compose.material3` - Material Design 3 components
 - `androidx.compose.material.icons.core` - Material icons core
@@ -271,16 +272,20 @@ Records every habit completion with timestamp.
 ### Other
 - `androidx.core:core-splashscreen` (1.2.0) - Splash screen compatibility
 - `com.google.android.material:material` (1.14.0) - Material components for dynamic colors
-- `sh.calvin.reorderable:reorderable` (3.0.0) - Drag-and-drop reordering library
+- `sh.calvin.reorderable:reorderable` (3.1.0) - Drag-and-drop reordering library
 - `androidx.datastore:datastore-preferences` (1.2.1) - Modern preferences storage
-- `com.mikepenz:aboutlibraries` (14.2.1) - Open source license display
+- `com.mikepenz:aboutlibraries-compose-m3` (15.0.4) - Open source license display
+- `com.google.code.gson:gson` (2.14.0) - JSON parsing
+- `androidx.biometric:biometric` (1.1.0) - Biometric authentication for gated key reveal
+- `androidx.fragment:fragment-ktx` (1.9.0) - Fragment extensions for BiometricPrompt
+- `androidx.swiperefreshlayout:swiperefreshlayout` (1.2.0) - Pull-to-refresh
 
 ### Testing
 - `junit` (4.13.2) - Unit testing framework
-- `androidx.junit` (1.2.1) - Android JUnit extensions
-- `androidx.espresso.core` (3.6.1) - UI testing framework
+- `androidx.junit` (1.3.0) - Android JUnit extensions
+- `androidx.espresso.core` (3.7.0) - UI testing framework
 - `androidx.compose.ui.test` - Compose testing utilities
-- `org.json:json` (20230227) - JVM JSON implementation for tests (Android mocks org.json)
+- `org.json:json` (20260814) - JVM JSON implementation for tests (Android mocks org.json)
 
 ## Development Conventions
 
@@ -468,6 +473,7 @@ The project is in **early development stage** (v0.5.19-alpha):
 - ✅ **Unified Device Form Factor** - 全应用统一的设备形态判定单一入口 `ui/DeviceFormFactor.kt`：`DeviceFormInfo`（携带 `windowSizeClass`/`windowPosture`）+ 纯函数 `classifyDeviceForm()`（无 Android 依赖可单测）+ `@Composable rememberDeviceFormInfo()`（`currentWindowAdaptiveInfo()`，旋转/分屏/折叠自动重组）。断点：`TABLET_MIN_WIDTH_DP=600`（`isTabletDevice` = `min(宽,高)>=600`，对齐旧 `smallestScreenWidthDp`）、`WIDE_LAYOUT_MIN_WIDTH_DP=840`（`isWideLayout` = 横屏且宽>=840）、`LARGE_SCREEN_MIN_WIDTH_DP=1200`（`isLargeWindow`）。派生标志 `isTabletLandscape`/`isPhoneLandscape`/`isWideLayout`/`isLargeWindow`。迁移调用点：`HomeScreen`（导航模式 `isTabletLandscape`/`isPhoneLandscape`、`isWaterfallMode`→`isWideLayout`）、`HabitScreen`（`useStaggeredGrid` = `isWideLayout || (forceTabletLandscape && isLandscape)`，删除 `screenWidthDp=840` hack）、`RecordsScreen`/`ContactsScreen`（`useTwoColumnLayout`→`isWideLayout`）、`WelcomeScreen`（`shouldUseSplitLayout`→`isLandscape`、`isTablet`→`isLargeWindow`）、`RewardBottomSheet`/`NotificationConfirmDialog`/`SettingsGeneralScreen`/`SettingsActivity`/`AIChatScreen`/`AICreateHabitScreen`。约定：页面禁止自行用 `LocalConfiguration`/`smallestScreenWidthDp`/`screenWidthDp`/`orientation` 判定设备形态，一律走 `rememberDeviceFormInfo()`；`@Preview` 的 `uiMode` 可保留 `Configuration.ORIENTATION_LANDSCAPE`
   - 单元测试：`DeviceFormFactorTest`（19 用例：600/840/1200 边界、手机/平板竖横屏、方形窗口、派生标志）
 - ✅ **In-App Font Size** - 应用内字体大小自定义（通用 → 字体大小，入口在「语言」上方、同一「显示与触感」组）：DataStore 新增 `FONT_SCALE_FOLLOW_SYSTEM`（默认 true）/ `FONT_SCALE`（默认 1.0f）；`HabitPulseTheme` 通过 `CompositionLocalProvider(LocalDensity provides Density(density, effectiveFontScale))` 全局覆盖字体缩放（跟随系统=系统 `fontScale`，关闭=自定义值；`@Preview` 用 `LocalInspectionMode` 跳过 DataStore 访问）。字体大小页 `SettingsFontScaleScreen`/`SettingsFontScaleActivity`（已注册 manifest）：跟随系统开关 = 单行 listitem 开关（无图标无说明，走标准按压/长按/震动）；滑杆档位 = Android 系统字体缩放预设 `[0.85, 1.0, 1.15, 1.3, 1.45, 1.6, 1.75, 1.9, 2.0]`（索引用 0..8，标准 1.0 刻度标记 + 最小/最大大小 A 字母）；开关打开时滑杆滚动到 `LocalConfiguration.current.fontScale` 最近档位并呈禁用灰化样式（仍可拖动，首次拖动自动关闭跟随系统），滑动按档位震动（`rememberHapticsEnabled`/`rememberPressVibrationParams`/`vibrateShort`，遵循全局震动开关）；设置离开页面时一次性写入生效（`BackHandler` + commit 标志）。通用页入口图标 `Icons.Outlined.FormatSize`（index 0 → 蓝），存储分组 `tintOffset` 2→4 避免同页图标颜色重复；通用首页入口描述改为「语言、显示与触感」（6 个 strings.xml）
+- ✅ **Open Source Licenses Screen Listitem Adaptation** - 开放源代码许可页（`OpenSourceLicensesActivity`）从 aboutlibraries 默认 `LibrariesContainer` 改为项目 listitem 规范样式：新增共享组件 `SettingsExpandableListSurface`（`SettingsSegmentedItem.kt`，`AnimatedVisibility` 展开/收起 + spring 动画 + chevron 180° 旋转，保留分段圆角/按下 20dp 圆角/按压震动，展开内容与表头同属一块 `surfaceContainer` 表面；表头支持 `badgeContent` 槽位，展开前即显示 license badge）；每库一行 = 无前置图标的 listitem（headline = 库名，supporting = 作者 · 版本，点击展开，**license pill badge 常驻表头**）；展开区显示原版 `LibraryActions` 三个功能按钮（Source/Website/Sponsor 描边 + License 填充，8dp 圆角 + 12/6 padding + `labelLarge` 12sp Medium，**按下圆角 8→20dp 动画** + `PressVibrationFeedback`，点击行为：有 URL 走**应用内 `WebViewActivity` 打开**，License 无 URL 弹许可证内容对话框 `LicenseContentDialog` 显示 `strippedLicenseContent`）。按钮文案保持原版英文不本地化；新增 shared 组件时把 `LargeCorner`/`SmallCorner`/`PressedCorner` 从 private 改为 internal 供跨包复用。**清理**：删除 git 提交的陈旧 `app/src/main/res/raw/aboutlibraries.json`（167 库旧版本，打包时被插件 generated 覆盖，保留 `keep.xml` 与 `app/config/`），debug/release APK 内 aboutlibraries.json 哈希验证与插件生成一致
 
 ### In Progress
 - 🔄 Calendar section

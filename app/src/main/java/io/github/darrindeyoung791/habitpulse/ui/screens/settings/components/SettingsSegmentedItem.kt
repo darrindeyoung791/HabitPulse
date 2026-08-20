@@ -1,8 +1,17 @@
 package io.github.darrindeyoung791.habitpulse.ui.screens.settings.components
 
+import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.core.Spring
 import androidx.compose.animation.core.animateDpAsState
+import androidx.compose.animation.core.animateFloatAsState
+import androidx.compose.animation.core.spring
+import androidx.compose.animation.expandVertically
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
+import androidx.compose.animation.shrinkVertically
 import androidx.compose.foundation.LocalIndication
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.combinedClickable
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.interaction.collectIsPressedAsState
@@ -18,6 +27,7 @@ import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.KeyboardArrowRight
+import androidx.compose.material.icons.filled.KeyboardArrowDown
 import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
@@ -27,6 +37,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.draw.rotate
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
@@ -36,9 +47,9 @@ import io.github.darrindeyoung791.habitpulse.ui.utils.PressVibrationFeedback
 
 internal val SettingsGroupItemGap = 2.dp
 internal val SettingsBetweenGroupGap = 16.dp
-private val LargeCorner = 16.dp
-private val SmallCorner = 4.dp
-private val PressedCorner = 20.dp
+internal val LargeCorner = 16.dp
+internal val SmallCorner = 4.dp
+internal val PressedCorner = 20.dp
 
 /**
  * A list item with:
@@ -243,5 +254,118 @@ fun SettingsSegmentedBox(
             .background(MaterialTheme.colorScheme.surfaceContainer)
     ) {
         content()
+    }
+}
+
+/**
+ * An expandable segmented list item: a single `surfaceContainer` surface holding a clickable
+ * header row (headline + supporting text + trailing chevron) above an [AnimatedVisibility]
+ * section that expands/collapses when the header is pressed.
+ *
+ * Matches the listitem spec: grouped corner radii, `PressedCorner` grow on press, ripple clipped
+ * to the current shape, and press vibration via [PressVibrationFeedback]. The expanded body stays
+ * inside the same surface so the segmented look is preserved.
+ *
+ * @param index item index within its group (0-based)
+ * @param count total items in the group
+ * @param expanded whether the body is visible
+ * @param onToggle invoked when the header row is clicked
+ * @param headline header title text
+ * @param supportingText optional header supporting text
+ * @param badgeContent optional content shown inside the header below the supporting text
+ *   (e.g. license badge pills) — always visible, independent of the expanded state
+ * @param content the expandable body
+ */
+@Composable
+fun SettingsExpandableListSurface(
+    index: Int,
+    count: Int,
+    expanded: Boolean,
+    onToggle: () -> Unit,
+    headline: String,
+    supportingText: String? = null,
+    badgeContent: (@Composable () -> Unit)? = null,
+    modifier: Modifier = Modifier,
+    content: @Composable () -> Unit
+) {
+    val interactionSource = remember { MutableInteractionSource() }
+    val pressed = interactionSource.collectIsPressedAsState().value
+
+    PressVibrationFeedback(interactionSource = interactionSource)
+
+    val topStart by animateDpAsState(if (pressed) PressedCorner else if (index == 0) LargeCorner else SmallCorner)
+    val topEnd by animateDpAsState(if (pressed) PressedCorner else if (index == 0) LargeCorner else SmallCorner)
+    val bottomStart by animateDpAsState(if (pressed) PressedCorner else if (index == count - 1) LargeCorner else SmallCorner)
+    val bottomEnd by animateDpAsState(if (pressed) PressedCorner else if (index == count - 1) LargeCorner else SmallCorner)
+    val shape = RoundedCornerShape(topStart, topEnd, bottomEnd, bottomStart)
+
+    val rotation by animateFloatAsState(
+        targetValue = if (expanded) 180f else 0f,
+        label = "expandChevron"
+    )
+
+    Column(
+        modifier = modifier
+            .fillMaxWidth()
+            .clip(shape)
+            .background(MaterialTheme.colorScheme.surfaceContainer)
+    ) {
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .clickable(
+                    interactionSource = interactionSource,
+                    indication = LocalIndication.current,
+                    onClick = onToggle
+                )
+                .padding(start = 16.dp, end = 16.dp, top = 12.dp, bottom = 12.dp),
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.spacedBy(16.dp)
+        ) {
+            Column(
+                modifier = Modifier.weight(1f),
+                verticalArrangement = Arrangement.spacedBy(4.dp)
+            ) {
+                Text(
+                    text = headline,
+                    style = MaterialTheme.typography.bodyLarge,
+                    color = MaterialTheme.colorScheme.onSurface
+                )
+                if (supportingText != null) {
+                    Text(
+                        text = supportingText,
+                        style = MaterialTheme.typography.bodyMedium,
+                        color = MaterialTheme.colorScheme.onSurfaceVariant
+                    )
+                }
+                if (badgeContent != null) {
+                    badgeContent()
+                }
+            }
+            Icon(
+                imageVector = Icons.Filled.KeyboardArrowDown,
+                contentDescription = null,
+                tint = MaterialTheme.colorScheme.onSurfaceVariant,
+                modifier = Modifier.rotate(rotation)
+            )
+        }
+
+        AnimatedVisibility(
+            visible = expanded,
+            enter = expandVertically(
+                animationSpec = spring(
+                    dampingRatio = Spring.DampingRatioNoBouncy,
+                    stiffness = Spring.StiffnessMediumLow
+                )
+            ) + fadeIn(),
+            exit = shrinkVertically(
+                animationSpec = spring(
+                    dampingRatio = Spring.DampingRatioNoBouncy,
+                    stiffness = Spring.StiffnessMediumLow
+                )
+            ) + fadeOut()
+        ) {
+            content()
+        }
     }
 }

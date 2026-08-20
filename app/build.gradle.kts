@@ -5,8 +5,8 @@ import java.util.Locale
 plugins {
     alias(libs.plugins.android.application)
     alias(libs.plugins.kotlin.compose)
-    id("com.google.devtools.ksp") version "2.3.9"
-    id("com.mikepenz.aboutlibraries.plugin.android") version "14.2.1"
+    alias(libs.plugins.ksp)
+    alias(libs.plugins.aboutlibraries)
 }
 
 android {
@@ -17,8 +17,8 @@ android {
         applicationId = "io.github.darrindeyoung791.habitpulse"
         minSdk = 26
         targetSdk = 37
-        versionCode = 198
-        versionName = "0.8.50-alpha"
+        versionCode = 199
+        versionName = "0.8.51-alpha"
 
         testInstrumentationRunner = "androidx.test.runner.AndroidJUnitRunner"
     }
@@ -91,24 +91,21 @@ afterEvaluate {
 
 dependencies {
     // Room database
-    val roomVersion = "2.8.4"
-    implementation("androidx.room:room-runtime:$roomVersion")
-    implementation("androidx.room:room-ktx:$roomVersion")
-    ksp("androidx.room:room-compiler:$roomVersion")
+    implementation(libs.androidx.room.runtime)
+    implementation(libs.androidx.room.ktx)
+    ksp(libs.androidx.room.compiler)
 
     // Lifecycle and ViewModel
-    implementation("androidx.lifecycle:lifecycle-viewmodel-compose:2.11.0")
-    implementation("androidx.lifecycle:lifecycle-runtime-compose:2.11.0")
+    implementation(libs.androidx.lifecycle.viewmodel.compose)
+    implementation(libs.androidx.lifecycle.runtime.compose)
 
     // DataStore for preferences
-    implementation("androidx.datastore:datastore-preferences:1.2.1")
+    implementation(libs.androidx.datastore.preferences)
 
-    implementation("androidx.compose.material:material-icons-core")
-    implementation("androidx.compose.material:material-icons-extended")
-    implementation("androidx.core:core-splashscreen:1.2.0")
+    implementation(libs.androidx.core.splashscreen)
     // Material library required for DynamicColors.applyToActivitiesIfAvailable
     // (also bundles com.google.android.material.color.utilities used for seed-based accent palettes)
-    implementation("com.google.android.material:material:1.14.0")
+    implementation(libs.com.google.android.material)
     implementation(libs.androidx.core.ktx)
     implementation(libs.androidx.lifecycle.runtime.ktx)
     implementation(libs.androidx.activity.compose)
@@ -124,7 +121,7 @@ dependencies {
     implementation(libs.androidx.compose.material.icons.core)
     implementation(libs.androidx.compose.material.icons.extended)
     testImplementation(libs.junit)
-    testImplementation("org.json:json:20230227")
+    testImplementation(libs.org.json)
     androidTestImplementation(libs.androidx.junit)
     androidTestImplementation(libs.androidx.espresso.core)
     androidTestImplementation(platform(libs.androidx.compose.bom))
@@ -133,18 +130,18 @@ dependencies {
     debugImplementation(libs.androidx.compose.ui.test.manifest)
 
     // AboutLibraries for open source licenses display
-    implementation("com.mikepenz:aboutlibraries-compose-m3:14.2.1")
+    implementation(libs.aboutlibraries.compose.m3)
 
     // Reorderable for drag-and-drop sorting
-    implementation("sh.calvin.reorderable:reorderable:3.1.0")
+    implementation(libs.reorderable)
 
     // SwipeRefreshLayout for pull-to-refresh
-    implementation("androidx.swiperefreshlayout:swiperefreshlayout:1.1.0")
+    implementation(libs.androidx.swiperefreshlayout)
 
     // Gson for JSON parsing
-    implementation("com.google.code.gson:gson:2.14.0")
+    implementation(libs.gson)
 
     // Biometric for gated API key reveal (CryptoObject + BiometricPrompt)
-    implementation("androidx.biometric:biometric:1.1.0")
-    implementation("androidx.fragment:fragment-ktx:1.8.5")
+    implementation(libs.androidx.biometric)
+    implementation(libs.androidx.fragment.ktx)
 }
