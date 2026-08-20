@@ -17,7 +17,7 @@ import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.navArgument
 import io.github.darrindeyoung791.habitpulse.HabitPulseApplication
-import io.github.darrindeyoung791.habitpulse.NewSettingsActivity
+import io.github.darrindeyoung791.habitpulse.SettingsActivity
 import io.github.darrindeyoung791.habitpulse.data.model.Habit
 import io.github.darrindeyoung791.habitpulse.ui.screens.EditMode
 import io.github.darrindeyoung791.habitpulse.ui.screens.HabitCreationScreen
@@ -28,7 +28,7 @@ import io.github.darrindeyoung791.habitpulse.ui.screens.StatsPlaceholderScreen
 import io.github.darrindeyoung791.habitpulse.ui.screens.TodayHabitsScreen
 import io.github.darrindeyoung791.habitpulse.ui.screens.WebViewScreen
 import io.github.darrindeyoung791.habitpulse.ui.screens.ai.AICreateHabitScreen
-import io.github.darrindeyoung791.habitpulse.NewSettingsAIActivity
+import io.github.darrindeyoung791.habitpulse.SettingsAIActivity
 import java.util.UUID
 
 /**
@@ -119,7 +119,7 @@ fun HabitPulseNavGraph(
                         }
                     },
                     onNavigateToSettings = {
-                        val intent = android.content.Intent(context, NewSettingsActivity::class.java)
+                        val intent = android.content.Intent(context, SettingsActivity::class.java)
                         context.startActivity(intent)
                     },
                     onEditHabit = { habit ->
@@ -471,7 +471,7 @@ fun HabitPulseNavGraph(
                         navController.popBackStack()
                     },
                     onNavigateToSettings = {
-                        val intent = android.content.Intent(context, NewSettingsAIActivity::class.java)
+                        val intent = android.content.Intent(context, SettingsAIActivity::class.java)
                         context.startActivity(intent)
                     },
                     application = context.applicationContext as HabitPulseApplication,

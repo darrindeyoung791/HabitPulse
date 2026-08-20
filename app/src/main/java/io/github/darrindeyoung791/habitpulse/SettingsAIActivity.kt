@@ -8,23 +8,23 @@ import androidx.activity.enableEdgeToEdge
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.platform.LocalContext
 import io.github.darrindeyoung791.habitpulse.navigation.RouteConfig
-import io.github.darrindeyoung791.habitpulse.ui.screens.settings.SettingsHomeScreen
+import io.github.darrindeyoung791.habitpulse.ui.screens.settings.SettingsAIScreen
 import io.github.darrindeyoung791.habitpulse.ui.theme.HabitPulseTheme
 
-class SettingsActivity : ComponentActivity() {
+class SettingsAIActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
         setContent {
             HabitPulseTheme {
-                SettingsHomeContent()
+                SettingsAIContent()
             }
         }
     }
 }
 
 @Composable
-private fun SettingsHomeContent() {
+private fun SettingsAIContent() {
     val context = LocalContext.current
     val onHelp: () -> Unit = {
         val intent = Intent(context, WebViewActivity::class.java).apply {
@@ -33,20 +33,18 @@ private fun SettingsHomeContent() {
         context.startActivity(intent)
     }
 
-    SettingsHomeScreen(
+    SettingsAIScreen(
         onBack = { (context as? android.app.Activity)?.finish() },
-        onNavigateAI = {
-            context.startActivity(Intent(context, SettingsAIActivity::class.java))
+        onOpenHelp = onHelp,
+        onAddConfig = {
+            context.startActivity(Intent(context, SettingsAIEditActivity::class.java))
         },
-        onNavigateNotifications = {
-            context.startActivity(Intent(context, SettingsNotificationsActivity::class.java))
-        },
-        onNavigateGeneral = {
-            context.startActivity(Intent(context, SettingsGeneralActivity::class.java))
-        },
-        onNavigateAbout = {
-            context.startActivity(Intent(context, SettingsAboutActivity::class.java))
-        },
-        onOpenHelp = onHelp
+        onEditConfig = { configId ->
+            context.startActivity(
+                Intent(context, SettingsAIEditActivity::class.java).apply {
+                    putExtra(SettingsAIEditActivity.EXTRA_CONFIG_ID, configId)
+                }
+            )
+        }
     )
 }

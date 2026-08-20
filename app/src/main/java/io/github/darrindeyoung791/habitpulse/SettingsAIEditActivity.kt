@@ -2,29 +2,39 @@ package io.github.darrindeyoung791.habitpulse
 
 import android.content.Intent
 import android.os.Bundle
-import androidx.activity.ComponentActivity
 import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.platform.LocalContext
+import androidx.fragment.app.FragmentActivity
 import io.github.darrindeyoung791.habitpulse.navigation.RouteConfig
-import io.github.darrindeyoung791.habitpulse.ui.screens.settings.SettingsHomeScreen
+import io.github.darrindeyoung791.habitpulse.ui.screens.settings.SettingsAIEditScreen
 import io.github.darrindeyoung791.habitpulse.ui.theme.HabitPulseTheme
 
-class SettingsActivity : ComponentActivity() {
+class SettingsAIEditActivity : FragmentActivity() {
+
+    companion object {
+        /**
+         * 传入要编辑的 AI 配置 id；不传表示新建。
+         */
+        const val EXTRA_CONFIG_ID = "extra_config_id"
+    }
+
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
         setContent {
             HabitPulseTheme {
-                SettingsHomeContent()
+                SettingsAIEditContent(
+                    configId = intent.getStringExtra(EXTRA_CONFIG_ID)
+                )
             }
         }
     }
 }
 
 @Composable
-private fun SettingsHomeContent() {
+private fun SettingsAIEditContent(configId: String?) {
     val context = LocalContext.current
     val onHelp: () -> Unit = {
         val intent = Intent(context, WebViewActivity::class.java).apply {
@@ -33,20 +43,9 @@ private fun SettingsHomeContent() {
         context.startActivity(intent)
     }
 
-    SettingsHomeScreen(
+    SettingsAIEditScreen(
+        configId = configId,
         onBack = { (context as? android.app.Activity)?.finish() },
-        onNavigateAI = {
-            context.startActivity(Intent(context, SettingsAIActivity::class.java))
-        },
-        onNavigateNotifications = {
-            context.startActivity(Intent(context, SettingsNotificationsActivity::class.java))
-        },
-        onNavigateGeneral = {
-            context.startActivity(Intent(context, SettingsGeneralActivity::class.java))
-        },
-        onNavigateAbout = {
-            context.startActivity(Intent(context, SettingsAboutActivity::class.java))
-        },
         onOpenHelp = onHelp
     )
 }

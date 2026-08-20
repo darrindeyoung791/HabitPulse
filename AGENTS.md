@@ -42,19 +42,19 @@ HabitPulse/
 │   │   ├── main/
 │   │   │   ├── java/io/github/darrindeyoung791/habitpulse/
 │   │   │   │   ├── MainActivity.kt              # Main entry point with NavHost
-│   │   │   │   ├── SettingsActivity.kt          # Settings screen (legacy)
-│   │   │   │   ├── NewSettingsActivity.kt       # New settings home (segmented list UI)
-│   │   │   │   ├── NewSettingsAIActivity.kt     # New settings: AI config list
-│   │   │   │   ├── NewSettingsAIEditActivity.kt # New settings: AI config add/edit
-│   │   │   │   ├── NewSettingsNotificationsActivity.kt # New settings: notifications
-│   │   │   │   ├── NewSettingsDebugReminderActivity.kt # New settings: debug reminders
-│   │   │   │   ├── NewSettingsTemplateActivity.kt # New settings: notification template
-│   │   │   │   ├── NewSettingsGeneralActivity.kt # New settings: general
-│   │   │   │   ├── NewSettingsAboutActivity.kt  # New settings: about
-│   │   │   │   ├── NewSettingsLanguageActivity.kt # New settings: language (app language switcher)
-│   │   │   │   ├── NewSettingsDebugActivity.kt  # New settings: debug (hidden, 5-tap on version)
-│   │   │   │   ├── LauncherActivity.kt          # Launcher that routes to NewWelcome or MainActivity
-│   │   │   │   ├── NewWelcomeActivity.kt        # New onboarding/welcome flow (4 steps)
+│   │   │   │   ├── SettingsActivity.kt       # Settings home (segmented list UI)
+│   │   │   │   ├── SettingsAIActivity.kt     # Settings: AI config list
+│   │   │   │   ├── SettingsAIEditActivity.kt # Settings: AI config add/edit
+│   │   │   │   ├── SettingsNotificationsActivity.kt # Settings: notifications
+│   │   │   │   ├── SettingsDebugReminderActivity.kt # Settings: debug reminders
+│   │   │   │   ├── SettingsTemplateActivity.kt # Settings: notification template
+│   │   │   │   ├── SettingsGeneralActivity.kt # Settings: general
+│   │   │   │   ├── SettingsAboutActivity.kt  # Settings: about
+│   │   │   │   ├── SettingsLanguageActivity.kt # Settings: language (app language switcher)
+│   │   │   │   ├── SettingsDebugActivity.kt  # Settings: debug (hidden, 5-tap on version)
+│   │   │   │   ├── SampleDataGenerator.kt    # Debug sample data generation (moved from legacy SettingsActivity)
+│   │   │   │   ├── LauncherActivity.kt       # Launcher that routes to Welcome or MainActivity
+│   │   │   │   ├── WelcomeActivity.kt        # Onboarding/welcome flow (4 steps)
 │   │   │   │   ├── OpenSourceLicensesActivity.kt # Open source licenses display
 │   │   │   │   ├── HabitPulseApplication.kt     # Application class with singleton init
 │   │   │   │   ├── navigation/
@@ -95,7 +95,7 @@ HabitPulse/
 │   │   │   │   │   │   ├── ContactsScreen.kt    # Supervisor contacts list
 │   │   │   │   │   │   └── AdScreen.kt          # Splash ad screen
 │   │   │   │   │   ├── screens/welcome/
-│   │   │   │   │   │   ├── NewWelcomeScreen.kt  # New onboarding container (4-step AnimatedContent)
+│   │   │   │   │   │   ├── WelcomeScreen.kt  # Onboarding container (4-step AnimatedContent)
 │   │   │   │   │   │   ├── WelcomeStepLayout.kt # Shared step skeleton + bottom bar + buttons
 │   │   │   │   │   │   ├── WelcomeTopBar.kt     # Back-button-only top bar (no progress dots/label)
 │   │   │   │   │   │   ├── WelcomeRiseIn.kt     # Stagger rise-in entrance animation
@@ -104,17 +104,17 @@ HabitPulse/
 │   │   │   │   │   │   ├── WelcomeNotificationsStep.kt # Step 3: reminder/DND/persistent switches
 │   │   │   │   │   │   └── WelcomeDoneStep.kt   # Step 4: done + enter app
 │   │   │   │   │   ├── screens/settings/
-│   │   │   │   │   │   ├── NewSettingsScaffold.kt       # Shared scaffold for new settings screens
-│   │   │   │   │   │   ├── NewSettingsHomeScreen.kt     # New settings home
-│   │   │   │   │   │   ├── NewSettingsAIScreen.kt       # AI settings (config list, selection)
-│   │   │   │   │   │   ├── NewSettingsAIEditScreen.kt   # AI config add/edit form
-│   │   │   │   │   │   ├── NewSettingsNotificationsScreen.kt # Notifications
-│   │   │   │   │   │   ├── NewSettingsDebugReminderScreen.kt # Debug reminders
-│   │   │   │   │   │   ├── NewSettingsTemplateScreen.kt # Notification template
-│   │   │   │   │   │   ├── NewSettingsGeneralScreen.kt # General
-│   │   │   │   │   │   ├── NewSettingsLanguageScreen.kt # Language (radio list)
-│   │   │   │   │   │   ├── NewSettingsAboutDetailScreen.kt # About detail (5-tap on version opens debug)
-│   │   │   │   │   │   ├── NewSettingsDebugScreen.kt     # Debug settings (add sample habits)
+│   │   │   │   │   │   ├── SettingsScaffold.kt       # Shared scaffold for settings screens
+│   │   │   │   │   │   ├── SettingsHomeScreen.kt     # Settings home
+│   │   │   │   │   │   ├── SettingsAIScreen.kt       # AI settings (config list, selection)
+│   │   │   │   │   │   ├── SettingsAIEditScreen.kt   # AI config add/edit form
+│   │   │   │   │   │   ├── SettingsNotificationsScreen.kt # Notifications
+│   │   │   │   │   │   ├── SettingsDebugReminderScreen.kt # Debug reminders
+│   │   │   │   │   │   ├── SettingsTemplateScreen.kt # Notification template
+│   │   │   │   │   │   ├── SettingsGeneralScreen.kt # General
+│   │   │   │   │   │   ├── SettingsLanguageScreen.kt # Language (radio list)
+│   │   │   │   │   │   ├── SettingsAboutDetailScreen.kt # About detail (5-tap on version opens debug)
+│   │   │   │   │   │   ├── SettingsDebugScreen.kt     # Debug settings (add sample habits)
 │   │   │   │   │   │   └── components/
 │   │   │   │   │   │       ├── SettingsSegmentedItem.kt # Segmented list item + icon chip + surface
 │   │   │   │   │   │       ├── SettingsSegmentedSwitch.kt # Segmented switch row
@@ -347,8 +347,8 @@ The project is in **early development stage** (v0.5.19-alpha):
 - ✅ Project structure set up
 - ✅ Basic Compose theme configured with Monet dynamic colors
 - ✅ Navigation Compose integrated with custom animations and shared transitions
-- ✅ LauncherActivity for routing between NewWelcome and MainActivity
-- ✅ NewWelcomeActivity + NewWelcomeScreen with 4-step onboarding flow (greeting → permissions → notifications → done)
+- ✅ LauncherActivity for routing between Welcome and MainActivity
+- ✅ WelcomeActivity + WelcomeScreen with 4-step onboarding flow (greeting → permissions → notifications → done)
 - ✅ AdScreen with countdown skip for splash ads
 - ✅ Home screen with 3 tabs: Habits, Contacts, Records
 - ✅ **HomeScreen Refactoring** - Split into layout shell (HomeScreen.kt) and content screens (HabitScreen.kt, etc.) for better maintainability (~1100 lines vs original 2900+)
@@ -434,15 +434,15 @@ The project is in **early development stage** (v0.5.19-alpha):
   - `HabitStatusTest` (12 tests) - covers `pendingCount`, `isCompletelyOverdue`, negative pendingCount, old-style completion compatibility
   - `HabitCompletionTest` (5 tests) - covers `getTodayDate()`, `getFormattedDate()`, and default values
 - ✅ **New Settings Redesign** - Segmented list settings UI with grouped items, leading icon chips, switches, and per-screen scaffolds
-- ✅ **Debug Settings Page** - Hidden debug page reached by tapping the version item 5 times within 5 seconds on the new About screen; hosts developer tools (add sample habits, reset onboarding to show the welcome flow on next launch), icon-less list items; sample-data dialog shows a warning that adding a large batch may disrupt existing habits and trigger many unnecessary reminders (6 locale `debug_add_sample_data_warning`); reset-onboarding item asks for confirmation then calls `HabitViewModel.resetOnboarding()` (writes `hasCompletedOnboarding=false` so `LauncherActivity` routes to `NewWelcomeActivity`)
-- ✅ **AI Config Provider Merge (superseded)** - AI provider config form was merged directly into the AI config page (second-level page); `NewSettingsAIProviderScreen.kt` / `NewSettingsAIProviderActivity.kt` deleted. Superseded by **Multi-AI-Config Settings** below, which moved the form out into a separate add/edit page (`NewSettingsAIEditActivity`)
+- ✅ **Debug Settings Page** - Hidden debug page reached by tapping the version item 5 times within 5 seconds on the new About screen; hosts developer tools (add sample habits, reset onboarding to show the welcome flow on next launch), icon-less list items; sample-data dialog shows a warning that adding a large batch may disrupt existing habits and trigger many unnecessary reminders (6 locale `debug_add_sample_data_warning`); reset-onboarding item asks for confirmation then calls `HabitViewModel.resetOnboarding()` (writes `hasCompletedOnboarding=false` so `LauncherActivity` routes to `WelcomeActivity`)
+- ✅ **AI Config Provider Merge (superseded)** - AI provider config form was merged directly into the AI config page (second-level page); `SettingsAIProviderScreen.kt` / `SettingsAIProviderActivity.kt` deleted. Superseded by **Multi-AI-Config Settings** below, which moved the form out into a separate add/edit page (`SettingsAIEditActivity`)
 - ✅ **AI Config Page Layout** - Provider config form (endpoint/key/model/test connection), streaming output switch + memory entry grouped as segmented list items; notice shown as standalone text (same style as About screen), no horizontal divider
 - ✅ **Model Label Localization** - Preset model labels (`glm-4-flash-250414（默认）`, `glm-5.1（最新旗舰）`) resource-ized via `ai_settings_model_default_label` / `ai_settings_model_flagship_label` format strings in all 4 locale files
-- ✅ **Old Settings Interface Migration** - Entry points to legacy settings migrated to new settings: Home settings button → `NewSettingsActivity`, AI Create Habit settings button → `NewSettingsAIActivity` (both in `HabitPulseNavGraph.kt`)
-- ✅ **In-App Language Switching** - Settings → General → Language entry (Android 13+ per-app language via platform `LocaleManager`; `LocaleManagerCompat` getter + reflection fallback for API 33 `@SystemApi` setter); dedicated `NewSettingsLanguageActivity` sub-page: "跟随系统" in its own group with system-language supporting text + fixed self-named labels (中文（简体，中国大陆）/ 中文（繁体，台湾）/ 中文（繁体，香港）/ English (US) / English (UK), `translatable="false"`), radio-button rows; selecting a language returns to the previous page with a single refresh; option hidden on API < 33; managed by `utils/AppLocaleManager.kt`
+- ✅ **Old Settings Interface Migration** - Entry points to legacy settings migrated to new settings: Home settings button → `SettingsActivity`, AI Create Habit settings button → `SettingsAIActivity` (both in `HabitPulseNavGraph.kt`)
+- ✅ **In-App Language Switching** - Settings → General → Language entry (Android 13+ per-app language via platform `LocaleManager`; `LocaleManagerCompat` getter + reflection fallback for API 33 `@SystemApi` setter); dedicated `SettingsLanguageActivity` sub-page: "跟随系统" in its own group with system-language supporting text + fixed self-named labels (中文（简体，中国大陆）/ 中文（繁体，台湾）/ 中文（繁体，香港）/ English (US) / English (UK), `translatable="false"`), radio-button rows; selecting a language returns to the previous page with a single refresh; option hidden on API < 33; managed by `utils/AppLocaleManager.kt`
 - ✅ **Settings Press Haptics** - Non-disabled settings list items (`SettingsListSurface`), text link buttons (`SettingsTextLinkButton`), and scaffold back/help `IconButton`s vibrate 25ms on press-down and 25ms on release (half of the 50ms home check-in button) via `ui/utils/PressVibrationFeedback.kt` (`PressVibrationFeedback` composable + `vibrateShort` + `rememberHapticsEnabled`); new General toggle "关闭应用内全部震动" (`HAPTIC_FEEDBACK_ENABLED` in `UserPreferences.kt`, default on, with the "关闭" switch showing off by default so the phone vibrates by default) gates all in-app vibration including the check-in button; "界面与显示" group renamed to "显示与触感" (all 6 string files)
-- ✅ **Vibration Debug Sub-page** - 调试 → 震动调试子页 (`NewSettingsDebugVibrationActivity`/`NewSettingsDebugVibrationScreen`): sliders for press-vibration duration (5-200ms) and amplitude (1-255) with immediate test button and reset-to-default; stored in DataStore (`PRESS_VIBRATION_DURATION_MS` / `PRESS_VIBRATION_AMPLITUDE` in `UserPreferences.kt`); `vibrateShort`/`PressVibrationFeedback`/`DndRangeSlider` now read configurable params via `rememberPressVibrationParams()`, amplitude only applies when hardware supports amplitude control (`hasAmplitudeControl()`, fallback `DEFAULT_AMPLITUDE`); settings scaffold (`NewSettingsScaffold`) also vibrates once when scrolling to top/bottom edge via `snapshotFlow` on scrollState (no vibration on non-scrollable short pages); devdoc `listitem-style.md` §7 updated
-- ✅ **Multi-AI-Config Settings** - AI settings upgraded from a single provider config to a managed list: AI config list page (`NewSettingsAIScreen`) shows all configs (tap row = set active, trailing edit pencil = edit page, radio shows active), "添加 AI 配置" opens `NewSettingsAIEditActivity`; edit page (`NewSettingsAIEditScreen`) has name/endpoint/key/model fields + per-config streaming & deep-thinking switches + test connection + save/delete; storage migrated to DataStore `llm_ai_configs` (JSON array of `AIConfig`, Gson + `@SerializedName`) + `llm_active_config_id`; legacy `llm_api_endpoint/llm_api_key/llm_model_name/llm_streaming_response` keys are deprecated and one-time migrated into a "默认配置" (via `migrateLegacyAiConfig()` on cold start, then physically removed); consumers (`AICreateHabitViewModel`, `AICreateHabitScreen`, welcome flow) read the active config through `getActiveAIConfig()`/`activeConfigFlow`; shared `AiConnectionTester` for test-connection; `SettingsSectionHeader` extracted as a shared component; legacy `AISettingsScreen`/`AISettingsActivity` deleted, legacy `SettingsActivity` AI entry repointed to `NewSettingsAIActivity`; welcome flow kept compiling with minimal changes (full welcome/AI feature refactor deferred)
+- ✅ **Vibration Debug Sub-page** - 调试 → 震动调试子页 (`SettingsDebugVibrationActivity`/`SettingsDebugVibrationScreen`): sliders for press-vibration duration (5-200ms) and amplitude (1-255) with immediate test button and reset-to-default; stored in DataStore (`PRESS_VIBRATION_DURATION_MS` / `PRESS_VIBRATION_AMPLITUDE` in `UserPreferences.kt`); `vibrateShort`/`PressVibrationFeedback`/`DndRangeSlider` now read configurable params via `rememberPressVibrationParams()`, amplitude only applies when hardware supports amplitude control (`hasAmplitudeControl()`, fallback `DEFAULT_AMPLITUDE`); settings scaffold (`SettingsScaffold`) also vibrates once when scrolling to top/bottom edge via `snapshotFlow` on scrollState (no vibration on non-scrollable short pages); devdoc `listitem-style.md` §7 updated
+- ✅ **Multi-AI-Config Settings** - AI settings upgraded from a single provider config to a managed list: AI config list page (`SettingsAIScreen`) shows all configs (tap row = set active, trailing edit pencil = edit page, radio shows active), "添加 AI 配置" opens `SettingsAIEditActivity`; edit page (`SettingsAIEditScreen`) has name/endpoint/key/model fields + per-config streaming & deep-thinking switches + test connection + save/delete; storage migrated to DataStore `llm_ai_configs` (JSON array of `AIConfig`, Gson + `@SerializedName`) + `llm_active_config_id`; legacy `llm_api_endpoint/llm_api_key/llm_model_name/llm_streaming_response` keys are deprecated and one-time migrated into a "默认配置" (via `migrateLegacyAiConfig()` on cold start, then physically removed); consumers (`AICreateHabitViewModel`, `AICreateHabitScreen`, welcome flow) read the active config through `getActiveAIConfig()`/`activeConfigFlow`; shared `AiConnectionTester` for test-connection; `SettingsSectionHeader` extracted as a shared component; legacy `AISettingsScreen`/`AISettingsActivity` deleted, legacy `SettingsActivity` AI entry repointed to `SettingsAIActivity`; welcome flow kept compiling with minimal changes (full welcome/AI feature refactor deferred)
 - ✅ **LLM API Key 加密** - API key 在 DataStore 中以密文存放，运行时静默解密，查看需生物识别：
   - 双密钥 AES-256-GCM：`llm_config_runtime`（无认证，静默解密）/ `llm_config_reveal`（`setUserAuthenticationParameters(0, AUTH_BIOMETRIC_STRONG | AUTH_DEVICE_CREDENTIAL)`），由 `data/security/KeystoreManager.kt` 管理
   - `data/security/AesGcmCipher.kt`：密文格式 `Base64(IV + ciphertext)`，每次新 12 字节随机 IV，解密失败抛 `AesGcmCipherException`（可恢复）
@@ -452,7 +452,7 @@ The project is in **early development stage** (v0.5.19-alpha):
   - `AIConfig` 新增 `displayCipher`（展示密文）与 `keyVersion: Int = 0`（0 = 明文遗留）字段（`@SerializedName`）；`hasApiKeyConfigured()` 基于密文判空
   - 迁移：冷启动（`HabitPulseApplication.onCreate` 调 `encryptAndPersistConfigs()`）+ 惰性兜底（`getActiveAIConfig()` 读到明文先迁移）；`decodeConfigs` 经 `normalizeForStorage()` 兼容缺 `displayCipher` 的旧 JSON
   - 运行时链路：`getActiveAIConfig()` 解密后返回明文版配置供 `toLLMConfig()`/`LLMClient` 发请求；`aiConfigsFlow`/`activeConfigFlow` 保持密文，UI 判空改用 `hasApiKeyConfigured()`（`AICreateHabitScreen`）
-  - 查看门控：`NewSettingsAIEditActivity` 改为 `FragmentActivity`；编辑页 API key 输入框加密态以不可选中的圆点 `•••` 展示（`enabled = false` + `OutlinedTextFieldDefaults` disabled 配色，尾图标仍可点击，示意「已填写但已加密」），`PasswordVisualTransformation` 仅在未展示明文时生效，点击查看 → BiometricPrompt（`canAuthenticate` 检测，无生物识别/设备凭据时按钮禁用）→ CryptoObject 解密填入明文；离开页面/60s 超时自动隐藏，每次查看重新验证；解密失败引导重新录入不崩溃
+  - 查看门控：`SettingsAIEditActivity` 改为 `FragmentActivity`；编辑页 API key 输入框加密态以不可选中的圆点 `•••` 展示（`enabled = false` + `OutlinedTextFieldDefaults` disabled 配色，尾图标仍可点击，示意「已填写但已加密」），`PasswordVisualTransformation` 仅在未展示明文时生效，点击查看 → BiometricPrompt（`canAuthenticate` 检测，无生物识别/设备凭据时按钮禁用）→ CryptoObject 解密填入明文；离开页面/60s 超时自动隐藏，每次查看重新验证；解密失败引导重新录入不崩溃
   - 测试连接（`AiConnectionTester`）在编辑已配置 key 时用 `decryptRuntime` 静默解密后测试
   - 依赖：`androidx.biometric:biometric:1.1.0` + `androidx.fragment:fragment-ktx:1.8.5`
   - 单元测试：`AesGcmCipherTest`（9 用例：往返/IV 唯一/Base64/篡改/错误密钥）、`ApiKeyMigrationTest`（11 用例：明文判定/迁移幂等/失败保底）、`AIConfigCompatTest`（5 用例：密文判空/旧 JSON 兼容）
@@ -461,13 +461,13 @@ The project is in **early development stage** (v0.5.19-alpha):
   - 引擎 `AIChatConversationManager`（`ai/conversation/`，与旧 `ConversationManager` 并存）：单轮 while 循环执行全部 tool_calls 并以 `role=tool` 回灌，直到无工具或命中暂停点（ask_question / create_habit / delete_habit）；`ToolResult.Error` ≥ MAX_RETRIES 触发错误事件；流式空内容/无工具回退一次非流式；`ConversationGuard` 扩展 `invalidSettingTries`（设置类连续报错 ≥3 触发 GuardBlocked）；`retryLastTurn` 删除最后一个 assistant 轮后重发
   - 工具注册表 `ai/tools/chat/`（`ChatTool`/`ChatToolRegistry`/`functionSpec`）：9 个工具 - `create_habit`（HH:mm 去重、repeat_days 0..6 去重、WEEKLY 缺天报错提问、title≤30/notes≤200 截断）、`search_habits`（`HabitRepository.searchHabitsFlow` first()，无关键字返回全部习惯按 sortOrder；`habitToBrief` 共享转换函数，含主键+打卡统计）、`edit_habit`/`delete_habit`（校验 id+title 回显）、`get_settings_status`/`update_setting`/`open_settings_page`（`ControllableSetting` 6 开关白名单映射 `UserPreferences` setter 与 Activity）、`ask_question`/`reply`
   - ViewModel `AIChatViewModel`（`viewmodel/`）：`messages` 单一数据源 + `usage: SessionUsage` 精确统计；`selectedConfigId` 会话级切换（默认读 `activeConfigFlow`，**不写回全局** `setActiveAIConfig`）；确认才 `insertHabit`/`deleteHabit`（无孤儿行）；未确认新习惯仅内存卡片；`HabitPickerCard` 带 `cardId`，支持 `searchHabitsInPicker`（卡内搜索全部习惯）/`submitPickerSelection`（多选提交给 AI）/`manualPickerDone`（我已手动操作继续会话）
-  - UI `AIChatScreen`（`ui/screens/ai/`）：TopAppBar（标题输出中变化、返回确认、`ProviderSwitcher` AssistChip→DropdownMenu 底部「管理提供商」、清除对话确认、Token 小字）；`ProviderSwitcher` 无配置时显「未配置」直接进 `NewSettingsAIActivity`；消息列表渲染气泡/`ThinkingBlock`/提问卡（choice/time/day_of_week/multi_choice/text/confirm）/新建习惯卡（确认/编辑/删除）/选择卡/编辑跳转卡/删除确认卡/设置状态与变更卡（撤销）/设置导航卡；底部输入栏横屏压缩 2 行 + 免责声明（横屏+键盘隐藏）；`HabitPickerCard` 含顶部搜索框（300ms 防抖）、多选高亮、行内编辑/删除、底部「提交选择」+「我已手动操作」
+  - UI `AIChatScreen`（`ui/screens/ai/`）：TopAppBar（标题输出中变化、返回确认、`ProviderSwitcher` AssistChip→DropdownMenu 底部「管理提供商」、清除对话确认、Token 小字）；`ProviderSwitcher` 无配置时显「未配置」直接进 `SettingsAIActivity`；消息列表渲染气泡/`ThinkingBlock`/提问卡（choice/time/day_of_week/multi_choice/text/confirm）/新建习惯卡（确认/编辑/删除）/选择卡/编辑跳转卡/删除确认卡/设置状态与变更卡（撤销）/设置导航卡；底部输入栏横屏压缩 2 行 + 免责声明（横屏+键盘隐藏）；`HabitPickerCard` 含顶部搜索框（300ms 防抖）、多选高亮、行内编辑/删除、底部「提交选择」+「我已手动操作」
   - `UserPreferences.getAIConfig(id)` 会话内按 id 取明文 key 配置（不写回全局）
   - 系统提示词新增 `assets/prompts/chat_system_prompt.md`（tool-calling 专用，`SystemPrompt.getChatSystemPrompt`）；6 个 strings 文件新增 `ai_chat_*` 文案；新增 `ai_error_guard_blocked`
   - 单元测试：`AIChatConversationManagerTest`（工具循环/暂停点/重试上限/流式降级）、`ConversationGuardTest`（同题拦截/纠错计数）、`ToolRegistryTest`（校验/白名单/状态数据）
-- ✅ **Unified Device Form Factor** - 全应用统一的设备形态判定单一入口 `ui/DeviceFormFactor.kt`：`DeviceFormInfo`（携带 `windowSizeClass`/`windowPosture`）+ 纯函数 `classifyDeviceForm()`（无 Android 依赖可单测）+ `@Composable rememberDeviceFormInfo()`（`currentWindowAdaptiveInfo()`，旋转/分屏/折叠自动重组）。断点：`TABLET_MIN_WIDTH_DP=600`（`isTabletDevice` = `min(宽,高)>=600`，对齐旧 `smallestScreenWidthDp`）、`WIDE_LAYOUT_MIN_WIDTH_DP=840`（`isWideLayout` = 横屏且宽>=840）、`LARGE_SCREEN_MIN_WIDTH_DP=1200`（`isLargeWindow`）。派生标志 `isTabletLandscape`/`isPhoneLandscape`/`isWideLayout`/`isLargeWindow`。迁移调用点：`HomeScreen`（导航模式 `isTabletLandscape`/`isPhoneLandscape`、`isWaterfallMode`→`isWideLayout`）、`HabitScreen`（`useStaggeredGrid` = `isWideLayout || (forceTabletLandscape && isLandscape)`，删除 `screenWidthDp=840` hack）、`RecordsScreen`/`ContactsScreen`（`useTwoColumnLayout`→`isWideLayout`）、`WelcomeScreen`（`shouldUseSplitLayout`→`isLandscape`、`isTablet`→`isLargeWindow`）、`RewardBottomSheet`/`NotificationConfirmDialog`/`NewSettingsGeneralScreen`/`SettingsActivity`/`AIChatScreen`/`AICreateHabitScreen`。约定：页面禁止自行用 `LocalConfiguration`/`smallestScreenWidthDp`/`screenWidthDp`/`orientation` 判定设备形态，一律走 `rememberDeviceFormInfo()`；`@Preview` 的 `uiMode` 可保留 `Configuration.ORIENTATION_LANDSCAPE`
+- ✅ **Unified Device Form Factor** - 全应用统一的设备形态判定单一入口 `ui/DeviceFormFactor.kt`：`DeviceFormInfo`（携带 `windowSizeClass`/`windowPosture`）+ 纯函数 `classifyDeviceForm()`（无 Android 依赖可单测）+ `@Composable rememberDeviceFormInfo()`（`currentWindowAdaptiveInfo()`，旋转/分屏/折叠自动重组）。断点：`TABLET_MIN_WIDTH_DP=600`（`isTabletDevice` = `min(宽,高)>=600`，对齐旧 `smallestScreenWidthDp`）、`WIDE_LAYOUT_MIN_WIDTH_DP=840`（`isWideLayout` = 横屏且宽>=840）、`LARGE_SCREEN_MIN_WIDTH_DP=1200`（`isLargeWindow`）。派生标志 `isTabletLandscape`/`isPhoneLandscape`/`isWideLayout`/`isLargeWindow`。迁移调用点：`HomeScreen`（导航模式 `isTabletLandscape`/`isPhoneLandscape`、`isWaterfallMode`→`isWideLayout`）、`HabitScreen`（`useStaggeredGrid` = `isWideLayout || (forceTabletLandscape && isLandscape)`，删除 `screenWidthDp=840` hack）、`RecordsScreen`/`ContactsScreen`（`useTwoColumnLayout`→`isWideLayout`）、`WelcomeScreen`（`shouldUseSplitLayout`→`isLandscape`、`isTablet`→`isLargeWindow`）、`RewardBottomSheet`/`NotificationConfirmDialog`/`SettingsGeneralScreen`/`SettingsActivity`/`AIChatScreen`/`AICreateHabitScreen`。约定：页面禁止自行用 `LocalConfiguration`/`smallestScreenWidthDp`/`screenWidthDp`/`orientation` 判定设备形态，一律走 `rememberDeviceFormInfo()`；`@Preview` 的 `uiMode` 可保留 `Configuration.ORIENTATION_LANDSCAPE`
   - 单元测试：`DeviceFormFactorTest`（19 用例：600/840/1200 边界、手机/平板竖横屏、方形窗口、派生标志）
-- ✅ **In-App Font Size** - 应用内字体大小自定义（通用 → 字体大小，入口在「语言」上方、同一「显示与触感」组）：DataStore 新增 `FONT_SCALE_FOLLOW_SYSTEM`（默认 true）/ `FONT_SCALE`（默认 1.0f）；`HabitPulseTheme` 通过 `CompositionLocalProvider(LocalDensity provides Density(density, effectiveFontScale))` 全局覆盖字体缩放（跟随系统=系统 `fontScale`，关闭=自定义值；`@Preview` 用 `LocalInspectionMode` 跳过 DataStore 访问）。字体大小页 `NewSettingsFontScaleScreen`/`NewSettingsFontScaleActivity`（已注册 manifest）：跟随系统开关 = 单行 listitem 开关（无图标无说明，走标准按压/长按/震动）；滑杆档位 = Android 系统字体缩放预设 `[0.85, 1.0, 1.15, 1.3, 1.45, 1.6, 1.75, 1.9, 2.0]`（索引用 0..8，标准 1.0 刻度标记 + 最小/最大大小 A 字母）；开关打开时滑杆滚动到 `LocalConfiguration.current.fontScale` 最近档位并呈禁用灰化样式（仍可拖动，首次拖动自动关闭跟随系统），滑动按档位震动（`rememberHapticsEnabled`/`rememberPressVibrationParams`/`vibrateShort`，遵循全局震动开关）；设置离开页面时一次性写入生效（`BackHandler` + commit 标志）。通用页入口图标 `Icons.Outlined.FormatSize`（index 0 → 蓝），存储分组 `tintOffset` 2→4 避免同页图标颜色重复；通用首页入口描述改为「语言、显示与触感」（6 个 strings.xml）
+- ✅ **In-App Font Size** - 应用内字体大小自定义（通用 → 字体大小，入口在「语言」上方、同一「显示与触感」组）：DataStore 新增 `FONT_SCALE_FOLLOW_SYSTEM`（默认 true）/ `FONT_SCALE`（默认 1.0f）；`HabitPulseTheme` 通过 `CompositionLocalProvider(LocalDensity provides Density(density, effectiveFontScale))` 全局覆盖字体缩放（跟随系统=系统 `fontScale`，关闭=自定义值；`@Preview` 用 `LocalInspectionMode` 跳过 DataStore 访问）。字体大小页 `SettingsFontScaleScreen`/`SettingsFontScaleActivity`（已注册 manifest）：跟随系统开关 = 单行 listitem 开关（无图标无说明，走标准按压/长按/震动）；滑杆档位 = Android 系统字体缩放预设 `[0.85, 1.0, 1.15, 1.3, 1.45, 1.6, 1.75, 1.9, 2.0]`（索引用 0..8，标准 1.0 刻度标记 + 最小/最大大小 A 字母）；开关打开时滑杆滚动到 `LocalConfiguration.current.fontScale` 最近档位并呈禁用灰化样式（仍可拖动，首次拖动自动关闭跟随系统），滑动按档位震动（`rememberHapticsEnabled`/`rememberPressVibrationParams`/`vibrateShort`，遵循全局震动开关）；设置离开页面时一次性写入生效（`BackHandler` + commit 标志）。通用页入口图标 `Icons.Outlined.FormatSize`（index 0 → 蓝），存储分组 `tintOffset` 2→4 避免同页图标颜色重复；通用首页入口描述改为「语言、显示与触感」（6 个 strings.xml）
 
 ### In Progress
 - 🔄 Calendar section
@@ -491,7 +491,7 @@ The project is in **early development stage** (v0.5.19-alpha):
 ```
 ┌──────────────┐      ┌──────────────┐      ┌─────────────────┐
 │              │      │              │      │                 │
-│LauncherActivity│───▶│NewWelcomeActivity│      │SettingsActivity │
+│LauncherActivity│───▶│WelcomeActivity│      │SettingsActivity │
 │              │      │                  │      │                 │
 │  Route logic │      │  4-step guide   │      │  - App info     │
 └──────┬───────┘      └──────┬───────┘      │  - Visual opts  │

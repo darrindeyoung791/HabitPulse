@@ -8,23 +8,23 @@ import androidx.activity.enableEdgeToEdge
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.platform.LocalContext
 import io.github.darrindeyoung791.habitpulse.navigation.RouteConfig
-import io.github.darrindeyoung791.habitpulse.ui.screens.settings.SettingsHomeScreen
+import io.github.darrindeyoung791.habitpulse.ui.screens.settings.SettingsFontScaleScreen
 import io.github.darrindeyoung791.habitpulse.ui.theme.HabitPulseTheme
 
-class SettingsActivity : ComponentActivity() {
+class SettingsFontScaleActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
         setContent {
             HabitPulseTheme {
-                SettingsHomeContent()
+                SettingsFontScaleContent()
             }
         }
     }
 }
 
 @Composable
-private fun SettingsHomeContent() {
+private fun SettingsFontScaleContent() {
     val context = LocalContext.current
     val onHelp: () -> Unit = {
         val intent = Intent(context, WebViewActivity::class.java).apply {
@@ -33,20 +33,8 @@ private fun SettingsHomeContent() {
         context.startActivity(intent)
     }
 
-    SettingsHomeScreen(
+    SettingsFontScaleScreen(
         onBack = { (context as? android.app.Activity)?.finish() },
-        onNavigateAI = {
-            context.startActivity(Intent(context, SettingsAIActivity::class.java))
-        },
-        onNavigateNotifications = {
-            context.startActivity(Intent(context, SettingsNotificationsActivity::class.java))
-        },
-        onNavigateGeneral = {
-            context.startActivity(Intent(context, SettingsGeneralActivity::class.java))
-        },
-        onNavigateAbout = {
-            context.startActivity(Intent(context, SettingsAboutActivity::class.java))
-        },
         onOpenHelp = onHelp
     )
 }

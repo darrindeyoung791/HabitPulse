@@ -26,7 +26,7 @@ class AIChatActivity : ComponentActivity() {
                 AIChatScreen(
                     onNavigateBack = { finish() },
                     onNavigateToSettings = {
-                        startActivity(Intent(this, NewSettingsAIActivity::class.java))
+                        startActivity(Intent(this, SettingsAIActivity::class.java))
                     },
                     onEditHabit = { habitId ->
                         val intent = Intent(this, MainActivity::class.java).apply {

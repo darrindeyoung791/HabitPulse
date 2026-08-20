@@ -61,7 +61,7 @@ import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.lifecycle.viewmodel.compose.viewModel
 import io.github.darrindeyoung791.habitpulse.HabitPulseApplication
-import io.github.darrindeyoung791.habitpulse.NewSettingsAIActivity
+import io.github.darrindeyoung791.habitpulse.SettingsAIActivity
 import io.github.darrindeyoung791.habitpulse.R
 import io.github.darrindeyoung791.habitpulse.ai.conversation.PartialHabit
 import io.github.darrindeyoung791.habitpulse.ai.tools.PendingQuestionData
@@ -1317,20 +1317,20 @@ private fun openSettingsPage(
     val intent = when (data.page) {
         "notifications" -> android.content.Intent(
             application,
-            io.github.darrindeyoung791.habitpulse.NewSettingsNotificationsActivity::class.java
+            io.github.darrindeyoung791.habitpulse.SettingsNotificationsActivity::class.java
         )
         "general" -> android.content.Intent(
             application,
-            io.github.darrindeyoung791.habitpulse.NewSettingsGeneralActivity::class.java
+            io.github.darrindeyoung791.habitpulse.SettingsGeneralActivity::class.java
         )
         "about" -> android.content.Intent(
             application,
-            io.github.darrindeyoung791.habitpulse.NewSettingsAboutActivity::class.java
+            io.github.darrindeyoung791.habitpulse.SettingsAboutActivity::class.java
         )
-        "ai" -> android.content.Intent(application, NewSettingsAIActivity::class.java)
+        "ai" -> android.content.Intent(application, SettingsAIActivity::class.java)
         else -> android.content.Intent(
             application,
-            io.github.darrindeyoung791.habitpulse.NewSettingsActivity::class.java
+            io.github.darrindeyoung791.habitpulse.SettingsActivity::class.java
         )
     }
     intent.addFlags(Intent.FLAG_ACTIVITY_NEW_TASK)
