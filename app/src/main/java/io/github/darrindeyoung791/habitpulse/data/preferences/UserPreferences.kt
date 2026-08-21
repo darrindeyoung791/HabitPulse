@@ -154,6 +154,14 @@ object PreferencesKeys {
      * AI 最大思考预算（reasoning tokens），默认 5000；0 表示不发送思考预算参数
      */
     val AI_MAX_THINKING_TOKENS = intPreferencesKey("ai_max_thinking_tokens")
+
+    /**
+     * 深色模式设置
+     * 0 = 跟随系统（默认）
+     * 1 = 强制开启深色模式
+     * 2 = 强制关闭深色模式（浅色）
+     */
+    val DARK_MODE = intPreferencesKey("dark_mode")
 }
 
 /**
@@ -775,6 +783,30 @@ class UserPreferences(private val context: Context) {
     suspend fun setAiMaxThinkingTokens(tokens: Int) {
         context.dataStore.edit { preferences ->
             preferences[PreferencesKeys.AI_MAX_THINKING_TOKENS] = tokens
+        }
+    }
+
+    /**
+     * 深色模式设置的 Flow
+     * 默认值为 0（跟随系统）
+     *
+     * 值含义：
+     * - 0: 跟随系统
+     * - 1: 强制开启深色模式
+     * - 2: 强制关闭深色模式（浅色）
+     */
+    val darkModeFlow: Flow<Int> = context.dataStore.data.map { preferences ->
+        preferences[PreferencesKeys.DARK_MODE] ?: 0
+    }
+
+    /**
+     * 设置深色模式
+     *
+     * @param mode 0=跟随系统, 1=强制开启, 2=强制关闭
+     */
+    suspend fun setDarkMode(mode: Int) {
+        context.dataStore.edit { preferences ->
+            preferences[PreferencesKeys.DARK_MODE] = mode
         }
     }
 }

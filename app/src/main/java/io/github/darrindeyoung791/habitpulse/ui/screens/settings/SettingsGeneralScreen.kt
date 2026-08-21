@@ -3,8 +3,27 @@ package io.github.darrindeyoung791.habitpulse.ui.screens.settings
 import android.content.Context
 import android.webkit.CookieManager
 import android.widget.Toast
+import androidx.compose.animation.core.animateDpAsState
+import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
+import androidx.compose.foundation.LocalIndication
+import androidx.compose.foundation.interaction.MutableInteractionSource
+import androidx.compose.foundation.interaction.collectIsPressedAsState
+import androidx.compose.foundation.layout.Arrangement
+import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.Column
+import androidx.compose.foundation.layout.ExperimentalLayoutApi
+import androidx.compose.foundation.layout.FlowRow
+import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.fillMaxWidth
+import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
+import androidx.compose.material.icons.outlined.DarkMode
+import androidx.compose.material.icons.filled.Check
 import androidx.compose.material.icons.outlined.DeleteSweep
 import androidx.compose.material.icons.outlined.FormatSize
 import androidx.compose.material.icons.outlined.Tablet
@@ -12,6 +31,7 @@ import androidx.compose.material.icons.outlined.Translate
 import androidx.compose.material.icons.outlined.Vibration
 import androidx.compose.material3.AlertDialog
 import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.Icon
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
@@ -21,7 +41,9 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
+import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
@@ -29,10 +51,14 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import io.github.darrindeyoung791.habitpulse.R
 import io.github.darrindeyoung791.habitpulse.data.preferences.UserPreferences
 import io.github.darrindeyoung791.habitpulse.ui.rememberDeviceFormInfo
+import io.github.darrindeyoung791.habitpulse.ui.screens.settings.components.LargeCorner
+import io.github.darrindeyoung791.habitpulse.ui.screens.settings.components.PressedCorner
 import io.github.darrindeyoung791.habitpulse.ui.screens.settings.components.SettingsSectionHeader
 import io.github.darrindeyoung791.habitpulse.ui.screens.settings.components.SettingsSegmentedGroup
 import io.github.darrindeyoung791.habitpulse.ui.screens.settings.components.SettingsSegmentedItem
 import io.github.darrindeyoung791.habitpulse.ui.screens.settings.components.SettingsSegmentedSwitch
+import io.github.darrindeyoung791.habitpulse.ui.screens.settings.components.SmallCorner
+import io.github.darrindeyoung791.habitpulse.ui.utils.PressVibrationFeedback
 import io.github.darrindeyoung791.habitpulse.utils.AppLocaleManager
 import kotlinx.coroutines.launch
 import java.io.File
@@ -57,6 +83,7 @@ fun SettingsGeneralScreen(
 
     val forceTabletLandscape by userPreferences.forceTabletLandscapeFlow.collectAsStateWithLifecycle(initialValue = false)
     val hapticsEnabled by userPreferences.hapticsEnabledFlow.collectAsStateWithLifecycle(initialValue = true)
+    val darkMode by userPreferences.darkModeFlow.collectAsStateWithLifecycle(initialValue = 0)
 
     var showForceTabletLandscapeDialog by remember { mutableStateOf(false) }
     var pendingForceTabletLandscapeValue by remember { mutableStateOf(false) }
@@ -66,14 +93,57 @@ fun SettingsGeneralScreen(
         onBack = onBack,
         onHelp = onOpenHelp
     ) {
-        SettingsSectionHeader(text = stringResource(id = R.string.settings_ui_display))
+        // 语言组（独立一组，带段标题）
+        SettingsSectionHeader(text = stringResource(id = R.string.settings_language))
         val showLanguageItem = AppLocaleManager.isPerAppLanguageSupported()
-        val uiDisplayItemCount =
-            1 + (if (showLanguageItem) 1 else 0) + (if (showForceTabletLandscapeSwitch) 1 else 0) + 1
-        if (uiDisplayItemCount > 0) {
+        if (showLanguageItem) {
             SettingsSegmentedGroup {
+                val currentLanguageText = AppLocaleManager
+                    .getCurrentAppLocale(context)
+                    ?.toLanguageTag()
+                    ?.let { AppLocaleManager.labelRes(it) }
+                    ?.let { stringResource(id = it) }
                 SettingsSegmentedItem(
                     index = 0,
+                    count = 1,
+                    headline = stringResource(id = R.string.settings_language),
+                    supportingText = currentLanguageText
+                        ?: if (!AppLocaleManager.isSystemLanguageSupported(context)) {
+                            stringResource(
+                                id = R.string.language_follow_system_unsupported,
+                                stringResource(id = R.string.app_name)
+                            )
+                        } else {
+                            AppLocaleManager.systemLocaleLabelRes(context)
+                                ?.let { stringResource(id = it) }
+                                ?: stringResource(id = R.string.settings_language_system_default)
+                        },
+                    leadingIcon = Icons.Outlined.Translate,
+                    showArrow = true,
+                    onClick = onOpenLanguage
+                )
+            }
+        }
+
+        // 显示与触感组
+        SettingsSectionHeader(text = stringResource(id = R.string.settings_ui_display))
+        val uiDisplayItemCount =
+            1 + (if (showForceTabletLandscapeSwitch) 1 else 0) + 1
+        if (uiDisplayItemCount > 0) {
+            SettingsSegmentedGroup {
+                // 深色模式按钮组
+                DarkModeButtonGroup(
+                    index = 0,
+                    count = uiDisplayItemCount,
+                    selectedMode = darkMode,
+                    onModeSelected = { mode ->
+                        scope.launch {
+                            userPreferences.setDarkMode(mode)
+                        }
+                    }
+                )
+                SettingsSegmentedItem(
+                    index = 1,
                     count = uiDisplayItemCount,
                     headline = stringResource(id = R.string.settings_font_scale),
                     supportingText = stringResource(id = R.string.settings_font_scale_description),
@@ -81,35 +151,9 @@ fun SettingsGeneralScreen(
                     showArrow = true,
                     onClick = onOpenFontScale
                 )
-                if (showLanguageItem) {
-                    val currentLanguageText = AppLocaleManager
-                        .getCurrentAppLocale(context)
-                        ?.toLanguageTag()
-                        ?.let { AppLocaleManager.labelRes(it) }
-                        ?.let { stringResource(id = it) }
-                    SettingsSegmentedItem(
-                        index = 1,
-                        count = uiDisplayItemCount,
-                        headline = stringResource(id = R.string.settings_language),
-                        supportingText = currentLanguageText
-                            ?: if (!AppLocaleManager.isSystemLanguageSupported(context)) {
-                                stringResource(
-                                    id = R.string.language_follow_system_unsupported,
-                                    stringResource(id = R.string.app_name)
-                                )
-                            } else {
-                                AppLocaleManager.systemLocaleLabelRes(context)
-                                    ?.let { stringResource(id = it) }
-                                    ?: stringResource(id = R.string.settings_language_system_default)
-                            },
-                        leadingIcon = Icons.Outlined.Translate,
-                        showArrow = true,
-                        onClick = onOpenLanguage
-                    )
-                }
                 if (showForceTabletLandscapeSwitch) {
                     SettingsSegmentedSwitch(
-                        index = if (showLanguageItem) 2 else 1,
+                        index = 2,
                         count = uiDisplayItemCount,
                         headline = stringResource(id = R.string.settings_force_tablet_landscape),
                         supportingText = stringResource(id = R.string.settings_force_tablet_landscape_description),
@@ -256,5 +300,175 @@ private fun deleteDir(dir: File): Boolean {
         dir.delete()
     } else {
         dir.delete()
+    }
+}
+
+/**
+ * 深色模式 MD3 按钮组列表项
+ *
+ * 第一行：标题「深色模式」+ 前置图标
+ * 第二行：三个 MD3 风格按钮（关闭 / 开启 / 跟随系统），左对齐
+ *
+ * 按钮交互：
+ * - 按下时圆角从 LargeCorner(16dp) 动画到 PressedCorner(20dp)
+ * - 松手回弹
+ * - 遵循列表项按压震动规范（25ms）
+ */
+@OptIn(ExperimentalLayoutApi::class)
+@Composable
+private fun DarkModeButtonGroup(
+    index: Int,
+    count: Int,
+    selectedMode: Int,
+    onModeSelected: (Int) -> Unit
+) {
+    val topStart by animateDpAsState(if (index == 0) LargeCorner else SmallCorner)
+    val topEnd by animateDpAsState(if (index == 0) LargeCorner else SmallCorner)
+    val bottomStart by animateDpAsState(if (index == count - 1) LargeCorner else SmallCorner)
+    val bottomEnd by animateDpAsState(if (index == count - 1) LargeCorner else SmallCorner)
+    val shape = RoundedCornerShape(topStart, topEnd, bottomEnd, bottomStart)
+
+    val containerColor = MaterialTheme.colorScheme.surfaceContainer
+    val headlineColor = MaterialTheme.colorScheme.onSurface
+
+    Box(
+        modifier = Modifier
+            .fillMaxWidth()
+            .clip(shape)
+            .background(containerColor)
+    ) {
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(start = 16.dp, end = 16.dp, top = 12.dp, bottom = 12.dp),
+            verticalAlignment = Alignment.Top,
+            horizontalArrangement = Arrangement.spacedBy(16.dp)
+        ) {
+            // 前置图标 chip
+            Box(
+                modifier = Modifier
+                    .padding(top = 8.dp)
+                    .size(40.dp)
+                    .background(
+                        color = MaterialTheme.colorScheme.primaryContainer,
+                        shape = RoundedCornerShape(12.dp)
+                    ),
+                contentAlignment = Alignment.Center
+            ) {
+                androidx.compose.material3.Icon(
+                    imageVector = Icons.Outlined.DarkMode,
+                    contentDescription = null,
+                    tint = MaterialTheme.colorScheme.onPrimaryContainer,
+                    modifier = Modifier.size(24.dp)
+                )
+            }
+
+            Column(
+                modifier = Modifier.weight(1f),
+                verticalArrangement = Arrangement.spacedBy(8.dp)
+            ) {
+                Text(
+                    text = stringResource(id = R.string.settings_dark_mode),
+                    style = MaterialTheme.typography.bodyLarge,
+                    color = headlineColor
+                )
+                // MD3 按钮组（允许换行）
+                FlowRow(
+                    horizontalArrangement = Arrangement.spacedBy(8.dp),
+                    verticalArrangement = Arrangement.spacedBy(8.dp)
+                ) {
+                    DarkModeButton(
+                        label = stringResource(id = R.string.settings_dark_mode_off),
+                        selected = selectedMode == 2,
+                        onClick = { onModeSelected(2) }
+                    )
+                    DarkModeButton(
+                        label = stringResource(id = R.string.settings_dark_mode_on),
+                        selected = selectedMode == 1,
+                        onClick = { onModeSelected(1) }
+                    )
+                    DarkModeButton(
+                        label = stringResource(id = R.string.settings_dark_mode_follow_system),
+                        selected = selectedMode == 0,
+                        onClick = { onModeSelected(0) }
+                    )
+                }
+            }
+        }
+    }
+}
+
+/**
+ * 单个切换按钮
+ *
+ * - 未选中态：pill 胶囊形（100% 圆角）+ surfaceContainerHighest 底色
+ * - 选中态：8dp 圆角 + primary 底色（与开关强调色一致）+ 勾号图标
+ * - 按下时圆角缩小（未选中 100%→16dp，选中 8dp→4dp）
+ * - 遵循列表项按压震动规范
+ */
+@Composable
+private fun DarkModeButton(
+    label: String,
+    selected: Boolean,
+    onClick: () -> Unit
+) {
+    val interactionSource = remember { MutableInteractionSource() }
+    val pressed by interactionSource.collectIsPressedAsState()
+    val isPressed = pressed
+
+    PressVibrationFeedback(interactionSource = interactionSource)
+
+    // 未选中默认 pill 形，选中默认 8dp；按下时都缩小到 4dp
+    val defaultCorner = if (selected) 8.dp else 100.dp
+    val pressedCorner = 4.dp
+    val cornerRadius by animateDpAsState(
+        targetValue = if (isPressed) pressedCorner else defaultCorner,
+        label = "buttonCorner"
+    )
+    val shape = RoundedCornerShape(cornerRadius)
+
+    val containerColor = if (selected) {
+        MaterialTheme.colorScheme.primary
+    } else {
+        MaterialTheme.colorScheme.surfaceContainerHighest
+    }
+
+    val contentColor = if (selected) {
+        MaterialTheme.colorScheme.onPrimary
+    } else {
+        MaterialTheme.colorScheme.onSurfaceVariant
+    }
+
+    Box(
+        modifier = Modifier
+            .clip(shape)
+            .background(containerColor)
+            .clickable(
+                interactionSource = interactionSource,
+                indication = LocalIndication.current,
+                onClick = onClick
+            )
+            .padding(horizontal = 16.dp, vertical = 8.dp),
+        contentAlignment = Alignment.Center
+    ) {
+        Row(
+            verticalAlignment = Alignment.CenterVertically,
+            horizontalArrangement = Arrangement.spacedBy(4.dp)
+        ) {
+            if (selected) {
+                Icon(
+                    imageVector = Icons.Filled.Check,
+                    contentDescription = null,
+                    tint = contentColor,
+                    modifier = Modifier.size(16.dp)
+                )
+            }
+            Text(
+                text = label,
+                style = MaterialTheme.typography.labelLarge,
+                color = contentColor,
+                maxLines = 1
+            )
+        }
     }
 }

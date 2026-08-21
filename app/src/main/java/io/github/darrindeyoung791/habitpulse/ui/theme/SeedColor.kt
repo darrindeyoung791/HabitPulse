@@ -1,9 +1,10 @@
 package io.github.darrindeyoung791.habitpulse.ui.theme
 
-import androidx.compose.foundation.isSystemInDarkTheme
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.remember
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.luminance
 import androidx.compose.ui.graphics.toArgb
 import com.google.android.material.color.utilities.Hct
 import com.google.android.material.color.utilities.SchemeTonalSpot
@@ -48,9 +49,13 @@ internal fun seedAccentTint(seed: Color, dark: Boolean): AccentTint {
 
 /**
  * 根据明暗主题派生指定种子色的 container / content 颜色。
+ *
+ * 使用 [MaterialTheme.colorScheme] 的背景色亮度判断当前是否深色主题，
+ * 而非 [androidx.compose.foundation.isSystemInDarkTheme]（后者只读系统配置，
+ * 忽略应用内手动切换）。
  */
 @Composable
 internal fun rememberSeedAccentTint(seed: Color): AccentTint {
-    val dark = isSystemInDarkTheme()
+    val dark = MaterialTheme.colorScheme.background.luminance() < 0.5f
     return remember(seed, dark) { seedAccentTint(seed, dark) }
 }

@@ -15,6 +15,10 @@
     <string name="settings_haptic_feedback">關閉應用程式內全部震動</string>
     <string name="settings_haptic_feedback_description">關閉列表、按鈕等介面的按壓震動回饋</string>
     <string name="settings_language">語言</string>
+    <string name="settings_dark_mode">主題</string>
+    <string name="settings_dark_mode_off">淺色</string>
+    <string name="settings_dark_mode_on">深色</string>
+    <string name="settings_dark_mode_follow_system">跟隨系統</string>
     <string name="settings_font_scale">字型大小</string>
     <string name="settings_font_scale_description">自訂應用程式內字型大小</string>
     <string name="settings_font_scale_follow_system">跟隨系統</string>

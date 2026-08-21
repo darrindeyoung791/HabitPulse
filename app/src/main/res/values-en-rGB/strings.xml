@@ -15,6 +15,10 @@
     <string name="settings_haptic_feedback">Disable all in-app vibrations</string>
     <string name="settings_haptic_feedback_description">Turn off press vibration feedback for lists, buttons and other UI</string>
     <string name="settings_language">Language</string>
+    <string name="settings_dark_mode">Theme</string>
+    <string name="settings_dark_mode_off">Light</string>
+    <string name="settings_dark_mode_on">Dark</string>
+    <string name="settings_dark_mode_follow_system">Follow system</string>
     <string name="settings_font_scale">Font size</string>
     <string name="settings_font_scale_description">Customize the in-app font size</string>
     <string name="settings_font_scale_follow_system">Follow system</string>

@@ -9,7 +9,6 @@ import androidx.activity.compose.setContent
 import androidx.activity.enableEdgeToEdge
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.foundation.*
-import androidx.compose.foundation.isSystemInDarkTheme
 import androidx.compose.foundation.layout.*
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Surface
@@ -162,16 +161,8 @@ class MainActivity : ComponentActivity() {
                     )
                 }
 
-                // 再次在主内容可见时确保系统栏图标外观被正确设置（覆盖启动/过渡期影响）
-                val isSystemDark = isSystemInDarkTheme()
-                LaunchedEffect(showMainContent, isSystemDark) {
-                    if (showMainContent) {
-                        WindowCompat.getInsetsController(activity.window, activity.window.decorView).apply {
-                            isAppearanceLightStatusBars = !isSystemDark
-                            isAppearanceLightNavigationBars = !isSystemDark
-                        }
-                    }
-                }
+                // 系统栏图标外观由 HabitPulseTheme 的 SideEffect 根据 effectiveDarkTheme 统一设置，
+                // 此处不再单独处理，避免使用 isSystemInDarkTheme()（仅读系统配置，忽略应用内手动切换）。
 
                 if (showMainContent) {
                     Surface(

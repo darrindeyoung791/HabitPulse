@@ -11,10 +11,13 @@ import androidx.compose.material3.lightColorScheme
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.SideEffect
+import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.ui.graphics.Color
+import kotlinx.coroutines.flow.first
+import kotlinx.coroutines.runBlocking
 import androidx.compose.ui.graphics.toArgb
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalDensity
@@ -220,23 +223,45 @@ fun HabitPulseTheme(
     content: @Composable () -> Unit
 ) {
     val context = LocalContext.current
+    val isPreview = LocalInspectionMode.current
+    val userPreferences = remember { if (!isPreview) UserPreferences.getInstance(context) else null }
+
+    // 读取用户深色模式偏好：0=跟随系统, 1=强制开启, 2=强制关闭
+    // 用 remember + runBlocking 同步读取 DataStore 内存缓存，确保首帧即正确主题，
+    // 避免 collectAsState 的 LaunchedEffect 异步延迟导致首帧闪现系统默认主题。
+    // DataStore 在 Application.onCreate 后台线程已初始化，内存缓存已就绪，
+    // flow.first() 从缓存返回，亚毫秒级。
+    val darkModePref by if (userPreferences != null) {
+        val initialValue = remember {
+            runBlocking { userPreferences.darkModeFlow.first() }
+        }
+        userPreferences.darkModeFlow.collectAsState(initial = initialValue)
+    } else {
+        remember { mutableStateOf(0) }
+    }
+
+    // 根据偏好决定实际深色模式状态
+    val effectiveDarkTheme = when (darkModePref) {
+        1 -> true   // 强制开启
+        2 -> false  // 强制关闭
+        else -> darkTheme // 跟随系统
+    }
+
     val colorScheme = when {
         dynamicColor && Build.VERSION.SDK_INT >= Build.VERSION_CODES.S -> {
-            if (darkTheme) {
+            if (effectiveDarkTheme) {
                 dynamicDarkColorScheme(context)
             } else {
                 dynamicLightColorScheme(context)
             }
         }
 
-        darkTheme -> DarkColorScheme
+        effectiveDarkTheme -> DarkColorScheme
         else -> LightColorScheme
     }
 
     // 应用内字体大小：跟随系统开关关闭时使用滑杆自定义缩放值（1.0 = 标准）。
     // Preview（LocalInspectionMode）中不访问 DataStore，保持默认系统缩放。
-    val isPreview = LocalInspectionMode.current
-    val userPreferences = remember { if (!isPreview) UserPreferences.getInstance(context) else null }
     val fontScaleFollowSystem by if (userPreferences != null) {
         userPreferences.fontScaleFollowSystemFlow.collectAsStateWithLifecycle(initialValue = true)
     } else {
@@ -265,8 +290,8 @@ fun HabitPulseTheme(
             window.navigationBarColor = colorScheme.surface.toArgb()
             // Update system bar icon colors based on theme
             WindowCompat.getInsetsController(window, view).apply {
-                isAppearanceLightStatusBars = !darkTheme
-                isAppearanceLightNavigationBars = !darkTheme
+                isAppearanceLightStatusBars = !effectiveDarkTheme
+                isAppearanceLightNavigationBars = !effectiveDarkTheme
             }
         }
     }
