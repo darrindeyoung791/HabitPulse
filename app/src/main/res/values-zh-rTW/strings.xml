@@ -450,7 +450,7 @@
     <string name="ai_settings_connection_success">連線成功</string>
     <string name="ai_settings_connection_failed">連線失敗</string>
     <string name="ai_settings_notice_title">設定說明</string>
-    <string name="ai_settings_notice_content">本應用支援 OpenAI 相容格式的 LLM API（如智譜 GLM、DeepSeek 等）。\n\nAPI 端點：請填寫完整的 API 位址，以斜線結尾。\nAPI 金鑰：請從相應平台取得。\n模型名稱：支援智譜 glm-4.7-flash（預設）、glm-4-flash、glm-4 等。</string>
+    <string name="ai_settings_notice_content">本應用支援 OpenAI 相容格式的 LLM API（如智譜 GLM、DeepSeek 等）。\n\nAPI 端點：請填寫完整的 API 位址，以斜線結尾。\nAPI 金鑰：請從相應平台取得。\n模型名稱：請填寫如 deepseek-v4-flash、mimo-v2.5、glm-4-flash-250414 等模型代號。</string>
     <string name="ai_settings_streaming">串流輸出</string>
     <string name="ai_settings_streaming_description">即時顯示 AI 思考過程和回覆</string>
     <string name="ai_settings_model_default_label">%1$s（預設）</string>

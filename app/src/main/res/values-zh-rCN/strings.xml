@@ -448,7 +448,7 @@
     <string name="ai_settings_connection_success">连接成功</string>
     <string name="ai_settings_connection_failed">连接失败</string>
     <string name="ai_settings_notice_title">配置说明</string>
-    <string name="ai_settings_notice_content">本应用支持兼容 OpenAI 格式的 LLM API（如智谱 GLM、DeepSeek 等）。\n\nAPI 端点：请填写完整的 API 地址，以斜杠结尾。\nAPI 密钥：请从相应平台获取。\n模型名称：支持智谱 glm-4.7-flash（默认）、glm-4-flash、glm-4 等。</string>
+    <string name="ai_settings_notice_content">本应用支持兼容 OpenAI 格式的 LLM API（如智谱 GLM、DeepSeek 等）。\n\nAPI 端点：请填写完整的 API 地址，以斜杠结尾。\nAPI 密钥：请从相应平台获取。\n模型名称：请填写诸如 deepseek-v4-flash、mimo-v2.5、glm-4-flash-250414 等模型代号。</string>
     <string name="ai_settings_streaming">流式输出</string>
     <string name="ai_settings_streaming_description">实时显示 AI 思考过程和回答</string>
     <string name="ai_settings_model_default_label">%1$s（默认）</string>
