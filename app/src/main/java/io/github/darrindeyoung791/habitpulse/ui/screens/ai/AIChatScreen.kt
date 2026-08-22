@@ -21,6 +21,7 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.ui.draw.clip
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.ArrowBack
+import androidx.compose.material.icons.automirrored.filled.KeyboardArrowRight
 import androidx.compose.material.icons.filled.Check
 import androidx.compose.material.icons.filled.CheckCircle
 import androidx.compose.material.icons.filled.KeyboardArrowDown
@@ -41,6 +42,7 @@ import androidx.compose.material.icons.outlined.Refresh
 import androidx.compose.material.icons.outlined.Settings
 import androidx.compose.material.icons.outlined.Slideshow
 import androidx.compose.material.icons.outlined.Tablet
+import androidx.compose.material.icons.outlined.DarkMode
 import androidx.compose.material.icons.outlined.Vibration
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
@@ -72,11 +74,15 @@ import io.github.darrindeyoung791.habitpulse.ai.tools.chat.HabitEditData
 import io.github.darrindeyoung791.habitpulse.ai.tools.chat.HabitSearchData
 import io.github.darrindeyoung791.habitpulse.ai.tools.chat.SessionUsage
 import io.github.darrindeyoung791.habitpulse.ai.tools.chat.SettingChangeData
+import io.github.darrindeyoung791.habitpulse.ai.tools.chat.SettingPair
 import io.github.darrindeyoung791.habitpulse.ai.tools.chat.SettingsNavData
 import io.github.darrindeyoung791.habitpulse.ai.tools.chat.SettingsStatusData
 import io.github.darrindeyoung791.habitpulse.navigation.getDeviceCornerRadius
 import io.github.darrindeyoung791.habitpulse.ui.rememberDeviceFormInfo
 import io.github.darrindeyoung791.habitpulse.ui.screens.settings.components.SettingsSegmentedGroup
+import io.github.darrindeyoung791.habitpulse.ui.screens.settings.components.SettingsIconChip
+import io.github.darrindeyoung791.habitpulse.ui.screens.settings.components.SettingsListSurface
+import io.github.darrindeyoung791.habitpulse.ui.screens.settings.components.rememberAccentTint
 import io.github.darrindeyoung791.habitpulse.ui.screens.settings.components.SettingsSegmentedSwitch
 import io.github.darrindeyoung791.habitpulse.ui.theme.AccentSeeds
 import io.github.darrindeyoung791.habitpulse.ui.theme.rememberSeedAccentTint
@@ -192,7 +198,7 @@ fun AIChatScreen(
                 modifier = Modifier.windowInsetsPadding(chatHorizontalInsets),
                 title = {
                     Text(
-                        if (uiState.isLoading) stringResource(R.string.ai_streaming_title)
+                        if (uiState.isGenerating) stringResource(R.string.ai_streaming_title)
                         else stringResource(R.string.ai_chat_title)
                     )
                 },
@@ -471,13 +477,8 @@ private fun ChatMessageItem(
         is AiChatUiMessage.UserBubble -> UserChatBubble(message.text)
         is AiChatUiMessage.AssistantBubble -> AIChatBubble(
             text = message.text,
-            thoughts = "",
-            isStreaming = message.isStreaming
-        )
-        is AiChatUiMessage.Thinking -> ThinkingBlock(
             thoughts = message.thoughts,
-            isLoading = message.isLoading,
-            elapsedSeconds = message.elapsedSeconds
+            isStreaming = message.isStreaming
         )
         is AiChatUiMessage.QuestionCard -> ChatQuestionCard(
             question = message.question,
@@ -531,10 +532,14 @@ private fun ChatMessageItem(
             stringResource(R.string.ai_chat_delete_cancelled),
             message.data
         )
-        is AiChatUiMessage.SettingsStatusCard -> SettingStatusCard(message.data)
+        is AiChatUiMessage.SettingsStatusCard -> SettingStatusCard(
+            data = message.data,
+            onNavigateToSettings = { page -> navigateToSettingsPage(application, page) }
+        )
         is AiChatUiMessage.SettingChangeCard -> SettingChangeCard(
             data = message.data,
-            onUndo = { viewModel.undoSettingChange(message.data) }
+            onToggle = { newValue -> viewModel.toggleSetting(message.data.key, newValue) },
+            onModeSelected = { intValue -> viewModel.setDarkModeSetting(intValue) }
         )
         is AiChatUiMessage.SettingReverted -> SettingRevertedChip(message.data)
         is AiChatUiMessage.SettingsNavCard -> SettingsNavCard(
@@ -755,7 +760,7 @@ private fun StatusChip(label: String, data: HabitDeleteData) {
             .fillMaxWidth()
             .padding(horizontal = 16.dp, vertical = 4.dp),
         colors = CardDefaults.cardColors(
-            containerColor = MaterialTheme.colorScheme.secondaryContainer
+            containerColor = MaterialTheme.colorScheme.errorContainer
         )
     ) {
         Row(
@@ -763,15 +768,16 @@ private fun StatusChip(label: String, data: HabitDeleteData) {
             verticalAlignment = Alignment.CenterVertically
         ) {
             Icon(
-                imageVector = Icons.Default.CheckCircle,
+                imageVector = Icons.Default.Delete,
                 contentDescription = null,
-                tint = MaterialTheme.colorScheme.primary,
+                tint = MaterialTheme.colorScheme.onErrorContainer,
                 modifier = Modifier.size(18.dp)
             )
             Spacer(modifier = Modifier.width(8.dp))
             Text(
                 text = "$label：${data.title}",
-                style = MaterialTheme.typography.bodyMedium
+                style = MaterialTheme.typography.bodyMedium,
+                color = MaterialTheme.colorScheme.onErrorContainer
             )
         }
     }
@@ -1100,42 +1106,96 @@ private fun HabitDeleteCard(
             .fillMaxWidth()
             .padding(horizontal = 16.dp, vertical = 4.dp),
         colors = CardDefaults.cardColors(
-            containerColor = MaterialTheme.colorScheme.errorContainer
+            containerColor = MaterialTheme.colorScheme.surfaceContainerHigh
         )
     ) {
         Column(modifier = Modifier.padding(16.dp)) {
             Text(
-                text = data.title,
+                text = stringResource(R.string.ai_chat_delete_confirm_prompt),
                 style = MaterialTheme.typography.bodyLarge
+            )
+            Text(
+                text = data.title,
+                style = MaterialTheme.typography.bodyMedium,
+                color = MaterialTheme.colorScheme.onSurfaceVariant
             )
             Spacer(modifier = Modifier.height(12.dp))
             Row(horizontalArrangement = Arrangement.spacedBy(8.dp)) {
-                HapticButton(text = stringResource(R.string.confirm), onClick = onConfirm)
+                val interactionSource = remember { MutableInteractionSource() }
+                PressVibrationFeedback(interactionSource = interactionSource)
+                Button(
+                    onClick = onConfirm,
+                    interactionSource = interactionSource,
+                    colors = ButtonDefaults.buttonColors(
+                        containerColor = MaterialTheme.colorScheme.error
+                    ),
+                    shape = RoundedCornerShape(28.dp)
+                ) {
+                    Text(stringResource(R.string.confirm))
+                }
                 HapticTextButton(text = stringResource(R.string.cancel), onClick = onCancel)
             }
         }
     }
 }
 
-/** 设置状态卡：复用设置页的分段列表组件，只读展示白名单开关当前值。 */
+/** 设置状态卡：每项可点击跳转对应设置页，显示当前值文字（非开关）。 */
 @Composable
-private fun SettingStatusCard(data: SettingsStatusData) {
+private fun SettingStatusCard(
+    data: SettingsStatusData,
+    onNavigateToSettings: (String) -> Unit
+) {
     SettingsSegmentedGroup(
         modifier = Modifier
             .fillMaxWidth()
             .padding(horizontal = 16.dp, vertical = 4.dp)
     ) {
         data.pairs.forEachIndexed { index, pair ->
-            SettingsSegmentedSwitch(
+            SettingItemRow(
                 index = index,
                 count = data.pairs.size,
-                headline = stringResource(pair.labelRes),
-                leadingIcon = settingIconFor(pair.key),
-                checked = pair.value,
-                onCheckedChange = {}
+                pair = pair,
+                onClick = { pair.navPage?.let(onNavigateToSettings) }
             )
         }
     }
+}
+
+@Composable
+private fun SettingItemRow(
+    index: Int,
+    count: Int,
+    pair: SettingPair,
+    onClick: () -> Unit
+) {
+    val tint = rememberAccentTint(index)
+    val interactionSource = remember { MutableInteractionSource() }
+
+    SettingsListSurface(
+        index = index,
+        count = count,
+        enabled = true,
+        onClick = onClick,
+        interactionSource = interactionSource,
+        leading = {
+            SettingsIconChip(
+                icon = settingIconFor(pair.key),
+                tint = tint,
+                twoLine = false,
+                enabled = true
+            )
+        },
+        headline = stringResource(pair.labelRes),
+        supportingText = pair.displayValue,
+        trailing = {
+            Icon(
+                imageVector = Icons.AutoMirrored.Filled.KeyboardArrowRight,
+                contentDescription = null,
+                modifier = Modifier.size(24.dp),
+                tint = MaterialTheme.colorScheme.onSurfaceVariant
+            )
+        }
+    )
 }
 
 @Composable
@@ -1146,14 +1206,16 @@ private fun settingIconFor(key: String): ImageVector = when (ControllableSetting
     ControllableSetting.HAPTIC_FEEDBACK_ENABLED -> Icons.Outlined.Vibration
     ControllableSetting.SHOW_SPLASH_AD -> Icons.Outlined.Slideshow
     ControllableSetting.FORCE_TABLET_LANDSCAPE -> Icons.Outlined.Tablet
+    ControllableSetting.DARK_MODE -> Icons.Outlined.DarkMode
     else -> Icons.Outlined.Notifications
 }
 
-/** 设置变更卡：变更摘要（高亮新值）+ 带触感的撤销按钮。 */
+/** 设置变更卡：布尔设置用 Switch，暗色模式用下拉菜单，用户可直接点击切换。 */
 @Composable
 private fun SettingChangeCard(
     data: SettingChangeData,
-    onUndo: () -> Unit
+    onToggle: (Boolean) -> Unit,
+    onModeSelected: (Int) -> Unit
 ) {
     Card(
         modifier = Modifier
@@ -1167,22 +1229,77 @@ private fun SettingChangeCard(
             modifier = Modifier.padding(12.dp),
             verticalAlignment = Alignment.CenterVertically
         ) {
-            Column(modifier = Modifier.weight(1f)) {
-                Text(
-                    text = stringResource(data.labelRes),
-                    style = MaterialTheme.typography.bodyMedium
+            Icon(
+                imageVector = settingIconFor(data.key),
+                contentDescription = null,
+                modifier = Modifier.size(24.dp),
+                tint = MaterialTheme.colorScheme.onSecondaryContainer
+            )
+            Spacer(modifier = Modifier.width(12.dp))
+            Text(
+                text = stringResource(data.labelRes),
+                style = MaterialTheme.typography.bodyMedium,
+                modifier = Modifier.weight(1f)
+            )
+            if (data.newIntValue != null) {
+                DarkModeDropdown(
+                    currentValue = data.newIntValue,
+                    onModeSelected = onModeSelected
                 )
-                Text(
-                    text = stringResource(R.string.ai_chat_setting_change_format,
-                        onOffLabel(data.oldValue), onOffLabel(data.newValue)),
-                    style = MaterialTheme.typography.bodySmall,
-                    color = if (data.newValue) MaterialTheme.colorScheme.primary
-                    else MaterialTheme.colorScheme.error
+            } else {
+                val interactionSource = remember { MutableInteractionSource() }
+                PressVibrationFeedback(interactionSource = interactionSource)
+                Switch(
+                    checked = data.newValue,
+                    onCheckedChange = onToggle,
+                    interactionSource = interactionSource,
+                    colors = SwitchDefaults.colors(
+                        checkedThumbColor = MaterialTheme.colorScheme.onPrimary,
+                        checkedTrackColor = MaterialTheme.colorScheme.primary,
+                        uncheckedThumbColor = MaterialTheme.colorScheme.outline,
+                        uncheckedTrackColor = MaterialTheme.colorScheme.surfaceContainerHighest
+                    )
                 )
             }
-            HapticTextButton(
-                text = stringResource(R.string.ai_chat_undo),
-                onClick = onUndo
+        }
+    }
+}
+
+@Composable
+private fun DarkModeDropdown(
+    currentValue: Int,
+    onModeSelected: (Int) -> Unit
+) {
+    var expanded by remember { mutableStateOf(false) }
+    val label = when (currentValue) {
+        1 -> stringResource(R.string.ai_setting_dark_mode_dark)
+        2 -> stringResource(R.string.ai_setting_dark_mode_light)
+        else -> stringResource(R.string.ai_setting_dark_mode_follow_system)
+    }
+    Box {
+        Text(
+            text = label,
+            style = MaterialTheme.typography.bodyMedium,
+            color = MaterialTheme.colorScheme.primary,
+            modifier = Modifier
+                .clickable { expanded = true }
+                .padding(horizontal = 8.dp, vertical = 4.dp)
+        )
+        DropdownMenu(
+            expanded = expanded,
+            onDismissRequest = { expanded = false }
+        ) {
+            DropdownMenuItem(
+                text = { Text(stringResource(R.string.ai_setting_dark_mode_light)) },
+                onClick = { onModeSelected(2); expanded = false }
+            )
+            DropdownMenuItem(
+                text = { Text(stringResource(R.string.ai_setting_dark_mode_dark)) },
+                onClick = { onModeSelected(1); expanded = false }
+            )
+            DropdownMenuItem(
+                text = { Text(stringResource(R.string.ai_setting_dark_mode_follow_system)) },
+                onClick = { onModeSelected(0); expanded = false }
             )
         }
     }
@@ -1314,7 +1431,11 @@ private fun openSettingsPage(
     application: HabitPulseApplication,
     data: SettingsNavData
 ) {
-    val intent = when (data.page) {
+    navigateToSettingsPage(application, data.page)
+}
+
+private fun navigateToSettingsPage(application: HabitPulseApplication, page: String) {
+    val intent = when (page) {
         "notifications" -> android.content.Intent(
             application,
             io.github.darrindeyoung791.habitpulse.SettingsNotificationsActivity::class.java

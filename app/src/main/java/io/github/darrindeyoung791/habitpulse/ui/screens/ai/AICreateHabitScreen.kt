@@ -645,13 +645,6 @@ fun AIChatBubble(
             .fillMaxWidth()
             .padding(vertical = 8.dp, horizontal = 16.dp)
     ) {
-        if (thoughts.isNotEmpty()) {
-            ThinkingBlock(
-                thoughts = thoughts,
-                isLoading = isStreaming
-            )
-            Spacer(modifier = Modifier.height(8.dp))
-        }
         if (text.isNotEmpty()) {
             Text(
                 text = text,

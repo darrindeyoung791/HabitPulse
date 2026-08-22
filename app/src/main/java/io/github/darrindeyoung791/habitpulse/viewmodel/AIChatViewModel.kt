@@ -104,13 +104,6 @@ class AIChatViewModel(application: Application) : AndroidViewModel(application) 
                         }
                         _uiState.value = _uiState.value.copy(isLoading = false, isGenerating = false, showStop = false)
                     }
-                    is ChatEvent.ThinkingStarted -> {
-                        appendThinkingMessage(event.messageId)
-                        _uiState.value = _uiState.value.copy(isLoading = false, isGenerating = true, showStop = true)
-                    }
-                    is ChatEvent.ThinkingUpdated -> updateThinking(event.thoughts)
-                    is ChatEvent.ThinkingEnded -> finalizeThinking(event.messageId)
-
                     is ChatEvent.ToolExecuted -> handleToolExecuted(event.toolName, event.data)
                     is ChatEvent.PauseForUser -> {
                         _uiState.value = _uiState.value.copy(isLoading = false, isGenerating = false, showStop = false)
@@ -223,10 +216,10 @@ class AIChatViewModel(application: Application) : AndroidViewModel(application) 
                     streamingEnabled = config.streamingEnabled,
                     scope = viewModelScope,
                     systemPrompt = SystemPrompt.getChatSystemPrompt(getApplication()),
-                    thinkingEnabled = config.thinkingEnabled,
+                    thinkingEnabled = false,
                     maxToolRetries = userPreferences.aiToolRetryLimitFlow.first()
                 )
-                newManager.setContextDependencies(repository, userPreferences)
+                newManager.setContextDependencies(repository, userPreferences, getApplication())
                 conversationManager = newManager
                 observeConversation()
                 newManager.startConversation(text)
@@ -392,6 +385,7 @@ class AIChatViewModel(application: Application) : AndroidViewModel(application) 
                 "haptic_feedback_enabled" -> userPreferences.setHapticsEnabled(d.oldValue)
                 "show_splash_ad" -> userPreferences.setShowSplashAd(d.oldValue)
                 "force_tablet_landscape" -> userPreferences.setForceTabletLandscape(d.oldValue)
+                "dark_mode" -> userPreferences.setDarkMode(d.oldIntValue ?: 0)
             }
             _messages.value = _messages.value + AiChatUiMessage.SettingReverted(d)
         }
@@ -418,6 +412,23 @@ class AIChatViewModel(application: Application) : AndroidViewModel(application) 
 
     fun stopGeneration() {
         viewModelScope.launch { conversationManager?.stop() }
+    }
+
+    fun toggleSetting(key: String, newValue: Boolean) {
+        viewModelScope.launch {
+            when (key) {
+                "reminder_enabled" -> userPreferences.setReminderEnabled(newValue)
+                "dnd_enabled" -> userPreferences.setDndEnabled(newValue)
+                "persistent_notification" -> userPreferences.setPersistentNotification(newValue)
+                "haptic_feedback_enabled" -> userPreferences.setHapticsEnabled(newValue)
+                "show_splash_ad" -> userPreferences.setShowSplashAd(newValue)
+                "force_tablet_landscape" -> userPreferences.setForceTabletLandscape(newValue)
+            }
+        }
+    }
+
+    fun setDarkModeSetting(intValue: Int) {
+        viewModelScope.launch { userPreferences.setDarkMode(intValue) }
     }
 
     fun clearConversation() {
@@ -462,37 +473,6 @@ class AIChatViewModel(application: Application) : AndroidViewModel(application) 
         _messages.value = msgs
     }
 
-    private var thinkingStartedAt: Long = 0L
-
-    private fun appendThinkingMessage(messageId: String) {
-        thinkingStartedAt = System.currentTimeMillis()
-        if (_messages.value.none { it is AiChatUiMessage.Thinking }) {
-            _messages.value = _messages.value + AiChatUiMessage.Thinking(messageId, "", true, 0L)
-        }
-    }
-
-    private fun updateThinking(thoughts: String) {
-        val msgs = _messages.value.toMutableList()
-        val idx = msgs.indexOfLast { it is AiChatUiMessage.Thinking }
-        if (idx >= 0) {
-            msgs[idx] = (msgs[idx] as AiChatUiMessage.Thinking).copy(thoughts = thoughts)
-            _messages.value = msgs
-        }
-    }
-
-    private fun finalizeThinking(messageId: String) {
-        val msgs = _messages.value.toMutableList()
-        val idx = msgs.indexOfLast { it is AiChatUiMessage.Thinking && it.messageId == messageId }
-        if (idx >= 0) {
-            val elapsed = ((System.currentTimeMillis() - thinkingStartedAt) / 1000).coerceAtLeast(0L)
-            msgs[idx] = (msgs[idx] as AiChatUiMessage.Thinking).copy(
-                isLoading = false,
-                elapsedSeconds = elapsed
-            )
-            _messages.value = msgs
-        }
-    }
-
     private fun stopStreamingAssistant() {
         val msgs = _messages.value.toMutableList()
         val last = msgs.lastOrNull()
@@ -527,13 +507,6 @@ sealed class AiChatUiMessage {
         val text: String,
         val thoughts: String = "",
         val isStreaming: Boolean = false
-    ) : AiChatUiMessage()
-
-    data class Thinking(
-        val messageId: String,
-        val thoughts: String,
-        val isLoading: Boolean = true,
-        val elapsedSeconds: Long = 0L
     ) : AiChatUiMessage()
 
     data class QuestionCard(val question: PendingQuestionData) : AiChatUiMessage()

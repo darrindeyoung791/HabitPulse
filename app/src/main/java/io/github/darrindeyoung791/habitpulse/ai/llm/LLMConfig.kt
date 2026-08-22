@@ -8,7 +8,7 @@ data class LLMConfig(
     val thinkingEnabled: Boolean = false,
     val timeoutMs: Int = 30000,
     val maxRetries: Int = 3,
-    val maxOutputTokens: Int = 5000,
+    val maxOutputTokens: Int = 20000,
     val maxThinkingTokens: Int = 5000
 ) {
     fun isValid(): Boolean {
@@ -16,13 +16,9 @@ data class LLMConfig(
     }
 
     /**
-     * 思考预算参数。仅当配置了思考预算（[maxThinkingTokens] > 0）且开启深度思考时返回，
-     * 否则返回 null 以保持请求体干净（避免不支持该字段的服务端报错）。
+     * 思考预算参数。暂时禁用深度思考，始终返回 null。
      */
-    fun thinkingParam(): ThinkingParam? {
-        if (!thinkingEnabled || maxThinkingTokens <= 0) return null
-        return ThinkingParam(type = "enabled", budgetTokens = maxThinkingTokens)
-    }
+    fun thinkingParam(): ThinkingParam? = null
 
     fun getChatCompletionsUrl(): String {
         return ensureChatCompletionsUrl(apiEndpoint)

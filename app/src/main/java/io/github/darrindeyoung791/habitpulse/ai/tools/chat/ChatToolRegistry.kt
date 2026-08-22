@@ -34,11 +34,13 @@ class ChatToolRegistry(
         fun buildArguments(
             arguments: Map<String, Any?>,
             repo: Any? = null,
-            prefs: Any? = null
+            prefs: Any? = null,
+            context: Any? = null
         ): Map<String, Any?> {
             val map = arguments.toMutableMap()
             if (repo != null) map["__repo"] = repo
             if (prefs != null) map["__prefs"] = prefs
+            if (context != null) map["__context"] = context
             return map
         }
     }

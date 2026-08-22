@@ -540,6 +540,12 @@
     <string name="ai_setting_haptic_feedback_enabled">In-app vibration</string>
     <string name="ai_setting_show_splash_ad">Splash ad</string>
     <string name="ai_setting_force_tablet_landscape">Force tablet landscape</string>
+    <string name="ai_setting_dark_mode">Theme</string>
+    <string name="ai_setting_value_on">On</string>
+    <string name="ai_setting_value_off">Off</string>
+    <string name="ai_setting_dark_mode_light">Light</string>
+    <string name="ai_setting_dark_mode_dark">Dark</string>
+    <string name="ai_setting_dark_mode_follow_system">Follow system</string>
 
     <!-- AI Disclaimer -->
     <string name="ai_disclaimer">AI may make mistakes. Please review before saving.</string>
@@ -572,6 +578,7 @@
     <string name="ai_chat_habit_created">Created</string>
     <string name="ai_chat_habit_deleted">Deleted</string>
     <string name="ai_chat_delete_cancelled">Deletion cancelled</string>
+    <string name="ai_chat_delete_confirm_prompt">Confirm delete this habit?</string>
     <string name="ai_chat_setting_reverted">Reverted</string>
     <string name="ai_chat_search_hint">Found habits below. Ask me to edit or delete one</string>
     <string name="ai_chat_usage_empty">—</string>

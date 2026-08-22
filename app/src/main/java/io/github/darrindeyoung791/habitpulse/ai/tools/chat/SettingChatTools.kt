@@ -1,5 +1,6 @@
 package io.github.darrindeyoung791.habitpulse.ai.tools.chat
 
+import android.content.Context
 import io.github.darrindeyoung791.habitpulse.R
 import io.github.darrindeyoung791.habitpulse.data.preferences.UserPreferences
 import kotlinx.coroutines.flow.first
@@ -10,18 +11,26 @@ import kotlinx.coroutines.flow.first
 enum class ControllableSetting(
     val key: String,
     val labelRes: Int,
-    val default: Boolean
+    val default: Boolean,
+    val navPage: String
 ) {
-    REMINDER_ENABLED("reminder_enabled", R.string.ai_setting_reminder_enabled, true),
-    DND_ENABLED("dnd_enabled", R.string.ai_setting_dnd_enabled, true),
-    PERSISTENT_NOTIFICATION("persistent_notification", R.string.ai_setting_persistent_notification, false),
-    HAPTIC_FEEDBACK_ENABLED("haptic_feedback_enabled", R.string.ai_setting_haptic_feedback_enabled, true),
-    SHOW_SPLASH_AD("show_splash_ad", R.string.ai_setting_show_splash_ad, false),
-    FORCE_TABLET_LANDSCAPE("force_tablet_landscape", R.string.ai_setting_force_tablet_landscape, false);
+    REMINDER_ENABLED("reminder_enabled", R.string.ai_setting_reminder_enabled, true, "notifications"),
+    DND_ENABLED("dnd_enabled", R.string.ai_setting_dnd_enabled, true, "notifications"),
+    PERSISTENT_NOTIFICATION("persistent_notification", R.string.ai_setting_persistent_notification, false, "notifications"),
+    HAPTIC_FEEDBACK_ENABLED("haptic_feedback_enabled", R.string.ai_setting_haptic_feedback_enabled, true, "general"),
+    SHOW_SPLASH_AD("show_splash_ad", R.string.ai_setting_show_splash_ad, false, "general"),
+    FORCE_TABLET_LANDSCAPE("force_tablet_landscape", R.string.ai_setting_force_tablet_landscape, false, "general"),
+    DARK_MODE("dark_mode", R.string.ai_setting_dark_mode, false, "general");
 
     companion object {
         fun byKey(key: String): ControllableSetting? = values().firstOrNull { it.key == key }
     }
+}
+
+private fun Context.displayDarkMode(intVal: Int): String = when (intVal) {
+    1 -> getString(R.string.ai_setting_dark_mode_dark)
+    2 -> getString(R.string.ai_setting_dark_mode_light)
+    else -> getString(R.string.ai_setting_dark_mode_follow_system)
 }
 
 /** 全量可控制设置状态 → SettingStatusCard。 */
@@ -36,18 +45,34 @@ object GetSettingsStatusChatTool : ChatTool {
     override suspend fun execute(arguments: Map<String, Any?>): ChatToolResult {
         val prefs = arguments["__prefs"] as? UserPreferences
             ?: return ChatToolResult.Error("内部错误：缺少偏好设置存储")
+        val ctx = arguments["__context"] as? Context
+            ?: return ChatToolResult.Error("内部错误：缺少上下文")
 
         val pairs = mutableListOf<SettingPair>()
         for (setting in ControllableSetting.values()) {
-            val value = when (setting) {
-                ControllableSetting.REMINDER_ENABLED -> prefs.reminderEnabledFlow.first()
-                ControllableSetting.DND_ENABLED -> prefs.dndEnabledFlow.first()
-                ControllableSetting.PERSISTENT_NOTIFICATION -> prefs.persistentNotificationFlow.first()
-                ControllableSetting.HAPTIC_FEEDBACK_ENABLED -> prefs.hapticsEnabledFlow.first()
-                ControllableSetting.SHOW_SPLASH_AD -> prefs.showSplashAdFlow.first()
-                ControllableSetting.FORCE_TABLET_LANDSCAPE -> prefs.forceTabletLandscapeFlow.first()
+            val pair = when (setting) {
+                ControllableSetting.DARK_MODE -> {
+                    val intVal = prefs.darkModeFlow.first()
+                    SettingPair(setting.key, setting.labelRes, intVal == 1,
+                        intValue = intVal, navPage = setting.navPage,
+                        displayValue = ctx.displayDarkMode(intVal))
+                }
+                else -> {
+                    val boolVal = when (setting) {
+                        ControllableSetting.REMINDER_ENABLED -> prefs.reminderEnabledFlow.first()
+                        ControllableSetting.DND_ENABLED -> prefs.dndEnabledFlow.first()
+                        ControllableSetting.PERSISTENT_NOTIFICATION -> prefs.persistentNotificationFlow.first()
+                        ControllableSetting.HAPTIC_FEEDBACK_ENABLED -> prefs.hapticsEnabledFlow.first()
+                        ControllableSetting.SHOW_SPLASH_AD -> prefs.showSplashAdFlow.first()
+                        ControllableSetting.FORCE_TABLET_LANDSCAPE -> prefs.forceTabletLandscapeFlow.first()
+                        else -> false
+                    }
+                    SettingPair(setting.key, setting.labelRes, boolVal,
+                        navPage = setting.navPage,
+                        displayValue = ctx.getString(if (boolVal) R.string.ai_setting_value_on else R.string.ai_setting_value_off))
+                }
             }
-            pairs.add(SettingPair(setting.key, setting.labelRes, value))
+            pairs.add(pair)
         }
         return ChatToolResult.Success(SettingsStatusData(pairs))
     }
@@ -63,7 +88,11 @@ object UpdateSettingChatTool : ChatTool {
             "修改前建议先调用 get_settings_status 查看当前状态。不能改 AI 配置/模型/时段等，请引导用户。",
         properties = mapOf(
             "key" to mapOf("type" to "string", "enum" to ControllableSetting.values().map { it.key }),
-            "value" to mapOf("type" to "boolean")
+            "value" to mapOf("type" to "boolean"),
+            "intValue" to mapOf(
+                "type" to "integer",
+                "description" to "多态设置值（dark_mode: 0=跟随系统, 1=深色, 2=浅色），仅 dark_mode 需要"
+            )
         ),
         required = listOf("key", "value")
     )
@@ -71,12 +100,34 @@ object UpdateSettingChatTool : ChatTool {
     override suspend fun execute(arguments: Map<String, Any?>): ChatToolResult {
         val prefs = arguments["__prefs"] as? UserPreferences
             ?: return ChatToolResult.Error("内部错误：缺少偏好设置存储")
+        val ctx = arguments["__context"] as? Context
+            ?: return ChatToolResult.Error("内部错误：缺少上下文")
         val key = arguments["key"]?.toString().orEmpty()
         val value = arguments["value"] as? Boolean
             ?: return ChatToolResult.Error("value 必须是布尔值")
+        val intValue = (arguments["intValue"] as? Number)?.toInt()
 
         val setting = ControllableSetting.byKey(key)
             ?: return ChatToolResult.Error("不支持修改的设置项，可用 get_settings_status 查看可控制项")
+
+        if (setting == ControllableSetting.DARK_MODE) {
+            val oldInt = prefs.darkModeFlow.first()
+            val newInt = intValue ?: if (value) 1 else 2
+            if (oldInt == newInt) {
+                val display = ctx.displayDarkMode(oldInt)
+                return ChatToolResult.Success(SettingChangeData(key, setting.labelRes,
+                    oldInt == 1, newInt == 1,
+                    displayOldValue = display, displayNewValue = display,
+                    oldIntValue = oldInt, newIntValue = newInt))
+            }
+            prefs.setDarkMode(newInt)
+            val oldDisplay = ctx.displayDarkMode(oldInt)
+            val newDisplay = ctx.displayDarkMode(newInt)
+            return ChatToolResult.Success(SettingChangeData(key, setting.labelRes,
+                oldInt == 1, newInt == 1,
+                displayOldValue = oldDisplay, displayNewValue = newDisplay,
+                oldIntValue = oldInt, newIntValue = newInt))
+        }
 
         val oldValue = when (setting) {
             ControllableSetting.REMINDER_ENABLED -> prefs.reminderEnabledFlow.first()
@@ -85,6 +136,7 @@ object UpdateSettingChatTool : ChatTool {
             ControllableSetting.HAPTIC_FEEDBACK_ENABLED -> prefs.hapticsEnabledFlow.first()
             ControllableSetting.SHOW_SPLASH_AD -> prefs.showSplashAdFlow.first()
             ControllableSetting.FORCE_TABLET_LANDSCAPE -> prefs.forceTabletLandscapeFlow.first()
+            else -> false
         }
         if (oldValue == value) {
             return ChatToolResult.Success(SettingChangeData(key, setting.labelRes, oldValue, value))
@@ -97,8 +149,12 @@ object UpdateSettingChatTool : ChatTool {
             ControllableSetting.HAPTIC_FEEDBACK_ENABLED -> prefs.setHapticsEnabled(value)
             ControllableSetting.SHOW_SPLASH_AD -> prefs.setShowSplashAd(value)
             ControllableSetting.FORCE_TABLET_LANDSCAPE -> prefs.setForceTabletLandscape(value)
+            else -> {}
         }
-        return ChatToolResult.Success(SettingChangeData(key, setting.labelRes, oldValue, value))
+        val oldDisplay = ctx.getString(if (oldValue) R.string.ai_setting_value_on else R.string.ai_setting_value_off)
+        val newDisplay = ctx.getString(if (value) R.string.ai_setting_value_on else R.string.ai_setting_value_off)
+        return ChatToolResult.Success(SettingChangeData(key, setting.labelRes, oldValue, value,
+            displayOldValue = oldDisplay, displayNewValue = newDisplay))
     }
 }
 

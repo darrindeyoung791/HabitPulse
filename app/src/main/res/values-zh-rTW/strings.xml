@@ -541,6 +541,12 @@
     <string name="ai_setting_haptic_feedback_enabled">應用程式內震動</string>
     <string name="ai_setting_show_splash_ad">開屏廣告</string>
     <string name="ai_setting_force_tablet_landscape">平板強制橫屏</string>
+    <string name="ai_setting_dark_mode">主題</string>
+    <string name="ai_setting_value_on">開</string>
+    <string name="ai_setting_value_off">關</string>
+    <string name="ai_setting_dark_mode_light">淺色</string>
+    <string name="ai_setting_dark_mode_dark">深色</string>
+    <string name="ai_setting_dark_mode_follow_system">跟隨系統</string>
 
     <!-- AI Disclaimer -->
     <string name="ai_disclaimer">AI 可能會犯錯，請核對資訊後儲存。</string>
@@ -573,6 +579,7 @@
     <string name="ai_chat_habit_created">已建立</string>
     <string name="ai_chat_habit_deleted">已刪除</string>
     <string name="ai_chat_delete_cancelled">已取消刪除</string>
+    <string name="ai_chat_delete_confirm_prompt">確認刪除此習慣？</string>
     <string name="ai_chat_setting_reverted">已恢復</string>
     <string name="ai_chat_search_hint">找到以下習慣，可讓我編輯或刪除其中一個</string>
     <string name="ai_chat_usage_empty">—</string>

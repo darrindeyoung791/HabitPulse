@@ -97,7 +97,7 @@ class ChatToolTest {
         assertEquals(ControllableSetting.REMINDER_ENABLED, ControllableSetting.byKey("reminder_enabled"))
         assertEquals(ControllableSetting.DND_ENABLED, ControllableSetting.byKey("dnd_enabled"))
         assertEquals(ControllableSetting.byKey("ai_configs"), null)
-        assertEquals(ControllableSetting.values().size, 6)
+        assertEquals(ControllableSetting.values().size, 7)
     }
 
     @Test

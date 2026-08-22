@@ -38,7 +38,10 @@ data class HabitDeleteData(
 data class SettingPair(
     val key: String,
     val labelRes: Int,
-    val value: Boolean
+    val value: Boolean,
+    val intValue: Int? = null,
+    val navPage: String? = null,
+    val displayValue: String? = null
 )
 
 data class SettingsStatusData(
@@ -50,7 +53,11 @@ data class SettingChangeData(
     val key: String,
     val labelRes: Int,
     val oldValue: Boolean,
-    val newValue: Boolean
+    val newValue: Boolean,
+    val displayOldValue: String? = null,
+    val displayNewValue: String? = null,
+    val oldIntValue: Int? = null,
+    val newIntValue: Int? = null
 )
 
 /** `open_settings_page` 返回：打开设置子页导航卡。 */
@@ -68,10 +75,6 @@ sealed class ChatEvent {
 
     /** 完整正文（流式结束或非流式）。 */
     data class AssistantText(val text: String, val thoughts: String = "") : ChatEvent()
-
-    data class ThinkingStarted(val messageId: String) : ChatEvent()
-    data class ThinkingUpdated(val thoughts: String) : ChatEvent()
-    data class ThinkingEnded(val messageId: String) : ChatEvent()
 
     /** 工具执行成功，携带结果数据（UI 渲染对应卡片）。 */
     data class ToolExecuted(val toolName: String, val data: Any?) : ChatEvent()

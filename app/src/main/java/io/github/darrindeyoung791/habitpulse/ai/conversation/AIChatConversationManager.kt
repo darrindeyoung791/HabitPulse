@@ -39,7 +39,6 @@ class AIChatConversationManager(
     private val scope: CoroutineScope,
     private val systemPrompt: String,
     private val thinkingEnabled: Boolean = false,
-    private val thinkingMessageId: String = "thinking",
     private val maxToolRetries: Int = 20
 ) {
     private val gson = Gson()
@@ -212,7 +211,8 @@ class AIChatConversationManager(
                     val executionArgs = ChatToolRegistry.buildArguments(
                         args,
                         repo = contextRepo,
-                        prefs = contextPrefs
+                        prefs = contextPrefs,
+                        context = contextContext
                     )
 
                     when (val outcome = toolRegistry.execute(name, executionArgs)) {
@@ -281,10 +281,12 @@ class AIChatConversationManager(
     /** 上下文注入（由构造方通过 setContextDependencies 设置）。 */
     private var contextRepo: Any? = null
     private var contextPrefs: Any? = null
+    private var contextContext: Any? = null
 
-    fun setContextDependencies(repo: Any?, prefs: Any?) {
+    fun setContextDependencies(repo: Any?, prefs: Any?, context: Any? = null) {
         contextRepo = repo
         contextPrefs = prefs
+        contextContext = context
     }
 
     private data class TurnResult(
@@ -347,10 +349,6 @@ class AIChatConversationManager(
                         }
                         is LLMClient.StreamChunk.Reasoning -> {
                             thoughts.append(chunk.delta)
-                            if (thinkingEnabled) {
-                                _events.value = ChatEvent.ThinkingStarted(thinkingMessageId)
-                                _events.value = ChatEvent.ThinkingUpdated(thoughts.toString())
-                            }
                         }
                         is LLMClient.StreamChunk.ToolCallComplete -> {
                             toolCalls = chunk.toolCalls
@@ -359,9 +357,8 @@ class AIChatConversationManager(
                             accUsage(chunk.usage)
                         }
                         is LLMClient.StreamChunk.Done -> {
-                            _events.value = ChatEvent.AssistantText(fullContent.toString(), thoughts.toString())
-                            if (thinkingEnabled && thoughts.isNotEmpty()) {
-                                _events.value = ChatEvent.ThinkingEnded(thinkingMessageId)
+                            if (toolCalls.isEmpty()) {
+                                _events.value = ChatEvent.AssistantText(fullContent.toString(), thoughts.toString())
                             }
                             if (toolCalls.isNotEmpty()) {
                                 // 关键：流式工具调用必须回灌 assistant(tool_calls) 消息，

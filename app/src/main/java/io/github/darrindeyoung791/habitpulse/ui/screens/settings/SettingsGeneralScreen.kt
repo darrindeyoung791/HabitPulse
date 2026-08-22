@@ -128,7 +128,7 @@ fun SettingsGeneralScreen(
         // 显示与触感组
         SettingsSectionHeader(text = stringResource(id = R.string.settings_ui_display))
         val uiDisplayItemCount =
-            1 + (if (showForceTabletLandscapeSwitch) 1 else 0) + 1
+            1 + 1 + (if (showForceTabletLandscapeSwitch) 1 else 0) + 1
         if (uiDisplayItemCount > 0) {
             SettingsSegmentedGroup {
                 // 深色模式按钮组

@@ -48,8 +48,7 @@ fun SettingsDebugScreen(
     var showResetOnboardingDialog by remember { mutableStateOf(false) }
 
     val toolRetryLimit by prefs.aiToolRetryLimitFlow.collectAsStateWithLifecycle(initialValue = 20)
-    val maxOutputTokens by prefs.aiMaxOutputTokensFlow.collectAsStateWithLifecycle(initialValue = 5000)
-    val maxThinkingTokens by prefs.aiMaxThinkingTokensFlow.collectAsStateWithLifecycle(initialValue = 5000)
+    val maxOutputTokens by prefs.aiMaxOutputTokensFlow.collectAsStateWithLifecycle(initialValue = 20000)
 
     var editingAiParamId by remember { mutableStateOf<String?>(null) }
 
@@ -101,7 +100,7 @@ fun SettingsDebugScreen(
         SettingsSegmentedGroup(tintOffset = 2) {
             SettingsSegmentedItem(
                 index = 0,
-                count = 3,
+                count = 2,
                 headline = stringResource(id = R.string.settings_debug_ai_retry_limit),
                 supportingText = toolRetryLimit.toString(),
                 showArrow = false,
@@ -109,19 +108,11 @@ fun SettingsDebugScreen(
             )
             SettingsSegmentedItem(
                 index = 1,
-                count = 3,
+                count = 2,
                 headline = stringResource(id = R.string.settings_debug_ai_max_output_tokens),
                 supportingText = maxOutputTokens.toString(),
                 showArrow = false,
                 onClick = { editingAiParamId = "output" }
-            )
-            SettingsSegmentedItem(
-                index = 2,
-                count = 3,
-                headline = stringResource(id = R.string.settings_debug_ai_max_thinking_tokens),
-                supportingText = maxThinkingTokens.toString(),
-                showArrow = false,
-                onClick = { editingAiParamId = "thinking" }
             )
         }
     }
@@ -197,15 +188,10 @@ fun SettingsDebugScreen(
                 toolRetryLimit,
                 prefs::setAiToolRetryLimit
             )
-            "output" -> Triple(
+            else -> Triple(
                 stringResource(R.string.settings_debug_ai_max_output_tokens),
                 maxOutputTokens,
                 prefs::setAiMaxOutputTokens
-            )
-            else -> Triple(
-                stringResource(R.string.settings_debug_ai_max_thinking_tokens),
-                maxThinkingTokens,
-                prefs::setAiMaxThinkingTokens
             )
         }
         NumberInputDialog(

@@ -116,7 +116,6 @@ fun SettingsAIEditScreen(
     var endpointInput by remember(editingConfig) { mutableStateOf(editingConfig?.apiEndpoint.orEmpty()) }
     var modelInput by remember(editingConfig) { mutableStateOf(editingConfig?.modelName.orEmpty()) }
     var streamingEnabled by remember(editingConfig) { mutableStateOf(editingConfig?.streamingEnabled ?: true) }
-    var thinkingEnabled by remember(editingConfig) { mutableStateOf(editingConfig?.thinkingEnabled ?: false) }
 
     // API key 查看门控状态：
     // - apiKeyInput：当前输入框内容。编辑已配置 key 时不预填密文，初始为空。
@@ -149,7 +148,6 @@ fun SettingsAIEditScreen(
         endpointInput = preset.apiEndpoint
         modelInput = preset.modelName
         streamingEnabled = preset.defaultStreaming
-        thinkingEnabled = preset.defaultThinking
     }
 
     val defaultModelLabel = stringResource(id = R.string.ai_settings_model_default_label, "glm-4-flash-250414")
@@ -288,8 +286,7 @@ fun SettingsAIEditScreen(
             endpointInput != (editingConfig?.apiEndpoint.orEmpty()) ||
             apiKeyChanged ||
             modelInput != (editingConfig?.modelName.orEmpty()) ||
-            streamingEnabled != (editingConfig?.streamingEnabled ?: true) ||
-            thinkingEnabled != (editingConfig?.thinkingEnabled ?: false)
+            streamingEnabled != (editingConfig?.streamingEnabled ?: true)
 
     val handleBack: () -> Unit = {
         if (hasUnsavedChanges) {
@@ -326,8 +323,7 @@ fun SettingsAIEditScreen(
                                 displayCipher = if (preserveKey) existing.displayCipher else "",
                                 keyVersion = if (preserveKey) existing.keyVersion else 0,
                                 modelName = modelInput.trim(),
-                                streamingEnabled = streamingEnabled,
-                                thinkingEnabled = thinkingEnabled
+                                streamingEnabled = streamingEnabled
                             )
                         }
                         if (isEditMode && editingConfig != null) {
@@ -341,8 +337,7 @@ fun SettingsAIEditScreen(
                                 displayCipher = "",
                                 keyVersion = 0,
                                 modelName = modelInput.trim(),
-                                streamingEnabled = streamingEnabled,
-                                thinkingEnabled = thinkingEnabled
+                                streamingEnabled = streamingEnabled
                             )
                             userPreferences.addAIConfig(newConfig)
                             userPreferences.setActiveAIConfig(newConfig.id)
@@ -643,21 +638,12 @@ fun SettingsAIEditScreen(
         SettingsSegmentedGroup {
             SettingsSegmentedSwitch(
                 index = 0,
-                count = 2,
+                count = 1,
                 headline = stringResource(id = R.string.ai_settings_streaming),
                 supportingText = stringResource(id = R.string.ai_settings_streaming_description),
                 leadingIcon = Icons.Outlined.Subject,
                 checked = streamingEnabled,
                 onCheckedChange = { streamingEnabled = it }
-            )
-            SettingsSegmentedSwitch(
-                index = 1,
-                count = 2,
-                headline = stringResource(id = R.string.ai_settings_thinking),
-                supportingText = stringResource(id = R.string.ai_settings_thinking_description),
-                leadingIcon = Icons.Outlined.Psychology,
-                checked = thinkingEnabled,
-                onCheckedChange = { thinkingEnabled = it }
             )
         }
 

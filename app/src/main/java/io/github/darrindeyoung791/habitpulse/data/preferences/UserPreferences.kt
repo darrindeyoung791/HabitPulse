@@ -757,7 +757,7 @@ class UserPreferences(private val context: Context) {
      * 默认值为 5000
      */
     val aiMaxOutputTokensFlow: Flow<Int> = context.dataStore.data.map { preferences ->
-        preferences[PreferencesKeys.AI_MAX_OUTPUT_TOKENS] ?: 5000
+        preferences[PreferencesKeys.AI_MAX_OUTPUT_TOKENS] ?: 20000
     }
 
     /**
