@@ -1,8 +1,12 @@
 package io.github.darrindeyoung791.habitpulse.ui.screens
 
 import androidx.compose.animation.AnimatedContent
+import androidx.compose.animation.core.Animatable
+import androidx.compose.animation.core.FastOutSlowInEasing
+import androidx.compose.animation.core.Spring
 import androidx.compose.animation.core.animateDpAsState
 import androidx.compose.animation.core.animateFloatAsState
+import androidx.compose.animation.core.spring
 import androidx.compose.animation.core.tween
 import androidx.compose.animation.Crossfade
 import androidx.compose.animation.fadeIn
@@ -14,12 +18,14 @@ import android.util.Log
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.background
 import androidx.compose.foundation.focusable
+import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.lazy.LazyListState
 import androidx.compose.foundation.lazy.staggeredgrid.LazyStaggeredGridState
 import androidx.compose.foundation.relocation.BringIntoViewRequester
 import androidx.compose.foundation.shape.CircleShape
+import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material.icons.Icons
 import androidx.compose.material.icons.automirrored.filled.*
 import androidx.compose.material.icons.filled.*
@@ -33,8 +39,11 @@ import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.platform.LocalLayoutDirection
 import androidx.compose.ui.*
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.draw.drawBehind
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.layout.onSizeChanged
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.semantics.clearAndSetSemantics
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.heading
 import androidx.compose.ui.semantics.semantics
@@ -46,6 +55,11 @@ import androidx.compose.ui.focus.FocusRequester
 import androidx.compose.ui.focus.focusRequester
 import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.input.nestedscroll.nestedScroll
+import androidx.compose.foundation.gestures.awaitEachGesture
+import androidx.compose.foundation.gestures.awaitFirstDown
+import androidx.compose.ui.input.pointer.util.VelocityTracker
+import androidx.compose.ui.input.pointer.positionChange
+import androidx.compose.ui.input.pointer.pointerInput
 import androidx.compose.ui.text.style.TextAlign
 import androidx.activity.compose.BackHandler
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
@@ -54,6 +68,7 @@ import androidx.compose.animation.SharedTransitionScope
 import io.github.darrindeyoung791.habitpulse.HabitPulseApplication
 import io.github.darrindeyoung791.habitpulse.R
 import io.github.darrindeyoung791.habitpulse.data.model.Habit
+import io.github.darrindeyoung791.habitpulse.navigation.getDeviceCornerRadius
 import io.github.darrindeyoung791.habitpulse.ui.rememberDeviceFormInfo
 import io.github.darrindeyoung791.habitpulse.ui.theme.HabitPulseTheme
 import io.github.darrindeyoung791.habitpulse.ui.utils.rememberDebounceClickHandler
@@ -63,6 +78,8 @@ import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
 import java.time.LocalDate
 import java.util.UUID
+import kotlin.math.abs
+import kotlin.math.roundToInt
 
 enum class HomeSection { Habits, Contacts, Records }
 
@@ -77,6 +94,13 @@ fun HomeSection.outlinedIconResource() = when (this) {
     HomeSection.Contacts -> Icons.Outlined.People
     HomeSection.Records -> Icons.Outlined.Assessment
 }
+
+/**
+ * How long (in seconds) a release fling is assumed to keep pushing the drawer
+ * when predicting which side it will settle on (pager-style momentum
+ * projection). Larger = short flicks trigger more eagerly.
+ */
+private const val DrawerFlingProjectionSeconds = 0.16f
 
 @Composable
 fun AnimatedNavIcon(
@@ -195,7 +219,7 @@ fun HomeScreen(
     // Navigation mode decision logic:
     // - Tablet in landscape: PermanentNavigationDrawer with hamburger menu
     // - Phone in landscape: NavigationRail
-    // - All portrait modes: BottomNavigationBar
+    // - All portrait modes: custom reveal drawer (page slides right off-screen)
     val isPermanentDrawer = deviceForm.isTabletLandscape
     val useRail = deviceForm.isPhoneLandscape
 
@@ -218,8 +242,178 @@ fun HomeScreen(
     var currentSection by rememberSaveable { mutableStateOf(HomeSection.Habits) }
     var isDrawerExpanded by rememberSaveable { mutableStateOf(true) }
 
-    // Portrait mode: ModalNavigationDrawer state
-    val portraitDrawerState = rememberDrawerState(initialValue = DrawerValue.Closed)
+    // ------------------------------------------------------------------
+    // Portrait mode: reveal drawer (same-plane slide, DeepSeek-style)
+    // The drawer sits immediately to the LEFT of the main page on one
+    // virtual plane. Opening translates BOTH by drawerWidth * fraction:
+    // the drawer enters from off-screen left while the page exits right,
+    // and the displaced page is dimmed by a scrim overlay.
+    // Fraction 0f = fully closed, 1f = fully open.
+    // ------------------------------------------------------------------
+    var portraitScreenWidthPx by remember { mutableFloatStateOf(0f) }
+    // Drawer occupies 3/4 of the screen width.
+    val portraitDrawerWidthPx = portraitScreenWidthPx * 3f / 4f
+    val portraitDrawerWidth = with(LocalDensity.current) { portraitDrawerWidthPx.toDp() }
+    var portraitDrawerOpen by rememberSaveable { mutableStateOf(false) }
+    val portraitDrawerFraction = remember { Animatable(if (portraitDrawerOpen) 1f else 0f) }
+
+    // Derived flags via derivedStateOf so per-frame fraction updates do NOT
+    // recompose HomeScreen - only boolean threshold crossings do.
+    val isPortraitDrawerOpen by remember { derivedStateOf { portraitDrawerFraction.value > 0.5f } }
+    val portraitDrawerHidden by remember { derivedStateOf { portraitDrawerFraction.value <= 0.001f } }
+    val portraitPageHidden by remember { derivedStateOf { portraitDrawerFraction.value >= 0.999f } }
+    val portraitDrawerCatchEnabled by remember { derivedStateOf { portraitDrawerFraction.value > 0.95f } }
+
+    fun openPortraitDrawer() {
+        portraitDrawerOpen = true
+        scope.launch {
+            portraitDrawerFraction.animateTo(
+                1f,
+                animationSpec = tween(durationMillis = 320, easing = FastOutSlowInEasing)
+            )
+        }
+    }
+
+    fun closePortraitDrawer() {
+        portraitDrawerOpen = false
+        scope.launch {
+            portraitDrawerFraction.animateTo(
+                0f,
+                animationSpec = tween(durationMillis = 320, easing = FastOutSlowInEasing)
+            )
+        }
+    }
+
+    /**
+     * Settle after a drag with the animation's INITIAL VELOCITY matching the
+     * finger velocity at release, so the drawer visibly keeps the gesture's
+     * momentum and glides into its anchor (critically damped spring: no
+     * overshoot past the fully-open/closed position). Used by the swipe
+     * gesture only; button/menu paths keep the fixed tween above.
+     */
+    fun settlePortraitDrawer(open: Boolean, releaseVelocityPxPerSec: Float) {
+        portraitDrawerOpen = open
+        scope.launch {
+            val widthPx = portraitScreenWidthPx * 3f / 4f
+            val initialVelocity = if (widthPx > 1f) releaseVelocityPxPerSec / widthPx else 0f
+            portraitDrawerFraction.animateTo(
+                targetValue = if (open) 1f else 0f,
+                animationSpec = spring(
+                    dampingRatio = Spring.DampingRatioNoBouncy,
+                    stiffness = Spring.StiffnessLow
+                ),
+                initialVelocity = initialVelocity
+            )
+        }
+    }
+
+    // Shared horizontal drag gesture (custom axis-arbitrating detector).
+    // Attached to the STATIC root container (NOT the translating page/drawer):
+    // its local coordinates therefore equal world/screen coordinates. This is
+    // critical - a detector inside the following container would measure the
+    // finger in a frame that shifts every frame, collapsing deltas and
+    // velocity to ~0 once the drawer catches up, causing bogus bounce-backs.
+    //
+    // - Swipe right anywhere on the page opens; swipe left on the drawer or
+    //   dimmed page closes. Fraction follows the finger frame by frame.
+    // - Anti-mistouch: NOTHING is consumed until HORIZONTAL displacement
+    //   crosses touch slop FIRST, so child clicks and taps are untouched.
+    //   If a vertical scroll claims the pointer stream first (its changes
+    //   become consumed) or vertical slop is crossed before horizontal slop,
+    //   the gesture is abandoned and can never trigger the drawer - even if
+    //   the finger later moves horizontally without lifting.
+    val portraitDrawerDragModifier = Modifier.pointerInput(Unit) {
+        val touchSlop = viewConfiguration.touchSlop
+        val velocityTracker = VelocityTracker()
+        awaitEachGesture {
+            val down = awaitFirstDown(requireUnconsumed = false)
+            var totalX = 0f
+            var totalY = 0f
+            var engaged = false
+
+            while (true) {
+                val event = awaitPointerEvent()
+                val change = event.changes.firstOrNull { it.id == down.id } ?: break
+
+                val delta = change.positionChange()
+                totalX += delta.x
+                totalY += delta.y
+
+                // Velocity is sampled ONLY from engagement onward: the slow
+                // press/drift phase before direction-lock must not dilute the
+                // release-speed measurement, or fast flicks read below the
+                // fling threshold and wrongly fall back to the distance rule.
+                // The release (UP) frame is included too - it usually carries
+                // the fastest samples of the whole gesture.
+                if (engaged) {
+                    velocityTracker.addPosition(change.uptimeMillis, change.position)
+                }
+                if (!change.pressed) break
+
+                if (!engaged) {
+                    // A child (e.g. a vertically scrolling list) claimed the
+                    // pointer stream: stand down immediately.
+                    if (change.isConsumed) break
+                    if (abs(totalX) > touchSlop && abs(totalX) > abs(totalY)) {
+                        engaged = true
+                        velocityTracker.resetTracking()
+                        velocityTracker.addPosition(change.uptimeMillis, change.position)
+                    } else if (abs(totalY) > touchSlop) {
+                        // Vertical gesture won before horizontal slop:
+                        // never hijack it for the rest of this touch.
+                        break
+                    }
+                }
+
+                if (engaged) {
+                    change.consume()
+                    // AwaitPointerEventScope is a restricted suspension scope
+                    // (foreign suspend calls like Animatable.snapTo are
+                    // forbidden), so hop out via scope.launch instead: it is a
+                    // plain (non-suspend) call, launches execute FIFO on the
+                    // UI dispatcher, and each snapTo lands within the same
+                    // frame - the drawer tracks the finger with no lag.
+                    val dx = delta.x
+                    scope.launch {
+                        val widthPx = portraitScreenWidthPx * 3f / 4f
+                        if (widthPx > 1f) {
+                            portraitDrawerFraction.snapTo(
+                                (portraitDrawerFraction.value + dx / widthPx)
+                                    .coerceIn(0f, 1f)
+                            )
+                        }
+                    }
+                }
+            }
+
+            if (engaged) {
+                val velocityX = velocityTracker.calculateVelocity().x
+                // Rule 1 (absolute, velocity-independent): once THIS gesture
+                // has travelled >= 1/5 of the screen width, direction alone
+                // decides - rightward opens, leftward closes.
+                // Rule 2 (momentum projection): for shorter gestures, predict
+                // where the release speed would carry the drawer and settle to
+                // the nearest anchor - short fast flicks project far past mid
+                // and trigger; slow short drags stay put; an unreliable speed
+                // reading merely degrades to nearest-anchor instead of ever
+                // reversing the drawer against the finger.
+                val fifthOfScreen = portraitScreenWidthPx / 5f
+                val shouldOpen = if (abs(totalX) >= fifthOfScreen) {
+                    totalX > 0f
+                } else {
+                    val widthPx = portraitScreenWidthPx * 3f / 4f
+                    val velocityFractionPerSec = if (widthPx > 1f) velocityX / widthPx else 0f
+                    portraitDrawerFraction.value +
+                        velocityFractionPerSec * DrawerFlingProjectionSeconds > 0.5f
+                }
+                // Hand the finger's release velocity to the settle animation so
+                // the drawer keeps the gesture's momentum instead of playing a
+                // canned tween.
+                settlePortraitDrawer(open = shouldOpen, releaseVelocityPxPerSec = velocityX)
+            }
+        }
+    }
+
     val useDrawer = !isLandscape
 
     // Notify MainActivity that home data has loaded (dismisses splash screen)
@@ -419,7 +613,7 @@ fun HomeScreen(
         }
     }
 
-    val topAppBarContent: @Composable (Boolean, () -> Unit) -> Unit = { isRailVisible, onDrawerToggle ->
+    val topAppBarContent: @Composable (Boolean) -> Unit = { isRailVisible ->
         val currentTitle = when (currentSection) {
             HomeSection.Habits -> stringResource(id = R.string.main_title_habits)
             HomeSection.Contacts -> stringResource(id = R.string.main_title_contacts)
@@ -529,10 +723,14 @@ fun HomeScreen(
                 ),
                 navigationIcon = {
                     if (useDrawer) {
-                        IconButton(onClick = onDrawerToggle) {
+                        IconButton(
+                            onClick = {
+                                if (isPortraitDrawerOpen) closePortraitDrawer() else openPortraitDrawer()
+                            }
+                        ) {
                             Icon(
-                                imageVector = if (portraitDrawerState.isOpen) Icons.AutoMirrored.Filled.MenuOpen else Icons.Filled.Menu,
-                                contentDescription = if (portraitDrawerState.isOpen)
+                                imageVector = if (isPortraitDrawerOpen) Icons.AutoMirrored.Filled.MenuOpen else Icons.Filled.Menu,
+                                contentDescription = if (isPortraitDrawerOpen)
                                     stringResource(id = R.string.main_collapse_drawer)
                                 else
                                     stringResource(id = R.string.main_expand_drawer)
@@ -765,7 +963,7 @@ fun HomeScreen(
             // Drawer handles start inset, Scaffold handles top and end insets
             Scaffold(
                 modifier = Modifier.fillMaxSize(),
-                topBar = { topAppBarContent(false) { } },
+                topBar = { topAppBarContent(false) },
                 floatingActionButton = {
                     if (showFab) {
                         ExtendedFloatingActionButton(
@@ -846,7 +1044,7 @@ fun HomeScreen(
                     .weight(1f)
             ) {
                 // TopAppBar handles its own insets via windowInsets parameter
-                topAppBarContent(true) { }
+                topAppBarContent(true)
 
                 // Scrollable content area
                 Box(
@@ -889,32 +1087,52 @@ fun HomeScreen(
             }
         }
     } else {
-        // Portrait mode: ModalNavigationDrawer layout
-        ModalNavigationDrawer(
-            drawerState = portraitDrawerState,
-            drawerContent = {
-                ModalDrawerSheet(
-                    modifier = Modifier.width(360.dp)
-                ) {
-                    // Collapse drawer button at top
-                    Box(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .height(84.dp)
-                            .padding(horizontal = 8.dp),
-                        contentAlignment = Alignment.CenterEnd
-                    ) {
-                        IconButton(
-                            onClick = { scope.launch { portraitDrawerState.close() } },
-                            modifier = Modifier.size(40.dp)
-                        ) {
-                            Icon(
-                                imageVector = Icons.AutoMirrored.Filled.MenuOpen,
-                                contentDescription = stringResource(id = R.string.main_collapse_drawer)
-                            )
-                        }
+        // Portrait mode: reveal drawer (same-plane slide).
+        // Drawer and main page are laid out side by side on ONE virtual plane:
+        // opening translates both right by drawerWidth * fraction, so the
+        // drawer slides in from off-screen while the page exits right and
+        // gets dimmed. Offsets read fraction in the placement phase, so the
+        // animation causes no recomposition.
+        val deviceCornerRadius = getDeviceCornerRadius()
+        Box(
+            modifier = Modifier
+                .fillMaxSize()
+                .background(MaterialTheme.colorScheme.surface)
+                .onSizeChanged { portraitScreenWidthPx = it.width.toFloat() }
+                // Gesture lives on the STATIC root so pointer coordinates stay
+                // in world space while the plane underneath translates.
+                .then(portraitDrawerDragModifier)
+        ) {
+            // Drawer sheet - enters from off-screen left, moving the same
+            // distance as the page (same virtual plane).
+            Surface(
+                modifier = Modifier
+                    .align(Alignment.CenterStart)
+                    .width(portraitDrawerWidth)
+                    .fillMaxHeight()
+                    .offset {
+                        IntOffset(
+                            ((portraitDrawerFraction.value - 1f) * portraitDrawerWidthPx).roundToInt(),
+                            0
+                        )
                     }
-
+                    .then(if (portraitDrawerHidden) Modifier.clearAndSetSemantics { } else Modifier),
+                // Same background as the main page so the rounded-corner card
+                // edge never clashes against a differently-tinted sheet.
+                color = MaterialTheme.colorScheme.surface
+            ) {
+                Column(
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .windowInsetsPadding(
+                            WindowInsets.safeDrawing.only(
+                                WindowInsetsSides.Start + WindowInsetsSides.Top
+                            )
+                        ),
+                    // Center the nav items as a group so they stay within
+                    // comfortable thumb reach.
+                    verticalArrangement = Arrangement.Center
+                ) {
                     sectionItems.forEach { section ->
                         val isSelected = currentSection == section
                         NavigationDrawerItem(
@@ -933,44 +1151,79 @@ fun HomeScreen(
                                 )
                             },
                             selected = isSelected,
+                            // Switch section immediately AND slide back concurrently:
+                            // both animations run at the same time.
                             onClick = {
-                                scope.launch {
-                                    portraitDrawerState.close()
-                                    navigateToSection(section)
-                                }
+                                navigateToSection(section)
+                                closePortraitDrawer()
                             },
                             modifier = Modifier.padding(NavigationDrawerItemDefaults.ItemPadding)
                         )
                     }
                 }
             }
-        ) {
-            Scaffold(
-                modifier = Modifier.fillMaxSize(),
-                topBar = { topAppBarContent(false) { scope.launch { if (portraitDrawerState.isOpen) portraitDrawerState.close() else portraitDrawerState.open() } } },
-                floatingActionButton = {
-                    if (showFab) {
-                        ExtendedFloatingActionButton(
-                            onClick = {
-                                showCreateHabitDialog = true
-                            },
-                            icon = {
-                                Icon(imageVector = Icons.Filled.Add, contentDescription = null)
-                            },
-                            text = { Text(text = newHabitLabel) },
-                            modifier = Modifier
-                                .semantics { contentDescription = newHabitLabel }
-                        )
+
+            // Sliding main page - moves the same distance as the drawer so the
+            // two stay rigidly attached on one plane. Clipped to the device
+            // corner radius (after offset, so the whole rounded card slides)
+            // so the displaced, dimmed page reads as a card over the drawer.
+            Box(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .offset {
+                        IntOffset((portraitDrawerFraction.value * portraitDrawerWidthPx).roundToInt(), 0)
                     }
-                },
-                contentWindowInsets = WindowInsets(0, 0, 0, 0)
-            ) { paddingValues ->
-                Box(
-                    modifier = Modifier
-                        .fillMaxSize()
-                        .padding(paddingValues)
-                ) {
-                    homeBody(Modifier.fillMaxSize())
+                    .clip(RoundedCornerShape(deviceCornerRadius))
+                    .then(if (portraitPageHidden) Modifier.clearAndSetSemantics { } else Modifier)
+            ) {
+                Scaffold(
+                    modifier = Modifier.fillMaxSize(),
+                    topBar = { topAppBarContent(false) },
+                    floatingActionButton = {
+                        if (showFab) {
+                            ExtendedFloatingActionButton(
+                                onClick = {
+                                    showCreateHabitDialog = true
+                                },
+                                icon = {
+                                    Icon(imageVector = Icons.Filled.Add, contentDescription = null)
+                                },
+                                text = { Text(text = newHabitLabel) },
+                                modifier = Modifier
+                                    .semantics { contentDescription = newHabitLabel }
+                            )
+                        }
+                    },
+                    contentWindowInsets = WindowInsets(0, 0, 0, 0)
+                ) { paddingValues ->
+                    Box(
+                        modifier = Modifier
+                            .fillMaxSize()
+                            .padding(paddingValues)
+                    ) {
+                        homeBody(Modifier.fillMaxSize())
+                    }
+                }
+
+                // Dimming scrim over the displaced page; tap it to close.
+                // Not composed while fully closed so it can never interfere
+                // with page interactions.
+                if (!portraitDrawerHidden) {
+                    Box(
+                        modifier = Modifier
+                            .matchParentSize()
+                            .drawBehind {
+                                drawRect(
+                                    color = Color.Black,
+                                    alpha = 0.32f * portraitDrawerFraction.value
+                                )
+                            }
+                            .clickable(
+                                interactionSource = remember { MutableInteractionSource() },
+                                indication = null,
+                                enabled = portraitDrawerCatchEnabled
+                            ) { closePortraitDrawer() }
+                    )
                 }
             }
         }
@@ -978,8 +1231,11 @@ fun HomeScreen(
 
     // BackHandler for portrait drawer close on back press
     if (useDrawer) {
-        BackHandler(enabled = portraitDrawerState.isOpen) {
-            scope.launch { portraitDrawerState.close() }
+        val portraitDrawerBackEnabled by remember {
+            derivedStateOf { portraitDrawerFraction.targetValue > 0.01f }
+        }
+        BackHandler(enabled = portraitDrawerBackEnabled) {
+            closePortraitDrawer()
         }
     }
 
