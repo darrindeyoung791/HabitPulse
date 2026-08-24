@@ -161,6 +161,14 @@
             android:resizeableActivity="true"
             android:configChanges="uiMode|orientation|screenSize|screenLayout|smallestScreenSize" />
         <activity
+            android:name=".SettingsUICatalogActivity"
+            android:exported="false"
+            android:label="UI catalog"
+            android:theme="@style/Theme.HabitPulse"
+            android:enableOnBackInvokedCallback="true"
+            android:resizeableActivity="true"
+            android:configChanges="uiMode|orientation|screenSize|screenLayout|smallestScreenSize" />
+        <activity
             android:name=".WebViewActivity"
             android:exported="false"
             android:label="@string/webview_help"

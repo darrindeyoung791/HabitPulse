@@ -69,6 +69,7 @@ fun SettingsTemplateScreen(
         title = stringResource(id = R.string.notification_template_settings_title),
         onBack = handleBack,
         onHelp = onOpenHelp,
+        reserveFabSpace = true,
         floatingActionButton = {
             val fabInteractionSource = remember { MutableInteractionSource() }
             ExtendedFloatingActionButton(

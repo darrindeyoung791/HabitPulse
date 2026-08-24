@@ -8,23 +8,23 @@ import androidx.activity.enableEdgeToEdge
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.platform.LocalContext
 import io.github.darrindeyoung791.habitpulse.navigation.RouteConfig
-import io.github.darrindeyoung791.habitpulse.ui.screens.settings.SettingsDebugScreen
+import io.github.darrindeyoung791.habitpulse.ui.screens.settings.SettingsUICatalogScreen
 import io.github.darrindeyoung791.habitpulse.ui.theme.HabitPulseTheme
 
-class SettingsDebugActivity : ComponentActivity() {
+class SettingsUICatalogActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         enableEdgeToEdge()
         setContent {
             HabitPulseTheme {
-                SettingsDebugContent()
+                SettingsUICatalogContent()
             }
         }
     }
 }
 
 @Composable
-private fun SettingsDebugContent() {
+private fun SettingsUICatalogContent() {
     val context = LocalContext.current
     val onHelp: () -> Unit = {
         val intent = Intent(context, WebViewActivity::class.java).apply {
@@ -33,17 +33,8 @@ private fun SettingsDebugContent() {
         context.startActivity(intent)
     }
 
-    SettingsDebugScreen(
+    SettingsUICatalogScreen(
         onBack = { (context as? android.app.Activity)?.finish() },
-        onOpenHelp = onHelp,
-        onNavigateDebugReminder = {
-            context.startActivity(Intent(context, SettingsDebugReminderActivity::class.java))
-        },
-        onNavigateDebugVibration = {
-            context.startActivity(Intent(context, SettingsDebugVibrationActivity::class.java))
-        },
-        onNavigateUICatalog = {
-            context.startActivity(Intent(context, SettingsUICatalogActivity::class.java))
-        }
+        onOpenHelp = onHelp
     )
 }

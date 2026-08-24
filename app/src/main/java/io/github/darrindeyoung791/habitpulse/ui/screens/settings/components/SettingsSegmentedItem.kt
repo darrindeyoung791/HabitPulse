@@ -258,22 +258,32 @@ fun SettingsSegmentedBox(
 }
 
 /**
- * An expandable segmented list item: a single `surfaceContainer` surface holding a clickable
- * header row (headline + supporting text + trailing chevron) above an [AnimatedVisibility]
- * section that expands/collapses when the header is pressed.
+ * An expandable segmented list item: a single `surfaceContainer` surface holding a
+ * headline + supporting text + trailing indicator above an [AnimatedVisibility] section
+ * that expands/collapses when any part of the surface is pressed.
  *
  * Matches the listitem spec: grouped corner radii, `PressedCorner` grow on press, ripple clipped
- * to the current shape, and press vibration via [PressVibrationFeedback]. The expanded body stays
- * inside the same surface so the segmented look is preserved.
+ * to the current shape and spanning the whole surface (header and expanded body alike), and press
+ * vibration via [PressVibrationFeedback]. Clickable children inside the expanded body win over
+ * the surface toggle, so embedded buttons keep working.
  *
  * @param index item index within its group (0-based)
  * @param count total items in the group
  * @param expanded whether the body is visible
- * @param onToggle invoked when the header row is clicked
+ * @param onToggle invoked when the surface is clicked
  * @param headline header title text
  * @param supportingText optional header supporting text
+ * @param leadingIcon optional leading icon rendered as a [SettingsIconChip]
+ * @param tintIndex accent palette index for the leading icon chip; defaults to [index]
+ * @param enabled whether the item responds to clicks; also tints the leading icon
+ *   chip into its disabled style
  * @param badgeContent optional content shown inside the header below the supporting text
  *   (e.g. license badge pills) — always visible, independent of the expanded state
+ * @param trailing optional trailing composable replacing the default expanding chevron
+ *   (e.g. a [androidx.compose.material3.Switch] whose checked state mirrors [expanded]);
+ *   share this component's [interactionSource] with it to sync pressed visuals
+ * @param interactionSource interaction source driving the ripple, corner animation,
+ *   press vibration and any shared trailing control
  * @param content the expandable body
  */
 @Composable
@@ -284,19 +294,24 @@ fun SettingsExpandableListSurface(
     onToggle: () -> Unit,
     headline: String,
     supportingText: String? = null,
+    leadingIcon: ImageVector? = null,
+    tintIndex: Int = index,
+    enabled: Boolean = true,
     badgeContent: (@Composable () -> Unit)? = null,
+    trailing: (@Composable () -> Unit)? = null,
     modifier: Modifier = Modifier,
+    interactionSource: MutableInteractionSource = remember { MutableInteractionSource() },
     content: @Composable () -> Unit
 ) {
-    val interactionSource = remember { MutableInteractionSource() }
     val pressed = interactionSource.collectIsPressedAsState().value
+    val isPressed = pressed && enabled
 
-    PressVibrationFeedback(interactionSource = interactionSource)
+    PressVibrationFeedback(interactionSource = interactionSource, enabled = enabled)
 
-    val topStart by animateDpAsState(if (pressed) PressedCorner else if (index == 0) LargeCorner else SmallCorner)
-    val topEnd by animateDpAsState(if (pressed) PressedCorner else if (index == 0) LargeCorner else SmallCorner)
-    val bottomStart by animateDpAsState(if (pressed) PressedCorner else if (index == count - 1) LargeCorner else SmallCorner)
-    val bottomEnd by animateDpAsState(if (pressed) PressedCorner else if (index == count - 1) LargeCorner else SmallCorner)
+    val topStart by animateDpAsState(if (isPressed) PressedCorner else if (index == 0) LargeCorner else SmallCorner)
+    val topEnd by animateDpAsState(if (isPressed) PressedCorner else if (index == 0) LargeCorner else SmallCorner)
+    val bottomStart by animateDpAsState(if (isPressed) PressedCorner else if (index == count - 1) LargeCorner else SmallCorner)
+    val bottomEnd by animateDpAsState(if (isPressed) PressedCorner else if (index == count - 1) LargeCorner else SmallCorner)
     val shape = RoundedCornerShape(topStart, topEnd, bottomEnd, bottomStart)
 
     val rotation by animateFloatAsState(
@@ -304,24 +319,35 @@ fun SettingsExpandableListSurface(
         label = "expandChevron"
     )
 
+    val tint = leadingIcon?.let { rememberAccentTint(tintIndex) }
+
     Column(
         modifier = modifier
             .fillMaxWidth()
             .clip(shape)
             .background(MaterialTheme.colorScheme.surfaceContainer)
+            .clickable(
+                interactionSource = interactionSource,
+                indication = LocalIndication.current,
+                enabled = enabled,
+                onClick = onToggle
+            )
     ) {
         Row(
             modifier = Modifier
                 .fillMaxWidth()
-                .clickable(
-                    interactionSource = interactionSource,
-                    indication = LocalIndication.current,
-                    onClick = onToggle
-                )
                 .padding(start = 16.dp, end = 16.dp, top = 12.dp, bottom = 12.dp),
             verticalAlignment = Alignment.CenterVertically,
             horizontalArrangement = Arrangement.spacedBy(16.dp)
         ) {
+            if (leadingIcon != null && tint != null) {
+                SettingsIconChip(
+                    icon = leadingIcon,
+                    tint = tint,
+                    twoLine = supportingText != null,
+                    enabled = enabled
+                )
+            }
             Column(
                 modifier = Modifier.weight(1f),
                 verticalArrangement = Arrangement.spacedBy(4.dp)
@@ -329,7 +355,7 @@ fun SettingsExpandableListSurface(
                 Text(
                     text = headline,
                     style = MaterialTheme.typography.bodyLarge,
-                    color = MaterialTheme.colorScheme.onSurface
+                    color = if (enabled) MaterialTheme.colorScheme.onSurface else MaterialTheme.colorScheme.onSurfaceVariant
                 )
                 if (supportingText != null) {
                     Text(
@@ -342,12 +368,16 @@ fun SettingsExpandableListSurface(
                     badgeContent()
                 }
             }
-            Icon(
-                imageVector = Icons.Filled.KeyboardArrowDown,
-                contentDescription = null,
-                tint = MaterialTheme.colorScheme.onSurfaceVariant,
-                modifier = Modifier.rotate(rotation)
-            )
+            if (trailing != null) {
+                trailing()
+            } else {
+                Icon(
+                    imageVector = Icons.Filled.KeyboardArrowDown,
+                    contentDescription = null,
+                    tint = MaterialTheme.colorScheme.onSurfaceVariant,
+                    modifier = Modifier.rotate(rotation)
+                )
+            }
         }
 
         AnimatedVisibility(

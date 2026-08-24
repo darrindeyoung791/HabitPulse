@@ -306,6 +306,7 @@ fun SettingsAIEditScreen(
         ),
         onBack = handleBack,
         onHelp = onOpenHelp,
+        reserveFabSpace = true,
         floatingActionButton = {
             val fabInteractionSource = remember { MutableInteractionSource() }
             ExtendedFloatingActionButton(

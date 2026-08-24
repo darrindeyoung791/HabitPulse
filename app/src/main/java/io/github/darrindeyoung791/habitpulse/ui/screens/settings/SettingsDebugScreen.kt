@@ -38,7 +38,8 @@ fun SettingsDebugScreen(
     onBack: () -> Unit,
     onOpenHelp: () -> Unit,
     onNavigateDebugReminder: () -> Unit,
-    onNavigateDebugVibration: () -> Unit
+    onNavigateDebugVibration: () -> Unit,
+    onNavigateUICatalog: () -> Unit
 ) {
     val context = LocalContext.current
     val scope = rememberCoroutineScope()
@@ -113,6 +114,18 @@ fun SettingsDebugScreen(
                 supportingText = maxOutputTokens.toString(),
                 showArrow = false,
                 onClick = { editingAiParamId = "output" }
+            )
+        }
+
+        Spacer(modifier = Modifier.height(SettingsBetweenGroupGap))
+
+        SettingsSegmentedGroup(tintOffset = 3) {
+            SettingsSegmentedItem(
+                index = 0,
+                count = 1,
+                headline = "UI catalog",
+                supportingText = "Showcase of shared new-settings UI elements",
+                onClick = onNavigateUICatalog
             )
         }
     }

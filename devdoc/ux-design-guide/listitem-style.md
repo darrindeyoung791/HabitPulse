@@ -22,6 +22,10 @@
 新设置各页面（`NewSettings*Screen`）统一使用上述组件。**旧设置 `SettingsActivity.kt` 中的
 `SettingsListItem` / `SettingsSwitchItem` 为 legacy 封装，新页面不得再使用**。
 
+> **活体示例**：调试设置 → 「UI catalog」（`SettingsUICatalogScreen.kt`）以可交互页面集中展示
+> 上述全部元素及分组圆角 / `tintOffset` / 状态变体特性，可作为视觉对照参考。该页文案为硬编码英文，
+> 暂未资源化，后续扩展其他界面时再统一迁移 design token 式管理。
+
 ---
 
 ## 1. 设计规格
@@ -170,27 +174,40 @@ Box(
 
 ## 4.5 非点击分段表面（SettingsSegmentedBox）
 
-- 用途：把**非交互内容**（如免打扰时间滑块 `DndRangeSlider`）放进分段组，获得与列表项一致的
+- 用途：把**非交互内容**（如字体大小滑杆、震动调试滑块）放进分段组，获得与列表项一致的
   圆角 + `surfaceContainer` 底色，但不响应点击（无涟漪、无按下圆角动画）。
-- 使用：`SettingsSegmentedBox(index = 2, count = 3) { ... }`，`index` / `count` 与组内其他项
+- 使用：`SettingsSegmentedBox(index = ..., count = ...) { ... }`，`index` / `count` 与组内其他项
   一起决定圆角；内部内容自带 padding（如滑块 `padding(horizontal = 16.dp)`）。
-- 参考实现：`NewSettingsReminderScreen.kt`（免打扰时段滑块作为组内第三项，`index=2, count=3`）。
-- 注意：当滑块随开关隐藏时，组内可见项数变化，`count` 需随之调整（滑块可见 = 3，隐藏 = 2）。
+- 参考实现：`SettingsFontScaleScreen.kt`（字体大小档位滑杆）、`SettingsDebugVibrationScreen.kt`。
+- 注意：**跟随开关展开/收起的滑块不再使用本组件**——免打扰时段滑块（`DndRangeSlider`）已迁移到
+  `SettingsExpandableListSurface` 的「开关行 + 同表面展开体」模式（见 4.7），
+  避免开关行与滑块之间出现 2dp 分段间隙。
 
 ## 4.7 可展开列表项（SettingsExpandableListSurface）
 
-- 用途：点击表头在「展开 / 收起」之间切换的列表项（如开放源代码许可页每个开源库）。
-  表头 = 标题 + 可选副标题 + 可选 `badgeContent` 槽位 + 尾部 chevron；展开内容与表头位于
-  **同一块** `surfaceContainer` 表面内（`AnimatedVisibility` + spring 动画），保持分段观感。
+- 用途：点击在「展开 / 收起」之间切换的列表项（如开放源代码许可页每个开源库、通知设置的
+  免打扰时段）。整个条目 = 标题 + 可选副标题 + 可选 `badgeContent` 槽位 + 尾部指示器；
+  展开内容与表头位于**同一块** `surfaceContainer` 表面内（`AnimatedVisibility` + spring 动画），
+  保持分段观感、中间无间隙。
+- **整面可点击**：`clickable` 位于表面根节点而非表头行——涟漪与按下圆角形变覆盖表头和
+  展开体整体；展开区内嵌的可点击子控件（按钮等）按 Compose 最内层消费规则优先响应，
+  不会误触发展开切换。
 - `badgeContent`：常驻表头槽位（如 license pill badge），在标题/副标题下方渲染，
   **与展开状态无关，始终可见**。
-- 表头点击走标准列表项交互：涟漪裁剪到当前圆角、按下四角动画到 `PressedCorner`、
-  `PressVibrationFeedback` 震动；chevron 用 `Icons.Filled.KeyboardArrowDown` 随展开态
-  180° 旋转（`animateFloatAsState`）。
-- 参数：`index` / `count` 与组内其他项一起决定圆角；`expanded` / `onToggle` 由调用方持有；
-  `content` 为展开区（自带水平 padding，底部留 12dp 以上呼吸空间）。
-- 参考实现：`OpenSourceLicensesActivity.kt`（无前置图标 listitem，badge 常驻表头，展开区
-  显示原版 Source/Website/License 功能按钮，有 URL 走应用内 `WebViewActivity` 打开）。
+- 尾部指示器二选一：
+  - 默认 chevron：`Icons.Filled.KeyboardArrowDown` 随展开态 180° 旋转（`animateFloatAsState`）；
+  - `trailing` 槽位：传入自定义 composable 替换 chevron。「开关即展开」变体在此传入
+    `Switch(onCheckedChange = null)`，`checked` 镜像 `expanded`；把组件的
+    `interactionSource` 共享给 Switch 即可同步按压态（同 `SettingsSegmentedSwitch` 手法）。
+- 参数：`index` / `count` 决定圆角；`expanded` / `onToggle` 由调用方持有；可选
+  `leadingIcon`（渲染 `SettingsIconChip`，配 `tintIndex` 取色板）/ `enabled`
+  （禁用点击、图标 chip 走禁用配色）；`content` 为展开区（自带水平 padding，
+  底部留 12dp 以上呼吸空间）。
+- 参考实现：
+  - `OpenSourceLicensesActivity.kt`（chevron 变体，badge 常驻表头，展开区显示功能按钮）；
+  - `SettingsNotificationsScreen.kt` / `WelcomeNotificationsStep.kt`（开关即展开变体，
+    免打扰滑块与开关行同一表面，替代旧「开关行 + `SettingsSegmentedBox` 两段式」）；
+  - `SettingsUICatalogScreen.kt`（两种变体的对照演示）。
 - 注意：展开态切换不会改变 `index` / `count`，末项展开时底部圆角仍保持 `LargeCorner`。
 
 ## 4.6 紧凑文本链接按钮（SettingsTextLinkButton）
@@ -225,6 +242,9 @@ Box(
 8. **RTL**：图标用 `autoMirrored` 变体，padding 用 `start/end`，不写死方向。
 9. **触感震动**：可点击的列表项 / 开关行 / 文本按钮 / 返回帮助按钮默认带按压震动，由
    `PressVibrationFeedback` 自动附加；**不要**在业务组件里直接调 `vibrator`（见第 7 节）。
+10. **FAB 页面底部留白**：挂 `floatingActionButton` 的页面必须传
+   `SettingsScaffold(reserveFabSpace = true)`，内容尾部自动追加 1/4 屏高的 `Spacer`，
+   避免 FAB 遮挡滚动到底部的元素（已启用：AI 配置编辑、通知模板、UI catalog）。
 
 ---
 

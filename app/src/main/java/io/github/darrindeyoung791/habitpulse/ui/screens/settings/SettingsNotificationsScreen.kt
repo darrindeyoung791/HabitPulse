@@ -6,9 +6,7 @@ import android.provider.Settings
 import androidx.activity.ComponentActivity
 import androidx.activity.compose.rememberLauncherForActivityResult
 import androidx.activity.result.contract.ActivityResultContracts
-import androidx.compose.animation.AnimatedVisibility
-import androidx.compose.animation.expandVertically
-import androidx.compose.animation.shrinkVertically
+import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
@@ -19,6 +17,7 @@ import androidx.compose.material.icons.outlined.Alarm
 import androidx.compose.material.icons.outlined.Bedtime
 import androidx.compose.material.icons.outlined.Notifications
 import androidx.compose.material3.ExperimentalMaterial3Api
+import androidx.compose.material3.Switch
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.getValue
@@ -26,7 +25,6 @@ import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
-import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
@@ -40,11 +38,12 @@ import io.github.darrindeyoung791.habitpulse.navigation.RouteConfig
 import io.github.darrindeyoung791.habitpulse.service.ForegroundNotificationService
 import io.github.darrindeyoung791.habitpulse.ui.screens.dnd.DndRangeSlider
 import io.github.darrindeyoung791.habitpulse.ui.screens.settings.components.SettingsBetweenGroupGap
-import io.github.darrindeyoung791.habitpulse.ui.screens.settings.components.SettingsSegmentedBox
+import io.github.darrindeyoung791.habitpulse.ui.screens.settings.components.SettingsExpandableListSurface
 import io.github.darrindeyoung791.habitpulse.ui.screens.settings.components.SettingsSegmentedGroup
 import io.github.darrindeyoung791.habitpulse.ui.screens.settings.components.SettingsSegmentedItem
 import io.github.darrindeyoung791.habitpulse.ui.screens.settings.components.SettingsSegmentedSwitch
 import io.github.darrindeyoung791.habitpulse.ui.screens.settings.components.SettingsTextLinkButton
+import io.github.darrindeyoung791.habitpulse.ui.screens.settings.components.ThemeSwitchColors
 import io.github.darrindeyoung791.habitpulse.utils.NotificationHelper
 import io.github.darrindeyoung791.habitpulse.utils.NotificationPermissionHelper
 import io.github.darrindeyoung791.habitpulse.utils.ReminderManager
@@ -90,7 +89,6 @@ fun SettingsNotificationsScreen(
     }
 
     val showDndSlider = dndEnabled && reminderEnabled
-    val switchCount = if (showDndSlider) 3 else 2
 
     SettingsScaffold(
         title = stringResource(id = R.string.settings_notifications),
@@ -100,7 +98,7 @@ fun SettingsNotificationsScreen(
         SettingsSegmentedGroup {
             SettingsSegmentedSwitch(
                 index = 0,
-                count = switchCount,
+                count = 2,
                 headline = stringResource(id = R.string.settings_reminder),
                 supportingText = stringResource(id = R.string.settings_reminder_description),
                 leadingIcon = Icons.Outlined.Alarm,
@@ -117,40 +115,46 @@ fun SettingsNotificationsScreen(
                     }
                 }
             )
-            SettingsSegmentedSwitch(
+            val dndInteractionSource = remember { MutableInteractionSource() }
+            SettingsExpandableListSurface(
                 index = 1,
-                count = switchCount,
+                count = 2,
+                expanded = showDndSlider,
+                onToggle = {
+                    if (reminderEnabled) {
+                        scope.launch { userPreferences.setDndEnabled(!dndEnabled) }
+                    }
+                },
                 headline = stringResource(id = R.string.settings_reminder_dnd),
                 supportingText = stringResource(id = R.string.settings_reminder_dnd_description),
                 leadingIcon = Icons.Outlined.Bedtime,
-                checked = dndEnabled && reminderEnabled,
                 enabled = reminderEnabled,
-                onCheckedChange = { isChecked ->
-                    scope.launch { userPreferences.setDndEnabled(isChecked) }
-                }
-            )
-            AnimatedVisibility(
-                visible = showDndSlider,
-                enter = expandVertically(expandFrom = Alignment.Top),
-                exit = shrinkVertically(shrinkTowards = Alignment.Top)
-            ) {
-                SettingsSegmentedBox(index = 2, count = 3) {
-                    DndRangeSlider(
-                        startTime = dndStartTime,
-                        endTime = dndEndTime,
-                        onStartTimeChange = { time -> scope.launch { userPreferences.setDndStartTime(time) } },
-                        onEndTimeChange = { time -> scope.launch { userPreferences.setDndEndTime(time) } },
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .padding(horizontal = 16.dp)
+                interactionSource = dndInteractionSource,
+                trailing = {
+                    Switch(
+                        checked = showDndSlider,
+                        onCheckedChange = null,
+                        enabled = reminderEnabled,
+                        interactionSource = dndInteractionSource,
+                        colors = ThemeSwitchColors()
                     )
                 }
+            ) {
+                DndRangeSlider(
+                    startTime = dndStartTime,
+                    endTime = dndEndTime,
+                    onStartTimeChange = { time -> scope.launch { userPreferences.setDndStartTime(time) } },
+                    onEndTimeChange = { time -> scope.launch { userPreferences.setDndEndTime(time) } },
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(horizontal = 16.dp)
+                )
             }
         }
 
         Spacer(modifier = Modifier.height(SettingsBetweenGroupGap))
 
-        SettingsSegmentedGroup(tintOffset = switchCount) {
+        SettingsSegmentedGroup(tintOffset = 2) {
             if (hasNotificationPermission) {
                 SettingsSegmentedSwitch(
                     index = 0,

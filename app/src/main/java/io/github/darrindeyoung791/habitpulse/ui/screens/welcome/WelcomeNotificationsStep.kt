@@ -1,8 +1,6 @@
 package io.github.darrindeyoung791.habitpulse.ui.screens.welcome
 
-import androidx.compose.animation.AnimatedVisibility
-import androidx.compose.animation.expandVertically
-import androidx.compose.animation.shrinkVertically
+import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
@@ -13,9 +11,10 @@ import androidx.compose.material.icons.outlined.Alarm
 import androidx.compose.material.icons.outlined.Bedtime
 import androidx.compose.material.icons.outlined.Notifications
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.Switch
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
-import androidx.compose.ui.Alignment
+import androidx.compose.runtime.remember
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
@@ -24,9 +23,10 @@ import androidx.compose.ui.unit.dp
 import io.github.darrindeyoung791.habitpulse.R
 import io.github.darrindeyoung791.habitpulse.ui.DeviceFormInfo
 import io.github.darrindeyoung791.habitpulse.ui.screens.dnd.DndRangeSlider
-import io.github.darrindeyoung791.habitpulse.ui.screens.settings.components.SettingsSegmentedBox
+import io.github.darrindeyoung791.habitpulse.ui.screens.settings.components.SettingsExpandableListSurface
 import io.github.darrindeyoung791.habitpulse.ui.screens.settings.components.SettingsSegmentedGroup
 import io.github.darrindeyoung791.habitpulse.ui.screens.settings.components.SettingsSegmentedSwitch
+import io.github.darrindeyoung791.habitpulse.ui.screens.settings.components.ThemeSwitchColors
 
 /**
  * 第三步：通知设置。提醒 / 免打扰 / 常驻通知 三个分段开关；
@@ -52,7 +52,6 @@ fun WelcomeNotificationsStep(
 ) {
     val maxWidth = welcomeContentMaxWidth(deviceForm)
     val dndBoxVisible = dndEnabled && reminderEnabled
-    val groupCount = if (dndBoxVisible) 3 else 2
 
     WelcomeStepLayout(
         isPhoneLandscape = deviceForm.isPhoneLandscape,
@@ -88,7 +87,7 @@ fun WelcomeNotificationsStep(
                 SettingsSegmentedGroup(modifier = Modifier.widthIn(max = maxWidth)) {
                     SettingsSegmentedSwitch(
                         index = 0,
-                        count = groupCount,
+                        count = 2,
                         headline = stringResource(R.string.settings_reminder),
                         supportingText = stringResource(R.string.settings_reminder_description),
                         leadingIcon = Icons.Outlined.Alarm,
@@ -96,34 +95,37 @@ fun WelcomeNotificationsStep(
                         tintIndex = 0,
                         onCheckedChange = onReminderChanged
                     )
-                    SettingsSegmentedSwitch(
+                    val dndInteractionSource = remember { MutableInteractionSource() }
+                    SettingsExpandableListSurface(
                         index = 1,
-                        count = groupCount,
+                        count = 2,
+                        expanded = dndBoxVisible,
+                        onToggle = { if (reminderEnabled) onDndChanged(!dndEnabled) },
                         headline = stringResource(R.string.settings_reminder_dnd),
                         supportingText = stringResource(R.string.settings_reminder_dnd_description),
                         leadingIcon = Icons.Outlined.Bedtime,
-                        checked = dndEnabled,
-                        enabled = reminderEnabled,
                         tintIndex = 5,
-                        onCheckedChange = onDndChanged
-                    )
-                    AnimatedVisibility(
-                        visible = dndBoxVisible,
-                        enter = expandVertically(expandFrom = Alignment.Top, clip = false),
-                        exit = shrinkVertically(shrinkTowards = Alignment.Top, clip = false),
-                        label = "welcomeDndBox"
-                    ) {
-                        SettingsSegmentedBox(index = 2, count = 3) {
-                            DndRangeSlider(
-                                startTime = dndStart,
-                                endTime = dndEnd,
-                                onStartTimeChange = onDndStartChanged,
-                                onEndTimeChange = onDndEndChanged,
-                                modifier = Modifier
-                                    .fillMaxWidth()
-                                    .padding(horizontal = 16.dp)
+                        enabled = reminderEnabled,
+                        interactionSource = dndInteractionSource,
+                        trailing = {
+                            Switch(
+                                checked = dndBoxVisible,
+                                onCheckedChange = null,
+                                enabled = reminderEnabled,
+                                interactionSource = dndInteractionSource,
+                                colors = ThemeSwitchColors()
                             )
                         }
+                    ) {
+                        DndRangeSlider(
+                            startTime = dndStart,
+                            endTime = dndEnd,
+                            onStartTimeChange = onDndStartChanged,
+                            onEndTimeChange = onDndEndChanged,
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(horizontal = 16.dp)
+                        )
                     }
                 }
             }
