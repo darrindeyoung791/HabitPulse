@@ -198,7 +198,6 @@ fun HomeScreen(
     // - All portrait modes: BottomNavigationBar
     val isPermanentDrawer = deviceForm.isTabletLandscape
     val useRail = deviceForm.isPhoneLandscape
-    val useBottomBar = !isPermanentDrawer && !useRail
 
     // Fallback: forceTabletLandscape for edge cases
     val effectiveIsPermanentDrawer = if (forceTabletLandscape && isLandscape && !isTabletDevice) {
@@ -218,6 +217,10 @@ fun HomeScreen(
 
     var currentSection by rememberSaveable { mutableStateOf(HomeSection.Habits) }
     var isDrawerExpanded by rememberSaveable { mutableStateOf(true) }
+
+    // Portrait mode: ModalNavigationDrawer state
+    val portraitDrawerState = rememberDrawerState(initialValue = DrawerValue.Closed)
+    val useDrawer = !isLandscape
 
     // Notify MainActivity that home data has loaded (dismisses splash screen)
     var hasNotifiedLoaded by remember { mutableStateOf(false) }
@@ -416,7 +419,7 @@ fun HomeScreen(
         }
     }
 
-    val topAppBarContent: @Composable (Boolean) -> Unit = { isRailVisible ->
+    val topAppBarContent: @Composable (Boolean, () -> Unit) -> Unit = { isRailVisible, onDrawerToggle ->
         val currentTitle = when (currentSection) {
             HomeSection.Habits -> stringResource(id = R.string.main_title_habits)
             HomeSection.Contacts -> stringResource(id = R.string.main_title_contacts)
@@ -433,7 +436,8 @@ fun HomeScreen(
 
         if (isRailVisible) {
             // Phone landscape: use TopAppBar
-            TopAppBar(
+            Box(modifier = Modifier.clickable { navigateToSection(currentSection) }) {
+                TopAppBar(
                 windowInsets = WindowInsets.safeDrawing.only(
                     if (isRailCutoutRight) WindowInsetsSides.Top + WindowInsetsSides.End else WindowInsetsSides.Top
                 ),
@@ -506,21 +510,36 @@ fun HomeScreen(
                         }
                     ) {
                         Icon(
-                            imageVector = Icons.Filled.Settings,
+                            imageVector = Icons.Outlined.Settings,
                             contentDescription = stringResource(id = R.string.main_settings)
                         )
                     }
                 },
                 scrollBehavior = currentTopAppBarScrollBehavior
             )
+            }
         } else {
             // Other modes: use LargeTopAppBar with exitUntilCollapsed behavior
-            LargeTopAppBar(
+            Box(modifier = Modifier.clickable { navigateToSection(currentSection) }) {
+                LargeTopAppBar(
                 windowInsets = WindowInsets.safeDrawing.only(WindowInsetsSides.Top),
                 colors = TopAppBarDefaults.topAppBarColors(
                     containerColor = Color.Transparent,
                     scrolledContainerColor = Color.Transparent
                 ),
+                navigationIcon = {
+                    if (useDrawer) {
+                        IconButton(onClick = onDrawerToggle) {
+                            Icon(
+                                imageVector = if (portraitDrawerState.isOpen) Icons.AutoMirrored.Filled.MenuOpen else Icons.Filled.Menu,
+                                contentDescription = if (portraitDrawerState.isOpen)
+                                    stringResource(id = R.string.main_collapse_drawer)
+                                else
+                                    stringResource(id = R.string.main_expand_drawer)
+                            )
+                        }
+                    }
+                },
                 title = {
                     Column {
                         // Main title - animate font size based on scroll state
@@ -630,7 +649,7 @@ fun HomeScreen(
                         }
                     ) {
                         Icon(
-                            imageVector = Icons.Filled.Settings,
+                            imageVector = Icons.Outlined.Settings,
                             contentDescription = stringResource(id = R.string.main_settings)
                         )
                     }
@@ -638,6 +657,7 @@ fun HomeScreen(
                 scrollBehavior = currentScrollBehavior,
                 modifier = Modifier.nestedScroll(currentScrollBehavior.nestedScrollConnection)
             )
+            }
         }
     }
 
@@ -745,7 +765,7 @@ fun HomeScreen(
             // Drawer handles start inset, Scaffold handles top and end insets
             Scaffold(
                 modifier = Modifier.fillMaxSize(),
-                topBar = { topAppBarContent(false) },
+                topBar = { topAppBarContent(false) { } },
                 floatingActionButton = {
                     if (showFab) {
                         ExtendedFloatingActionButton(
@@ -826,7 +846,7 @@ fun HomeScreen(
                     .weight(1f)
             ) {
                 // TopAppBar handles its own insets via windowInsets parameter
-                topAppBarContent(true)
+                topAppBarContent(true) { }
 
                 // Scrollable content area
                 Box(
@@ -869,87 +889,82 @@ fun HomeScreen(
             }
         }
     } else {
-        // Bottom Navigation Bar layout for portrait modes
-        Scaffold(
-            modifier = Modifier
-                .fillMaxSize(),
-            topBar = { topAppBarContent(false) },
-            bottomBar = {
-                if (useBottomBar) {
-                    // Bottom Navigation Bar for portrait modes
-                    // Use surface color to match system navigation bar color
-                    NavigationBar(
-                        containerColor = MaterialTheme.colorScheme.surface,
-                        contentColor = MaterialTheme.colorScheme.onSurface
+        // Portrait mode: ModalNavigationDrawer layout
+        ModalNavigationDrawer(
+            drawerState = portraitDrawerState,
+            drawerContent = {
+                ModalDrawerSheet(
+                    modifier = Modifier.width(360.dp)
+                ) {
+                    // Collapse drawer button at top
+                    Box(
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .height(84.dp)
+                            .padding(horizontal = 8.dp),
+                        contentAlignment = Alignment.CenterEnd
                     ) {
-                        sectionItems.forEach { section ->
-                            NavigationBarItem(
-                                icon = {
-                                    AnimatedNavIcon(
-                                        isSelected = currentSection == section,
-                                        section = section,
-                                        contentDescription = when (section) {
-                                            HomeSection.Habits -> stringResource(id = R.string.main_tab_habits)
-                                            HomeSection.Contacts -> stringResource(id = R.string.main_tab_contacts)
-                                            HomeSection.Records -> stringResource(id = R.string.main_tab_records)
-                                        }
-                                    )
-                                },
-                                label = { Text(text = when (section) {
-                                    HomeSection.Habits -> stringResource(id = R.string.main_tab_habits)
-                                    HomeSection.Contacts -> stringResource(id = R.string.main_tab_contacts)
-                                    HomeSection.Records -> stringResource(id = R.string.main_tab_records)
-                                }) },
-                                selected = currentSection == section,
-                                onClick = { navigateToSection(section) }
+                        IconButton(
+                            onClick = { scope.launch { portraitDrawerState.close() } },
+                            modifier = Modifier.size(40.dp)
+                        ) {
+                            Icon(
+                                imageVector = Icons.AutoMirrored.Filled.MenuOpen,
+                                contentDescription = stringResource(id = R.string.main_collapse_drawer)
                             )
                         }
                     }
-                }
-            },
-            floatingActionButton = {
-                if (showFab) {
-                    ExtendedFloatingActionButton(
-                        onClick = {
-                            showCreateHabitDialog = true
-                        },
-                        icon = {
-                            Icon(imageVector = Icons.Filled.Add, contentDescription = null)
-                        },
-                        text = { Text(text = newHabitLabel) },
-                        modifier = Modifier
-                            .semantics { contentDescription = newHabitLabel }
-                    )
-                }
-            },
-            contentWindowInsets = WindowInsets(0, 0, 0, 0)
-        ) { paddingValues ->
-            // Collapsed NavigationBar for tablet landscape
-            if (effectiveIsPermanentDrawer) {
-                Row(
-                    modifier = Modifier
-                        .fillMaxSize()
-                        .padding(paddingValues)
-                ) {
-                    CollapsedNavigationBar(
-                        sectionItems = sectionItems,
-                        currentSection = currentSection,
-                        onNavigateToSection = navigateToSection,
-                        habitsContentDescription = stringResource(id = R.string.main_tab_habits),
-                        contactsContentDescription = stringResource(id = R.string.main_tab_contacts),
-                        recordsContentDescription = stringResource(id = R.string.main_tab_records)
-                    )
 
-                    Box(
-                        modifier = Modifier
-                            .fillMaxSize()
-                            .weight(1f)
-                    ) {
-                        homeBody(Modifier.fillMaxSize())
+                    sectionItems.forEach { section ->
+                        val isSelected = currentSection == section
+                        NavigationDrawerItem(
+                            label = {
+                                Text(text = when (section) {
+                                    HomeSection.Habits -> stringResource(id = R.string.main_tab_habits)
+                                    HomeSection.Contacts -> stringResource(id = R.string.main_tab_contacts)
+                                    HomeSection.Records -> stringResource(id = R.string.main_tab_records)
+                                })
+                            },
+                            icon = {
+                                AnimatedNavIcon(
+                                    isSelected = isSelected,
+                                    section = section,
+                                    contentDescription = null
+                                )
+                            },
+                            selected = isSelected,
+                            onClick = {
+                                scope.launch {
+                                    portraitDrawerState.close()
+                                    navigateToSection(section)
+                                }
+                            },
+                            modifier = Modifier.padding(NavigationDrawerItemDefaults.ItemPadding)
+                        )
                     }
                 }
-            } else {
-                // Bottom bar layout - content fills entire area
+            }
+        ) {
+            Scaffold(
+                modifier = Modifier.fillMaxSize(),
+                topBar = { topAppBarContent(false) { scope.launch { if (portraitDrawerState.isOpen) portraitDrawerState.close() else portraitDrawerState.open() } } },
+                floatingActionButton = {
+                    if (showFab) {
+                        ExtendedFloatingActionButton(
+                            onClick = {
+                                showCreateHabitDialog = true
+                            },
+                            icon = {
+                                Icon(imageVector = Icons.Filled.Add, contentDescription = null)
+                            },
+                            text = { Text(text = newHabitLabel) },
+                            modifier = Modifier
+                                .semantics { contentDescription = newHabitLabel }
+                        )
+                    }
+                },
+                contentWindowInsets = WindowInsets(0, 0, 0, 0)
+            ) { paddingValues ->
                 Box(
                     modifier = Modifier
                         .fillMaxSize()
@@ -958,6 +973,13 @@ fun HomeScreen(
                     homeBody(Modifier.fillMaxSize())
                 }
             }
+        }
+    }
+
+    // BackHandler for portrait drawer close on back press
+    if (useDrawer) {
+        BackHandler(enabled = portraitDrawerState.isOpen) {
+            scope.launch { portraitDrawerState.close() }
         }
     }
 
