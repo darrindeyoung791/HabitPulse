@@ -118,12 +118,7 @@ fun ContactsScreenContent(
     modifier: Modifier = Modifier,
     application: HabitPulseApplication? = null,
     scrollBehavior: TopAppBarScrollBehavior? = null,
-    listState: LazyListState = remember { LazyListState() },
-    // Search parameters
-    searchQuery: String = "",
-    onSearchQueryChange: (String) -> Unit = {},
-    isSearchActive: Boolean = false,
-    onSearchActiveChange: (Boolean) -> Unit = {}
+    listState: LazyListState = remember { LazyListState() }
 ) {
     val viewModel: ContactsViewModel = if (application != null) {
         application.contactsViewModel
@@ -143,6 +138,10 @@ fun ContactsScreenContent(
     val lastNonEmptyData by viewModel.lastNonEmptyData.collectAsStateWithLifecycle(initialValue = emptyList())
     val selectedContact by viewModel.selectedContact.collectAsStateWithLifecycle()
 
+    // Omnibox 查询词由 HomeScreen 同步到 ViewModel（debounce），此处只读取
+    val searchQuery by viewModel.searchQuery.collectAsStateWithLifecycle(initialValue = "")
+    val searching = searchQuery.isNotBlank()
+
     // 使用最后一次的非空数据，避免切换页面时闪现空状态
     // 但只在加载中时使用缓存，加载完成后显示真实数据（包括空状态）
     val displayContacts = if (contacts.isNotEmpty()) {
@@ -155,14 +154,11 @@ fun ContactsScreenContent(
         contacts
     }
     
-    // 使用过滤后的联系人列表（如果搜索激活）
-    // 当搜索词为空时，直接使用 displayContacts，避免等待 Flow 收集导致闪现空列表
+    // 使用过滤后的联系人列表（Omnibox 查询词非空时）
+    // 查询词为空时，直接使用 displayContacts，避免等待 Flow 收集导致闪现空列表
     val filteredContactsFlowValue by viewModel.filteredContactsFlow.collectAsStateWithLifecycle(initialValue = displayContacts)
-    val filteredContacts = if (isSearchActive && searchQuery.isNotEmpty()) {
+    val filteredContacts = if (searching) {
         filteredContactsFlowValue
-    } else if (isSearchActive) {
-        // 搜索激活但搜索词为空，显示所有联系人
-        displayContacts
     } else {
         displayContacts
     }
@@ -190,42 +186,6 @@ fun ContactsScreenContent(
     Column(
         modifier = nestedScrollModifier.fillMaxSize()
     ) {
-        // 搜索框 - 使用 AnimatedVisibility 带滑入/滑出动画
-        // 搜索框的高度变化会自动推动下方内容
-        val searchFocusRequester = remember { FocusRequester() }
-        
-        // 请求焦点到搜索框
-        LaunchedEffect(isSearchActive) {
-            if (isSearchActive) {
-                searchFocusRequester.requestFocus()
-            }
-        }
-        
-        AnimatedVisibility(
-            visible = isSearchActive,
-            enter = slideInVertically(
-                initialOffsetY = { height -> -height },
-                animationSpec = spring(dampingRatio = 0.8f, stiffness = 200f)
-            ) + fadeIn(animationSpec = tween(200)),
-            exit = slideOutVertically(
-                targetOffsetY = { height -> -height },
-                animationSpec = tween(200)
-            ) + fadeOut(animationSpec = tween(200))
-        ) {
-            SearchBarFixed(
-                searchQuery = searchQuery,
-                onSearchQueryChange = onSearchQueryChange,
-                onClearSearch = { onSearchQueryChange("") },
-                onBackClick = { onSearchActiveChange(false) },
-                placeholder = stringResource(id = R.string.search_contacts_hint),
-                accessibilityLabel = stringResource(id = R.string.accessibility_search_contacts),
-                focusRequester = searchFocusRequester,
-                isFocused = true,
-                onFocusedChange = { },
-                isSearchActive = isSearchActive
-            )
-        }
-
         when {
             // 只在首次加载时显示加载指示器，切换页面时不显示
             isLoading && !hasLoadedDataOnce -> {
@@ -237,7 +197,7 @@ fun ContactsScreenContent(
                 }
             }
             // 搜索时显示搜索结果（包括空结果），不搜索时显示正常状态
-            isSearchActive -> {
+            searching -> {
                 if (filteredContacts.isEmpty()) {
                     // 搜索但无结果
                     EmptyContactsContent(

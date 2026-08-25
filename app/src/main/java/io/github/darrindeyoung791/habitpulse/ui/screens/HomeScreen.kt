@@ -2,6 +2,7 @@ package io.github.darrindeyoung791.habitpulse.ui.screens
 
 import androidx.compose.animation.AnimatedContent
 import androidx.compose.animation.core.Animatable
+import androidx.compose.animation.core.AnimationVector1D
 import androidx.compose.animation.core.FastOutSlowInEasing
 import androidx.compose.animation.core.Spring
 import androidx.compose.animation.core.animateDpAsState
@@ -20,6 +21,9 @@ import androidx.compose.foundation.background
 import androidx.compose.foundation.focusable
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.text.BasicTextField
+import androidx.compose.foundation.text.KeyboardActions
+import androidx.compose.foundation.text.KeyboardOptions
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.lazy.LazyListState
 import androidx.compose.foundation.lazy.staggeredgrid.LazyStaggeredGridState
@@ -33,26 +37,39 @@ import androidx.compose.material.icons.outlined.*
 import androidx.compose.material.icons.automirrored.filled.ArrowForward
 import androidx.compose.material3.*
 import androidx.compose.runtime.*
+import androidx.compose.runtime.saveable.Saver
 import androidx.compose.runtime.saveable.rememberSaveable
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.platform.LocalLayoutDirection
 import androidx.compose.ui.*
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.drawBehind
+import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.SolidColor
+import androidx.compose.ui.graphics.graphicsLayer
+import androidx.compose.ui.layout.onGloballyPositioned
 import androidx.compose.ui.layout.onSizeChanged
+import androidx.compose.ui.layout.positionInWindow
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.clearAndSetSemantics
 import androidx.compose.ui.semantics.contentDescription
 import androidx.compose.ui.semantics.heading
 import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.font.FontWeight
+import androidx.compose.ui.text.input.ImeAction
 import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.*
 import androidx.compose.ui.focus.FocusRequester
 import androidx.compose.ui.focus.focusRequester
+import androidx.compose.ui.geometry.Rect
+import androidx.compose.ui.geometry.lerp
+import androidx.compose.ui.graphics.lerp
+import androidx.compose.ui.graphics.lerp
 import androidx.compose.ui.platform.LocalFocusManager
 import androidx.compose.ui.input.nestedscroll.nestedScroll
 import androidx.compose.foundation.gestures.awaitEachGesture
@@ -72,7 +89,11 @@ import io.github.darrindeyoung791.habitpulse.navigation.getDeviceCornerRadius
 import io.github.darrindeyoung791.habitpulse.ui.rememberDeviceFormInfo
 import io.github.darrindeyoung791.habitpulse.ui.theme.HabitPulseTheme
 import io.github.darrindeyoung791.habitpulse.ui.utils.rememberDebounceClickHandler
+import io.github.darrindeyoung791.habitpulse.ui.utils.rememberHapticsEnabled
+import io.github.darrindeyoung791.habitpulse.ui.utils.rememberPressVibrationParams
+import io.github.darrindeyoung791.habitpulse.ui.utils.vibrateShort
 import io.github.darrindeyoung791.habitpulse.ui.screens.DateFilterButton
+import io.github.darrindeyoung791.habitpulse.ui.screens.ai.AIChatScreen
 import io.github.darrindeyoung791.habitpulse.viewmodel.HabitViewModel
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.launch
@@ -101,6 +122,252 @@ fun HomeSection.outlinedIconResource() = when (this) {
  * projection). Larger = short flicks trigger more eagerly.
  */
 private const val DrawerFlingProjectionSeconds = 0.16f
+
+/**
+ * 主页内容底部为 Omnibox 预留的额外净空：列表可滚动范围在搜索框上方结束，
+ * 不从其下滑动（各列表自带的尾部 Spacer 之外再叠加）。
+ */
+private val OmniboxContentBottomClearance = 24.dp
+
+/** 渐变过渡层从 Omnibox 上沿再往上延伸的高度（过渡起点）。 */
+private val OmniboxGradientHeadroom = 64.dp
+
+/** Omnibox 距屏幕底边（导航栏/键盘之上）的外边距。 */
+private val OmniboxBottomMargin = 20.dp
+
+/**
+ * 底部 Omnibox + MD3 drag handle + 背景渐变过渡的完整装饰，需在 BoxScope 中调用。
+ *
+ * 把手位于搜索框上方：点按直接展开 AI 对话页；纵向拖拽由主页根层的
+ * 常驻手势条（aiSheetStripDragModifier）驱动，可无极擦洗形变进度。
+ * 渐变层自把手上方 [OmniboxGradientHeadroom]
+ * 处开始向下不透明度加深，直至屏幕底边完全变为背景色；整体随 ime insets 抬升。
+ */
+@Composable
+private fun BoxScope.BottomOmniboxWithFade(
+    query: String,
+    onQueryChange: (String) -> Unit,
+    onHandleTap: () -> Unit,
+    showHandle: Boolean = true,
+    progress: Float = 0f,
+    onPillBounds: (Rect) -> Unit = {},
+    dragModifier: Modifier = Modifier
+) {
+    val surfaceColor = MaterialTheme.colorScheme.surface
+
+    Box(
+        modifier = Modifier
+            .align(Alignment.BottomCenter)
+            .fillMaxWidth()
+    ) {
+        // 透明 → 背景色 的垂直渐变（绘制相位执行，零重组开销）
+        Box(
+            modifier = Modifier
+                .matchParentSize()
+                .drawBehind {
+                    drawRect(
+                        brush = Brush.verticalGradient(
+                            listOf(surfaceColor.copy(alpha = 0f), surfaceColor)
+                        )
+                    )
+                }
+        )
+        Column(
+            modifier = Modifier
+                .windowInsetsPadding(WindowInsets.navigationBars.union(WindowInsets.ime))
+                .padding(
+                    top = OmniboxGradientHeadroom,
+                    bottom = OmniboxBottomMargin,
+                    start = 16.dp,
+                    end = 16.dp
+                )
+                .then(dragModifier)
+                .graphicsLayer { alpha = (1f - progress).coerceIn(0f, 1f) },
+            horizontalAlignment = Alignment.CenterHorizontally
+        ) {
+            // 拖拽把手：点按展开 AI 对话页；拖拽由外层容器手势处理。
+            // 形变启动后隐藏视觉（幽灵把手在面片上缘同位接替），
+            // 但保留固定占位尺寸，避免布局跳动
+            val handleDescription = stringResource(R.string.ai_omnibox_handle_talkback)
+            Box(
+                modifier = Modifier
+                    .size(width = 64.dp, height = 24.dp)
+                    .clickable(enabled = showHandle) { onHandleTap() }
+                    .semantics {
+                        contentDescription = handleDescription
+                    },
+                contentAlignment = Alignment.Center
+            ) {
+                if (showHandle) {
+                    OmniboxDragHandle()
+                }
+            }
+            Spacer(modifier = Modifier.height(6.dp))
+            HomeOmnibox(
+                query = query,
+                onQueryChange = onQueryChange,
+                onUpdateWindowBounds = onPillBounds
+            )
+        }
+    }
+}
+
+/** Omnibox 顶部的横向拖拽把手（自绘，避免依赖版本不稳定的 m3 DragHandle）。 */
+@Composable
+private fun OmniboxDragHandle() {
+    Box(
+        modifier = Modifier
+            .padding(vertical = 10.dp, horizontal = 16.dp)
+            .size(width = 32.dp, height = 4.dp)
+            .clip(RoundedCornerShape(percent = 50))
+            .background(MaterialTheme.colorScheme.onSurfaceVariant.copy(alpha = 0.4f))
+    )
+}
+
+/**
+ * Omnibox → AI 对话页 形变层（文件级独立组件）。
+ *
+ * 性能关键设计：
+ * - 对 [progress] 值的全部读取都发生在本组件的最小重组作用域内——动画每帧
+ *   只重组本组件，不波及 HomeScreen 主树。
+ * - 传给内嵌 AIChatScreen 的回调经 remember 固定为稳定实例（rememberUpdatedState
+ *   转发最新值），使其在纯进度帧中可以被跳过重组；浮现 alpha 在 graphicsLayer
+ *   的绘制相位读取，同样不触发重组。
+ * - 显示/隐藏门用 derivedStateOf 布尔阈值，避免逐帧重组子树。
+ */
+@Composable
+private fun BoxScope.AiSheetOverlay(
+    progress: Animatable<Float, AnimationVector1D>,
+    omniboxBounds: Rect,
+    screenWidthPx: Float,
+    screenHeightPx: Float,
+    cornerRadius: Dp,
+    application: HabitPulseApplication?,
+    habits: List<Habit>,
+    onCollapse: () -> Unit,
+    onNavigateToSettings: () -> Unit,
+    onEditHabitById: (UUID) -> Unit,
+    onManualCreateHabit: () -> Unit,
+    draftText: String
+) {
+    val density = LocalDensity.current
+    val p = progress.value
+
+    // 稳定回调包装：实例跨帧不变，内部经 State 转发最新闭包
+    val collapseState = rememberUpdatedState(onCollapse)
+    val settingsState = rememberUpdatedState(onNavigateToSettings)
+    val editByIdState = rememberUpdatedState(onEditHabitById)
+    val manualState = rememberUpdatedState(onManualCreateHabit)
+    val chatOnBack = remember { { collapseState.value() } }
+    val chatOnSettings = remember { { settingsState.value() } }
+    val chatOnEdit = remember { { id: UUID -> editByIdState.value(id) } }
+    val chatOnManual = remember { { manualState.value() } }
+
+    // 门控布尔：只有跨越阈值时才重组对应子树
+    val scrimVisible by remember { derivedStateOf { progress.value > 0.01f } }
+    val chatVisible by remember { derivedStateOf { progress.value > 0.3f } }
+    val handleVisible by remember { derivedStateOf { progress.value < 0.25f } }
+
+    // 几何插值
+    val screenRect = Rect(0f, 0f, screenWidthPx, screenHeightPx)
+    // 起点矩形与真实胶囊完全重合（不含把手区 headroom）：拖拽启动的首帧
+    // 面片与 Omnibox 像素级重合、零跳变，随进度连续向上/向四周生长
+    val startRect = Rect(
+        omniboxBounds.left,
+        omniboxBounds.top,
+        omniboxBounds.right,
+        omniboxBounds.bottom
+    )
+    val curRect = lerp(startRect, screenRect, p)
+    // 半径从真实胶囊的半高开始，保证首帧圆角与 Omnibox 一致
+    val startRadiusPx = startRect.height / 2f
+    val endRadiusPx = with(density) { cornerRadius.toPx() }
+    val curRadiusPx = startRadiusPx + (endRadiusPx - startRadiusPx) * p
+    // 颜色在组合期取好，绘制相位只做插值（drawBehind 中不可读 CompositionLocal）
+    val sheetStartColor = MaterialTheme.colorScheme.surfaceContainerHighest
+    val sheetEndColor = MaterialTheme.colorScheme.surface
+
+    // 页面压暗 + 点击空白处收回
+    if (scrimVisible) {
+        Box(
+            modifier = Modifier
+                .matchParentSize()
+                .drawBehind {
+                    drawRect(color = Color.Black, alpha = 0.32f * progress.value)
+                }
+                .clickable(
+                    interactionSource = remember { MutableInteractionSource() },
+                    indication = null,
+                    enabled = p > 0.05f
+                ) { onCollapse() }
+        )
+    }
+
+    // 形变面片：矩形/圆角/颜色随进度连续插值；可继续拖拽擦洗
+    Box(
+        modifier = Modifier
+            .offset {
+                IntOffset(curRect.left.roundToInt(), curRect.top.roundToInt())
+            }
+            .size(
+                width = with(density) { curRect.width.toDp() },
+                height = with(density) { curRect.height.toDp() }
+            )
+            .graphicsLayer {
+                shape = RoundedCornerShape(with(density) { curRadiusPx.toDp() })
+                clip = true
+            }
+            .drawBehind {
+                drawRect(color = lerp(sheetStartColor, sheetEndColor, p))
+            }
+    ) {
+        // 对话页元素在后半程浮现（alpha 绘制相位读取，不逐帧重组）
+        if (chatVisible && application != null) {
+            Box(
+                modifier = Modifier
+                    .fillMaxSize()
+                    .graphicsLayer {
+                        alpha = ((progress.value - 0.45f) / 0.35f).coerceIn(0f, 1f)
+                    }
+            ) {
+                AIChatScreen(
+                    onNavigateBack = chatOnBack,
+                    onNavigateToSettings = chatOnSettings,
+                    onCollapse = chatOnBack,
+                    onEditHabit = chatOnEdit,
+                    application = application,
+                    initialInputText = draftText,
+                    onManualCreateHabit = chatOnManual,
+                    progress = progress
+                )
+            }
+        }
+    }
+
+    // 把手幽灵层：随拖拽上移并渐隐，至屏幕上 1/4 进度处完全透明
+    if (handleVisible) {
+        val handleAlpha = (1f - p / 0.25f).coerceIn(0f, 1f)
+        val handleBoxWidthDp = 64.dp
+        val handleBoxHeightDp = 24.dp
+        val handleBoxWidthPx = with(density) { handleBoxWidthDp.toPx() }
+        val handleBoxHeightPx = with(density) { handleBoxHeightDp.toPx() }
+        Box(
+            modifier = Modifier
+                .offset {
+                    IntOffset(
+                        (((curRect.left + curRect.right) / 2f) - handleBoxWidthPx / 2f)
+                            .roundToInt(),
+                        (curRect.top - handleBoxHeightPx).roundToInt()
+                    )
+                }
+                .size(handleBoxWidthDp, handleBoxHeightDp)
+                .graphicsLayer { alpha = handleAlpha },
+            contentAlignment = Alignment.Center
+        ) {
+            OmniboxDragHandle()
+        }
+    }
+}
 
 @Composable
 fun AnimatedNavIcon(
@@ -147,6 +414,12 @@ fun HomeScreen(
     // 防重复点击处理器
     val clickHandler = rememberDebounceClickHandler()
     val scope = rememberCoroutineScope()
+    val focusManager = LocalFocusManager.current
+
+    // 抽屉完全展开到位时的一次性触感反馈（时长/强度读调试页设置，
+    // 并遵循「关闭应用内全部震动」总开关）
+    val hapticsEnabled = rememberHapticsEnabled()
+    val (vibrationDurationMs, vibrationAmplitude) = rememberPressVibrationParams()
 
     // Track which habit is transitioning to MultiSelect (for shared element)
     var multiSelectTargetHabitId by remember { mutableStateOf<UUID?>(null) }
@@ -175,27 +448,14 @@ fun HomeScreen(
     }
     val habits by viewModel.habitsFlow.collectAsStateWithLifecycle(initialValue = emptyList())
 
-    // 联系人搜索状�?
-    var contactsSearchQuery by remember { mutableStateOf("") }
-    var isContactsSearchActive by remember { mutableStateOf(false) }
-    val contactsFocusManager = LocalFocusManager.current
+    // Omnibox（主页底部常驻搜索框）：单一查询词，三个 Section 共用一个输入框。
+    // Habits / Contacts 由各自 ViewModel 内部做 debounce 过滤（此处单向同步），
+    // Records 本期仅占位不过滤；AI 与语音识别均为预留位，无逻辑。
+    var homeOmniboxText by rememberSaveable { mutableStateOf("") }
 
-    // 习惯搜索状态
-    var isHabitsSearchActive by remember { mutableStateOf(false) }
-
-    // 当联系人搜索激活时，拦截系统返回键
-    BackHandler(enabled = isContactsSearchActive) {
-        isContactsSearchActive = false
-        contactsFocusManager.clearFocus()
-    }
-
-    // 当退出联系人搜索时，清除搜索关键�?
-    LaunchedEffect(isContactsSearchActive) {
-        if (!isContactsSearchActive) {
-            contactsSearchQuery = ""
-            application?.contactsViewModel?.clearSearch()
-            contactsFocusManager.clearFocus()
-        }
+    LaunchedEffect(homeOmniboxText) {
+        viewModel.setSearchQuery(homeOmniboxText)
+        application?.contactsViewModel?.setSearchQuery(homeOmniboxText)
     }
 
     // 当页面首次加载时，请求焦点到 title
@@ -250,9 +510,11 @@ fun HomeScreen(
     // and the displaced page is dimmed by a scrim overlay.
     // Fraction 0f = fully closed, 1f = fully open.
     // ------------------------------------------------------------------
-    var portraitScreenWidthPx by remember { mutableFloatStateOf(0f) }
+    var sheetScreenWidthPx by remember { mutableFloatStateOf(0f) }
+    var sheetScreenHeightPx by remember { mutableFloatStateOf(0f) }
+    val deviceCornerRadius = getDeviceCornerRadius()
     // Drawer occupies 3/4 of the screen width.
-    val portraitDrawerWidthPx = portraitScreenWidthPx * 3f / 4f
+    val portraitDrawerWidthPx = sheetScreenWidthPx * 3f / 4f
     val portraitDrawerWidth = with(LocalDensity.current) { portraitDrawerWidthPx.toDp() }
     var portraitDrawerOpen by rememberSaveable { mutableStateOf(false) }
     val portraitDrawerFraction = remember { Animatable(if (portraitDrawerOpen) 1f else 0f) }
@@ -265,12 +527,19 @@ fun HomeScreen(
     val portraitDrawerCatchEnabled by remember { derivedStateOf { portraitDrawerFraction.value > 0.95f } }
 
     fun openPortraitDrawer() {
+        // 若焦点在 Omnibox 输入框上，打开抽屉时取消聚焦并收起键盘
+        focusManager.clearFocus()
+        val wasFullyOpen = portraitDrawerFraction.value >= 0.999f
         portraitDrawerOpen = true
         scope.launch {
             portraitDrawerFraction.animateTo(
                 1f,
                 animationSpec = tween(durationMillis = 320, easing = FastOutSlowInEasing)
             )
+            // 完全展开到位后震动一次（已在全开状态时跳过；收起不震）
+            if (!wasFullyOpen && portraitDrawerFraction.value >= 0.999f && hapticsEnabled) {
+                vibrateShort(context, vibrationDurationMs, vibrationAmplitude)
+            }
         }
     }
 
@@ -292,9 +561,14 @@ fun HomeScreen(
      * gesture only; button/menu paths keep the fixed tween above.
      */
     fun settlePortraitDrawer(open: Boolean, releaseVelocityPxPerSec: Float) {
+        if (open) {
+            // 滑动展开路径同样需要联动：若焦点在 Omnibox 上则取消聚焦收起键盘
+            focusManager.clearFocus()
+        }
+        val wasFullyOpen = portraitDrawerFraction.value >= 0.999f
         portraitDrawerOpen = open
         scope.launch {
-            val widthPx = portraitScreenWidthPx * 3f / 4f
+            val widthPx = sheetScreenWidthPx * 3f / 4f
             val initialVelocity = if (widthPx > 1f) releaseVelocityPxPerSec / widthPx else 0f
             portraitDrawerFraction.animateTo(
                 targetValue = if (open) 1f else 0f,
@@ -304,7 +578,95 @@ fun HomeScreen(
                 ),
                 initialVelocity = initialVelocity
             )
+            // 手势展开到位后震动一次（已在全开状态或收起时跳过）
+            if (open && !wasFullyOpen && portraitDrawerFraction.value >= 0.999f && hapticsEnabled) {
+                vibrateShort(context, vibrationDurationMs, vibrationAmplitude)
+            }
         }
+    }
+
+    // ------------------------------------------------------------------
+    // Omnibox → AI 对话页 连续形变（拖拽把手无极擦洗，进度驱动）
+    // 进度 0 = 主页底部 Omnibox 原位；1 = AIChatScreen 全屏。
+    // 形变的是背景面片（与输入框同形状同色），而非输入框本身延展全屏。
+    // ------------------------------------------------------------------
+    // 使用 rememberSaveable 让形变进度在旋转后保持，对话内容在 ViewModel 中不丢失
+    var aiSheetOpen by rememberSaveable { mutableStateOf(false) }
+    val aiSheetProgress = rememberSaveable(saver = Saver(
+        save = { animatable: Animatable<Float, AnimationVector1D> ->
+            if (animatable.isRunning) null else animatable.value
+        },
+        restore = { value: Float -> Animatable(value) }
+    )) { Animatable(0f) }
+    var aiDraftText by rememberSaveable { mutableStateOf("") }
+    // Omnibox 胶囊在窗口坐标系中的边界（形变起点矩形）
+    var omniboxWindowBounds by remember { mutableStateOf(Rect.Zero) }
+
+    val isAiSheetActive by remember {
+        derivedStateOf { aiSheetOpen || aiSheetProgress.value > 0.001f }
+    }
+    // 形变启动后隐藏装饰层把手的视觉（幽灵把手同位接替），避免双把手并存
+    val showOmniboxHandle by remember {
+        derivedStateOf { aiSheetProgress.value <= 0.001f && !aiSheetOpen }
+    }
+
+    fun beginAiSheetHandoff() {
+        if (!aiSheetOpen && aiSheetProgress.value <= 0.001f) {
+            // 文本草稿交接：Omnibox 已输入内容移交给对话页输入框
+            aiDraftText = homeOmniboxText
+            homeOmniboxText = ""
+        }
+    }
+
+    /**
+     * 形变收尾动画（三条入口统一走此函数）：
+     * - 弹性弹簧产生端点回弹动效；手势路径注入释放初速，末端跟随动量
+     *   （初速钳制在 ±8 progress/s，防止极端数值）
+     * - 到达端点落定后按全局震动设置震动一次；起点已在端点则跳过
+     */
+    fun animateAiSheetTo(
+        open: Boolean,
+        initialVelocityProgressPerSec: Float = 0f
+    ) {
+        // 收起时将草稿文本归还搜索框（换行替换为空格，搜索框不支持换行）
+        if (!open && aiDraftText.isNotEmpty() && homeOmniboxText.isEmpty()) {
+            homeOmniboxText = aiDraftText.replace("\n", " ")
+        }
+        val startValue = aiSheetProgress.value
+        val alreadyAtTarget = if (open) startValue >= 0.999f else startValue <= 0.001f
+        scope.launch {
+            aiSheetProgress.animateTo(
+                targetValue = if (open) 1f else 0f,
+                animationSpec = spring(
+                    dampingRatio = 0.7f,
+                    stiffness = Spring.StiffnessMediumLow
+                ),
+                initialVelocity = initialVelocityProgressPerSec.coerceIn(-8f, 8f)
+            )
+            // 回弹落定后震动一次（完全展开与完全收起都触发）
+            val endValue = aiSheetProgress.value
+            if (!alreadyAtTarget && hapticsEnabled &&
+                ((open && endValue >= 0.999f) || (!open && endValue <= 0.001f))
+            ) {
+                vibrateShort(context, vibrationDurationMs, vibrationAmplitude)
+            }
+        }
+    }
+
+    fun settleAiSheet(open: Boolean, releaseVelocityProgressPerSec: Float) {
+        if (open) beginAiSheetHandoff()
+        focusManager.clearFocus()
+        animateAiSheetTo(open, releaseVelocityProgressPerSec)
+    }
+
+    fun expandAiSheetAnimated() {
+        beginAiSheetHandoff()
+        focusManager.clearFocus()
+        animateAiSheetTo(open = true)
+    }
+
+    fun collapseAiSheetAnimated() {
+        animateAiSheetTo(open = false)
     }
 
     // Shared horizontal drag gesture (custom axis-arbitrating detector).
@@ -326,7 +688,12 @@ fun HomeScreen(
         val touchSlop = viewConfiguration.touchSlop
         val velocityTracker = VelocityTracker()
         awaitEachGesture {
+            // ⚠️ 守卫必须放在 awaitFirstDown 之后（见 AI 手势条同款注释）：
+            // block 在挂起前 return 且无按下指针时，awaitEachGesture 会不经
+            // 挂起立即重启下一轮 —— 形变激活期间这里曾因此热自旋死循环。
             val down = awaitFirstDown(requireUnconsumed = false)
+            // Omnibox→AI 形变激活期间不参与抽屉手势
+            if (isAiSheetActive) return@awaitEachGesture
             var totalX = 0f
             var totalY = 0f
             var engaged = false
@@ -375,7 +742,7 @@ fun HomeScreen(
                     // frame - the drawer tracks the finger with no lag.
                     val dx = delta.x
                     scope.launch {
-                        val widthPx = portraitScreenWidthPx * 3f / 4f
+                        val widthPx = sheetScreenWidthPx * 3f / 4f
                         if (widthPx > 1f) {
                             portraitDrawerFraction.snapTo(
                                 (portraitDrawerFraction.value + dx / widthPx)
@@ -397,11 +764,11 @@ fun HomeScreen(
                 // and trigger; slow short drags stay put; an unreliable speed
                 // reading merely degrades to nearest-anchor instead of ever
                 // reversing the drawer against the finger.
-                val fifthOfScreen = portraitScreenWidthPx / 5f
+                val fifthOfScreen = sheetScreenWidthPx / 5f
                 val shouldOpen = if (abs(totalX) >= fifthOfScreen) {
                     totalX > 0f
                 } else {
-                    val widthPx = portraitScreenWidthPx * 3f / 4f
+                    val widthPx = sheetScreenWidthPx * 3f / 4f
                     val velocityFractionPerSec = if (widthPx > 1f) velocityX / widthPx else 0f
                     portraitDrawerFraction.value +
                         velocityFractionPerSec * DrawerFlingProjectionSeconds > 0.5f
@@ -410,6 +777,100 @@ fun HomeScreen(
                 // the drawer keeps the gesture's momentum instead of playing a
                 // canned tween.
                 settlePortraitDrawer(open = shouldOpen, releaseVelocityPxPerSec = velocityX)
+            }
+        }
+    }
+
+    // 拖拽全程位移：把手到屏幕顶部的实测距离；边界未上报时以屏高比例兜底，
+    // 避免 travelPx≈1 导致任意微小位移把进度瞬间顶满（ANR 根因之一）
+    fun aiSheetTravelPx(): Float {
+        val boundsTop = omniboxWindowBounds.top
+        return if (boundsTop > 1f) boundsTop else sheetScreenHeightPx * 0.55f
+    }
+
+    // ------------------------------------------------------------------
+    // AI 形变唯一纵向驱动：常驻于主页根层的「底部手势条」。
+    // 不挂在装饰/形变面片上——那些节点会随 p 越阈而挂载/卸载，
+    // 挂在上面会导致：① 双检测器短暂共存同时消费同一指针流（进度翻倍、
+    // 瞬间满屏）；② 拖拽中途节点被卸载、手势协程被取消，松手 settle
+    // 永不执行。常驻条生命周期贯穿全程，单一驱动源。
+    // ------------------------------------------------------------------
+    val aiSheetStripDragModifier = Modifier.pointerInput(Unit) {
+        val touchSlop = viewConfiguration.touchSlop
+        val velocityTracker = VelocityTracker()
+        awaitEachGesture {
+            // ⚠️ 守卫必须在 awaitFirstDown 之后：awaitEachGesture 在 block 不经
+            // 挂起就返回时会立即重启下一轮迭代（无指针按下时 finally 直接放行），
+            // 形成主线程热自旋 —— 这正是完全展开态 ANR 的根因。
+            // awaitFirstDown 本身是挂起点，其后 return 是安全的（finally 会等抬手）。
+            val down = awaitFirstDown(requireUnconsumed = false)
+            // 完全展开后不接管任何拖拽（避免劫持聊天页底部区域）
+            if (aiSheetProgress.value >= 0.999f) return@awaitEachGesture
+            // 抽屉开启期间不参与
+            if (portraitDrawerFraction.value > 0.01f) return@awaitEachGesture
+            velocityTracker.resetTracking()
+            var totalY = 0f
+            var engaged = false
+
+            while (true) {
+                val event = awaitPointerEvent()
+                val change = event.changes.firstOrNull { it.id == down.id } ?: break
+
+                val delta = change.positionChange()
+                totalY += delta.y
+
+                if (engaged) {
+                    velocityTracker.addPosition(change.uptimeMillis, change.position)
+                }
+                if (!change.pressed) break
+
+                if (!engaged) {
+                    if (change.isConsumed) break
+                    // 仅上滑意图才接管（下拉收回走遮罩点击/返回键）
+                    if (abs(totalY) > touchSlop && totalY < 0f &&
+                        aiSheetProgress.value < 0.999f
+                    ) {
+                        engaged = true
+                        beginAiSheetHandoff()
+                        velocityTracker.resetTracking()
+                        velocityTracker.addPosition(change.uptimeMillis, change.position)
+                    } else if (abs(totalY) > touchSlop) {
+                        break
+                    }
+                }
+
+                if (engaged) {
+                    change.consume()
+                    val dy = delta.y
+                    scope.launch {
+                        val travelPx = aiSheetTravelPx()
+                        aiSheetProgress.snapTo(
+                            (aiSheetProgress.value - dy / travelPx).coerceIn(0f, 1f)
+                        )
+                    }
+                }
+            }
+
+            if (engaged) {
+                val vy = velocityTracker.calculateVelocity().y // 上滑为负
+                val travelPx = aiSheetTravelPx()
+                val velocityProgressPerSec = -vy / travelPx
+                val projected =
+                    aiSheetProgress.value + velocityProgressPerSec * DrawerFlingProjectionSeconds
+                // 触发规则（与抽屉一致的两级判定）：
+                // ① 本次手势位移 ≥ 1/5 屏宽时无论速度按方向直接展开（上滑）
+                // ② 更短手势用动量投影取最近锚点——快速轻扫短距即触发，
+                //    慢速短拖保持原位，速度读数失真时仅退化为就近吸附
+                val fifthOfScreen = sheetScreenWidthPx / 5f
+                val shouldOpen = if (abs(totalY) >= fifthOfScreen) {
+                    totalY < 0f
+                } else {
+                    projected > 0.5f
+                }
+                settleAiSheet(
+                    open = shouldOpen,
+                    releaseVelocityProgressPerSec = velocityProgressPerSec
+                )
             }
         }
     }
@@ -582,8 +1043,8 @@ fun HomeScreen(
                         animatedContentScope = animatedContentScope,
                         nestedScrollConnection = habitsScrollBehavior.nestedScrollConnection,
                         multiSelectTargetHabitId = multiSelectTargetHabitId,
-                        isSearchActive = isHabitsSearchActive,
-                        onSearchActiveChange = { isHabitsSearchActive = it }
+                        searchQuery = homeOmniboxText,
+                        onClearSearch = { homeOmniboxText = "" }
                     )
                 }
                 HomeSection.Contacts -> {
@@ -591,14 +1052,7 @@ fun HomeScreen(
                         modifier = modifier,
                         application = application,
                         scrollBehavior = contactsScrollBehavior,
-                        listState = contactsScrollState,
-                        searchQuery = contactsSearchQuery,
-                        onSearchQueryChange = { 
-                            contactsSearchQuery = it
-                            application?.contactsViewModel?.setSearchQuery(it)
-                        },
-                        isSearchActive = isContactsSearchActive,
-                        onSearchActiveChange = { isContactsSearchActive = it }
+                        listState = contactsScrollState
                     )
                 }
                 HomeSection.Records -> {
@@ -652,35 +1106,6 @@ fun HomeScreen(
                     )
                 },
                 actions = {
-                    // Search button - only show in Habits section
-                    if (currentSection == HomeSection.Habits) {
-                        IconButton(
-                            onClick = { isHabitsSearchActive = true }
-                        ) {
-                            Icon(
-                                imageVector = Icons.Filled.Search,
-                                contentDescription = stringResource(id = R.string.accessibility_search_habits)
-                            )
-                        }
-                    }
-                    // Search button - only show in Contacts section
-                    if (currentSection == HomeSection.Contacts) {
-                        IconButton(
-                            onClick = {
-                                if (isContactsSearchActive) {
-                                    isContactsSearchActive = false
-                                    contactsFocusManager.clearFocus()
-                                } else {
-                                    isContactsSearchActive = true
-                                }
-                            }
-                        ) {
-                            Icon(
-                                imageVector = Icons.Filled.Search,
-                                contentDescription = stringResource(id = R.string.accessibility_search_contacts)
-                            )
-                        }
-                    }
                     // Date filter button - only show in Records section
                     if (currentSection == HomeSection.Records) {
                         val recordsVM = application?.recordsViewModel
@@ -795,35 +1220,6 @@ fun HomeScreen(
                     }
                 },
                 actions = {
-                    // Search button - only show in Habits section
-                    if (currentSection == HomeSection.Habits) {
-                        IconButton(
-                            onClick = { isHabitsSearchActive = true }
-                        ) {
-                            Icon(
-                                imageVector = Icons.Filled.Search,
-                                contentDescription = stringResource(id = R.string.accessibility_search_habits)
-                            )
-                        }
-                    }
-                    // Search button - only show in Contacts section
-                    if (currentSection == HomeSection.Contacts) {
-                        IconButton(
-                            onClick = {
-                                if (isContactsSearchActive) {
-                                    isContactsSearchActive = false
-                                    contactsFocusManager.clearFocus()
-                                } else {
-                                    isContactsSearchActive = true
-                                }
-                            }
-                        ) {
-                            Icon(
-                                imageVector = Icons.Filled.Search,
-                                contentDescription = stringResource(id = R.string.accessibility_search_contacts)
-                            )
-                        }
-                    }
                     // Date filter button - only show in Records section
                     if (currentSection == HomeSection.Records) {
                         val recordsVM = application?.recordsViewModel
@@ -859,10 +1255,19 @@ fun HomeScreen(
         }
     }
 
-    val showFab = currentSection == HomeSection.Habits
-    val newHabitLabel = stringResource(id = R.string.main_new_habit)
+    // 新建习惯 FAB 本期隐藏（omnibox 迭代）：手动创建入口改为
+    // 习惯页顶部下拉释放触发 CreateHabitSelectionDialog（见 HabitScreenContent）。
 
     if (effectiveIsPermanentDrawer) {
+        // 外层 Box 让 AiSheetOverlay 能覆盖全屏（包括 Drawer）
+        Box(
+            modifier = Modifier
+                .fillMaxSize()
+                .onSizeChanged {
+                    sheetScreenWidthPx = it.width.toFloat()
+                    sheetScreenHeightPx = it.height.toFloat()
+                }
+        ) {
         PermanentNavigationDrawer(
             drawerContent = {
                 PermanentDrawerSheet(
@@ -964,21 +1369,6 @@ fun HomeScreen(
             Scaffold(
                 modifier = Modifier.fillMaxSize(),
                 topBar = { topAppBarContent(false) },
-                floatingActionButton = {
-                    if (showFab) {
-                        ExtendedFloatingActionButton(
-                            onClick = {
-                                showCreateHabitDialog = true
-                            },
-                            icon = {
-                                Icon(imageVector = Icons.Filled.Add, contentDescription = null)
-                            },
-                            text = { Text(text = newHabitLabel) },
-                            modifier = Modifier
-                                .semantics { contentDescription = newHabitLabel }
-                        )
-                    }
-                },
                 // Scaffold handles top and end insets (start is handled by drawer)
                 contentWindowInsets = WindowInsets.safeDrawing.only(
                     WindowInsetsSides.Top + WindowInsetsSides.End
@@ -989,18 +1379,76 @@ fun HomeScreen(
                         .fillMaxSize()
                         .padding(paddingValues)
                 ) {
-                    homeBody(Modifier.fillMaxSize())
+                    homeBody(
+                        Modifier
+                            .fillMaxSize()
+                            // 列表可滚动范围在 omnibox 上方结束
+                            .padding(bottom = OmniboxContentBottomClearance)
+                            // 键盘弹出时列表显示高度随之抬升，习惯不被遮挡
+                            .imePadding()
+                    )
+
+                    // Omnibox（常驻搜索框 + 背景渐变过渡 + AI 形变拖拽源）
+                    // 注意：形变期间保持挂载不卸载——展开后被全屏面片覆盖不可见，
+                    // 但节点存活使拖拽手势协程贯穿全程；同时保证输入框可正常聚焦
+                        BottomOmniboxWithFade(
+                            query = homeOmniboxText,
+                            onQueryChange = { homeOmniboxText = it },
+                            onHandleTap = { expandAiSheetAnimated() },
+                            showHandle = showOmniboxHandle,
+                            progress = aiSheetProgress.value,
+                            onPillBounds = { omniboxWindowBounds = it },
+                            dragModifier = aiSheetStripDragModifier
+                        )
                 }
             }
         }
+
+        // AI 形变覆盖层（与手机竖屏一致的覆盖方案，覆盖全屏含 Drawer）
+        if (isAiSheetActive && omniboxWindowBounds.width > 0f && application != null) {
+            AiSheetOverlay(
+                progress = aiSheetProgress,
+                omniboxBounds = omniboxWindowBounds,
+                screenWidthPx = sheetScreenWidthPx,
+                screenHeightPx = sheetScreenHeightPx,
+                cornerRadius = deviceCornerRadius,
+                application = application,
+                habits = habits,
+                onCollapse = { collapseAiSheetAnimated() },
+                onNavigateToSettings = onNavigateToSettings,
+                onEditHabitById = { habitId: UUID ->
+                    val habit = habits.firstOrNull { it.id == habitId }
+                    if (habit != null) {
+                        collapseAiSheetAnimated()
+                        scope.launch {
+                            clickHandler.processClick { onEditHabit(habit) }
+                        }
+                    }
+                },
+                onManualCreateHabit = {
+                    collapseAiSheetAnimated()
+                    scope.launch {
+                        clickHandler.processClick { onCreateHabit() }
+                    }
+                },
+                draftText = aiDraftText
+            )
+        }
+        } // outer Box
     } else if (effectiveUseRail) {
         // NavigationRail layout for landscape phones
         // Rail occupies full height on left, content area on right
-        Row(
+        // 外层 Box 让 AiSheetOverlay 能覆盖全屏（包括 Rail）
+        Box(
             modifier = Modifier
                 .fillMaxSize()
                 .background(MaterialTheme.colorScheme.surface)
+                .onSizeChanged {
+                    sheetScreenWidthPx = it.width.toFloat()
+                    sheetScreenHeightPx = it.height.toFloat()
+                }
         ) {
+            Row(modifier = Modifier.fillMaxSize()) {
             // NavigationRail - fixed on left side
             // Handles start inset for camera cutout
             NavigationRail(
@@ -1059,31 +1507,54 @@ fun HomeScreen(
                             } else {
                                 Modifier
                             }
-                        )
+                        ).padding(bottom = OmniboxContentBottomClearance)
+                        // 键盘弹出时列表显示高度随之抬升
+                        .imePadding()
                     )
 
-                    // FAB - floating above content
-                    if (showFab) {
-                        ExtendedFloatingActionButton(
-                            onClick = {
-                                showCreateHabitDialog = true
-                            },
-                            icon = {
-                                Icon(imageVector = Icons.Filled.Add, contentDescription = null)
-                            },
-                            text = { Text(text = newHabitLabel) },
-                            modifier = Modifier
-                                .align(Alignment.BottomEnd)
-                                .windowInsetsPadding(
-                                    WindowInsets.safeDrawing.only(
-                                        if (isRailCutoutRight) WindowInsetsSides.Bottom + WindowInsetsSides.End else WindowInsetsSides.Bottom
-                                    )
-                                )
-                                .padding(16.dp)
-                                .semantics { contentDescription = newHabitLabel }
+                    // Omnibox（常驻搜索框 + 背景渐变过渡，替代原 FAB 位置带）；形变激活期间由形变层接管
+                        BottomOmniboxWithFade(
+                            query = homeOmniboxText,
+                            onQueryChange = { homeOmniboxText = it },
+                            onHandleTap = { expandAiSheetAnimated() },
+                            showHandle = showOmniboxHandle,
+                            progress = aiSheetProgress.value,
+                            onPillBounds = { omniboxWindowBounds = it },
+                            dragModifier = aiSheetStripDragModifier
                         )
-                    }
                 }
+            }
+            }
+
+            // AI 形变覆盖层（与手机竖屏一致的覆盖方案）
+            if (isAiSheetActive && omniboxWindowBounds.width > 0f && application != null) {
+                AiSheetOverlay(
+                    progress = aiSheetProgress,
+                    omniboxBounds = omniboxWindowBounds,
+                    screenWidthPx = sheetScreenWidthPx,
+                    screenHeightPx = sheetScreenHeightPx,
+                    cornerRadius = deviceCornerRadius,
+                    application = application,
+                    habits = habits,
+                    onCollapse = { collapseAiSheetAnimated() },
+                    onNavigateToSettings = onNavigateToSettings,
+                    onEditHabitById = { habitId: UUID ->
+                        val habit = habits.firstOrNull { it.id == habitId }
+                        if (habit != null) {
+                            collapseAiSheetAnimated()
+                            scope.launch {
+                                clickHandler.processClick { onEditHabit(habit) }
+                            }
+                        }
+                    },
+                    onManualCreateHabit = {
+                        collapseAiSheetAnimated()
+                        scope.launch {
+                            clickHandler.processClick { onCreateHabit() }
+                        }
+                    },
+                    draftText = aiDraftText
+                )
             }
         }
     } else {
@@ -1093,12 +1564,14 @@ fun HomeScreen(
         // drawer slides in from off-screen while the page exits right and
         // gets dimmed. Offsets read fraction in the placement phase, so the
         // animation causes no recomposition.
-        val deviceCornerRadius = getDeviceCornerRadius()
         Box(
             modifier = Modifier
                 .fillMaxSize()
                 .background(MaterialTheme.colorScheme.surface)
-                .onSizeChanged { portraitScreenWidthPx = it.width.toFloat() }
+                .onSizeChanged {
+                    sheetScreenWidthPx = it.width.toFloat()
+                    sheetScreenHeightPx = it.height.toFloat()
+                }
                 // Gesture lives on the STATIC root so pointer coordinates stay
                 // in world space while the plane underneath translates.
                 .then(portraitDrawerDragModifier)
@@ -1179,31 +1652,32 @@ fun HomeScreen(
                 Scaffold(
                     modifier = Modifier.fillMaxSize(),
                     topBar = { topAppBarContent(false) },
-                    floatingActionButton = {
-                        if (showFab) {
-                            ExtendedFloatingActionButton(
-                                onClick = {
-                                    showCreateHabitDialog = true
-                                },
-                                icon = {
-                                    Icon(imageVector = Icons.Filled.Add, contentDescription = null)
-                                },
-                                text = { Text(text = newHabitLabel) },
-                                modifier = Modifier
-                                    .semantics { contentDescription = newHabitLabel }
-                            )
-                        }
-                    },
                     contentWindowInsets = WindowInsets(0, 0, 0, 0)
                 ) { paddingValues ->
                     Box(
                         modifier = Modifier
                             .fillMaxSize()
                             .padding(paddingValues)
+                            // 列表可滚动范围在 omnibox 上方结束，不在其下滑动
+                            .padding(bottom = OmniboxContentBottomClearance)
+                            // 键盘弹出时列表显示高度随之抬升，习惯不被遮挡
+                            .imePadding()
                     ) {
                         homeBody(Modifier.fillMaxSize())
                     }
                 }
+
+                // Omnibox（常驻搜索框 + 背景渐变过渡，随页面一同滑动、被遮罩压暗 + AI 形变拖拽源）
+                // 形变期间保持挂载不卸载（同上）
+                    BottomOmniboxWithFade(
+                        query = homeOmniboxText,
+                        onQueryChange = { homeOmniboxText = it },
+                        onHandleTap = { expandAiSheetAnimated() },
+                        showHandle = showOmniboxHandle,
+                        progress = aiSheetProgress.value,
+                        onPillBounds = { omniboxWindowBounds = it },
+                        dragModifier = aiSheetStripDragModifier
+                    )
 
                 // Dimming scrim over the displaced page; tap it to close.
                 // Not composed while fully closed so it can never interfere
@@ -1225,6 +1699,42 @@ fun HomeScreen(
                             ) { closePortraitDrawer() }
                     )
                 }
+            }
+
+            // ------------------------------------------------------------------
+            // Omnibox → AI 对话页 形变层：实现整体隔离在文件级 AiSheetOverlay 内，
+            // 进度读取不进入 HomeScreen 组合作用域——动画帧只重组形变层自身，
+            // 绝不波及主树（否则整屏逐帧重组 + 聊天树不可跳过 = 松手 ANR）。
+            // 几何未就绪（胶囊边界尚未上报）时不渲染，避免坏帧
+            // ------------------------------------------------------------------
+            if (isAiSheetActive && omniboxWindowBounds.width > 0f && application != null) {
+                AiSheetOverlay(
+                    progress = aiSheetProgress,
+                    omniboxBounds = omniboxWindowBounds,
+                    screenWidthPx = sheetScreenWidthPx,
+                    screenHeightPx = sheetScreenHeightPx,
+                    cornerRadius = deviceCornerRadius,
+                    application = application,
+                    habits = habits,
+                    onCollapse = { collapseAiSheetAnimated() },
+                    onNavigateToSettings = onNavigateToSettings,
+                    onEditHabitById = { habitId ->
+                        val habit = habits.firstOrNull { it.id == habitId }
+                        if (habit != null) {
+                            collapseAiSheetAnimated()
+                            scope.launch {
+                                clickHandler.processClick { onEditHabit(habit) }
+                            }
+                        }
+                    },
+                    onManualCreateHabit = {
+                        collapseAiSheetAnimated()
+                        scope.launch {
+                            clickHandler.processClick { onCreateHabit() }
+                        }
+                    },
+                    draftText = aiDraftText
+                )
             }
         }
     }
@@ -1364,6 +1874,103 @@ fun BlankSectionContent(
             style = MaterialTheme.typography.bodyMedium,
             textAlign = TextAlign.Center
         )
+    }
+}
+
+/**
+ * 主页底部常驻 Omnibox（Google 搜索框风格）。
+ *
+ * 100% 圆角胶囊形：左侧放大镜图标，中间提示文本「搜索与AI」/输入内容，
+ * 右侧麦克风图标（语音识别预留位，本期无行为）；有输入内容时麦克风
+ * 替换为清除按钮。点击任意处聚焦并弹出输入法，调用方通过 ime insets
+ * padding 适配键盘高度。
+ *
+ * 无阴影；填充色用 surfaceContainerHighest，与习惯卡片（surfaceContainer）
+ * 区分。
+ */
+@Composable
+private fun HomeOmnibox(
+    query: String,
+    onQueryChange: (String) -> Unit,
+    onUpdateWindowBounds: (Rect) -> Unit = {},
+    modifier: Modifier = Modifier
+) {
+    val focusRequester = remember { FocusRequester() }
+    val focusManager = LocalFocusManager.current
+
+    Surface(
+        modifier = modifier
+            .onGloballyPositioned { coords ->
+                // 上报胶囊在窗口坐标系中的边界，作为 AI 形变层的起点矩形
+                onUpdateWindowBounds(
+                    Rect(coords.positionInWindow(), coords.size.toSize())
+                )
+            },
+        shape = RoundedCornerShape(percent = 50),
+        color = MaterialTheme.colorScheme.surfaceContainerHighest
+    ) {
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .heightIn(min = 52.dp)
+                .clickable { focusRequester.requestFocus() },
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            Icon(
+                imageVector = Icons.Filled.Search,
+                contentDescription = null,
+                tint = MaterialTheme.colorScheme.onSurfaceVariant,
+                modifier = Modifier.padding(start = 16.dp)
+            )
+            BasicTextField(
+                value = query,
+                onValueChange = onQueryChange,
+                singleLine = true,
+                textStyle = MaterialTheme.typography.bodyLarge.copy(
+                    color = MaterialTheme.colorScheme.onSurface
+                ),
+                cursorBrush = SolidColor(MaterialTheme.colorScheme.primary),
+                keyboardOptions = KeyboardOptions(imeAction = ImeAction.Search),
+                keyboardActions = KeyboardActions(onSearch = { focusManager.clearFocus() }),
+                modifier = Modifier
+                    .weight(1f)
+                    .padding(horizontal = 12.dp, vertical = 14.dp)
+                    .focusRequester(focusRequester),
+                decorationBox = { innerTextField ->
+                    Box {
+                        if (query.isEmpty()) {
+                            Text(
+                                text = stringResource(id = R.string.main_omnibox_hint),
+                                style = MaterialTheme.typography.bodyLarge,
+                                color = MaterialTheme.colorScheme.onSurfaceVariant,
+                                maxLines = 1
+                            )
+                        }
+                        innerTextField()
+                    }
+                }
+            )
+            if (query.isNotEmpty()) {
+                IconButton(
+                    onClick = { onQueryChange("") },
+                    modifier = Modifier.padding(end = 4.dp)
+                ) {
+                    Icon(
+                        imageVector = Icons.Filled.Close,
+                        contentDescription = stringResource(id = R.string.accessibility_omnibox_clear),
+                        tint = MaterialTheme.colorScheme.onSurfaceVariant
+                    )
+                }
+            } else {
+                // 语音识别预留位：本期无行为
+                Icon(
+                    imageVector = Icons.Filled.Mic,
+                    contentDescription = null,
+                    tint = MaterialTheme.colorScheme.onSurfaceVariant,
+                    modifier = Modifier.padding(end = 20.dp)
+                )
+            }
+        }
     }
 }
 

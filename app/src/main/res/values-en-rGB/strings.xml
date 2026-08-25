@@ -566,6 +566,8 @@
     <string name="ai_error_unknown">Unknown error</string>
     <!-- AI Chat -->
     <string name="ai_chat_title">AI Assistant</string>
+    <string name="ai_omnibox_handle_talkback">Open AI Assistant</string>
+    <string name="ai_chat_new_conversation">New conversation</string>
     <string name="ai_chat_entry">New AI Chat</string>
     <string name="ai_chat_manage_providers">Manage providers</string>
     <string name="ai_chat_not_configured">Not configured</string>
@@ -750,4 +752,8 @@
     <string name="region_co">Colombia</string>
     <string name="region_mx">Mexico</string>
     <string name="region_nz">New Zealand</string>
+    <string name="main_omnibox_hint">Search here, or swipe up for AI</string>
+    <string name="accessibility_omnibox_clear">Clear search</string>
+    <string name="ai_chat_manual_create">Create a habit manually</string>
+    <string name="ai_chat_manual_create_description">Skip the AI and fill in the details yourself</string>
 </resources>

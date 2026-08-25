@@ -194,6 +194,13 @@ class MainActivity : ComponentActivity() {
                             }
                             intentForNav.removeExtra(AIChatActivity.EXTRA_EDIT_HABIT_ID)
                         }
+                        // 从 AIChatActivity 跳转过来手动创建习惯
+                        if (intentForNav.getBooleanExtra(AIChatActivity.EXTRA_MANUAL_CREATE, false)) {
+                            navController.navigate(Route.CreateHabit.route) {
+                                launchSingleTop = true
+                            }
+                            intentForNav.removeExtra(AIChatActivity.EXTRA_MANUAL_CREATE)
+                        }
                     }
                 }
 

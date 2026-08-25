@@ -733,9 +733,8 @@ fun AIChatInputBox(
             .fillMaxWidth()
             .padding(horizontal = 16.dp, vertical = 8.dp),
         shape = containerShape,
-        color = MaterialTheme.colorScheme.background,
-        border = BorderStroke(1.dp, MaterialTheme.colorScheme.outlineVariant),
-        shadowElevation = 4.dp
+        // 与主页 Omnibox 一致的填充风格：surfaceContainerHighest、无描边无阴影
+        color = MaterialTheme.colorScheme.surfaceContainerHighest
     ) {
         Box(modifier = Modifier.fillMaxWidth()) {
             BasicTextField(

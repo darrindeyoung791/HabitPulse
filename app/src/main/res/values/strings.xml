@@ -581,6 +581,8 @@
     <string name="settings_ai_title">AI 设置</string>
     <!-- AI Chat -->
     <string name="ai_chat_title">AI 助手</string>
+    <string name="ai_omnibox_handle_talkback">打开AI助手</string>
+    <string name="ai_chat_new_conversation">新建对话</string>
     <string name="ai_chat_entry">新版 AI 对话</string>
     <string name="ai_chat_manage_providers">管理提供商</string>
     <string name="ai_chat_not_configured">未配置</string>
@@ -758,4 +760,10 @@
     <string name="region_co">哥伦比亚</string>
     <string name="region_mx">墨西哥</string>
     <string name="region_nz">新西兰</string>
+
+    <!-- 主页 Omnibox（搜索与AI） -->
+    <string name="main_omnibox_hint">轻点搜索，上滑打开AI助手</string>
+    <string name="accessibility_omnibox_clear">清除搜索内容</string>
+    <string name="ai_chat_manual_create">手动创建习惯</string>
+    <string name="ai_chat_manual_create_description">不使用 AI，自己一步步填写创建</string>
 </resources>

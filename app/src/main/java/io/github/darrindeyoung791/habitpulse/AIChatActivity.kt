@@ -16,6 +16,7 @@ class AIChatActivity : ComponentActivity() {
 
     companion object {
         const val EXTRA_EDIT_HABIT_ID = "extra_edit_habit_id"
+        const val EXTRA_MANUAL_CREATE = "extra_manual_create"
     }
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -34,6 +35,15 @@ class AIChatActivity : ComponentActivity() {
                             addFlags(Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_SINGLE_TOP)
                         }
                         startActivity(intent)
+                    },
+                    onManualCreateHabit = {
+                        // 回到主窗口并打开手动创建习惯页
+                        val intent = Intent(this, MainActivity::class.java).apply {
+                            putExtra(EXTRA_MANUAL_CREATE, true)
+                            addFlags(Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_SINGLE_TOP)
+                        }
+                        startActivity(intent)
+                        finish()
                     },
                     application = applicationContext as HabitPulseApplication
                 )

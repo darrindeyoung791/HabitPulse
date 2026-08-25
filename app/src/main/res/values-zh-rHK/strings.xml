@@ -566,6 +566,8 @@
     <string name="ai_error_unknown">未知錯誤</string>
     <!-- AI Chat -->
     <string name="ai_chat_title">AI 助手</string>
+    <string name="ai_omnibox_handle_talkback">打開AI助手</string>
+    <string name="ai_chat_new_conversation">新建對話</string>
     <string name="ai_chat_entry">新版 AI 對話</string>
     <string name="ai_chat_manage_providers">管理供應商</string>
     <string name="ai_chat_not_configured">未設定</string>
@@ -748,4 +750,8 @@
     <string name="region_co">哥倫比亞</string>
     <string name="region_mx">墨西哥</string>
     <string name="region_nz">新西蘭</string>
+    <string name="main_omnibox_hint">輕按搜索，向上滑動開啟AI助手</string>
+    <string name="accessibility_omnibox_clear">清除搜尋內容</string>
+    <string name="ai_chat_manual_create">手動建立習慣</string>
+    <string name="ai_chat_manual_create_description">不使用 AI，自己一步步填寫建立</string>
 </resources>

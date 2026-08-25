@@ -4,6 +4,8 @@ import android.content.Intent
 import android.widget.Toast
 import androidx.activity.compose.BackHandler
 import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.core.Animatable
+import androidx.compose.animation.core.AnimationVector1D
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
 import androidx.compose.animation.scaleIn
@@ -19,8 +21,9 @@ import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.focus.FocusRequester
+import androidx.compose.ui.focus.focusRequester
 import androidx.compose.material.icons.Icons
-import androidx.compose.material.icons.automirrored.filled.ArrowBack
 import androidx.compose.material.icons.automirrored.filled.KeyboardArrowRight
 import androidx.compose.material.icons.filled.Check
 import androidx.compose.material.icons.filled.CheckCircle
@@ -28,8 +31,10 @@ import androidx.compose.material.icons.filled.KeyboardArrowDown
 import androidx.compose.material.icons.filled.Add
 import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.filled.Delete
+import androidx.compose.material.icons.filled.MoreVert
 import androidx.compose.material.icons.filled.Stop
 import androidx.compose.material.icons.filled.Search
+import androidx.compose.material.icons.outlined.AddComment
 import androidx.compose.material.icons.outlined.RadioButtonUnchecked
 import androidx.compose.material.icons.outlined.Alarm
 import androidx.compose.material.icons.outlined.AutoAwesome
@@ -54,6 +59,7 @@ import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.platform.LocalClipboardManager
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalDensity
+import androidx.compose.ui.platform.LocalSoftwareKeyboardController
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.semantics.Role
 import androidx.compose.ui.semantics.role
@@ -105,8 +111,15 @@ import java.util.UUID
 fun AIChatScreen(
     onNavigateBack: () -> Unit,
     onNavigateToSettings: () -> Unit,
+    onCollapse: () -> Unit = {},
     onEditHabit: (UUID) -> Unit,
-    application: HabitPulseApplication
+    application: HabitPulseApplication,
+    // Omnibox 形变交接：展开起点带入的草稿文本
+    initialInputText: String = "",
+    // 显着的手动创建习惯入口（顶栏图标 + 欢迎区卡片均触发）
+    onManualCreateHabit: () -> Unit = {},
+    // 可选：外部传入的形变进度，用于 TopAppBar 反向拖拽收起
+    progress: Animatable<Float, AnimationVector1D>? = null
 ) {
     val viewModel: AIChatViewModel = viewModel()
     val context = LocalContext.current
@@ -116,18 +129,26 @@ fun AIChatScreen(
     val usage by viewModel.usage.collectAsStateWithLifecycle()
 
     val listState = rememberLazyListState()
-    val hasMessages = messages.isNotEmpty()
 
-    var inputText by remember { mutableStateOf("") }
+    var inputText by rememberSaveable { mutableStateOf(initialInputText) }
 
     var showLeaveDialog by remember { mutableStateOf(false) }
-
-    val hasUnconfirmedHabits = messages.any { it is AiChatUiMessage.CreatedHabitCard }
 
     val isLandscape = rememberDeviceFormInfo().isLandscape
     val density = LocalDensity.current
     val imeVisible = androidx.compose.foundation.layout.WindowInsets.ime.getBottom(density) > 0
     val deviceCornerRadius = getDeviceCornerRadius()
+
+    val inputFocusRequester = remember { FocusRequester() }
+    val keyboardController = LocalSoftwareKeyboardController.current
+
+    // 完全展开后自动聚焦输入框并弹出键盘
+    LaunchedEffect(progress?.value) {
+        if (progress == null || (progress.value >= 0.999f)) {
+            inputFocusRequester.requestFocus()
+            keyboardController?.show()
+        }
+    }
     // 横屏时系统栏/摄像头在屏幕侧边，整个界面水平方向都要留出安全区。
     // 注意：Compose 的 displayCutout 在部分设备（本模拟器即如此）上报 0，
     // 必须改用 safeDrawing（systemBars + displayCutout 的并集）才能拿到横向 inset。
@@ -184,52 +205,106 @@ fun AIChatScreen(
     }
 
     BackHandler(enabled = true) {
-        if (hasMessages) {
+        if (uiState.isGenerating) {
             showLeaveDialog = true
         } else {
             onNavigateBack()
         }
     }
 
+    val scope = rememberCoroutineScope()
+
     Scaffold(
-        contentWindowInsets = WindowInsets(0, 0, 0, 0),
-        topBar = {
-            TopAppBar(
-                modifier = Modifier.windowInsetsPadding(chatHorizontalInsets),
-                title = {
-                    Text(
-                        if (uiState.isGenerating) stringResource(R.string.ai_streaming_title)
-                        else stringResource(R.string.ai_chat_title)
-                    )
-                },
+            contentWindowInsets = WindowInsets(0, 0, 0, 0),
+            topBar = {
+                var showMenu by remember { mutableStateOf(false) }
+                TopAppBar(
+                    modifier = Modifier.windowInsetsPadding(chatHorizontalInsets),
+                    title = {
+                        Text(
+                            text = if (uiState.isGenerating) stringResource(R.string.ai_streaming_title)
+                            else stringResource(R.string.ai_chat_title)
+                        )
+                    },
                 navigationIcon = {
                     val backInteractionSource = remember { MutableInteractionSource() }
                     PressVibrationFeedback(interactionSource = backInteractionSource)
                     IconButton(
                         onClick = {
-                            if (hasMessages) showLeaveDialog = true else onNavigateBack()
+                            if (uiState.isGenerating) showLeaveDialog = true else onCollapse()
                         },
                         interactionSource = backInteractionSource
                     ) {
                         Icon(
-                            imageVector = Icons.AutoMirrored.Filled.ArrowBack,
+                            imageVector = Icons.Filled.KeyboardArrowDown,
                             contentDescription = stringResource(R.string.go_back)
                         )
                     }
                 },
                 actions = {
-                    TokenUsageText(
-                        usage = usage
-                    )
-                    val settingsInteractionSource = remember { MutableInteractionSource() }
-                    PressVibrationFeedback(interactionSource = settingsInteractionSource)
+                    val newChatInteractionSource = remember { MutableInteractionSource() }
+                    PressVibrationFeedback(interactionSource = newChatInteractionSource)
                     IconButton(
-                        onClick = onNavigateToSettings,
-                        interactionSource = settingsInteractionSource
+                        onClick = { viewModel.clearConversation() },
+                        enabled = !uiState.isGenerating,
+                        interactionSource = newChatInteractionSource
                     ) {
-                    Icon(
-                        imageVector = Icons.Outlined.Settings,
-                        contentDescription = stringResource(R.string.settings_ai_title)
+                        Icon(
+                            imageVector = Icons.Outlined.AddComment,
+                            contentDescription = stringResource(R.string.ai_chat_new_conversation)
+                        )
+                    }
+                    val menuInteractionSource = remember { MutableInteractionSource() }
+                    PressVibrationFeedback(interactionSource = menuInteractionSource)
+                    IconButton(
+                        onClick = { showMenu = true },
+                        interactionSource = menuInteractionSource
+                    ) {
+                        Icon(
+                            imageVector = Icons.Filled.MoreVert,
+                            contentDescription = stringResource(R.string.settings_ai_title)
+                        )
+                    }
+                    DropdownMenu(
+                        expanded = showMenu,
+                        onDismissRequest = { showMenu = false }
+                    ) {
+                    DropdownMenuItem(
+                        text = {
+                            Text(
+                                text = if (usage.completedCalls > 0) {
+                                    stringResource(R.string.ai_chat_token_count, formatTokenCount(usage.totalTokens))
+                                } else {
+                                    stringResource(R.string.ai_chat_usage_empty)
+                                },
+                                style = MaterialTheme.typography.bodyMedium
+                            )
+                        },
+                        onClick = { showMenu = false },
+                        leadingIcon = {
+                            Icon(
+                                imageVector = Icons.Outlined.Info,
+                                contentDescription = null,
+                                modifier = Modifier.size(20.dp)
+                            )
+                        }
+                    )
+                    HorizontalDivider()
+                        DropdownMenuItem(
+                            text = { Text(stringResource(R.string.settings_ai_title)) },
+                            onClick = {
+                                showMenu = false
+                                context.startActivity(
+                                    android.content.Intent(context, SettingsAIActivity::class.java)
+                                )
+                            },
+                        leadingIcon = {
+                            Icon(
+                                imageVector = Icons.Outlined.Settings,
+                                contentDescription = null,
+                                modifier = Modifier.size(20.dp)
+                            )
+                        }
                     )
                     }
                 }
@@ -256,7 +331,7 @@ fun AIChatScreen(
                 AIChatInputBox(
                     inputText = inputText,
                     onTextChange = { inputText = it },
-                    focusRequester = androidx.compose.ui.focus.FocusRequester(),
+                    focusRequester = inputFocusRequester,
                     onSendClick = {
                         val text = inputText.trim()
                         if (text.isNotEmpty()) {
@@ -288,7 +363,8 @@ fun AIChatScreen(
                         AIWelcomeContent(
                             onSuggestionClick = { suggestion ->
                                 viewModel.sendMessage(suggestion)
-                            }
+                            },
+                            onManualCreateHabit = onManualCreateHabit
                         )
                     }
                 }
@@ -308,7 +384,6 @@ fun AIChatScreen(
                     }
                 }
             }
-            val scope = rememberCoroutineScope()
             // FAB 节点保持常驻（有消息时始终组合），仅通过 AnimatedVisibility 显隐。
             // 若用裸 if 条件组合，无障碍节点会随 followBottom 突变而频繁增删：
             // 滚到底部时 followBottom 翻转为 true（canScrollForward 为 false 的瞬间），
@@ -342,10 +417,10 @@ fun AIChatScreen(
                             imageVector = Icons.Filled.KeyboardArrowDown,
                             contentDescription = stringResource(R.string.ai_error_scroll_to_bottom)
                         )
-                    }
                 }
             }
         }
+    }
     }
 
     if (showLeaveDialog) {
@@ -353,12 +428,7 @@ fun AIChatScreen(
             onDismissRequest = { showLeaveDialog = false },
             title = { Text(stringResource(R.string.ai_chat_confirm_leave_title)) },
             text = {
-                Text(
-                    stringResource(
-                        if (hasUnconfirmedHabits) R.string.ai_chat_confirm_leave_unsaved
-                        else R.string.ai_chat_confirm_leave_message
-                    )
-                )
+                Text(stringResource(R.string.ai_chat_confirm_leave_message))
             },
             confirmButton = {
                 TextButton(onClick = {
@@ -374,58 +444,6 @@ fun AIChatScreen(
                 }
             }
         )
-    }
-}
-
-/** 顶栏：可点击的 Token 用量小字（细分下拉）。 */
-@OptIn(ExperimentalMaterial3Api::class)
-@Composable
-private fun TokenUsageText(usage: SessionUsage) {
-    var tokenMenu by remember { mutableStateOf(false) }
-    val interactionSource = remember { MutableInteractionSource() }
-    PressVibrationFeedback(interactionSource = interactionSource)
-
-    Box {
-        Text(
-            text = if (usage.completedCalls > 0) {
-                stringResource(R.string.ai_chat_token_count, formatTokenCount(usage.totalTokens))
-            } else {
-                stringResource(R.string.ai_chat_usage_empty)
-            },
-            style = MaterialTheme.typography.labelSmall,
-            color = MaterialTheme.colorScheme.onSurfaceVariant,
-            modifier = Modifier
-                .clickable(
-                    interactionSource = interactionSource,
-                    indication = null,
-                    onClick = { tokenMenu = true }
-                )
-                .padding(horizontal = 4.dp, vertical = 8.dp)
-        )
-        DropdownMenu(
-            expanded = tokenMenu,
-            onDismissRequest = { tokenMenu = false }
-        ) {
-            DropdownMenuItem(
-                text = {
-                    Text(stringResource(R.string.ai_chat_token_detail_prompt, formatTokenCount(usage.promptTokens)))
-                },
-                onClick = { tokenMenu = false }
-            )
-            DropdownMenuItem(
-                text = {
-                    Text(stringResource(R.string.ai_chat_token_detail_completion, formatTokenCount(usage.completionTokens)))
-                },
-                onClick = { tokenMenu = false }
-            )
-            HorizontalDivider()
-            DropdownMenuItem(
-                text = {
-                    Text(stringResource(R.string.ai_chat_token_calls, usage.completedCalls))
-                },
-                onClick = { tokenMenu = false }
-            )
-        }
     }
 }
 
@@ -588,10 +606,11 @@ private fun UserChatBubble(text: String) {
     }
 }
 
-/** 空会话欢迎态：居中图标 + 问候语 + 示例提问 chips（参考主流 AI 客户端的空状态）。 */
+/** 空会话欢迎态：居中图标 + 问候语 + 示例提问 chips（紧凑流式排布）+ 手动创建习惯入口卡。 */
 @Composable
 private fun AIWelcomeContent(
-    onSuggestionClick: (String) -> Unit
+    onSuggestionClick: (String) -> Unit,
+    onManualCreateHabit: () -> Unit = {}
 ) {
     Column(
         modifier = Modifier
@@ -628,21 +647,61 @@ private fun AIWelcomeContent(
             color = MaterialTheme.colorScheme.onSurfaceVariant,
             textAlign = TextAlign.Center
         )
-        Spacer(modifier = Modifier.height(24.dp))
+        Spacer(modifier = Modifier.height(16.dp))
+        // 显著的手动建立习惯入口
+        Surface(
+            onClick = onManualCreateHabit,
+            shape = RoundedCornerShape(16.dp),
+            color = MaterialTheme.colorScheme.secondaryContainer,
+            modifier = Modifier.fillMaxWidth()
+        ) {
+            Row(
+                modifier = Modifier
+                    .fillMaxWidth()
+                    .padding(horizontal = 16.dp, vertical = 14.dp),
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                Icon(
+                    imageVector = Icons.Filled.Add,
+                    contentDescription = null,
+                    tint = MaterialTheme.colorScheme.onSecondaryContainer
+                )
+                Spacer(modifier = Modifier.width(12.dp))
+                Column {
+                    Text(
+                        text = stringResource(R.string.ai_chat_manual_create),
+                        style = MaterialTheme.typography.titleSmall,
+                        color = MaterialTheme.colorScheme.onSecondaryContainer
+                    )
+                    Text(
+                        text = stringResource(R.string.ai_chat_manual_create_description),
+                        style = MaterialTheme.typography.bodySmall,
+                        color = MaterialTheme.colorScheme.onSecondaryContainer.copy(alpha = 0.75f)
+                    )
+                }
+            }
+        }
+        Spacer(modifier = Modifier.height(16.dp))
         val suggestions = listOf(
             stringResource(R.string.ai_chat_suggestion_create),
             stringResource(R.string.ai_chat_suggestion_search),
             stringResource(R.string.ai_chat_suggestion_setting)
         )
-        suggestions.forEach { suggestion ->
-            val chipInteractionSource = remember { MutableInteractionSource() }
-            PressVibrationFeedback(interactionSource = chipInteractionSource)
-            SuggestionChip(
-                onClick = { onSuggestionClick(suggestion) },
-                interactionSource = chipInteractionSource,
-                label = { Text(suggestion) }
-            )
-            Spacer(modifier = Modifier.height(4.dp))
+        // 紧凑流式排布：横向排列、间距收紧（替代原先逐个竖排的松散布局）
+        FlowRow(
+            horizontalArrangement = Arrangement.spacedBy(6.dp, Alignment.CenterHorizontally),
+            verticalArrangement = Arrangement.spacedBy(4.dp),
+            modifier = Modifier.fillMaxWidth()
+        ) {
+            suggestions.forEach { suggestion ->
+                val chipInteractionSource = remember { MutableInteractionSource() }
+                PressVibrationFeedback(interactionSource = chipInteractionSource)
+                SuggestionChip(
+                    onClick = { onSuggestionClick(suggestion) },
+                    interactionSource = chipInteractionSource,
+                    label = { Text(suggestion) }
+                )
+            }
         }
     }
 }
@@ -1820,10 +1879,10 @@ private fun TimePickerDialogWithTimes(
                                     )
                                 }
                             )
-                        }
-                    }
                 }
             }
+        }
+    }
         },
         confirmButton = {
             TextButton(
