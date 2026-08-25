@@ -23,6 +23,12 @@
     <string name="settings_font_scale_description">自訂應用程式內字型大小</string>
     <string name="settings_font_scale_follow_system">跟隨系統</string>
     <string name="settings_font_scale_standard">標準</string>
+    <string name="settings_font_scale_smallest">最小</string>
+    <string name="settings_font_scale_small">小</string>
+    <string name="settings_font_scale_large">大</string>
+    <string name="settings_font_scale_larger">更大</string>
+    <string name="settings_font_scale_extra_large">超大</string>
+    <string name="settings_font_scale_largest">最大</string>
     <string name="settings_language_system_default">跟隨系統</string>
     <string name="language_follow_system_unsupported">%1$s doesn\'t support your language.</string>
     <string name="settings_new_settings_entry">新版設定</string>
@@ -600,7 +606,7 @@
     <string name="ai_chat_welcome_title">我是你的 AI 習慣助手</string>
     <string name="ai_chat_welcome_subtitle">可以讓我建立、查詢、修改或刪除習慣，也可以幫你調整應用程式設定。</string>
     <string name="ai_chat_suggestion_create">幫我建立一個閱讀習慣</string>
-    <string name="ai_chat_suggestion_search">有哪些習慣需要我處理？</string>
+    <string name="ai_chat_suggestion_search">去除重複的習慣</string>
     <string name="ai_chat_suggestion_setting">幫我開啟通知設定</string>
     <string name="ai_chat_setting_change_format">%1$s → %2$s</string>
     <string name="ai_chat_on">開</string>
@@ -750,8 +756,12 @@
     <string name="region_co">哥倫比亞</string>
     <string name="region_mx">墨西哥</string>
     <string name="region_nz">新西蘭</string>
-    <string name="main_omnibox_hint">輕按搜索，向上滑動開啟AI助手</string>
+    <string name="main_omnibox_hint">輕按搜索，向上滑動建立習慣</string>
     <string name="accessibility_omnibox_clear">清除搜尋內容</string>
     <string name="ai_chat_manual_create">手動建立習慣</string>
     <string name="ai_chat_manual_create_description">不使用 AI，自己一步步填寫建立</string>
+    <string name="ai_chat_no_config_hint">請先新增 AI 供應商</string>
+    <string name="ai_chat_no_config_subtitle">尚未設定 AI 供應商，請先新增後再使用對話功能。</string>
+    <string name="ai_chat_add_provider">新增 AI 供應商</string>
+    <string name="ai_chat_add_provider_desc">設定 API 金鑰以啟用 AI 對話</string>
 </resources>

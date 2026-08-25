@@ -133,17 +133,21 @@ class AIChatConversationManager(
     suspend fun retryLastTurn() {
         if (isStreaming) return
         isStopped = false
-        removeLastAssistantTurn()
+        removeLastUserAndAssistantTurn()
         retryCount = 0
         guard.resetInvalidSettingTries()
         needUserPause = false
         sendToLLM()
     }
 
-    private fun removeLastAssistantTurn() {
-        val lastAssistant = messages.indexOfLast { it.role == "assistant" }
-        if (lastAssistant >= 0) {
-            while (messages.size > lastAssistant) {
+    /**
+     * 删除最后一个用户消息及其之后的所有消息（assistant 回复、tool 消息等），
+     * 使 conversation manager 回到发送前的状态。供 retry 场景外部调用。
+     */
+    fun removeLastUserAndAssistantTurn() {
+        val lastUser = messages.indexOfLast { it.role == "user" }
+        if (lastUser >= 0) {
+            while (messages.size > lastUser) {
                 messages.removeAt(messages.lastIndex)
             }
         }

@@ -84,6 +84,7 @@ import io.github.darrindeyoung791.habitpulse.ai.tools.chat.SettingPair
 import io.github.darrindeyoung791.habitpulse.ai.tools.chat.SettingsNavData
 import io.github.darrindeyoung791.habitpulse.ai.tools.chat.SettingsStatusData
 import io.github.darrindeyoung791.habitpulse.navigation.getDeviceCornerRadius
+import io.github.darrindeyoung791.habitpulse.ui.screens.settings.components.SettingsSegmentedItem
 import io.github.darrindeyoung791.habitpulse.ui.rememberDeviceFormInfo
 import io.github.darrindeyoung791.habitpulse.ui.screens.settings.components.SettingsSegmentedGroup
 import io.github.darrindeyoung791.habitpulse.ui.screens.settings.components.SettingsIconChip
@@ -106,7 +107,7 @@ import java.util.UUID
 /**
  * 新版 AI 对话界面：TopAppBar + 消息列表 + 底部输入栏。
  */
-@OptIn(ExperimentalMaterial3Api::class)
+@OptIn(ExperimentalMaterial3Api::class, ExperimentalLayoutApi::class)
 @Composable
 fun AIChatScreen(
     onNavigateBack: () -> Unit,
@@ -127,6 +128,7 @@ fun AIChatScreen(
     val uiState by viewModel.uiState.collectAsStateWithLifecycle()
     val messages by viewModel.messages.collectAsStateWithLifecycle()
     val usage by viewModel.usage.collectAsStateWithLifecycle()
+    val retryInputText by viewModel.retryInputText.collectAsStateWithLifecycle()
 
     val listState = rememberLazyListState()
 
@@ -142,9 +144,25 @@ fun AIChatScreen(
     val inputFocusRequester = remember { FocusRequester() }
     val keyboardController = LocalSoftwareKeyboardController.current
 
-    // 完全展开后自动聚焦输入框并弹出键盘
+    // 重试信号：将用户上次发送的文本回填到输入框并聚焦
+    LaunchedEffect(retryInputText) {
+        val text = retryInputText ?: return@LaunchedEffect
+        inputText = text
+        viewModel.clearRetryInputText()
+        inputFocusRequester.requestFocus()
+        keyboardController?.show()
+    }
+
+    // AI 配置检测：无任何提供商时降级为手动模式
+    val activeConfig by viewModel.activeConfig.collectAsStateWithLifecycle(initialValue = null)
+    val configs by viewModel.configs.collectAsStateWithLifecycle(initialValue = emptyList())
+    val hasAIConfig = configs.isNotEmpty() && activeConfig?.hasApiKeyConfigured() == true
+
+    // 完全展开后自动聚焦输入框并弹出键盘（仅当无已有对话时）
     LaunchedEffect(progress?.value) {
-        if (progress == null || (progress.value >= 0.999f)) {
+        if (messages.isEmpty() && hasAIConfig &&
+            (progress == null || progress.value >= 0.999f)
+        ) {
             inputFocusRequester.requestFocus()
             keyboardController?.show()
         }
@@ -201,6 +219,35 @@ fun AIChatScreen(
             }
             lastIndex = index
             lastOffset = offset
+        }
+    }
+
+    // 触底时自动聚焦输入框：仅在用户上滑（向列表底部方向）触底时聚焦，下滑触底不触发。
+    LaunchedEffect(listState) {
+        var prevIndex = listState.firstVisibleItemIndex
+        snapshotFlow {
+            listState.isScrollInProgress to listState.firstVisibleItemIndex
+        }.collect { (inProgress, index) ->
+            if (inProgress) {
+                // index 增大 = 向列表尾部滑动（上滑触底）
+                val scrolledTowardEnd = index > prevIndex
+                prevIndex = index
+                if (scrolledTowardEnd && !listState.canScrollForward) {
+                    inputFocusRequester.requestFocus()
+                    keyboardController?.show()
+                }
+            }
+        }
+    }
+
+    // 已有对话时，键盘弹出自动滚到底部
+    LaunchedEffect(imeVisible) {
+        if (imeVisible && messages.isNotEmpty()) {
+            followBottom = true
+            listState.animateScrollToItem(
+                (messages.size - 1).coerceAtLeast(0),
+                scrollOffset = Int.MAX_VALUE
+            )
         }
     }
 
@@ -290,22 +337,39 @@ fun AIChatScreen(
                         }
                     )
                     HorizontalDivider()
+                    DropdownMenuItem(
+                        text = { Text(stringResource(R.string.settings_ai_title)) },
+                        onClick = {
+                            showMenu = false
+                            context.startActivity(
+                                android.content.Intent(context, SettingsAIActivity::class.java)
+                            )
+                        },
+                    leadingIcon = {
+                        Icon(
+                            imageVector = Icons.Outlined.Settings,
+                            contentDescription = null,
+                            modifier = Modifier.size(20.dp)
+                        )
+                    }
+                    )
+                    if (messages.isNotEmpty()) {
+                        HorizontalDivider()
                         DropdownMenuItem(
-                            text = { Text(stringResource(R.string.settings_ai_title)) },
+                            text = { Text(stringResource(R.string.ai_chat_manual_create)) },
                             onClick = {
                                 showMenu = false
-                                context.startActivity(
-                                    android.content.Intent(context, SettingsAIActivity::class.java)
-                                )
+                                onManualCreateHabit()
                             },
-                        leadingIcon = {
-                            Icon(
-                                imageVector = Icons.Outlined.Settings,
-                                contentDescription = null,
-                                modifier = Modifier.size(20.dp)
-                            )
-                        }
-                    )
+                            leadingIcon = {
+                                Icon(
+                                    imageVector = Icons.Outlined.Edit,
+                                    contentDescription = null,
+                                    modifier = Modifier.size(20.dp)
+                                )
+                            }
+                        )
+                    }
                     }
                 }
             )
@@ -341,8 +405,9 @@ fun AIChatScreen(
                     },
                     onStopClick = { viewModel.stopGeneration() },
                     isLoading = uiState.isGenerating,
-                    placeholderRes = R.string.ai_chat_input_hint,
-                    containerCornerRadius = deviceCornerRadius
+                    placeholderRes = if (hasAIConfig) R.string.ai_chat_input_hint else R.string.ai_chat_no_config_hint,
+                    containerCornerRadius = deviceCornerRadius,
+                    enabled = hasAIConfig
                 )
             }
         }
@@ -355,7 +420,9 @@ fun AIChatScreen(
         ) {
             LazyColumn(
                 state = listState,
-                modifier = Modifier.fillMaxSize(),
+                modifier = Modifier
+                    .fillMaxSize()
+                    .imeNestedScroll(),
                 contentPadding = PaddingValues(vertical = 8.dp)
             ) {
                 if (messages.isEmpty()) {
@@ -364,7 +431,9 @@ fun AIChatScreen(
                             onSuggestionClick = { suggestion ->
                                 viewModel.sendMessage(suggestion)
                             },
-                            onManualCreateHabit = onManualCreateHabit
+                            onManualCreateHabit = onManualCreateHabit,
+                            hasAIConfig = hasAIConfig,
+                            onNavigateToSettings = onNavigateToSettings
                         )
                     }
                 }
@@ -606,11 +675,13 @@ private fun UserChatBubble(text: String) {
     }
 }
 
-/** 空会话欢迎态：居中图标 + 问候语 + 示例提问 chips（紧凑流式排布）+ 手动创建习惯入口卡。 */
+/** 空会话欢迎态：居中图标 + 问候语 + 示例提问 chips（紧凑流式排布）+ 手动创建习惯入口。 */
 @Composable
 private fun AIWelcomeContent(
     onSuggestionClick: (String) -> Unit,
-    onManualCreateHabit: () -> Unit = {}
+    onManualCreateHabit: () -> Unit = {},
+    hasAIConfig: Boolean = true,
+    onNavigateToSettings: () -> Unit = {}
 ) {
     Column(
         modifier = Modifier
@@ -642,66 +713,63 @@ private fun AIWelcomeContent(
         )
         Spacer(modifier = Modifier.height(4.dp))
         Text(
-            text = stringResource(R.string.ai_chat_welcome_subtitle),
+            text = if (hasAIConfig) stringResource(R.string.ai_chat_welcome_subtitle)
+                   else stringResource(R.string.ai_chat_no_config_subtitle),
             style = MaterialTheme.typography.bodyMedium,
             color = MaterialTheme.colorScheme.onSurfaceVariant,
             textAlign = TextAlign.Center
         )
         Spacer(modifier = Modifier.height(16.dp))
-        // 显著的手动建立习惯入口
-        Surface(
-            onClick = onManualCreateHabit,
-            shape = RoundedCornerShape(16.dp),
-            color = MaterialTheme.colorScheme.secondaryContainer,
-            modifier = Modifier.fillMaxWidth()
-        ) {
-            Row(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(horizontal = 16.dp, vertical = 14.dp),
-                verticalAlignment = Alignment.CenterVertically
+
+        if (hasAIConfig) {
+            // 有 AI 配置：示例提问 chips
+            val suggestions = listOf(
+                stringResource(R.string.ai_chat_suggestion_create),
+                stringResource(R.string.ai_chat_suggestion_search),
+                stringResource(R.string.ai_chat_suggestion_setting)
+            )
+            FlowRow(
+                horizontalArrangement = Arrangement.spacedBy(6.dp, Alignment.CenterHorizontally),
+                verticalArrangement = Arrangement.spacedBy(4.dp),
+                modifier = Modifier.fillMaxWidth()
             ) {
-                Icon(
-                    imageVector = Icons.Filled.Add,
-                    contentDescription = null,
-                    tint = MaterialTheme.colorScheme.onSecondaryContainer
-                )
-                Spacer(modifier = Modifier.width(12.dp))
-                Column {
-                    Text(
-                        text = stringResource(R.string.ai_chat_manual_create),
-                        style = MaterialTheme.typography.titleSmall,
-                        color = MaterialTheme.colorScheme.onSecondaryContainer
-                    )
-                    Text(
-                        text = stringResource(R.string.ai_chat_manual_create_description),
-                        style = MaterialTheme.typography.bodySmall,
-                        color = MaterialTheme.colorScheme.onSecondaryContainer.copy(alpha = 0.75f)
+                suggestions.forEach { suggestion ->
+                    val chipInteractionSource = remember { MutableInteractionSource() }
+                    PressVibrationFeedback(interactionSource = chipInteractionSource)
+                    SuggestionChip(
+                        onClick = { onSuggestionClick(suggestion) },
+                        interactionSource = chipInteractionSource,
+                        label = { Text(suggestion) }
                     )
                 }
             }
+            Spacer(modifier = Modifier.height(16.dp))
         }
-        Spacer(modifier = Modifier.height(16.dp))
-        val suggestions = listOf(
-            stringResource(R.string.ai_chat_suggestion_create),
-            stringResource(R.string.ai_chat_suggestion_search),
-            stringResource(R.string.ai_chat_suggestion_setting)
+
+        // 手动创建习惯 + AI 设置（listitem 风格，同一分组）
+        val itemCount = if (hasAIConfig) 1 else 2
+        SettingsSegmentedItem(
+            index = 0,
+            count = itemCount,
+            headline = stringResource(R.string.ai_chat_manual_create),
+            supportingText = stringResource(R.string.ai_chat_manual_create_description),
+            leadingIcon = Icons.Outlined.Edit,
+            tintIndex = 0,
+            onClick = onManualCreateHabit
         )
-        // 紧凑流式排布：横向排列、间距收紧（替代原先逐个竖排的松散布局）
-        FlowRow(
-            horizontalArrangement = Arrangement.spacedBy(6.dp, Alignment.CenterHorizontally),
-            verticalArrangement = Arrangement.spacedBy(4.dp),
-            modifier = Modifier.fillMaxWidth()
-        ) {
-            suggestions.forEach { suggestion ->
-                val chipInteractionSource = remember { MutableInteractionSource() }
-                PressVibrationFeedback(interactionSource = chipInteractionSource)
-                SuggestionChip(
-                    onClick = { onSuggestionClick(suggestion) },
-                    interactionSource = chipInteractionSource,
-                    label = { Text(suggestion) }
-                )
-            }
+        if (!hasAIConfig) {
+            Spacer(modifier = Modifier.height(2.dp))
+            SettingsSegmentedItem(
+                index = 1,
+                count = 2,
+                headline = stringResource(R.string.ai_chat_add_provider),
+                supportingText = stringResource(R.string.ai_chat_add_provider_desc),
+                leadingIcon = Icons.Outlined.Settings,
+                tintIndex = 1,
+                onClick = {
+                    onNavigateToSettings()
+                }
+            )
         }
     }
 }

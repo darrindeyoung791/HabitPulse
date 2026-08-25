@@ -3,6 +3,7 @@ package io.github.darrindeyoung791.habitpulse.ui.screens
 import androidx.compose.animation.AnimatedContent
 import androidx.compose.animation.core.Animatable
 import androidx.compose.animation.core.AnimationVector1D
+import androidx.compose.animation.core.CubicBezierEasing
 import androidx.compose.animation.core.FastOutSlowInEasing
 import androidx.compose.animation.core.Spring
 import androidx.compose.animation.core.animateDpAsState
@@ -424,9 +425,6 @@ fun HomeScreen(
     // Track which habit is transitioning to MultiSelect (for shared element)
     var multiSelectTargetHabitId by remember { mutableStateOf<UUID?>(null) }
 
-    // FAB selection dialog state
-    var showCreateHabitDialog by remember { mutableStateOf(false) }
-
     // Focus requester for TalkBack initial focus
     val titleFocusRequester = remember { androidx.compose.ui.focus.FocusRequester() }
 
@@ -637,11 +635,20 @@ fun HomeScreen(
         scope.launch {
             aiSheetProgress.animateTo(
                 targetValue = if (open) 1f else 0f,
-                animationSpec = spring(
-                    dampingRatio = 0.7f,
-                    stiffness = Spring.StiffnessMediumLow
-                ),
-                initialVelocity = initialVelocityProgressPerSec.coerceIn(-8f, 8f)
+                animationSpec = if (open) {
+                    // 展开：适度回弹 + 末端缓动（比收起 400ms 稍长）
+                    spring(
+                        dampingRatio = 0.8f,
+                        stiffness = 280f
+                    )
+                } else {
+                    // 收起：夸张的 ease-out —— 中段极快、末段缓慢拖尾
+                    tween(
+                        durationMillis = 400,
+                        easing = CubicBezierEasing(0.05f, 0.7f, 0.1f, 1.0f)
+                    )
+                },
+                initialVelocity = if (open) initialVelocityProgressPerSec.coerceIn(-8f, 8f) else 0f
             )
             // 回弹落定后震动一次（完全展开与完全收起都触发）
             val endValue = aiSheetProgress.value
@@ -1028,7 +1035,7 @@ fun HomeScreen(
                         bringIntoViewRequester = bringIntoViewRequester,
                         forceTabletLandscape = forceTabletLandscape == true,
                         onCreateHabit = onCreateHabit,
-                        onCreateHabitSelection = { showCreateHabitDialog = true },
+                        onCreateHabitSelection = { expandAiSheetAnimated() },
                         onEditHabit = onEditHabit,
                         onNavigateToMultiSelect = { habitId ->
                             multiSelectTargetHabitId = habitId
@@ -1256,7 +1263,7 @@ fun HomeScreen(
     }
 
     // 新建习惯 FAB 本期隐藏（omnibox 迭代）：手动创建入口改为
-    // 习惯页顶部下拉释放触发 CreateHabitSelectionDialog（见 HabitScreenContent）。
+    // 习惯页顶部下拉释放展开搜索框（AI 形变）
 
     if (effectiveIsPermanentDrawer) {
         // 外层 Box 让 AiSheetOverlay 能覆盖全屏（包括 Drawer）
@@ -1767,28 +1774,6 @@ fun HomeScreen(
         }
     }
 
-    // FAB - Create Habit Selection Dialog
-    if (showCreateHabitDialog) {
-        CreateHabitSelectionDialog(
-            onDismiss = { showCreateHabitDialog = false },
-            onManualCreate = {
-                showCreateHabitDialog = false
-                scope.launch {
-                    clickHandler.processClick {
-                        onCreateHabit()
-                    }
-                }
-            },
-            onAICreate = {
-                showCreateHabitDialog = false
-                scope.launch {
-                    clickHandler.processClick {
-                        onAICreateHabit()
-                    }
-                }
-            }
-        )
-    }
 }
 
 /**
@@ -2032,92 +2017,6 @@ fun CollapsedNavigationBar(
             }
         }
     }
-}
-
-@Composable
-fun CreateHabitSelectionDialog(
-    onDismiss: () -> Unit,
-    onManualCreate: () -> Unit,
-    onAICreate: () -> Unit
-) {
-    AlertDialog(
-        onDismissRequest = onDismiss,
-        title = { Text(stringResource(id = R.string.create_habit_selection_title)) },
-        text = {
-            Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
-                ElevatedCard(
-                    onClick = onAICreate,
-                    modifier = Modifier.fillMaxWidth(),
-                    colors = CardDefaults.elevatedCardColors(
-                        containerColor = MaterialTheme.colorScheme.primaryContainer
-                    ),
-                    elevation = CardDefaults.elevatedCardElevation(defaultElevation = 0.dp)
-                ) {
-                    Row(
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .padding(12.dp),
-                        verticalAlignment = Alignment.CenterVertically
-                    ) {
-                        Icon(
-                            imageVector = Icons.Filled.AutoAwesome,
-                            contentDescription = null,
-                            tint = MaterialTheme.colorScheme.primary
-                        )
-                        Spacer(modifier = Modifier.width(12.dp))
-                        Column(modifier = Modifier.weight(1f)) {
-                            Text(
-                                text = stringResource(id = R.string.create_habit_selection_ai),
-                                style = MaterialTheme.typography.titleMedium,
-                                color = MaterialTheme.colorScheme.onPrimaryContainer
-                            )
-                            Text(
-                                text = stringResource(id = R.string.create_habit_selection_ai_desc),
-                                style = MaterialTheme.typography.bodySmall,
-                                color = MaterialTheme.colorScheme.onPrimaryContainer.copy(alpha = 0.7f)
-                            )
-                        }
-                        Icon(
-                            imageVector = Icons.AutoMirrored.Filled.ArrowForward,
-                            contentDescription = null,
-                            tint = MaterialTheme.colorScheme.primary
-                        )
-                    }
-                }
-                Row(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .clickable(onClick = onManualCreate)
-                        .padding(12.dp),
-                    verticalAlignment = Alignment.CenterVertically
-                ) {
-                    Icon(
-                        imageVector = Icons.Filled.Edit,
-                        contentDescription = null,
-                        tint = MaterialTheme.colorScheme.onSurfaceVariant
-                    )
-                    Spacer(modifier = Modifier.width(12.dp))
-                    Column {
-                        Text(
-                            text = stringResource(id = R.string.create_habit_selection_manual),
-                            style = MaterialTheme.typography.bodyLarge
-                        )
-                        Text(
-                            text = stringResource(id = R.string.create_habit_selection_manual_desc),
-                            style = MaterialTheme.typography.bodySmall,
-                            color = MaterialTheme.colorScheme.onSurfaceVariant
-                        )
-                    }
-                }
-            }
-        },
-        confirmButton = {},
-        dismissButton = {
-            TextButton(onClick = onDismiss) {
-                Text(stringResource(id = R.string.cancel))
-            }
-        }
-    )
 }
 
 // ============= Preview =============

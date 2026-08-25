@@ -23,6 +23,12 @@
     <string name="settings_font_scale_description">Customize the in-app font size</string>
     <string name="settings_font_scale_follow_system">Follow system</string>
     <string name="settings_font_scale_standard">Standard</string>
+    <string name="settings_font_scale_smallest">Smallest</string>
+    <string name="settings_font_scale_small">Small</string>
+    <string name="settings_font_scale_large">Large</string>
+    <string name="settings_font_scale_larger">Larger</string>
+    <string name="settings_font_scale_extra_large">Extra large</string>
+    <string name="settings_font_scale_largest">Largest</string>
     <string name="settings_language_system_default">System default</string>
     <string name="language_follow_system_unsupported">%1$s doesn\'t support your language.</string>
     <string name="settings_new_settings_entry">New Settings</string>
@@ -600,7 +606,7 @@
     <string name="ai_chat_welcome_title">I\'m your AI habit assistant</string>
     <string name="ai_chat_welcome_subtitle">Ask me to create, find, edit or delete habits, or adjust app settings.</string>
     <string name="ai_chat_suggestion_create">Help me create a reading habit</string>
-    <string name="ai_chat_suggestion_search">Which habits need attention?</string>
+    <string name="ai_chat_suggestion_search">Remove duplicate habits</string>
     <string name="ai_chat_suggestion_setting">Open the notifications settings</string>
     <string name="ai_chat_setting_change_format">%1$s → %2$s</string>
     <string name="ai_chat_on">On</string>
@@ -752,8 +758,12 @@
     <string name="region_co">Colombia</string>
     <string name="region_mx">Mexico</string>
     <string name="region_nz">New Zealand</string>
-    <string name="main_omnibox_hint">Search here, or swipe up for AI</string>
+    <string name="main_omnibox_hint">Search here, or swipe up to create a habit</string>
     <string name="accessibility_omnibox_clear">Clear search</string>
     <string name="ai_chat_manual_create">Create a habit manually</string>
     <string name="ai_chat_manual_create_description">Skip the AI and fill in the details yourself</string>
+    <string name="ai_chat_no_config_hint">Add an AI provider first</string>
+    <string name="ai_chat_no_config_subtitle">No AI provider configured. Please add one to use the chat feature.</string>
+    <string name="ai_chat_add_provider">Add AI provider</string>
+    <string name="ai_chat_add_provider_desc">Set up an API key to enable AI chat</string>
 </resources>

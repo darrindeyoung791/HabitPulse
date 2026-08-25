@@ -703,7 +703,8 @@ fun AIChatInputBox(
     isLoading: Boolean,
     placeholderRes: Int = R.string.ai_input_placeholder,
     containerCornerRadius: Dp = 24.dp,
-    modifier: Modifier = Modifier
+    modifier: Modifier = Modifier,
+    enabled: Boolean = true
 ) {
     val containerShape = RoundedCornerShape(containerCornerRadius)
     // 发送/停止按钮：尺寸更小，贴右下角；按钮圆角 + 内边距 = 输入框外圆角，
@@ -756,7 +757,7 @@ fun AIChatInputBox(
                 textStyle = textStyle.copy(
                     color = MaterialTheme.colorScheme.onSurface
                 ),
-                enabled = !isLoading,
+                enabled = enabled,
                 decorationBox = { innerTextField ->
                     Box {
                         if (inputText.isEmpty()) {

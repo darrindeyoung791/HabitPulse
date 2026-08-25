@@ -68,6 +68,15 @@ class AIChatViewModel(application: Application) : AndroidViewModel(application) 
     private val _uiState = MutableStateFlow(AiChatUiState())
     val uiState: StateFlow<AiChatUiState> = _uiState.asStateFlow()
 
+    /** 重试时将用户上次发送的文本回填到输入框（一次性信号，UI 读取后应清零）。 */
+    private val _retryInputText = MutableStateFlow<String?>(null)
+    val retryInputText: StateFlow<String?> = _retryInputText.asStateFlow()
+
+    /** UI 消费重试信号后调用，清零以避免重复触发。 */
+    fun clearRetryInputText() {
+        _retryInputText.value = null
+    }
+
     private val _usage = MutableStateFlow(SessionUsage())
     val usage: StateFlow<SessionUsage> = _usage.asStateFlow()
 
@@ -402,11 +411,28 @@ class AIChatViewModel(application: Application) : AndroidViewModel(application) 
             val msgs = _messages.value.toMutableList()
             val lastUserIndex = msgs.indexOfLast { it is AiChatUiMessage.UserBubble }
             if (lastUserIndex < 0) return@launch
+
+            // 提取用户上次发送的文本，用于回填输入框
+            val lastUserText = (msgs[lastUserIndex] as AiChatUiMessage.UserBubble).text
+
+            // 移除最后的用户消息及其之后的所有消息（assistant 回复等）
             while (msgs.size > lastUserIndex) msgs.removeAt(msgs.lastIndex)
             _messages.value = msgs
+
+            // 同步清理 conversation manager 内部消息历史：移除最后的用户消息及其 assistant 回复
+            conversationManager?.removeLastUserAndAssistantTurn()
+
+            // 回到空闲态：不自动发送，等待用户编辑后手动重发
             currentAssistantMessageId = null
-            _uiState.value = _uiState.value.copy(isLoading = true, isGenerating = true, showStop = true, showRetry = false)
-            conversationManager?.retryLastTurn()
+            _uiState.value = _uiState.value.copy(
+                isLoading = false,
+                isGenerating = false,
+                showStop = false,
+                showRetry = false
+            )
+
+            // 发送一次性信号，让 UI 将文本回填到输入框并聚焦
+            _retryInputText.value = lastUserText
         }
     }
 
@@ -429,6 +455,14 @@ class AIChatViewModel(application: Application) : AndroidViewModel(application) 
 
     fun setDarkModeSetting(intValue: Int) {
         viewModelScope.launch { userPreferences.setDarkMode(intValue) }
+        // 更新 UI 中对应 SettingChangeCard 的显示值，使下拉菜单跟随用户最后选择
+        val msgs = _messages.value.toMutableList()
+        val lastSettingCard = msgs.indexOfLast { it is AiChatUiMessage.SettingChangeCard && it.data.key == "dark_mode" }
+        if (lastSettingCard >= 0) {
+            val card = msgs[lastSettingCard] as AiChatUiMessage.SettingChangeCard
+            msgs[lastSettingCard] = card.copy(data = card.data.copy(newIntValue = intValue))
+            _messages.value = msgs
+        }
     }
 
     fun clearConversation() {

@@ -24,6 +24,12 @@
     <string name="settings_font_scale_description">自定义应用内字体大小</string>
     <string name="settings_font_scale_follow_system">跟随系统</string>
     <string name="settings_font_scale_standard">标准</string>
+    <string name="settings_font_scale_smallest">最小</string>
+    <string name="settings_font_scale_small">小</string>
+    <string name="settings_font_scale_large">大</string>
+    <string name="settings_font_scale_larger">更大</string>
+    <string name="settings_font_scale_extra_large">超大</string>
+    <string name="settings_font_scale_largest">最大</string>
     <string name="settings_language_system_default">跟随系统</string>
     <string name="language_follow_system_unsupported">%1$s doesn\'t support your language.</string>
 
@@ -615,7 +621,7 @@
     <string name="ai_chat_welcome_title">我是你的 AI 习惯助手</string>
     <string name="ai_chat_welcome_subtitle">可以让我创建、查找、修改或删除习惯，也可以帮你调整应用设置。</string>
     <string name="ai_chat_suggestion_create">帮我创建一个读书习惯</string>
-    <string name="ai_chat_suggestion_search">有哪些习惯需要我处理？</string>
+    <string name="ai_chat_suggestion_search">去除重复的习惯</string>
     <string name="ai_chat_suggestion_setting">帮我打开通知设置</string>
     <string name="ai_chat_setting_change_format">%1$s → %2$s</string>
     <string name="ai_chat_on">开</string>
@@ -762,8 +768,12 @@
     <string name="region_nz">新西兰</string>
 
     <!-- 主页 Omnibox（搜索与AI） -->
-    <string name="main_omnibox_hint">轻点搜索，上滑打开AI助手</string>
+    <string name="main_omnibox_hint">轻点搜索，上滑创建习惯</string>
     <string name="accessibility_omnibox_clear">清除搜索内容</string>
     <string name="ai_chat_manual_create">手动创建习惯</string>
     <string name="ai_chat_manual_create_description">不使用 AI，自己一步步填写创建</string>
+    <string name="ai_chat_no_config_hint">请先添加 AI 提供商</string>
+    <string name="ai_chat_no_config_subtitle">尚未配置 AI 提供商，请先添加后再使用对话功能。</string>
+    <string name="ai_chat_add_provider">添加 AI 提供商</string>
+    <string name="ai_chat_add_provider_desc">配置 API 密钥以启用 AI 对话</string>
 </resources>
