@@ -1,6 +1,7 @@
 package io.github.darrindeyoung791.habitpulse.ui.screens
 
 import androidx.compose.animation.AnimatedContent
+import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.core.Animatable
 import androidx.compose.animation.core.AnimationVector1D
 import androidx.compose.animation.core.CubicBezierEasing
@@ -52,6 +53,7 @@ import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.SolidColor
 import androidx.compose.ui.graphics.graphicsLayer
+import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.layout.onGloballyPositioned
 import androidx.compose.ui.layout.onSizeChanged
 import androidx.compose.ui.layout.positionInWindow
@@ -89,6 +91,7 @@ import io.github.darrindeyoung791.habitpulse.data.model.Habit
 import io.github.darrindeyoung791.habitpulse.navigation.getDeviceCornerRadius
 import io.github.darrindeyoung791.habitpulse.ui.rememberDeviceFormInfo
 import io.github.darrindeyoung791.habitpulse.ui.theme.HabitPulseTheme
+import io.github.darrindeyoung791.habitpulse.ui.utils.PressVibrationFeedback
 import io.github.darrindeyoung791.habitpulse.ui.utils.rememberDebounceClickHandler
 import io.github.darrindeyoung791.habitpulse.ui.utils.rememberHapticsEnabled
 import io.github.darrindeyoung791.habitpulse.ui.utils.rememberPressVibrationParams
@@ -97,6 +100,7 @@ import io.github.darrindeyoung791.habitpulse.ui.screens.DateFilterButton
 import io.github.darrindeyoung791.habitpulse.ui.screens.ai.AIChatScreen
 import io.github.darrindeyoung791.habitpulse.viewmodel.HabitViewModel
 import kotlinx.coroutines.delay
+import kotlinx.coroutines.flow.map
 import kotlinx.coroutines.launch
 import java.time.LocalDate
 import java.util.UUID
@@ -136,6 +140,71 @@ private val OmniboxGradientHeadroom = 64.dp
 /** Omnibox 距屏幕底边（导航栏/键盘之上）的外边距。 */
 private val OmniboxBottomMargin = 20.dp
 
+/** 拖拽把手占位盒高度（含点击热区），形变幽灵把手同尺寸。 */
+internal val OmniboxHandleBoxHeight = 24.dp
+
+/** 把手与胶囊输入框之间的垂直间距。 */
+private val OmniboxHandlePillSpacing = 6.dp
+
+/** Omnibox 胶囊输入框的最小高度。 */
+internal val OmniboxPillMinHeight = 52.dp
+
+/**
+ * 空状态占位在「AppBar ↔ Omnibox 上沿」之间整体垂直居中所需的额外底部净空：
+ * Omnibox 装饰层总高（底距 + 胶囊 + 间距 + 把手）减去内容区已预留的
+ * [OmniboxContentBottomClearance]。各 Section 的空态占位组件统一追加此净空，
+ * 列表布局不使用（保持滚动范围延伸到渐变层后方）。
+ */
+internal val EmptyStateExtraBottomClearance = OmniboxBottomMargin +
+    OmniboxPillMinHeight + OmniboxHandlePillSpacing + OmniboxHandleBoxHeight -
+    OmniboxContentBottomClearance
+
+/**
+ * 空状态占位居中修正：追加 Omnibox 装饰高度的底部净空 + 导航栏 inset，
+ * 使占位元素在 AppBar 与 Omnibox 之间作为一个整体垂直居中。
+ */
+@Composable
+internal fun Modifier.emptyStateOmniboxClearance(): Modifier = this
+    .padding(bottom = EmptyStateExtraBottomClearance)
+    .windowInsetsPadding(WindowInsets.navigationBars.only(WindowInsetsSides.Bottom))
+
+/**
+ * Omnibox 有输入时显示的 AI 快捷 chip（用 AI 创建 / 用 AI 查询）。
+ * 点击后把当前输入组装成固定模板的用户可见提示词移交 AI 对话页自动发送。
+ */
+@Composable
+private fun AiAssistChip(
+    label: String,
+    icon: ImageVector,
+    enabled: Boolean,
+    onClick: () -> Unit
+) {
+    val interactionSource = remember { MutableInteractionSource() }
+    PressVibrationFeedback(interactionSource = interactionSource, enabled = enabled)
+    AssistChip(
+        onClick = onClick,
+        label = { Text(label, style = MaterialTheme.typography.labelLarge) },
+        leadingIcon = {
+            Icon(
+                imageVector = icon,
+                contentDescription = null,
+                modifier = Modifier.size(16.dp)
+            )
+        },
+        enabled = enabled,
+        interactionSource = interactionSource,
+        // 简约扁平样式：任何交互态都不带阴影、无描边；容器用不透明 surfaceContainerHighest
+        // （与 Omnibox 胶囊同色），列表从下方滚过时不影响 chip 文字可读性；
+        // 禁用态（形变淡出期）同样保持不透明，避免半透明闪现
+        elevation = AssistChipDefaults.assistChipElevation(),
+        border = null,
+        colors = AssistChipDefaults.assistChipColors(
+            containerColor = MaterialTheme.colorScheme.surfaceContainerHighest,
+            disabledContainerColor = MaterialTheme.colorScheme.surfaceContainerHighest
+        )
+    )
+}
+
 /**
  * 底部 Omnibox + MD3 drag handle + 背景渐变过渡的完整装饰，需在 BoxScope 中调用。
  *
@@ -152,7 +221,10 @@ private fun BoxScope.BottomOmniboxWithFade(
     showHandle: Boolean = true,
     progress: Float = 0f,
     onPillBounds: (Rect) -> Unit = {},
-    dragModifier: Modifier = Modifier
+    dragModifier: Modifier = Modifier,
+    aiAssistEnabled: Boolean = false,
+    onAiCreateHabit: (String) -> Unit = {},
+    onAiSearchHabits: (String) -> Unit = {}
 ) {
     val surfaceColor = MaterialTheme.colorScheme.surface
 
@@ -192,7 +264,7 @@ private fun BoxScope.BottomOmniboxWithFade(
             val handleDescription = stringResource(R.string.ai_omnibox_handle_talkback)
             Box(
                 modifier = Modifier
-                    .size(width = 64.dp, height = 24.dp)
+                    .size(width = 64.dp, height = OmniboxHandleBoxHeight)
                     .clickable(enabled = showHandle) { onHandleTap() }
                     .semantics {
                         contentDescription = handleDescription
@@ -203,7 +275,37 @@ private fun BoxScope.BottomOmniboxWithFade(
                     OmniboxDragHandle()
                 }
             }
-            Spacer(modifier = Modifier.height(6.dp))
+            Spacer(modifier = Modifier.height(OmniboxHandlePillSpacing))
+
+            // AI 快捷 chips：有输入且已配置 AI 时在输入框上方左对齐同时显示两枚，
+            // 点击把当前输入组装成用户可见提示词移交 AI 对话页自动发送。
+            // 入场效果保持简约：仅快速淡入淡出，不做位移/展开。
+            // showHandle（=形变未激活）同时作为可点击门控，避免淡出期间误触
+            AnimatedVisibility(
+                visible = query.isNotBlank() && aiAssistEnabled,
+                enter = fadeIn(animationSpec = tween(120)),
+                exit = fadeOut(animationSpec = tween(100))
+            ) {
+                Column {
+                    Row(modifier = Modifier.fillMaxWidth()) {
+                        AiAssistChip(
+                            label = stringResource(R.string.ai_omnibox_ai_create),
+                            icon = Icons.Outlined.AddCircle,
+                            enabled = showHandle,
+                            onClick = { onAiCreateHabit(query) }
+                        )
+                        Spacer(modifier = Modifier.width(8.dp))
+                        AiAssistChip(
+                            label = stringResource(R.string.ai_omnibox_ai_search),
+                            icon = Icons.Filled.Search,
+                            enabled = showHandle,
+                            onClick = { onAiSearchHabits(query) }
+                        )
+                    }
+                    Spacer(modifier = Modifier.height(4.dp))
+                }
+            }
+
             HomeOmnibox(
                 query = query,
                 onQueryChange = onQueryChange,
@@ -249,7 +351,9 @@ private fun BoxScope.AiSheetOverlay(
     onNavigateToSettings: () -> Unit,
     onEditHabitById: (UUID) -> Unit,
     onManualCreateHabit: () -> Unit,
-    draftText: String
+    draftText: String,
+    autoSendText: String? = null,
+    onAutoSendConsumed: () -> Unit = {}
 ) {
     val density = LocalDensity.current
     val p = progress.value
@@ -259,10 +363,19 @@ private fun BoxScope.AiSheetOverlay(
     val settingsState = rememberUpdatedState(onNavigateToSettings)
     val editByIdState = rememberUpdatedState(onEditHabitById)
     val manualState = rememberUpdatedState(onManualCreateHabit)
+    val autoSendConsumedState = rememberUpdatedState(onAutoSendConsumed)
     val chatOnBack = remember { { collapseState.value() } }
     val chatOnSettings = remember { { settingsState.value() } }
     val chatOnEdit = remember { { id: UUID -> editByIdState.value(id) } }
     val chatOnManual = remember { { manualState.value() } }
+    val chatOnAutoSendConsumed = remember { { autoSendConsumedState.value() } }
+
+    // 顶栏反向拖拽的行程：把手到屏幕顶部的实测距离（与主页底部手势条同源逻辑）
+    val scrubTravelPxProvider = remember {
+        {
+            if (omniboxBounds.top > 1f) omniboxBounds.top else screenHeightPx * 0.55f
+        }
+    }
 
     // 门控布尔：只有跨越阈值时才重组对应子树
     val scrimVisible by remember { derivedStateOf { progress.value > 0.01f } }
@@ -339,7 +452,10 @@ private fun BoxScope.AiSheetOverlay(
                     application = application,
                     initialInputText = draftText,
                     onManualCreateHabit = chatOnManual,
-                    progress = progress
+                    progress = progress,
+                    collapseTravelPx = scrubTravelPxProvider,
+                    autoSendText = autoSendText,
+                    onAutoSendConsumed = chatOnAutoSendConsumed
                 )
             }
         }
@@ -349,19 +465,17 @@ private fun BoxScope.AiSheetOverlay(
     if (handleVisible) {
         val handleAlpha = (1f - p / 0.25f).coerceIn(0f, 1f)
         val handleBoxWidthDp = 64.dp
-        val handleBoxHeightDp = 24.dp
-        val handleBoxWidthPx = with(density) { handleBoxWidthDp.toPx() }
-        val handleBoxHeightPx = with(density) { handleBoxHeightDp.toPx() }
+        val handleBoxHeightPx = with(density) { OmniboxHandleBoxHeight.toPx() }
         Box(
             modifier = Modifier
                 .offset {
                     IntOffset(
-                        (((curRect.left + curRect.right) / 2f) - handleBoxWidthPx / 2f)
+                        (((curRect.left + curRect.right) / 2f) - (handleBoxWidthDp.toPx() / 2f))
                             .roundToInt(),
                         (curRect.top - handleBoxHeightPx).roundToInt()
                     )
                 }
-                .size(handleBoxWidthDp, handleBoxHeightDp)
+                .size(handleBoxWidthDp, OmniboxHandleBoxHeight)
                 .graphicsLayer { alpha = handleAlpha },
             contentAlignment = Alignment.Center
         ) {
@@ -447,8 +561,10 @@ fun HomeScreen(
     val habits by viewModel.habitsFlow.collectAsStateWithLifecycle(initialValue = emptyList())
 
     // Omnibox（主页底部常驻搜索框）：单一查询词，三个 Section 共用一个输入框。
-    // Habits / Contacts 由各自 ViewModel 内部做 debounce 过滤（此处单向同步），
-    // Records 本期仅占位不过滤；AI 与语音识别均为预留位，无逻辑。
+    // Habits / Contacts 由各自 ViewModel 内部做 debounce 过滤（此处单向同步）；
+    // Records 由 UI 层直接按习惯名称过滤；语音识别为预留位。
+    // 「用 AI 创建 / 用 AI 查询」chip 在有输入且已配置 AI 时出现，
+    // 点击把输入组装成固定模板提示词移交对话页自动发送。
     var homeOmniboxText by rememberSaveable { mutableStateOf("") }
 
     LaunchedEffect(homeOmniboxText) {
@@ -473,6 +589,12 @@ fun HomeScreen(
         remember { io.github.darrindeyoung791.habitpulse.data.preferences.UserPreferences.getInstance(it) }
     }
     val forceTabletLandscape: Boolean by userPreferences?.forceTabletLandscapeFlow?.collectAsStateWithLifecycle(initialValue = false) ?: remember { mutableStateOf(false) }
+
+    // AI 快捷 chip 可用性：已配置至少一个含密钥的 AI 配置时才在 Omnibox 上方显示
+    val aiAssistEnabled by userPreferences?.aiConfigsFlow
+        ?.map { configs -> configs.any { it.hasApiKeyConfigured() } }
+        ?.collectAsStateWithLifecycle(initialValue = false)
+        ?: remember { mutableStateOf(false) }
 
     // Navigation mode decision logic:
     // - Tablet in landscape: PermanentNavigationDrawer with hamburger menu
@@ -597,6 +719,10 @@ fun HomeScreen(
         restore = { value: Float -> Animatable(value) }
     )) { Animatable(0f) }
     var aiDraftText by rememberSaveable { mutableStateOf("") }
+    // Omnibox「用 AI 创建 / 用 AI 查询」chip 移交的完整提示词：
+    // 对话页完全展开后自动以用户消息发送一次，随后回调置空。
+    // 声明在收尾动画函数之前，供 animateAiSheetTo 收起时清理引用
+    var pendingAiPrompt by rememberSaveable { mutableStateOf<String?>(null) }
     // Omnibox 胶囊在窗口坐标系中的边界（形变起点矩形）
     var omniboxWindowBounds by remember { mutableStateOf(Rect.Zero) }
 
@@ -626,10 +752,12 @@ fun HomeScreen(
         open: Boolean,
         initialVelocityProgressPerSec: Float = 0f
     ) {
-        // 收起时将草稿文本归还搜索框（换行替换为空格，搜索框不支持换行）
+        // 收起时将草稿文本归还搜索框（换行替换为空格，搜索框不支持换行），
+        // 并丢弃尚未发送的 AI 快捷提示词（避免下次展开时意外发送旧内容）
         if (!open && aiDraftText.isNotEmpty() && homeOmniboxText.isEmpty()) {
             homeOmniboxText = aiDraftText.replace("\n", " ")
         }
+        if (!open) pendingAiPrompt = null
         val startValue = aiSheetProgress.value
         val alreadyAtTarget = if (open) startValue >= 0.999f else startValue <= 0.001f
         scope.launch {
@@ -674,6 +802,18 @@ fun HomeScreen(
 
     fun collapseAiSheetAnimated() {
         animateAiSheetTo(open = false)
+    }
+
+    /**
+     * 把 Omnibox 当前输入组装成固定模板的用户可见提示词并展开 AI 对话页。
+     * 模板区分创建/查询两种意图，无需 AI 预先判断。
+     */
+    fun sendOmniboxToAi(promptRes: Int, rawText: String) {
+        val text = rawText.trim()
+        if (text.isEmpty()) return
+        pendingAiPrompt = context.getString(promptRes, text)
+        homeOmniboxText = ""
+        expandAiSheetAnimated()
     }
 
     // Shared horizontal drag gesture (custom axis-arbitrating detector).
@@ -1067,7 +1207,9 @@ fun HomeScreen(
                         modifier = modifier,
                         application = application,
                         scrollBehavior = recordsScrollBehavior,
-                        listState = recordsScrollState
+                        listState = recordsScrollState,
+                        searchQuery = homeOmniboxText,
+                        onClearSearch = { homeOmniboxText = "" }
                     )
                 }
             }
@@ -1405,7 +1547,14 @@ fun HomeScreen(
                             showHandle = showOmniboxHandle,
                             progress = aiSheetProgress.value,
                             onPillBounds = { omniboxWindowBounds = it },
-                            dragModifier = aiSheetStripDragModifier
+                            dragModifier = aiSheetStripDragModifier,
+                            aiAssistEnabled = aiAssistEnabled,
+                            onAiCreateHabit = { text ->
+                                sendOmniboxToAi(R.string.ai_chat_auto_create_prompt, text)
+                            },
+                            onAiSearchHabits = { text ->
+                                sendOmniboxToAi(R.string.ai_chat_auto_search_prompt, text)
+                            }
                         )
                 }
             }
@@ -1438,7 +1587,9 @@ fun HomeScreen(
                         clickHandler.processClick { onCreateHabit() }
                     }
                 },
-                draftText = aiDraftText
+                draftText = aiDraftText,
+                autoSendText = pendingAiPrompt,
+                onAutoSendConsumed = { pendingAiPrompt = null }
             )
         }
         } // outer Box
@@ -1527,7 +1678,14 @@ fun HomeScreen(
                             showHandle = showOmniboxHandle,
                             progress = aiSheetProgress.value,
                             onPillBounds = { omniboxWindowBounds = it },
-                            dragModifier = aiSheetStripDragModifier
+                            dragModifier = aiSheetStripDragModifier,
+                            aiAssistEnabled = aiAssistEnabled,
+                            onAiCreateHabit = { text ->
+                                sendOmniboxToAi(R.string.ai_chat_auto_create_prompt, text)
+                            },
+                            onAiSearchHabits = { text ->
+                                sendOmniboxToAi(R.string.ai_chat_auto_search_prompt, text)
+                            }
                         )
                 }
             }
@@ -1560,7 +1718,9 @@ fun HomeScreen(
                             clickHandler.processClick { onCreateHabit() }
                         }
                     },
-                    draftText = aiDraftText
+                    draftText = aiDraftText,
+                    autoSendText = pendingAiPrompt,
+                    onAutoSendConsumed = { pendingAiPrompt = null }
                 )
             }
         }
@@ -1683,7 +1843,14 @@ fun HomeScreen(
                         showHandle = showOmniboxHandle,
                         progress = aiSheetProgress.value,
                         onPillBounds = { omniboxWindowBounds = it },
-                        dragModifier = aiSheetStripDragModifier
+                        dragModifier = aiSheetStripDragModifier,
+                        aiAssistEnabled = aiAssistEnabled,
+                        onAiCreateHabit = { text ->
+                            sendOmniboxToAi(R.string.ai_chat_auto_create_prompt, text)
+                        },
+                        onAiSearchHabits = { text ->
+                            sendOmniboxToAi(R.string.ai_chat_auto_search_prompt, text)
+                        }
                     )
 
                 // Dimming scrim over the displaced page; tap it to close.
@@ -1740,7 +1907,9 @@ fun HomeScreen(
                             clickHandler.processClick { onCreateHabit() }
                         }
                     },
-                    draftText = aiDraftText
+                    draftText = aiDraftText,
+                    autoSendText = pendingAiPrompt,
+                    onAutoSendConsumed = { pendingAiPrompt = null }
                 )
             }
         }
@@ -1897,7 +2066,7 @@ private fun HomeOmnibox(
         Row(
             modifier = Modifier
                 .fillMaxWidth()
-                .heightIn(min = 52.dp)
+                .heightIn(min = OmniboxPillMinHeight)
                 .clickable { focusRequester.requestFocus() },
             verticalAlignment = Alignment.CenterVertically
         ) {

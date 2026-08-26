@@ -530,6 +530,8 @@ fun EmptyStateContent(
     Column(
         modifier = modifier
             .fillMaxSize()
+            // 空态占位在 AppBar 与 Omnibox 之间整体垂直居中（补偿 Omnibox 装饰高度）
+            .emptyStateOmniboxClearance()
             .padding(16.dp),
         horizontalAlignment = Alignment.CenterHorizontally,
         verticalArrangement = Arrangement.Center
@@ -538,7 +540,7 @@ fun EmptyStateContent(
             imageVector = Icons.Outlined.LibraryAdd,
             contentDescription = null,
             modifier = Modifier.size(80.dp),
-            tint = MaterialTheme.colorScheme.secondary
+            tint = MaterialTheme.colorScheme.onSurface
         )
 
         Spacer(modifier = Modifier.height(24.dp))
@@ -1732,6 +1734,8 @@ private fun SearchEmptyState(
     Column(
         modifier = modifier
             .fillMaxSize()
+            // 搜索空态同样在 AppBar 与 Omnibox 之间整体垂直居中
+            .emptyStateOmniboxClearance()
             .padding(16.dp),
         horizontalAlignment = Alignment.CenterHorizontally,
         verticalArrangement = Arrangement.Center
@@ -1740,7 +1744,7 @@ private fun SearchEmptyState(
             imageVector = Icons.Outlined.Search,
             contentDescription = null,
             modifier = Modifier.size(80.dp),
-            tint = MaterialTheme.colorScheme.secondary
+            tint = MaterialTheme.colorScheme.onSurface
         )
 
         Spacer(modifier = Modifier.height(24.dp))

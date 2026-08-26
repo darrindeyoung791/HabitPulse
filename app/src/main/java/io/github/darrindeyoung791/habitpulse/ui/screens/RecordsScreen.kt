@@ -40,6 +40,7 @@ import androidx.compose.material.icons.filled.Close
 import androidx.compose.material.icons.outlined.Assessment
 import androidx.compose.material.icons.outlined.CalendarMonth
 import androidx.compose.material.icons.outlined.CalendarToday
+import androidx.compose.material.icons.outlined.Search
 import androidx.compose.material3.Card
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.CircularProgressIndicator
@@ -155,6 +156,9 @@ fun formatRelativeDate(date: Date): String {
 
 /**
  * 记录页面内容组件
+ *
+ * @param searchQuery Omnibox 查询词：按习惯名称模糊匹配过滤记录（日期/习惯筛选保留）
+ * @param onClearSearch 清除搜索（搜索无结果占位的「清除搜索」按钮回调）
  */
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
@@ -162,7 +166,9 @@ fun RecordsScreenContent(
     modifier: Modifier = Modifier,
     application: HabitPulseApplication? = null,
     scrollBehavior: TopAppBarScrollBehavior? = null,
-    listState: LazyListState = remember { LazyListState() }
+    listState: LazyListState = remember { LazyListState() },
+    searchQuery: String = "",
+    onClearSearch: () -> Unit = {}
 ) {
     val viewModel: RecordsViewModel = if (application != null) {
         application.recordsViewModel
@@ -192,6 +198,22 @@ fun RecordsScreenContent(
         lastNonEmptyData
     } else {
         groupedRecords
+    }
+
+    // Omnibox 搜索：按习惯名称模糊匹配（如输入「跑」匹配「长跑」「晨跑」）。
+    // 搜索时直接用实时 groupedRecords 过滤、绕过 lastNonEmptyData 缓存，
+    // 避免加载瞬间闪现与查询词无关的旧数据；过滤后剔除空日期组
+    val searching = searchQuery.isNotBlank()
+    val trimmedQuery = searchQuery.trim()
+    val recordsToShow = if (!searching) {
+        displayRecords
+    } else {
+        groupedRecords.mapNotNull { group ->
+            val matched = group.records.filter {
+                it.habit.title.contains(trimmedQuery, ignoreCase = true)
+            }
+            if (matched.isEmpty()) null else group.copy(records = matched)
+        }
     }
 
     // 加载用时超过 1 秒后才显示加载指示器，避免短暂加载闪现
@@ -242,86 +264,67 @@ fun RecordsScreenContent(
 
     val animationsFrozen by rememberAnimationsFrozen(listState)
 
-    Column(
+    // 根容器改为 Box：空态/加载态与筛选栏叠放，占位元素在 AppBar 与 Omnibox 之间
+    // 整体垂直居中时忽略筛选行高度（与习惯/联系人界面的居中位置保持一致）
+    Box(
         modifier = nestedScrollModifier.fillMaxSize()
     ) {
-        // === Filter Bar Section - Always Visible ===
-        FilterBarSection(
-            selectedHabitName = selectedHabitName,
-            habitOptions = habitOptions,
-            selectedHabitId = selectedHabitId,
-            onHabitSelected = { viewModel.selectHabit(it) }
-        )
-
         // === Content Section ===
         when {
-            displayRecords.isNotEmpty() -> {
-                // 有数据时直接显示（可能是缓存数据或实时数据）
+            recordsToShow.isNotEmpty() -> {
+                Column(
+                    modifier = Modifier.fillMaxSize()
+                ) {
+                    // === Filter Bar Section - Always Visible ===
+                    FilterBarSection(
+                        modifier = Modifier.fillMaxWidth(),
+                        selectedHabitName = selectedHabitName,
+                        habitOptions = habitOptions,
+                        selectedHabitId = selectedHabitId,
+                        onHabitSelected = { viewModel.selectHabit(it) }
+                    )
 
-                if (useTwoColumnLayout) {
-                    // Two-column layout for tablet landscape
-                    // Date headers span full width, records are split into two columns
-                    Md3ScrollableColumn(
-                        modifier = Modifier.fillMaxSize(),
-                        listState = listState,
-                        contentPadding = PaddingValues(horizontal = 16.dp, vertical = 16.dp),
-                        verticalArrangement = Arrangement.spacedBy(16.dp)
-                    ) {
-                        // Group records by date
-                        val groupedByDate = displayRecords.flatMap { it.records }
-                            .groupBy { it.completion.completedDateLocal }
-                            .toSortedMap(compareByDescending { it })
+                    if (useTwoColumnLayout) {
+                        // Two-column layout for tablet landscape
+                        // Date headers span full width, records are split into two columns
+                        Md3ScrollableColumn(
+                            modifier = Modifier.fillMaxSize(),
+                            listState = listState,
+                            contentPadding = PaddingValues(horizontal = 16.dp, vertical = 16.dp),
+                            verticalArrangement = Arrangement.spacedBy(16.dp)
+                        ) {
+                            // Group records by date
+                            val groupedByDate = recordsToShow.flatMap { it.records }
+                                .groupBy { it.completion.completedDateLocal }
+                                .toSortedMap(compareByDescending { it })
 
-                        groupedByDate.forEach { (date, recordsForDate) ->
-                            // Date header spans full width
-                            item(key = "header_$date") {
-                                DateSectionHeader(
-                                    date = date,
-                                    dateFormat = displayDateFormat,
-                                    modifier = Modifier.fillMaxWidth()
-                                )
-                            }
+                            groupedByDate.forEach { (date, recordsForDate) ->
+                                // Date header spans full width
+                                item(key = "header_$date") {
+                                    DateSectionHeader(
+                                        date = date,
+                                        dateFormat = displayDateFormat,
+                                        modifier = Modifier.fillMaxWidth()
+                                    )
+                                }
 
-                            // Records for this date in two columns
-                            item(key = "records_$date") {
-                                Row(
-                                    modifier = Modifier.fillMaxWidth(),
-                                    horizontalArrangement = Arrangement.spacedBy(16.dp)
-                                ) {
-                                    // Split records into two columns
-                                    val column1Records = recordsForDate.filterIndexed { index, _ -> index % 2 == 0 }
-                                    val column2Records = recordsForDate.filterIndexed { index, _ -> index % 2 == 1 }
-
-                                    // Left column
-                                    Column(
-                                        modifier = Modifier.weight(1f),
-                                        verticalArrangement = Arrangement.spacedBy(8.dp)
+                                // Records for this date in two columns
+                                item(key = "records_$date") {
+                                    Row(
+                                        modifier = Modifier.fillMaxWidth(),
+                                        horizontalArrangement = Arrangement.spacedBy(16.dp)
                                     ) {
-                                        column1Records.forEachIndexed { colIndex, record ->
-                                            val globalIndex = colIndex * 2
-                                            StaggeredListItem(
-                                                index = globalIndex,
-                                                animationsFrozen = animationsFrozen
-                                            ) {
-                                                CompletionRecordCard(
-                                                    completion = record.completion,
-                                                    habitTitle = record.habit.title,
-                                                    timeFormat = timeFormat,
-                                                    completionSequence = record.completionSequence,
-                                                    modifier = Modifier.fillMaxWidth()
-                                                )
-                                            }
-                                        }
-                                    }
+                                        // Split records into two columns
+                                        val column1Records = recordsForDate.filterIndexed { index, _ -> index % 2 == 0 }
+                                        val column2Records = recordsForDate.filterIndexed { index, _ -> index % 2 == 1 }
 
-                                    // Right column (only show if there are records)
-                                    if (column2Records.isNotEmpty()) {
+                                        // Left column
                                         Column(
                                             modifier = Modifier.weight(1f),
                                             verticalArrangement = Arrangement.spacedBy(8.dp)
                                         ) {
-                                            column2Records.forEachIndexed { colIndex, record ->
-                                                val globalIndex = colIndex * 2 + 1
+                                            column1Records.forEachIndexed { colIndex, record ->
+                                                val globalIndex = colIndex * 2
                                                 StaggeredListItem(
                                                     index = globalIndex,
                                                     animationsFrozen = animationsFrozen
@@ -336,62 +339,107 @@ fun RecordsScreenContent(
                                                 }
                                             }
                                         }
+
+                                        // Right column (only show if there are records)
+                                        if (column2Records.isNotEmpty()) {
+                                            Column(
+                                                modifier = Modifier.weight(1f),
+                                                verticalArrangement = Arrangement.spacedBy(8.dp)
+                                            ) {
+                                                column2Records.forEachIndexed { colIndex, record ->
+                                                    val globalIndex = colIndex * 2 + 1
+                                                    StaggeredListItem(
+                                                        index = globalIndex,
+                                                        animationsFrozen = animationsFrozen
+                                                    ) {
+                                                        CompletionRecordCard(
+                                                            completion = record.completion,
+                                                            habitTitle = record.habit.title,
+                                                            timeFormat = timeFormat,
+                                                            completionSequence = record.completionSequence,
+                                                            modifier = Modifier.fillMaxWidth()
+                                                        )
+                                                    }
+                                                }
+                                            }
+                                        }
                                     }
                                 }
                             }
-                        }
 
-                        // Add bottom spacer to prevent FAB from covering last item
-                        item {
-                            Spacer(modifier = Modifier.height(100.dp))
-                        }
-                    }
-                } else {
-                    // Single column layout for phones and portrait mode
-                    Md3ScrollableColumn(
-                        modifier = Modifier.fillMaxSize(),
-                        listState = listState,
-                        contentPadding = PaddingValues(horizontal = 16.dp, vertical = 8.dp),
-                        verticalArrangement = Arrangement.spacedBy(4.dp)
-                    ) {
-                        displayRecords.forEach { dateGroup ->
-                            item(key = "header_${dateGroup.date}") {
-                                DateSectionHeader(
-                                    date = dateGroup.date,
-                                    dateFormat = displayDateFormat,
-                                    modifier = Modifier.fillMaxWidth()
-                                )
+                            // Add bottom spacer to prevent FAB from covering last item
+                            item {
+                                Spacer(modifier = Modifier.height(100.dp))
                             }
-
-                            itemsIndexed(
-                                items = dateGroup.records,
-                                key = { _, item -> item.completion.id }
-                            ) { index, record ->
-                                StaggeredListItem(
-                                    index = index,
-                                    animationsFrozen = animationsFrozen
-                                ) {
-                                    CompletionRecordCard(
-                                        completion = record.completion,
-                                        habitTitle = record.habit.title,
-                                        timeFormat = timeFormat,
-                                        completionSequence = record.completionSequence,
+                        }
+                    } else {
+                        // Single column layout for phones and portrait mode
+                        Md3ScrollableColumn(
+                            modifier = Modifier.fillMaxSize(),
+                            listState = listState,
+                            contentPadding = PaddingValues(horizontal = 16.dp, vertical = 8.dp),
+                            verticalArrangement = Arrangement.spacedBy(4.dp)
+                        ) {
+                            recordsToShow.forEach { dateGroup ->
+                                item(key = "header_${dateGroup.date}") {
+                                    DateSectionHeader(
+                                        date = dateGroup.date,
+                                        dateFormat = displayDateFormat,
                                         modifier = Modifier.fillMaxWidth()
                                     )
                                 }
-                            }
-                        }
 
-                        item {
-                            Spacer(modifier = Modifier.height(100.dp))
+                                itemsIndexed(
+                                    items = dateGroup.records,
+                                    key = { _, item -> item.completion.id }
+                                ) { index, record ->
+                                    StaggeredListItem(
+                                        index = index,
+                                        animationsFrozen = animationsFrozen
+                                    ) {
+                                        CompletionRecordCard(
+                                            completion = record.completion,
+                                            habitTitle = record.habit.title,
+                                            timeFormat = timeFormat,
+                                            completionSequence = record.completionSequence,
+                                            modifier = Modifier.fillMaxWidth()
+                                        )
+                                    }
+                                }
+                            }
+
+                            item {
+                                Spacer(modifier = Modifier.height(100.dp))
+                            }
                         }
                     }
                 }
             }
+            searching && hasLoadedDataOnce && !isLoading -> {
+                // 搜索无匹配：筛选栏悬浮顶部可继续操作，占位铺满整屏居中（忽略筛选行高度）
+                RecordsSearchEmptyState(
+                    modifier = Modifier.fillMaxSize(),
+                    onClearSearch = onClearSearch
+                )
+                FilterBarSection(
+                    modifier = Modifier.align(Alignment.TopStart),
+                    selectedHabitName = selectedHabitName,
+                    habitOptions = habitOptions,
+                    selectedHabitId = selectedHabitId,
+                    onHabitSelected = { viewModel.selectHabit(it) }
+                )
+            }
             hasLoadedDataOnce && !isLoading -> {
-                // 数据已加载完成且无数据，显示空状态
+                // 数据已加载完成且无数据，显示空状态（同样忽略筛选行高度居中）
                 EmptyRecordsContent(
                     modifier = Modifier.fillMaxSize()
+                )
+                FilterBarSection(
+                    modifier = Modifier.align(Alignment.TopStart),
+                    selectedHabitName = selectedHabitName,
+                    habitOptions = habitOptions,
+                    selectedHabitId = selectedHabitId,
+                    onHabitSelected = { viewModel.selectHabit(it) }
                 )
             }
             showDelayedLoading -> {
@@ -402,6 +450,13 @@ fun RecordsScreenContent(
                 ) {
                     CircularProgressIndicator()
                 }
+                FilterBarSection(
+                    modifier = Modifier.align(Alignment.TopStart),
+                    selectedHabitName = selectedHabitName,
+                    habitOptions = habitOptions,
+                    selectedHabitId = selectedHabitId,
+                    onHabitSelected = { viewModel.selectHabit(it) }
+                )
             }
             else -> {
                 // 其他情况（首次加载未完成、缓存切换等），不显示任何内容避免闪现
@@ -416,13 +471,14 @@ fun RecordsScreenContent(
  */
 @Composable
 fun FilterBarSection(
+    modifier: Modifier = Modifier,
     selectedHabitName: String,
     habitOptions: List<RecordsViewModel.HabitOption>,
     selectedHabitId: UUID?,
     onHabitSelected: (UUID?) -> Unit
 ) {
     Row(
-        modifier = Modifier
+        modifier = modifier
             .fillMaxWidth()
             .padding(horizontal = 16.dp, vertical = 8.dp),
         horizontalArrangement = Arrangement.Start,
@@ -723,6 +779,8 @@ fun EmptyRecordsContent(modifier: Modifier = Modifier) {
     Column(
         modifier = modifier
             .fillMaxSize()
+            // 空态占位在 AppBar 与 Omnibox 之间整体垂直居中（补偿 Omnibox 装饰高度）
+            .emptyStateOmniboxClearance()
             .padding(16.dp),
         horizontalAlignment = Alignment.CenterHorizontally,
         verticalArrangement = Arrangement.Center
@@ -731,7 +789,7 @@ fun EmptyRecordsContent(modifier: Modifier = Modifier) {
             imageVector = Icons.Outlined.Assessment,
             contentDescription = null,
             modifier = Modifier.size(80.dp),
-            tint = MaterialTheme.colorScheme.secondary
+            tint = MaterialTheme.colorScheme.onSurface
         )
 
         Spacer(modifier = Modifier.height(24.dp))
@@ -750,6 +808,59 @@ fun EmptyRecordsContent(modifier: Modifier = Modifier) {
             color = MaterialTheme.colorScheme.onSurfaceVariant,
             textAlign = androidx.compose.ui.text.style.TextAlign.Center
         )
+    }
+}
+
+/**
+ * 记录搜索无匹配占位：按习惯名称搜索无结果时显示，
+ * 与其他界面的搜索空态保持一致（图标与文本同色）。
+ */
+@Composable
+private fun RecordsSearchEmptyState(
+    modifier: Modifier = Modifier,
+    onClearSearch: () -> Unit
+) {
+    Column(
+        modifier = modifier
+            .fillMaxSize()
+            // 搜索空态同样在 AppBar 与 Omnibox 之间整体垂直居中（忽略筛选行高度）
+            .emptyStateOmniboxClearance()
+            .padding(16.dp),
+        horizontalAlignment = Alignment.CenterHorizontally,
+        verticalArrangement = Arrangement.Center
+    ) {
+        Icon(
+            imageVector = Icons.Outlined.Search,
+            contentDescription = null,
+            modifier = Modifier.size(80.dp),
+            tint = MaterialTheme.colorScheme.onSurface
+        )
+
+        Spacer(modifier = Modifier.height(24.dp))
+
+        Text(
+            text = stringResource(id = R.string.search_no_results),
+            style = MaterialTheme.typography.titleLarge.copy(fontWeight = FontWeight.Normal),
+            color = MaterialTheme.colorScheme.onSurface
+        )
+
+        Spacer(modifier = Modifier.height(8.dp))
+
+        Text(
+            text = stringResource(id = R.string.search_no_results_description),
+            style = MaterialTheme.typography.bodyMedium,
+            color = MaterialTheme.colorScheme.onSurfaceVariant
+        )
+
+        Spacer(modifier = Modifier.height(16.dp))
+
+        TextButton(onClick = onClearSearch) {
+            Text(
+                text = stringResource(id = R.string.accessibility_clear_search),
+                style = MaterialTheme.typography.bodyMedium.copy(fontWeight = FontWeight.Normal),
+                color = MaterialTheme.colorScheme.primary
+            )
+        }
     }
 }
 

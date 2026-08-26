@@ -606,9 +606,10 @@
     <string name="ai_chat_token_calls">呼叫：%1$d 次</string>
     <string name="ai_chat_welcome_title">我是你的 AI 習慣助手</string>
     <string name="ai_chat_welcome_subtitle">可以讓我建立、查詢、修改或刪除習慣，也可以幫你調整應用程式設定。</string>
-    <string name="ai_chat_suggestion_create">幫我建立一個閱讀習慣</string>
-    <string name="ai_chat_suggestion_search">去除重複的習慣</string>
-    <string name="ai_chat_suggestion_setting">幫我開啟通知設定</string>
+    <string name="ai_omnibox_ai_create">用 AI 建立</string>
+    <string name="ai_omnibox_ai_search">用 AI 查詢</string>
+    <string name="ai_chat_auto_create_prompt">請幫我建立習慣：「%1$s」</string>
+    <string name="ai_chat_auto_search_prompt">請幫我搜尋與「%1$s」相關的習慣</string>
     <string name="ai_chat_setting_change_format">%1$s → %2$s</string>
     <string name="ai_chat_on">開</string>
     <string name="ai_chat_off">關</string>

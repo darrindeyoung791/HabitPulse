@@ -1044,6 +1044,8 @@ fun EmptyContactsContent(
     Column(
         modifier = modifier
             .fillMaxSize()
+            // 空态占位在 AppBar 与 Omnibox 之间整体垂直居中（补偿 Omnibox 装饰高度）
+            .emptyStateOmniboxClearance()
             .padding(16.dp),
         horizontalAlignment = Alignment.CenterHorizontally,
         verticalArrangement = Arrangement.Center
@@ -1052,7 +1054,7 @@ fun EmptyContactsContent(
             imageVector = Icons.Outlined.Person,
             contentDescription = null,
             modifier = Modifier.size(80.dp),
-            tint = MaterialTheme.colorScheme.onSurfaceVariant
+            tint = MaterialTheme.colorScheme.onSurface
         )
 
         Spacer(modifier = Modifier.height(24.dp))

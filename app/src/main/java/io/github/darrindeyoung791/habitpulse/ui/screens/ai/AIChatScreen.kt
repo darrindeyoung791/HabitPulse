@@ -6,6 +6,7 @@ import androidx.activity.compose.BackHandler
 import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.core.Animatable
 import androidx.compose.animation.core.AnimationVector1D
+import androidx.compose.animation.core.spring
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
 import androidx.compose.animation.scaleIn
@@ -14,6 +15,8 @@ import androidx.compose.foundation.BorderStroke
 import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.combinedClickable
+import androidx.compose.foundation.gestures.awaitEachGesture
+import androidx.compose.foundation.gestures.awaitFirstDown
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
@@ -56,6 +59,9 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
+import androidx.compose.ui.input.pointer.pointerInput
+import androidx.compose.ui.input.pointer.positionChange
+import androidx.compose.ui.input.pointer.util.VelocityTracker
 import androidx.compose.ui.platform.LocalClipboardManager
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalDensity
@@ -107,6 +113,9 @@ import java.util.UUID
 /**
  * 新版 AI 对话界面：TopAppBar + 消息列表 + 底部输入栏。
  */
+
+/** 顶栏反向拖拽松手的动量投影时长（秒），与主页抽屉/Omnibox 把手手势一致。 */
+private const val DrawerFlingProjectionSeconds = 0.16f
 @OptIn(ExperimentalMaterial3Api::class, ExperimentalLayoutApi::class)
 @Composable
 fun AIChatScreen(
@@ -120,7 +129,14 @@ fun AIChatScreen(
     // 显着的手动创建习惯入口（顶栏图标 + 欢迎区卡片均触发）
     onManualCreateHabit: () -> Unit = {},
     // 可选：外部传入的形变进度，用于 TopAppBar 反向拖拽收起
-    progress: Animatable<Float, AnimationVector1D>? = null
+    progress: Animatable<Float, AnimationVector1D>? = null,
+    // 顶栏反向拖拽擦洗的行程（px）：宿主传入「Omnibox 把手到屏幕顶部的实测距离」，
+    // 与主页底部手势条的行程同源，保证正反两个方向的擦洗速率一致
+    collapseTravelPx: () -> Float = { 1000f },
+    // 主页 Omnibox「用 AI 创建/查询」chip 移交的完整提示词：
+    // 完全展开后自动以用户消息发送一次，随后回调 onAutoSendConsumed 置空
+    autoSendText: String? = null,
+    onAutoSendConsumed: () -> Unit = {}
 ) {
     val viewModel: AIChatViewModel = viewModel()
     val context = LocalContext.current
@@ -166,6 +182,23 @@ fun AIChatScreen(
             inputFocusRequester.requestFocus()
             keyboardController?.show()
         }
+    }
+
+    // 主页 Omnibox「用 AI 创建/查询」chip 移交的提示词：完全展开且空闲时
+    // 自动以用户消息发送一次（未配置 AI 时降级为填入输入框），随后回调消费。
+    // 以 progress.value 为 key：擦洗/动画跨过完全展开阈值的那一帧触发
+    LaunchedEffect(progress?.value, autoSendText, hasAIConfig, uiState.isGenerating) {
+        val prompt = autoSendText ?: return@LaunchedEffect
+        if (progress == null || progress.value < 0.999f) return@LaunchedEffect
+        if (uiState.isGenerating) return@LaunchedEffect
+        if (hasAIConfig) {
+            viewModel.sendMessage(prompt)
+        } else {
+            inputText = prompt
+            inputFocusRequester.requestFocus()
+            keyboardController?.show()
+        }
+        onAutoSendConsumed()
     }
     // 横屏时系统栏/摄像头在屏幕侧边，整个界面水平方向都要留出安全区。
     // 注意：Compose 的 displayCutout 在部分设备（本模拟器即如此）上报 0，
@@ -261,12 +294,108 @@ fun AIChatScreen(
 
     val scope = rememberCoroutineScope()
 
+    // ------------------------------------------------------------------
+    // 顶栏反向拖拽收回（嵌入形变模式专用）：在 TopAppBar 上向下拖拽时跟手
+    // 反向擦洗形变进度（1 → 0），作为 Omnibox 展开动画的镜像手势。
+    // - 仅 AI 未输出时启用；独立 Activity（progress == null）不挂载
+    // - 自定义检测器（同主页把手模式）：越过 touch slop 且向下位移率先越阈
+    //   才 engage；engage 前不消费任何事件，顶栏按钮点击不受影响
+    // - 松手动量投影（0.16s）取最近锚点：< 0.5 走 onCollapse 标准收起
+    //   （由主页执行草稿归还/触感），≥ 0.5 本地弹簧弹回展开态（规格与
+    //   主页展开动画一致：dampingRatio 0.8 / stiffness 280 + 释放初速）
+    // ------------------------------------------------------------------
+    val isGeneratingNow = rememberUpdatedState(uiState.isGenerating)
+    val collapseCallback = rememberUpdatedState(onCollapse)
+    val topBarCollapseDragModifier = if (progress != null) {
+        Modifier.pointerInput(progress) {
+            val touchSlop = viewConfiguration.touchSlop
+            val velocityTracker = VelocityTracker()
+            awaitEachGesture {
+                // down 后再守卫：awaitEachGesture 在 block 无挂起返回时会立即
+                // 重启下一轮迭代（主页同款热自旋教训）
+                val down = awaitFirstDown(requireUnconsumed = false)
+                if (isGeneratingNow.value) return@awaitEachGesture
+                var totalY = 0f
+                var engaged = false
+
+                while (true) {
+                    val event = awaitPointerEvent()
+                    val change = event.changes.firstOrNull { it.id == down.id } ?: break
+
+                    val delta = change.positionChange()
+                    totalY += delta.y
+
+                    if (engaged) {
+                        velocityTracker.addPosition(change.uptimeMillis, change.position)
+                    }
+                    if (!change.pressed) break
+
+                    if (!engaged) {
+                        // 子组件（滚动列表等）已认领指针流则立即放弃
+                        if (change.isConsumed) break
+                        if (totalY > touchSlop && progress.value > 0.01f) {
+                            engaged = true
+                            velocityTracker.resetTracking()
+                            velocityTracker.addPosition(change.uptimeMillis, change.position)
+                        } else if (-totalY > touchSlop) {
+                            // 上滑意图：不属于收回手势
+                            break
+                        }
+                    }
+
+                    if (engaged) {
+                        change.consume()
+                        val dy = delta.y
+                        // AwaitPointerEventScope 受限挂起作用域，经 scope.launch 落帧
+                        scope.launch {
+                            val travelPx = collapseTravelPx().coerceAtLeast(1f)
+                            progress.snapTo(
+                                (progress.value - dy / travelPx).coerceIn(0f, 1f)
+                            )
+                        }
+                    }
+                }
+
+                if (engaged) {
+                    val vy = velocityTracker.calculateVelocity().y // 向下为正
+                    val travelPx = collapseTravelPx().coerceAtLeast(1f)
+                    val velocityProgressPerSec = -vy / travelPx
+                    val projected =
+                        progress.value + velocityProgressPerSec * DrawerFlingProjectionSeconds
+                    if (projected <= 0.5f || progress.value <= 0.001f) {
+                        collapseCallback.value()
+                    } else {
+                        scope.launch {
+                            val startValue = progress.value
+                            progress.animateTo(
+                                targetValue = 1f,
+                                animationSpec = spring(
+                                    dampingRatio = 0.8f,
+                                    stiffness = 280f
+                                ),
+                                initialVelocity = velocityProgressPerSec.coerceIn(-8f, 8f)
+                            )
+                            // 弹回完全展开落定时震动一次（起点已展开则跳过）
+                            if (startValue < 0.999f && progress.value >= 0.999f && hapticsEnabled) {
+                                vibrateShort(context, vibrationDuration, vibrationAmplitude)
+                            }
+                        }
+                    }
+                }
+            }
+        }
+    } else {
+        Modifier
+    }
+
     Scaffold(
             contentWindowInsets = WindowInsets(0, 0, 0, 0),
             topBar = {
                 var showMenu by remember { mutableStateOf(false) }
                 TopAppBar(
-                    modifier = Modifier.windowInsetsPadding(chatHorizontalInsets),
+                    modifier = Modifier
+                        .windowInsetsPadding(chatHorizontalInsets)
+                        .then(topBarCollapseDragModifier),
                     title = {
                         Text(
                             text = if (uiState.isGenerating) stringResource(R.string.ai_streaming_title)
@@ -309,13 +438,15 @@ fun AIChatScreen(
                     ) {
                         Icon(
                             imageVector = Icons.Filled.MoreVert,
-                            contentDescription = stringResource(R.string.settings_ai_title)
+                            contentDescription = stringResource(R.string.settings_category_ai)
                         )
                     }
                     DropdownMenu(
                         expanded = showMenu,
                         onDismissRequest = { showMenu = false }
                     ) {
+                    val tokenMenuInteractionSource = remember { MutableInteractionSource() }
+                    PressVibrationFeedback(interactionSource = tokenMenuInteractionSource)
                     DropdownMenuItem(
                         text = {
                             Text(
@@ -328,6 +459,7 @@ fun AIChatScreen(
                             )
                         },
                         onClick = { showMenu = false },
+                        interactionSource = tokenMenuInteractionSource,
                         leadingIcon = {
                             Icon(
                                 imageVector = Icons.Outlined.Info,
@@ -337,14 +469,17 @@ fun AIChatScreen(
                         }
                     )
                     HorizontalDivider()
+                    val aiConfigMenuInteractionSource = remember { MutableInteractionSource() }
+                    PressVibrationFeedback(interactionSource = aiConfigMenuInteractionSource)
                     DropdownMenuItem(
-                        text = { Text(stringResource(R.string.settings_ai_title)) },
+                        text = { Text(stringResource(R.string.settings_category_ai)) },
                         onClick = {
                             showMenu = false
                             context.startActivity(
                                 android.content.Intent(context, SettingsAIActivity::class.java)
                             )
                         },
+                        interactionSource = aiConfigMenuInteractionSource,
                     leadingIcon = {
                         Icon(
                             imageVector = Icons.Outlined.Settings,
@@ -355,12 +490,15 @@ fun AIChatScreen(
                     )
                     if (messages.isNotEmpty()) {
                         HorizontalDivider()
+                        val manualMenuInteractionSource = remember { MutableInteractionSource() }
+                        PressVibrationFeedback(interactionSource = manualMenuInteractionSource)
                         DropdownMenuItem(
                             text = { Text(stringResource(R.string.ai_chat_manual_create)) },
                             onClick = {
                                 showMenu = false
                                 onManualCreateHabit()
                             },
+                            interactionSource = manualMenuInteractionSource,
                             leadingIcon = {
                                 Icon(
                                     imageVector = Icons.Outlined.Edit,
@@ -428,9 +566,6 @@ fun AIChatScreen(
                 if (messages.isEmpty()) {
                     item(key = "welcome") {
                         AIWelcomeContent(
-                            onSuggestionClick = { suggestion ->
-                                viewModel.sendMessage(suggestion)
-                            },
                             onManualCreateHabit = onManualCreateHabit,
                             hasAIConfig = hasAIConfig,
                             onNavigateToSettings = onNavigateToSettings
@@ -675,10 +810,9 @@ private fun UserChatBubble(text: String) {
     }
 }
 
-/** 空会话欢迎态：居中图标 + 问候语 + 示例提问 chips（紧凑流式排布）+ 手动创建习惯入口。 */
+/** 空会话欢迎态：居中图标 + 问候语 + 手动创建习惯入口（无配置时附添加提供商入口）。 */
 @Composable
 private fun AIWelcomeContent(
-    onSuggestionClick: (String) -> Unit,
     onManualCreateHabit: () -> Unit = {},
     hasAIConfig: Boolean = true,
     onNavigateToSettings: () -> Unit = {}
@@ -720,31 +854,6 @@ private fun AIWelcomeContent(
             textAlign = TextAlign.Center
         )
         Spacer(modifier = Modifier.height(16.dp))
-
-        if (hasAIConfig) {
-            // 有 AI 配置：示例提问 chips
-            val suggestions = listOf(
-                stringResource(R.string.ai_chat_suggestion_create),
-                stringResource(R.string.ai_chat_suggestion_search),
-                stringResource(R.string.ai_chat_suggestion_setting)
-            )
-            FlowRow(
-                horizontalArrangement = Arrangement.spacedBy(6.dp, Alignment.CenterHorizontally),
-                verticalArrangement = Arrangement.spacedBy(4.dp),
-                modifier = Modifier.fillMaxWidth()
-            ) {
-                suggestions.forEach { suggestion ->
-                    val chipInteractionSource = remember { MutableInteractionSource() }
-                    PressVibrationFeedback(interactionSource = chipInteractionSource)
-                    SuggestionChip(
-                        onClick = { onSuggestionClick(suggestion) },
-                        interactionSource = chipInteractionSource,
-                        label = { Text(suggestion) }
-                    )
-                }
-            }
-            Spacer(modifier = Modifier.height(16.dp))
-        }
 
         // 手动创建习惯 + AI 设置（listitem 风格，同一分组）
         val itemCount = if (hasAIConfig) 1 else 2
@@ -1416,17 +1525,26 @@ private fun DarkModeDropdown(
             expanded = expanded,
             onDismissRequest = { expanded = false }
         ) {
+            val lightModeInteractionSource = remember { MutableInteractionSource() }
+            PressVibrationFeedback(interactionSource = lightModeInteractionSource)
             DropdownMenuItem(
                 text = { Text(stringResource(R.string.ai_setting_dark_mode_light)) },
-                onClick = { onModeSelected(2); expanded = false }
+                onClick = { onModeSelected(2); expanded = false },
+                interactionSource = lightModeInteractionSource
             )
+            val darkModeInteractionSource = remember { MutableInteractionSource() }
+            PressVibrationFeedback(interactionSource = darkModeInteractionSource)
             DropdownMenuItem(
                 text = { Text(stringResource(R.string.ai_setting_dark_mode_dark)) },
-                onClick = { onModeSelected(1); expanded = false }
+                onClick = { onModeSelected(1); expanded = false },
+                interactionSource = darkModeInteractionSource
             )
+            val followSystemInteractionSource = remember { MutableInteractionSource() }
+            PressVibrationFeedback(interactionSource = followSystemInteractionSource)
             DropdownMenuItem(
                 text = { Text(stringResource(R.string.ai_setting_dark_mode_follow_system)) },
-                onClick = { onModeSelected(0); expanded = false }
+                onClick = { onModeSelected(0); expanded = false },
+                interactionSource = followSystemInteractionSource
             )
         }
     }
@@ -1534,7 +1652,7 @@ private fun settingsPageLabelRes(page: String): Int = when (page) {
     "notifications" -> R.string.settings_notifications
     "general" -> R.string.settings_category_general
     "about" -> R.string.settings_about
-    "ai" -> R.string.settings_ai_title
+    "ai" -> R.string.settings_category_ai
     else -> R.string.settings_title
 }
 
@@ -1909,6 +2027,8 @@ private fun TimePickerDialogWithTimes(
                 } else {
                     TimeInput(state = timePickerState)
                 }
+                val addTimeInteractionSource = remember { MutableInteractionSource() }
+                PressVibrationFeedback(interactionSource = addTimeInteractionSource)
                 OutlinedButton(
                     onClick = {
                         val hh = "%02d".format(timePickerState.hour)
@@ -1918,6 +2038,7 @@ private fun TimePickerDialogWithTimes(
                             times = (times + newTime).toMutableList()
                         }
                     },
+                    interactionSource = addTimeInteractionSource,
                     modifier = Modifier.fillMaxWidth()
                 ) {
                     Icon(

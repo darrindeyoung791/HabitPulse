@@ -620,9 +620,10 @@
     <string name="ai_chat_token_calls">调用：%1$d 次</string>
     <string name="ai_chat_welcome_title">我是你的 AI 习惯助手</string>
     <string name="ai_chat_welcome_subtitle">可以让我创建、查找、修改或删除习惯，也可以帮你调整应用设置。</string>
-    <string name="ai_chat_suggestion_create">帮我创建一个读书习惯</string>
-    <string name="ai_chat_suggestion_search">去除重复的习惯</string>
-    <string name="ai_chat_suggestion_setting">帮我打开通知设置</string>
+    <string name="ai_omnibox_ai_create">用 AI 创建</string>
+    <string name="ai_omnibox_ai_search">用 AI 查询</string>
+    <string name="ai_chat_auto_create_prompt">请帮我创建习惯：「%1$s」</string>
+    <string name="ai_chat_auto_search_prompt">请帮我查找与「%1$s」相关的习惯</string>
     <string name="ai_chat_setting_change_format">%1$s → %2$s</string>
     <string name="ai_chat_on">开</string>
     <string name="ai_chat_off">关</string>
