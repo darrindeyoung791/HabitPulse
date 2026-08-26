@@ -38,6 +38,7 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.rotate
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.vector.ImageVector
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
@@ -74,6 +75,10 @@ fun SettingsSegmentedItem(
     showArrow: Boolean = true,
     tintIndex: Int = index,
     selected: Boolean = false,
+    // 未选中态容器色覆盖：null = 默认 surfaceContainer。
+    // 平板双栏左栏（整体 surfaceContainer 底）用它把列表项反转为 surface，
+    // 与右栏面板底色一致；选中态 secondaryContainer 不受影响
+    containerColorOverride: Color? = null,
     clickable: Boolean = true,
     onClick: () -> Unit,
     trailing: @Composable () -> Unit = {
@@ -94,6 +99,7 @@ fun SettingsSegmentedItem(
         count = count,
         enabled = enabled,
         selected = selected,
+        containerColorOverride = containerColorOverride,
         clickable = clickable,
         onClick = onClick,
         leading = {
@@ -152,6 +158,8 @@ internal fun SettingsListSurface(
     supportingText: String?,
     trailing: @Composable () -> Unit,
     selected: Boolean = false,
+    // 未选中态容器色覆盖：null = 默认 surfaceContainer（平板双栏左栏反转用）
+    containerColorOverride: Color? = null,
     clickable: Boolean = true,
     interactionSource: MutableInteractionSource = remember { MutableInteractionSource() }
 ) {
@@ -168,7 +176,11 @@ internal fun SettingsListSurface(
     val bottomEnd by animateDpAsState(if (isPressed) PressedCorner else if (index == count - 1) LargeCorner else SmallCorner)
     val shape = RoundedCornerShape(topStart, topEnd, bottomEnd, bottomStart)
 
-    val containerColor = if (selected) MaterialTheme.colorScheme.secondaryContainer else MaterialTheme.colorScheme.surfaceContainer
+    val containerColor = when {
+        selected -> MaterialTheme.colorScheme.secondaryContainer
+        containerColorOverride != null -> containerColorOverride
+        else -> MaterialTheme.colorScheme.surfaceContainer
+    }
     val headlineColor = when {
         !enabled -> MaterialTheme.colorScheme.onSurfaceVariant
         selected -> MaterialTheme.colorScheme.onSecondaryContainer

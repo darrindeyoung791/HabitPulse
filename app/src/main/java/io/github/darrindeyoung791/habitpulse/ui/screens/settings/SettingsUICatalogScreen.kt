@@ -31,7 +31,6 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.unit.dp
-import io.github.darrindeyoung791.habitpulse.ui.screens.dnd.DndRangeSlider
 import io.github.darrindeyoung791.habitpulse.ui.screens.settings.components.SettingsExpandableListSurface
 import io.github.darrindeyoung791.habitpulse.ui.screens.settings.components.SettingsSectionHeader
 import io.github.darrindeyoung791.habitpulse.ui.screens.settings.components.SettingsSegmentedBox
@@ -47,21 +46,21 @@ import io.github.darrindeyoung791.habitpulse.ui.utils.PressVibrationFeedback
 @Composable
 fun SettingsUICatalogScreen(
     onBack: () -> Unit,
+    // 平板双栏：三级页面保留返回按钮（弹栈）
+    showBack: Boolean = true,
     onOpenHelp: () -> Unit
 ) {
     var firstSwitchOn by remember { mutableStateOf(true) }
     var secondSwitchOn by remember { mutableStateOf(false) }
     var expandableOpen by remember { mutableStateOf(false) }
     var selectedNumberIndex by remember { mutableIntStateOf(1) }
-    var sliderExpanded by remember { mutableStateOf(true) }
-    var sliderStart by remember { mutableStateOf("23:00") }
-    var sliderEnd by remember { mutableStateOf("07:00") }
     var showDialog by remember { mutableStateOf(false) }
 
     SettingsScaffold(
         title = "UI catalog",
         onBack = onBack,
         onHelp = onOpenHelp,
+        showBack = showBack,
         reserveFabSpace = true,
         floatingActionButton = {
             val fabInteractionSource = remember { MutableInteractionSource() }
@@ -241,38 +240,6 @@ fun SettingsUICatalogScreen(
                     modifier = Modifier
                         .fillMaxWidth()
                         .padding(start = 16.dp, end = 16.dp, top = 6.dp, bottom = 16.dp)
-                )
-            }
-        }
-
-        SettingsSectionHeader(text = "Sliders")
-        SettingsSegmentedGroup {
-            val sliderInteractionSource = remember { MutableInteractionSource() }
-            SettingsExpandableListSurface(
-                index = 0,
-                count = 1,
-                expanded = sliderExpanded,
-                onToggle = { sliderExpanded = !sliderExpanded },
-                headline = "Switch-expanded slider",
-                supportingText = "Do-not-disturb pattern: the range slider lives inside the same surface as its switch row — no gap between them",
-                interactionSource = sliderInteractionSource,
-                trailing = {
-                    Switch(
-                        checked = sliderExpanded,
-                        onCheckedChange = null,
-                        interactionSource = sliderInteractionSource,
-                        colors = ThemeSwitchColors()
-                    )
-                }
-            ) {
-                DndRangeSlider(
-                    startTime = sliderStart,
-                    endTime = sliderEnd,
-                    onStartTimeChange = { sliderStart = it },
-                    onEndTimeChange = { sliderEnd = it },
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(horizontal = 16.dp)
                 )
             }
         }

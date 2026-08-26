@@ -28,7 +28,6 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
 import androidx.lifecycle.compose.collectAsStateWithLifecycle
-import io.github.darrindeyoung791.habitpulse.OpenSourceLicensesActivity
 import io.github.darrindeyoung791.habitpulse.R
 import io.github.darrindeyoung791.habitpulse.WebViewActivity
 import io.github.darrindeyoung791.habitpulse.data.preferences.UserPreferences
@@ -45,8 +44,11 @@ import kotlinx.coroutines.launch
 @Composable
 fun SettingsAboutDetailScreen(
     onBack: () -> Unit,
+    // 平板双栏：右侧面板的子页面根页隐藏返回按钮（无处可返回）
+    showBack: Boolean = true,
     onOpenHelp: () -> Unit,
-    onNavigateDebug: () -> Unit
+    onNavigateDebug: () -> Unit,
+    onOpenLicenses: () -> Unit
 ) {
     val context = LocalContext.current
 
@@ -89,7 +91,8 @@ fun SettingsAboutDetailScreen(
     SettingsScaffold(
         title = stringResource(id = R.string.settings_about),
         onBack = onBack,
-        onHelp = onOpenHelp
+        onHelp = onOpenHelp,
+        showBack = showBack
     ) {
         Text(
             text = stringResource(id = R.string.settings_privacy_notice, appName),
@@ -139,10 +142,7 @@ fun SettingsAboutDetailScreen(
                 headline = stringResource(id = R.string.settings_open_source_licenses),
                 supportingText = stringResource(id = R.string.settings_open_source_licenses_description),
                 leadingIcon = Icons.AutoMirrored.Outlined.Article,
-                onClick = {
-                    val intent = Intent(context, OpenSourceLicensesActivity::class.java)
-                    context.startActivity(intent)
-                }
+                onClick = onOpenLicenses
             )
         }
 

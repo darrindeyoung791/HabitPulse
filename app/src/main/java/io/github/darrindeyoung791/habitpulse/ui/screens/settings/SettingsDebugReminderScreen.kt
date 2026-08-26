@@ -57,6 +57,8 @@ import java.util.Locale
 @Composable
 fun SettingsDebugReminderScreen(
     onBack: () -> Unit,
+    // 平板双栏：三级页面保留返回按钮（弹栈）
+    showBack: Boolean = true,
     onOpenHelp: () -> Unit
 ) {
     val context = LocalContext.current
@@ -72,7 +74,8 @@ fun SettingsDebugReminderScreen(
     SettingsScaffold(
         title = stringResource(id = R.string.settings_debug_reminder_title),
         onBack = onBack,
-        onHelp = onOpenHelp
+        onHelp = onOpenHelp,
+        showBack = showBack
     ) {
         SettingsSectionHeader(text = stringResource(id = R.string.reminder_settings_keepalive_status))
         StatusRow(

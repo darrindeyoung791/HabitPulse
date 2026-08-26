@@ -67,6 +67,8 @@ import java.io.File
 @Composable
 fun SettingsGeneralScreen(
     onBack: () -> Unit,
+    // 平板双栏：右侧面板的子页面根页隐藏返回按钮（无处可返回）
+    showBack: Boolean = true,
     onOpenHelp: () -> Unit,
     onOpenLanguage: () -> Unit,
     onOpenFontScale: () -> Unit
@@ -78,7 +80,8 @@ fun SettingsGeneralScreen(
     var showClearCacheDialog by remember { mutableStateOf(false) }
     var showClearCookiesDialog by remember { mutableStateOf(false) }
 
-    val isTabletLandscape = rememberDeviceFormInfo().isTabletLandscape
+    val deviceFormInfo = rememberDeviceFormInfo()
+    val isTabletLandscape = deviceFormInfo.isTabletLandscape
     val showForceTabletLandscapeSwitch = !isTabletLandscape
 
     val forceTabletLandscape by userPreferences.forceTabletLandscapeFlow.collectAsStateWithLifecycle(initialValue = false)
@@ -88,10 +91,26 @@ fun SettingsGeneralScreen(
     var showForceTabletLandscapeDialog by remember { mutableStateOf(false) }
     var pendingForceTabletLandscapeValue by remember { mutableStateOf(false) }
 
+    /**
+     * 持久化强制平板横屏开关。
+     *
+     * 不在此处 recreate 宿主 Activity——SettingsGeneralActivity 是子页面，
+     * recreate 它对父级 SettingsActivity 无影响（SettingsActivity 在 back stack 中
+     * 不会被 recreate 触发）。正确做法：依赖 DataStore flow 自动传播——
+     * SettingsActivity 的 forceTabletLandscapeFlow 收集到新值后自动重组，
+     * 在用户返回设置主页时切换到双栏布局。
+     */
+    fun applyForceTabletLandscape(newValue: Boolean) {
+        scope.launch {
+            userPreferences.setForceTabletLandscape(newValue)
+        }
+    }
+
     SettingsScaffold(
         title = stringResource(id = R.string.settings_category_general),
         onBack = onBack,
-        onHelp = onOpenHelp
+        onHelp = onOpenHelp,
+        showBack = showBack
     ) {
         // 语言组（独立一组，带段标题）
         SettingsSectionHeader(text = stringResource(id = R.string.settings_language))
@@ -164,9 +183,7 @@ fun SettingsGeneralScreen(
                                 pendingForceTabletLandscapeValue = true
                                 showForceTabletLandscapeDialog = true
                             } else {
-                                scope.launch {
-                                    userPreferences.setForceTabletLandscape(false)
-                                }
+                                applyForceTabletLandscape(false)
                             }
                         }
                     )
@@ -259,9 +276,7 @@ fun SettingsGeneralScreen(
             confirmButton = {
                 TextButton(onClick = {
                     showForceTabletLandscapeDialog = false
-                    scope.launch {
-                        userPreferences.setForceTabletLandscape(pendingForceTabletLandscapeValue)
-                    }
+                    applyForceTabletLandscape(pendingForceTabletLandscapeValue)
                 }) { Text(stringResource(id = R.string.dialog_confirm)) }
             },
             dismissButton = {

@@ -51,6 +51,8 @@ import kotlinx.coroutines.launch
 @Composable
 fun SettingsDebugVibrationScreen(
     onBack: () -> Unit,
+    // 平板双栏：三级页面保留返回按钮（弹栈）
+    showBack: Boolean = true,
     onOpenHelp: () -> Unit
 ) {
     val context = LocalContext.current
@@ -66,7 +68,8 @@ fun SettingsDebugVibrationScreen(
     SettingsScaffold(
         title = stringResource(id = R.string.settings_debug_vibration_title),
         onBack = onBack,
-        onHelp = onOpenHelp
+        onHelp = onOpenHelp,
+        showBack = showBack
     ) {
         SettingsSectionHeader(text = stringResource(id = R.string.settings_debug_vibration_duration_group))
         SettingsSegmentedBox(index = 0, count = 1) {

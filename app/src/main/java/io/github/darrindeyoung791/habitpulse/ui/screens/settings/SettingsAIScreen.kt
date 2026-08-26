@@ -51,6 +51,8 @@ import kotlinx.coroutines.launch
 @Composable
 fun SettingsAIScreen(
     onBack: () -> Unit,
+    // 平板双栏：右侧面板的子页面根页隐藏返回按钮（无处可返回）
+    showBack: Boolean = true,
     onOpenHelp: () -> Unit,
     onAddConfig: () -> Unit,
     onEditConfig: (configId: String) -> Unit
@@ -69,6 +71,7 @@ fun SettingsAIScreen(
         title = stringResource(id = R.string.settings_category_ai),
         onBack = onBack,
         onHelp = onOpenHelp,
+        showBack = showBack,
         contentPadding = PaddingValues(16.dp)
     ) {
         SettingsSectionHeader(text = stringResource(id = R.string.ai_config_providers))

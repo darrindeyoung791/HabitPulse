@@ -385,6 +385,8 @@
     <string name="settings_reminder_dnd_start">Start</string>
     <string name="settings_reminder_dnd_end">End</string>
     <string name="settings_reminder_dnd_to">to</string>
+    <string name="settings_dnd_start_time">Start time: %1$s</string>
+    <string name="settings_dnd_end_time">End time: %1$s</string>
     <string name="settings_reminder_settings">Reminder Settings</string>
     <string name="settings_reminder_settings_description">Check keep-alive status and send test notification</string>
 
@@ -608,7 +610,7 @@
     <string name="ai_omnibox_ai_create">Create with AI</string>
     <string name="ai_omnibox_ai_search">Search with AI</string>
     <string name="ai_chat_auto_create_prompt">Please create a habit: \"%1$s\"</string>
-    <string name="ai_chat_auto_search_prompt">Please find habits related to \"%1$s\"</string>
+    <string name="ai_chat_auto_search_prompt">Please find habits or settings related to \"%1$s\"</string>
     <string name="ai_chat_setting_change_format">%1$s → %2$s</string>
     <string name="ai_chat_on">On</string>
     <string name="ai_chat_off">Off</string>

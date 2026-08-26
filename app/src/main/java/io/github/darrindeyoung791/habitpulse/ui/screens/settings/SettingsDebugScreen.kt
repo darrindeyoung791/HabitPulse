@@ -36,6 +36,8 @@ import kotlinx.coroutines.launch
 @Composable
 fun SettingsDebugScreen(
     onBack: () -> Unit,
+    // 平板双栏：调试页为「关于」的二级页面，保留返回按钮（弹栈）
+    showBack: Boolean = true,
     onOpenHelp: () -> Unit,
     onNavigateDebugReminder: () -> Unit,
     onNavigateDebugVibration: () -> Unit,
@@ -56,7 +58,8 @@ fun SettingsDebugScreen(
     SettingsScaffold(
         title = stringResource(id = R.string.settings_debug_title),
         onBack = onBack,
-        onHelp = onOpenHelp
+        onHelp = onOpenHelp,
+        showBack = showBack
     ) {
         SettingsSegmentedGroup {
             SettingsSegmentedItem(

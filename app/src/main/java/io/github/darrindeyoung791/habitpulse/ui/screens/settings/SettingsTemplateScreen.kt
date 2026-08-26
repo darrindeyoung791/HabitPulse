@@ -40,6 +40,8 @@ import kotlinx.coroutines.launch
 @Composable
 fun SettingsTemplateScreen(
     onBack: () -> Unit,
+    // 平板双栏：二级页面保留返回按钮（弹栈）
+    showBack: Boolean = true,
     onOpenHelp: () -> Unit
 ) {
     val context = LocalContext.current
@@ -69,6 +71,7 @@ fun SettingsTemplateScreen(
         title = stringResource(id = R.string.notification_template_settings_title),
         onBack = handleBack,
         onHelp = onOpenHelp,
+        showBack = showBack,
         reserveFabSpace = true,
         floatingActionButton = {
             val fabInteractionSource = remember { MutableInteractionSource() }

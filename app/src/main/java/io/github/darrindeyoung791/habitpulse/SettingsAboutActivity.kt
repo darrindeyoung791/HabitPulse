@@ -38,6 +38,9 @@ private fun SettingsAboutContent() {
         onOpenHelp = onHelp,
         onNavigateDebug = {
             context.startActivity(Intent(context, SettingsDebugActivity::class.java))
+        },
+        onOpenLicenses = {
+            context.startActivity(Intent(context, OpenSourceLicensesActivity::class.java))
         }
     )
 }

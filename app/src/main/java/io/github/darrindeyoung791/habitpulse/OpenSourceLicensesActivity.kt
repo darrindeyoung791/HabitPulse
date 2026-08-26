@@ -82,10 +82,6 @@ class OpenSourceLicensesActivity : ComponentActivity() {
 @Composable
 fun OpenSourceLicensesScreen() {
     val context = LocalContext.current
-    val libraries by produceLibraries(R.raw.aboutlibraries)
-    val listState = rememberLazyListState()
-    var licenseDialogLibrary by remember { mutableStateOf<Library?>(null) }
-
     Scaffold(
         modifier = Modifier.fillMaxSize(),
         topBar = {
@@ -109,33 +105,43 @@ fun OpenSourceLicensesScreen() {
             )
         }
     ) { innerPadding ->
-        val libs = libraries?.libraries.orEmpty()
-        Box(
-            modifier = Modifier
-                .fillMaxSize()
-                .padding(innerPadding)
-        ) {
-            LazyColumn(
-                state = listState,
-                modifier = Modifier.fillMaxSize(),
-                contentPadding = PaddingValues(16.dp),
-                verticalArrangement = Arrangement.spacedBy(SettingsGroupItemGap)
-            ) {
-                itemsIndexed(libs) { index, library ->
-                    LibraryExpandableRow(
-                        index = index,
-                        count = libs.size,
-                        library = library,
-                        onLicenseContentRequest = { licenseDialogLibrary = it }
-                    )
-                }
-            }
+        OpenSourceLicensesContent(modifier = Modifier.padding(innerPadding))
+    }
+}
 
-            Md3ScrollbarOverlay(
-                listState = listState,
-                modifier = Modifier.matchParentSize()
-            )
+/**
+ * 开放源代码许可列表内容（不含 Scaffold/TopAppBar），供独立 Activity 与
+ * 平板双栏右侧面板共用。
+ */
+@OptIn(ExperimentalMaterial3Api::class, ExperimentalLayoutApi::class)
+@Composable
+fun OpenSourceLicensesContent(modifier: Modifier = Modifier) {
+    val libraries by produceLibraries(R.raw.aboutlibraries)
+    val listState = rememberLazyListState()
+    var licenseDialogLibrary by remember { mutableStateOf<Library?>(null) }
+
+    val libs = libraries?.libraries.orEmpty()
+    Box(modifier = modifier.fillMaxSize()) {
+        LazyColumn(
+            state = listState,
+            modifier = Modifier.fillMaxSize(),
+            contentPadding = PaddingValues(16.dp),
+            verticalArrangement = Arrangement.spacedBy(SettingsGroupItemGap)
+        ) {
+            itemsIndexed(libs) { index, library ->
+                LibraryExpandableRow(
+                    index = index,
+                    count = libs.size,
+                    library = library,
+                    onLicenseContentRequest = { licenseDialogLibrary = it }
+                )
+            }
         }
+
+        Md3ScrollbarOverlay(
+            listState = listState,
+            modifier = Modifier.matchParentSize()
+        )
     }
 
     licenseDialogLibrary?.let { library ->

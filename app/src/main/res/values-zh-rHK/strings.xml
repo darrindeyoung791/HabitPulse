@@ -385,6 +385,8 @@
     <string name="settings_reminder_dnd_start">開始</string>
     <string name="settings_reminder_dnd_end">結束</string>
     <string name="settings_reminder_dnd_to">至</string>
+    <string name="settings_dnd_start_time">設定開始時間：%1$s</string>
+    <string name="settings_dnd_end_time">設定結束時間：%1$s</string>
     <string name="settings_reminder_settings">提醒設定</string>
     <string name="settings_reminder_settings_description">查看保活狀態和發送測試通知</string>
 
@@ -608,7 +610,7 @@
     <string name="ai_omnibox_ai_create">用 AI 建立</string>
     <string name="ai_omnibox_ai_search">用 AI 查詢</string>
     <string name="ai_chat_auto_create_prompt">請幫我建立習慣：「%1$s」</string>
-    <string name="ai_chat_auto_search_prompt">請幫我搜尋與「%1$s」相關的習慣</string>
+    <string name="ai_chat_auto_search_prompt">請幫我查詢與「%1$s」相關的習慣或設定項</string>
     <string name="ai_chat_setting_change_format">%1$s → %2$s</string>
     <string name="ai_chat_on">開</string>
     <string name="ai_chat_off">關</string>

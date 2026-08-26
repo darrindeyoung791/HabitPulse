@@ -22,13 +22,16 @@ import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Text
 import androidx.compose.material3.TopAppBar
+import androidx.compose.material3.TopAppBarDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.compositionLocalOf
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberUpdatedState
 import androidx.compose.runtime.snapshotFlow
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
@@ -40,6 +43,13 @@ import io.github.darrindeyoung791.habitpulse.ui.utils.rememberHapticsEnabled
 import io.github.darrindeyoung791.habitpulse.ui.utils.rememberPressVibrationParams
 import io.github.darrindeyoung791.habitpulse.ui.utils.vibrateShort
 
+/**
+ * 设置容器色覆盖：平板双栏右侧面板内嵌子页面时，宿主提供透明值，
+ * 让内层 Scaffold / TopAppBar 不自绘背景，露出面板的 surfaceContainer 底色。
+ * 其余场景为 null，走默认 surface 背景（行为不变）。
+ */
+val LocalSettingsContainerColor = compositionLocalOf<Color?> { null }
+
 @OptIn(ExperimentalMaterial3Api::class)
 @Composable
 fun SettingsScaffold(
@@ -48,13 +58,18 @@ fun SettingsScaffold(
     onHelp: (() -> Unit)? = null,
     contentPadding: PaddingValues = PaddingValues(horizontal = 16.dp, vertical = 16.dp),
     reserveFabSpace: Boolean = false,
+    // false 时不渲染返回按钮（平板双栏右侧面板的子页面根页：无处可返回）
+    showBack: Boolean = true,
     floatingActionButton: @Composable () -> Unit = {},
     content: @Composable ColumnScope.() -> Unit
 ) {
+    // 双栏面板内嵌时由宿主提供透明容器色，露出外层面板的背景变体色
+    val containerOverride = LocalSettingsContainerColor.current
     Scaffold(
         modifier = Modifier
             .fillMaxSize()
             .imePadding(),
+        containerColor = containerOverride ?: MaterialTheme.colorScheme.surface,
         topBar = {
             TopAppBar(
                 title = {
@@ -63,18 +78,24 @@ fun SettingsScaffold(
                         style = MaterialTheme.typography.titleLarge
                     )
                 },
+                colors = TopAppBarDefaults.topAppBarColors(
+                    containerColor = containerOverride ?: MaterialTheme.colorScheme.surface,
+                    scrolledContainerColor = containerOverride ?: MaterialTheme.colorScheme.surface
+                ),
                 navigationIcon = {
-                    val backInteractionSource = remember { MutableInteractionSource() }
-                    IconButton(
-                        onClick = onBack,
-                        interactionSource = backInteractionSource
-                    ) {
-                        Icon(
-                            imageVector = Icons.AutoMirrored.Filled.ArrowBack,
-                            contentDescription = stringResource(id = R.string.settings_back)
-                        )
+                    if (showBack) {
+                        val backInteractionSource = remember { MutableInteractionSource() }
+                        IconButton(
+                            onClick = onBack,
+                            interactionSource = backInteractionSource
+                        ) {
+                            Icon(
+                                imageVector = Icons.AutoMirrored.Filled.ArrowBack,
+                                contentDescription = stringResource(id = R.string.settings_back)
+                            )
+                        }
+                        PressVibrationFeedback(interactionSource = backInteractionSource)
                     }
-                    PressVibrationFeedback(interactionSource = backInteractionSource)
                 },
                 actions = {
                     if (onHelp != null) {
