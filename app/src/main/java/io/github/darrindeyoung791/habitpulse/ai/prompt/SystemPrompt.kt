@@ -30,7 +30,7 @@ object SystemPrompt {
      */
     fun getChatSystemPrompt(context: Context): String {
         val template = runCatching {
-            context.assets.open("prompts/chat_system_prompt.md")
+            context.assets.open("prompts/chat-system-prompt.md")
                 .bufferedReader(StandardCharsets.UTF_8)
                 .use { it.readText() }
         }.getOrNull()

@@ -44,7 +44,7 @@
 
 ## 6. 文案与系统提示词
 
-- [x] 6.1 新增系统提示词 `assets/prompts/chat_system_prompt.md`（tool-calling 专用）；按 devdoc §8 明确工具与设置/编辑/删除规则
+- [x] 6.1 新增系统提示词 `assets/prompts/chat-system-prompt.md`（tool-calling 专用）；按 devdoc §8 明确工具与设置/编辑/删除规则
 - [x] 6.2 `values/` + `values-en-rUS` + `values-en-rGB` + `values-zh-rHK` + `values-zh-rTW` 新增全部界面与卡片文案（含 ProviderSwitcher、清除对话、确认离开、Token 展示、设置白名单名）
 - [ ] 6.3 卡片触感：可点击卡片/开关复用 `PressVibrationFeedback`；设置图标用 AccentSeeds 种子色（本次省略——旧 AI 界面亦未接入触感，且不作为验收项；留待后续统一接入）
 
