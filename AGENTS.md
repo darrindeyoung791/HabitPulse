@@ -139,12 +139,12 @@ docs/                            # VitePress user-facing documentation site
 
 ## Design Guidelines
 
-- 使用 Material Design 3 规范设计界面
-    - 优先使用 Material Design 3 原生控件而非自绘控件，且保证 TalkBack 正确识别交互
-    - 优先使用 Material Design 3 配色语义与排版语义
-- 使用 Material Icon，绝对禁止使用 emoji
-- 除非明显提及，不要为控件使用阴影元素
-- 遵守 devdoc 下的其余 UX 相关的规范
+- Design interfaces following Material Design 3 specifications
+    - Prefer native Material Design 3 controls over custom-drawn controls, and ensure TalkBack correctly identifies interactions
+    - Prefer Material Design 3 color semantics and typography semantics
+- Use Material Icons; emoji are strictly prohibited
+- Unless explicitly mentioned, do not use shadow elements for controls
+- Follow other UX-related guidelines under `devdoc/`
 
 ## i18n Rules
 

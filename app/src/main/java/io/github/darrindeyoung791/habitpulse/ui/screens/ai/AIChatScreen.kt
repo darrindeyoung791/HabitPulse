@@ -568,7 +568,11 @@ fun AIChatScreen(
                         AIWelcomeContent(
                             onManualCreateHabit = onManualCreateHabit,
                             hasAIConfig = hasAIConfig,
-                            application = application
+                            onNavigateToAISettings = {
+                                context.startActivity(
+                                    android.content.Intent(context, SettingsAIActivity::class.java)
+                                )
+                            }
                         )
                     }
                 }
@@ -815,7 +819,7 @@ private fun UserChatBubble(text: String) {
 private fun AIWelcomeContent(
     onManualCreateHabit: () -> Unit = {},
     hasAIConfig: Boolean = true,
-    application: HabitPulseApplication? = null
+    onNavigateToAISettings: () -> Unit = {}
 ) {
     Column(
         modifier = Modifier
@@ -875,11 +879,7 @@ private fun AIWelcomeContent(
                 supportingText = stringResource(R.string.ai_chat_add_provider_desc),
                 leadingIcon = Icons.Outlined.Settings,
                 tintIndex = 1,
-                onClick = {
-                    application?.startActivity(
-                        android.content.Intent(application, SettingsAIActivity::class.java)
-                    )
-                }
+                onClick = onNavigateToAISettings
             )
         }
     }
