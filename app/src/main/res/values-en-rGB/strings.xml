@@ -761,8 +761,10 @@
     <string name="region_co">Colombia</string>
     <string name="region_mx">Mexico</string>
     <string name="region_nz">New Zealand</string>
-    <string name="main_omnibox_hint">Search here, or swipe up to create a habit</string>
+    <string name="main_omnibox_hint">Search</string>
     <string name="accessibility_omnibox_clear">Clear search</string>
+    <string name="accessibility_omnibox_add_habit">Create new habit</string>
+    <string name="accessibility_omnibox_mic">Voice search</string>
     <string name="ai_chat_manual_create">Create a habit manually</string>
     <string name="ai_chat_manual_create_description">Skip the AI and fill in the details yourself</string>
     <string name="ai_chat_no_config_hint">Add an AI provider first</string>

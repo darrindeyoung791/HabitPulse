@@ -20,6 +20,7 @@ import androidx.compose.animation.togetherWith
 import android.util.Log
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.background
+import androidx.compose.foundation.LocalIndication
 import androidx.compose.foundation.focusable
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.*
@@ -224,7 +225,9 @@ private fun BoxScope.BottomOmniboxWithFade(
     dragModifier: Modifier = Modifier,
     aiAssistEnabled: Boolean = false,
     onAiCreateHabit: (String) -> Unit = {},
-    onAiSearchHabits: (String) -> Unit = {}
+    onAiSearchHabits: (String) -> Unit = {},
+    showAddButton: Boolean = false,
+    onAddHabit: () -> Unit = {}
 ) {
     val surfaceColor = MaterialTheme.colorScheme.surface
 
@@ -306,11 +309,68 @@ private fun BoxScope.BottomOmniboxWithFade(
                 }
             }
 
-            HomeOmnibox(
-                query = query,
-                onQueryChange = onQueryChange,
-                onUpdateWindowBounds = onPillBounds
-            )
+            BoxWithConstraints(
+                modifier = Modifier.fillMaxWidth()
+            ) {
+                val addButtonGap = 8.dp
+                val addButtonTotalWidth = OmniboxPillMinHeight + addButtonGap
+                val targetPillWidth = if (showAddButton) maxWidth - addButtonTotalWidth else maxWidth
+                val animatedPillWidth by animateDpAsState(
+                    targetValue = targetPillWidth,
+                    animationSpec = tween(durationMillis = 250, easing = FastOutSlowInEasing),
+                    label = "pillWidth"
+                )
+
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .onGloballyPositioned { coords ->
+                            onPillBounds(
+                                Rect(coords.positionInWindow(), coords.size.toSize())
+                            )
+                        },
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    HomeOmnibox(
+                        query = query,
+                        onQueryChange = onQueryChange,
+                        modifier = Modifier.width(animatedPillWidth)
+                    )
+
+                    AnimatedVisibility(
+                        visible = showAddButton,
+                        enter = scaleIn(
+                            initialScale = 0.4f,
+                            animationSpec = tween(durationMillis = 200, easing = FastOutSlowInEasing)
+                        ) + fadeIn(animationSpec = tween(durationMillis = 180)),
+                        exit = scaleOut(
+                            targetScale = 0.4f,
+                            animationSpec = tween(durationMillis = 160, easing = FastOutSlowInEasing)
+                        ) + fadeOut(animationSpec = tween(durationMillis = 140))
+                    ) {
+                        val addInteractionSource = remember { MutableInteractionSource() }
+                        PressVibrationFeedback(interactionSource = addInteractionSource)
+                        Box(
+                            modifier = Modifier
+                                .padding(start = addButtonGap)
+                                .size(OmniboxPillMinHeight)
+                                .clip(CircleShape)
+                                .background(MaterialTheme.colorScheme.surfaceContainerHighest)
+                                .clickable(
+                                    interactionSource = addInteractionSource,
+                                    indication = LocalIndication.current
+                                ) { onAddHabit() },
+                            contentAlignment = Alignment.Center
+                        ) {
+                            Icon(
+                                imageVector = Icons.Filled.Add,
+                                contentDescription = stringResource(id = R.string.accessibility_omnibox_add_habit),
+                                tint = MaterialTheme.colorScheme.onSurfaceVariant
+                            )
+                        }
+                    }
+                }
+            }
         }
     }
 }
@@ -401,14 +461,11 @@ private fun BoxScope.AiSheetOverlay(
     val sheetStartColor = MaterialTheme.colorScheme.surfaceContainerHighest
     val sheetEndColor = MaterialTheme.colorScheme.surface
 
-    // 页面压暗 + 点击空白处收回
+    // 点击空白处收回（无压暗，主页内容通过 graphicsLayer 自带 alpha 渐隐）
     if (scrimVisible) {
         Box(
             modifier = Modifier
                 .matchParentSize()
-                .drawBehind {
-                    drawRect(color = Color.Black, alpha = 0.32f * progress.value)
-                }
                 .clickable(
                     interactionSource = remember { MutableInteractionSource() },
                     indication = null,
@@ -1516,7 +1573,15 @@ fun HomeScreen(
             // Tablet landscape mode
             // Drawer handles start inset, Scaffold handles top and end insets
             Scaffold(
-                modifier = Modifier.fillMaxSize(),
+                modifier = Modifier
+                    .fillMaxSize()
+                    .graphicsLayer {
+                        val p = aiSheetProgress.value
+                        val scale = 1f - 0.1f * p
+                        scaleX = scale
+                        scaleY = scale
+                        alpha = 1f - p
+                    },
                 topBar = { topAppBarContent(false) },
                 // Scaffold handles top and end insets (start is handled by drawer)
                 contentWindowInsets = WindowInsets.safeDrawing.only(
@@ -1554,7 +1619,9 @@ fun HomeScreen(
                             },
                             onAiSearchHabits = { text ->
                                 sendOmniboxToAi(R.string.ai_chat_auto_search_prompt, text)
-                            }
+                            },
+                            showAddButton = currentSection == HomeSection.Habits,
+                            onAddHabit = onCreateHabit
                         )
                 }
             }
@@ -1648,6 +1715,13 @@ fun HomeScreen(
                 modifier = Modifier
                     .fillMaxSize()
                     .weight(1f)
+                    .graphicsLayer {
+                        val p = aiSheetProgress.value
+                        val scale = 1f - 0.1f * p
+                        scaleX = scale
+                        scaleY = scale
+                        alpha = 1f - p
+                    }
             ) {
                 // TopAppBar handles its own insets via windowInsets parameter
                 topAppBarContent(true)
@@ -1685,7 +1759,9 @@ fun HomeScreen(
                             },
                             onAiSearchHabits = { text ->
                                 sendOmniboxToAi(R.string.ai_chat_auto_search_prompt, text)
-                            }
+                            },
+                            showAddButton = currentSection == HomeSection.Habits,
+                            onAddHabit = onCreateHabit
                         )
                 }
             }
@@ -1817,7 +1893,15 @@ fun HomeScreen(
                     .then(if (portraitPageHidden) Modifier.clearAndSetSemantics { } else Modifier)
             ) {
                 Scaffold(
-                    modifier = Modifier.fillMaxSize(),
+                    modifier = Modifier
+                        .fillMaxSize()
+                        .graphicsLayer {
+                            val p = aiSheetProgress.value
+                            val scale = 1f - 0.1f * p
+                            scaleX = scale
+                            scaleY = scale
+                            alpha = 1f - p
+                        },
                     topBar = { topAppBarContent(false) },
                     contentWindowInsets = WindowInsets(0, 0, 0, 0)
                 ) { paddingValues ->
@@ -1850,7 +1934,9 @@ fun HomeScreen(
                         },
                         onAiSearchHabits = { text ->
                             sendOmniboxToAi(R.string.ai_chat_auto_search_prompt, text)
-                        }
+                        },
+                        showAddButton = currentSection == HomeSection.Habits,
+                        onAddHabit = onCreateHabit
                     )
 
                 // Dimming scrim over the displaced page; tap it to close.
@@ -2046,20 +2132,13 @@ fun BlankSectionContent(
 private fun HomeOmnibox(
     query: String,
     onQueryChange: (String) -> Unit,
-    onUpdateWindowBounds: (Rect) -> Unit = {},
     modifier: Modifier = Modifier
 ) {
     val focusRequester = remember { FocusRequester() }
     val focusManager = LocalFocusManager.current
 
     Surface(
-        modifier = modifier
-            .onGloballyPositioned { coords ->
-                // 上报胶囊在窗口坐标系中的边界，作为 AI 形变层的起点矩形
-                onUpdateWindowBounds(
-                    Rect(coords.positionInWindow(), coords.size.toSize())
-                )
-            },
+        modifier = modifier,
         shape = RoundedCornerShape(percent = 50),
         color = MaterialTheme.colorScheme.surfaceContainerHighest
     ) {
@@ -2080,7 +2159,7 @@ private fun HomeOmnibox(
                 value = query,
                 onValueChange = onQueryChange,
                 singleLine = true,
-                textStyle = MaterialTheme.typography.bodyLarge.copy(
+                textStyle = MaterialTheme.typography.bodyMedium.copy(
                     color = MaterialTheme.colorScheme.onSurface
                 ),
                 cursorBrush = SolidColor(MaterialTheme.colorScheme.primary),
@@ -2091,11 +2170,11 @@ private fun HomeOmnibox(
                     .padding(horizontal = 12.dp, vertical = 14.dp)
                     .focusRequester(focusRequester),
                 decorationBox = { innerTextField ->
-                    Box {
+                    Box(contentAlignment = Alignment.CenterStart) {
                         if (query.isEmpty()) {
                             Text(
                                 text = stringResource(id = R.string.main_omnibox_hint),
-                                style = MaterialTheme.typography.bodyLarge,
+                                style = MaterialTheme.typography.bodyMedium,
                                 color = MaterialTheme.colorScheme.onSurfaceVariant,
                                 maxLines = 1
                             )
@@ -2116,13 +2195,16 @@ private fun HomeOmnibox(
                     )
                 }
             } else {
-                // 语音识别预留位：本期无行为
-                Icon(
-                    imageVector = Icons.Filled.Mic,
-                    contentDescription = null,
-                    tint = MaterialTheme.colorScheme.onSurfaceVariant,
-                    modifier = Modifier.padding(end = 20.dp)
-                )
+                IconButton(
+                    onClick = { /* TODO: 语音识别功能预留 */ },
+                    modifier = Modifier.padding(end = 4.dp)
+                ) {
+                    Icon(
+                        imageVector = Icons.Filled.Mic,
+                        contentDescription = stringResource(id = R.string.accessibility_omnibox_mic),
+                        tint = MaterialTheme.colorScheme.onSurfaceVariant
+                    )
+                }
             }
         }
     }

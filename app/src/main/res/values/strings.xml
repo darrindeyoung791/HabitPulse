@@ -771,8 +771,10 @@
     <string name="region_nz">新西兰</string>
 
     <!-- 主页 Omnibox（搜索与AI） -->
-    <string name="main_omnibox_hint">轻点搜索，上滑创建习惯</string>
+    <string name="main_omnibox_hint">轻点搜索，上滑 AI</string>
     <string name="accessibility_omnibox_clear">清除搜索内容</string>
+    <string name="accessibility_omnibox_add_habit">新建习惯</string>
+    <string name="accessibility_omnibox_mic">语音搜索</string>
     <string name="ai_chat_manual_create">手动创建习惯</string>
     <string name="ai_chat_manual_create_description">不使用 AI，自己一步步填写创建</string>
     <string name="ai_chat_no_config_hint">请先添加 AI 提供商</string>
