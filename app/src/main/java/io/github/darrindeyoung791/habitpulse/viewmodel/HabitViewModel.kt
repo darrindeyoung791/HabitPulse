@@ -79,6 +79,13 @@ class HabitViewModel(
         }
     }
 
+    /**
+     * 下拉刷新：重新加载今日完成数据，触发 habitsWithStatusFlow 重算
+     */
+    fun refresh() {
+        loadTodayCompletions()
+    }
+
     val habitsWithStatusFlow: Flow<List<HabitWithStatus>> = combine(
         repository.habitsBySortOrderFlow,
         todayCompletionsFlow

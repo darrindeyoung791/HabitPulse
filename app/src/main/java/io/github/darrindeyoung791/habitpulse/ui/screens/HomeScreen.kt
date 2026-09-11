@@ -317,7 +317,7 @@ private fun BoxScope.BottomOmniboxWithFade(
                 val targetPillWidth = if (showAddButton) maxWidth - addButtonTotalWidth else maxWidth
                 val animatedPillWidth by animateDpAsState(
                     targetValue = targetPillWidth,
-                    animationSpec = tween(durationMillis = 250, easing = FastOutSlowInEasing),
+                    animationSpec = tween(durationMillis = 300, easing = FastOutSlowInEasing),
                     label = "pillWidth"
                 )
 
@@ -801,8 +801,8 @@ fun HomeScreen(
 
     /**
      * 形变收尾动画（三条入口统一走此函数）：
-     * - 弹性弹簧产生端点回弹动效；手势路径注入释放初速，末端跟随动量
-     *   （初速钳制在 ±8 progress/s，防止极端数值）
+     * - 展开：spring(0.75, StiffnessMediumLow) 回弹；收起：tween(300ms, FastOutSlowInEasing)
+     * - 手势路径注入释放初速，spring 模式下初速有效
      * - 到达端点落定后按全局震动设置震动一次；起点已在端点则跳过
      */
     fun animateAiSheetTo(
@@ -821,16 +821,11 @@ fun HomeScreen(
             aiSheetProgress.animateTo(
                 targetValue = if (open) 1f else 0f,
                 animationSpec = if (open) {
-                    // 展开：适度回弹 + 末端缓动（比收起 400ms 稍长）
-                    spring(
-                        dampingRatio = 0.8f,
-                        stiffness = 280f
-                    )
+                    spring(dampingRatio = 0.75f, stiffness = Spring.StiffnessMediumLow)
                 } else {
-                    // 收起：夸张的 ease-out —— 中段极快、末段缓慢拖尾
                     tween(
-                        durationMillis = 400,
-                        easing = CubicBezierEasing(0.05f, 0.7f, 0.1f, 1.0f)
+                        durationMillis = 300,
+                        easing = FastOutSlowInEasing
                     )
                 },
                 initialVelocity = if (open) initialVelocityProgressPerSec.coerceIn(-8f, 8f) else 0f

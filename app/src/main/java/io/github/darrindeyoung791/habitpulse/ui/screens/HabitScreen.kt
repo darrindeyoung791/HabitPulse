@@ -269,42 +269,19 @@ fun HabitScreenContent(
         }
     }
 
-    val pullToCreateState = rememberPullToRefreshState()
+    var isRefreshing by remember { mutableStateOf(false) }
+    val pullToRefreshState = rememberPullToRefreshState()
     PullToRefreshBox(
-        isRefreshing = false,
-        onRefresh = onCreateHabitSelection,
-        state = pullToCreateState,
-        // 自定义指示器：加号图标随下拉进度缩放淡入（替代默认刷新样式）
-        indicator = {
-            val progress = pullToCreateState.distanceFraction.coerceIn(0f, 1f)
-            if (progress > 0.01f) {
-                Surface(
-                    shape = CircleShape,
-                    color = MaterialTheme.colorScheme.secondaryContainer,
-                    shadowElevation = 3.dp,
-                    modifier = Modifier
-                        .align(Alignment.TopCenter)
-                        .padding(top = 8.dp)
-                        .size(40.dp)
-                        .graphicsLayer {
-                            alpha = progress
-                            scaleX = 0.6f + 0.4f * progress
-                            scaleY = 0.6f + 0.4f * progress
-                        }
-                ) {
-                    Box(
-                        modifier = Modifier.fillMaxSize(),
-                        contentAlignment = Alignment.Center
-                    ) {
-                        Icon(
-                            imageVector = Icons.Filled.Add,
-                            contentDescription = null,
-                            tint = MaterialTheme.colorScheme.onSecondaryContainer
-                        )
-                    }
-                }
+        isRefreshing = isRefreshing,
+        onRefresh = {
+            isRefreshing = true
+            viewModel.refresh()
+            scope.launch {
+                kotlinx.coroutines.delay(350)
+                isRefreshing = false
             }
         },
+        state = pullToRefreshState,
         modifier = modifier.fillMaxSize()
     ) {
         Column(modifier = Modifier.fillMaxSize()) {

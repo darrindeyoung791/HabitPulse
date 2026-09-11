@@ -56,14 +56,18 @@ import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.material3.TextButton
 import androidx.compose.material3.TopAppBarScrollBehavior
+import androidx.compose.material3.pulltorefresh.PullToRefreshBox
+import androidx.compose.material3.pulltorefresh.rememberPullToRefreshState
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.ui.ExperimentalComposeUiApi
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.setValue
 import kotlinx.coroutines.delay
+import kotlinx.coroutines.launch
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -264,8 +268,24 @@ fun RecordsScreenContent(
 
     val animationsFrozen by rememberAnimationsFrozen(listState)
 
+    val scope = rememberCoroutineScope()
+    var isRefreshing by remember { mutableStateOf(false) }
+    val pullToRefreshState = rememberPullToRefreshState()
     // 根容器改为 Box：空态/加载态与筛选栏叠放，占位元素在 AppBar 与 Omnibox 之间
     // 整体垂直居中时忽略筛选行高度（与习惯/联系人界面的居中位置保持一致）
+    PullToRefreshBox(
+        isRefreshing = isRefreshing,
+        onRefresh = {
+            isRefreshing = true
+            viewModel.refreshRecords()
+            scope.launch {
+                delay(350)
+                isRefreshing = false
+            }
+        },
+        state = pullToRefreshState,
+        modifier = nestedScrollModifier.fillMaxSize()
+    ) {
     Box(
         modifier = nestedScrollModifier.fillMaxSize()
     ) {
@@ -463,6 +483,7 @@ fun RecordsScreenContent(
                 Box(modifier = Modifier.fillMaxSize())
             }
         }
+    }
     }
 }
 

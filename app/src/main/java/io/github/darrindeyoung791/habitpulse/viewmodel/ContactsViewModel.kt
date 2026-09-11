@@ -175,6 +175,17 @@ class ContactsViewModel(
     }
 
     /**
+     * 下拉刷新：数据由 Room Flow 自动更新，此处仅触发短暂加载指示
+     */
+    fun refresh() {
+        viewModelScope.launch {
+            _isLoading.value = true
+            kotlinx.coroutines.delay(300)
+            _isLoading.value = false
+        }
+    }
+
+    /**
      * 当前选中的联系人
      */
     private val _selectedContact = MutableStateFlow<ContactInfo?>(null)

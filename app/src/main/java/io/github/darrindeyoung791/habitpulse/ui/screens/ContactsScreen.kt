@@ -55,6 +55,8 @@ import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.CircularProgressIndicator
 import androidx.compose.material3.DropdownMenu
 import androidx.compose.material3.DropdownMenuItem
+import androidx.compose.material3.pulltorefresh.PullToRefreshBox
+import androidx.compose.material3.pulltorefresh.rememberPullToRefreshState
 import androidx.compose.material3.ExperimentalMaterial3Api
 import androidx.compose.material3.Icon
 import androidx.compose.material3.IconButton
@@ -183,8 +185,24 @@ fun ContactsScreenContent(
 
     val animationsFrozen by rememberAnimationsFrozen(listState)
 
-    Column(
+    val scope = rememberCoroutineScope()
+    var isRefreshing by remember { mutableStateOf(false) }
+    val pullToRefreshState = rememberPullToRefreshState()
+    PullToRefreshBox(
+        isRefreshing = isRefreshing,
+        onRefresh = {
+            isRefreshing = true
+            viewModel.refresh()
+            scope.launch {
+                kotlinx.coroutines.delay(350)
+                isRefreshing = false
+            }
+        },
+        state = pullToRefreshState,
         modifier = nestedScrollModifier.fillMaxSize()
+    ) {
+    Column(
+        modifier = Modifier.fillMaxSize()
     ) {
         when {
             // 只在首次加载时显示加载指示器，切换页面时不显示
@@ -422,6 +440,7 @@ fun ContactsScreenContent(
                 }
             }
         }
+    }
     }
 
     // Bottom Sheet - Show habits using this contact
