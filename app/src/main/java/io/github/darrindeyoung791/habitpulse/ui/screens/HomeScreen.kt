@@ -142,13 +142,13 @@ private val OmniboxGradientHeadroom = 64.dp
 private val OmniboxBottomMargin = 20.dp
 
 /** 拖拽把手占位盒高度（含点击热区），形变幽灵把手同尺寸。 */
-internal val OmniboxHandleBoxHeight = 24.dp
+internal val OmniboxHandleBoxHeight = 36.dp
 
 /** 把手与胶囊输入框之间的垂直间距。 */
 private val OmniboxHandlePillSpacing = 6.dp
 
 /** Omnibox 胶囊输入框的最小高度。 */
-internal val OmniboxPillMinHeight = 52.dp
+internal val OmniboxPillMinHeight = 64.dp
 
 /**
  * 空状态占位在「AppBar ↔ Omnibox 上沿」之间整体垂直居中所需的额外底部净空：
@@ -592,6 +592,11 @@ fun HomeScreen(
     // 并遵循「关闭应用内全部震动」总开关）
     val hapticsEnabled = rememberHapticsEnabled()
     val (vibrationDurationMs, vibrationAmplitude) = rememberPressVibrationParams()
+    // rememberUpdatedState 确保 pointerInput(Unit) 捕获的闭包始终读取最新值，
+    // 因为 pointerInput 的 key=Unit 不会因组合重启而重新启动手势协程。
+    val currentHapticsEnabled by rememberUpdatedState(hapticsEnabled)
+    val currentDurationMs by rememberUpdatedState(vibrationDurationMs)
+    val currentAmplitude by rememberUpdatedState(vibrationAmplitude)
 
     // Track which habit is transitioning to MultiSelect (for shared element)
     var multiSelectTargetHabitId by remember { mutableStateOf<UUID?>(null) }
@@ -714,8 +719,8 @@ fun HomeScreen(
                 animationSpec = tween(durationMillis = 320, easing = FastOutSlowInEasing)
             )
             // 完全展开到位后震动一次（已在全开状态时跳过；收起不震）
-            if (!wasFullyOpen && portraitDrawerFraction.value >= 0.999f && hapticsEnabled) {
-                vibrateShort(context, vibrationDurationMs, vibrationAmplitude)
+            if (!wasFullyOpen && portraitDrawerFraction.value >= 0.999f && currentHapticsEnabled) {
+                vibrateShort(context, currentDurationMs, currentAmplitude)
             }
         }
     }
@@ -751,13 +756,13 @@ fun HomeScreen(
                 targetValue = if (open) 1f else 0f,
                 animationSpec = spring(
                     dampingRatio = Spring.DampingRatioNoBouncy,
-                    stiffness = Spring.StiffnessLow
+                    stiffness = Spring.StiffnessMediumLow
                 ),
                 initialVelocity = initialVelocity
             )
             // 手势展开到位后震动一次（已在全开状态或收起时跳过）
-            if (open && !wasFullyOpen && portraitDrawerFraction.value >= 0.999f && hapticsEnabled) {
-                vibrateShort(context, vibrationDurationMs, vibrationAmplitude)
+            if (open && !wasFullyOpen && portraitDrawerFraction.value >= 0.999f && currentHapticsEnabled) {
+                vibrateShort(context, currentDurationMs, currentAmplitude)
             }
         }
     }
@@ -768,7 +773,6 @@ fun HomeScreen(
     // 形变的是背景面片（与输入框同形状同色），而非输入框本身延展全屏。
     // ------------------------------------------------------------------
     // 使用 rememberSaveable 让形变进度在旋转后保持，对话内容在 ViewModel 中不丢失
-    var aiSheetOpen by rememberSaveable { mutableStateOf(false) }
     val aiSheetProgress = rememberSaveable(saver = Saver(
         save = { animatable: Animatable<Float, AnimationVector1D> ->
             if (animatable.isRunning) null else animatable.value
@@ -784,15 +788,15 @@ fun HomeScreen(
     var omniboxWindowBounds by remember { mutableStateOf(Rect.Zero) }
 
     val isAiSheetActive by remember {
-        derivedStateOf { aiSheetOpen || aiSheetProgress.value > 0.001f }
+        derivedStateOf { aiSheetProgress.value > 0.001f }
     }
     // 形变启动后隐藏装饰层把手的视觉（幽灵把手同位接替），避免双把手并存
     val showOmniboxHandle by remember {
-        derivedStateOf { aiSheetProgress.value <= 0.001f && !aiSheetOpen }
+        derivedStateOf { aiSheetProgress.value <= 0.001f }
     }
 
     fun beginAiSheetHandoff() {
-        if (!aiSheetOpen && aiSheetProgress.value <= 0.001f) {
+        if (aiSheetProgress.value <= 0.001f) {
             // 文本草稿交接：Omnibox 已输入内容移交给对话页输入框
             aiDraftText = homeOmniboxText
             homeOmniboxText = ""
@@ -801,9 +805,8 @@ fun HomeScreen(
 
     /**
      * 形变收尾动画（三条入口统一走此函数）：
-     * - 展开：spring(0.75, StiffnessMediumLow) 回弹；收起：tween(300ms, FastOutSlowInEasing)
+     * - 展开：spring(0.85, StiffnessMediumLow) 轻微回弹；收起：tween(300ms, FastOutSlowInEasing)
      * - 手势路径注入释放初速，spring 模式下初速有效
-     * - 到达端点落定后按全局震动设置震动一次；起点已在端点则跳过
      */
     fun animateAiSheetTo(
         open: Boolean,
@@ -815,13 +818,11 @@ fun HomeScreen(
             homeOmniboxText = aiDraftText.replace("\n", " ")
         }
         if (!open) pendingAiPrompt = null
-        val startValue = aiSheetProgress.value
-        val alreadyAtTarget = if (open) startValue >= 0.999f else startValue <= 0.001f
         scope.launch {
             aiSheetProgress.animateTo(
                 targetValue = if (open) 1f else 0f,
                 animationSpec = if (open) {
-                    spring(dampingRatio = 0.75f, stiffness = Spring.StiffnessMediumLow)
+                    spring(dampingRatio = 0.65f, stiffness = Spring.StiffnessMediumLow)
                 } else {
                     tween(
                         durationMillis = 300,
@@ -830,13 +831,6 @@ fun HomeScreen(
                 },
                 initialVelocity = if (open) initialVelocityProgressPerSec.coerceIn(-8f, 8f) else 0f
             )
-            // 回弹落定后震动一次（完全展开与完全收起都触发）
-            val endValue = aiSheetProgress.value
-            if (!alreadyAtTarget && hapticsEnabled &&
-                ((open && endValue >= 0.999f) || (!open && endValue <= 0.001f))
-            ) {
-                vibrateShort(context, vibrationDurationMs, vibrationAmplitude)
-            }
         }
     }
 
