@@ -606,9 +606,8 @@
     <string name="ai_chat_welcome_title">我是你的 AI 习惯助手</string>
     <string name="ai_chat_welcome_subtitle">可以让我创建、查找、修改或删除习惯，也可以帮你调整应用设置。</string>
     <string name="ai_omnibox_ai_create">用 AI 创建</string>
-    <string name="ai_omnibox_ai_search">用 AI 查询</string>
+    <string name="ai_omnibox_ai_search">发送给 AI</string>
     <string name="ai_chat_auto_create_prompt">请帮我创建习惯：「%1$s」</string>
-    <string name="ai_chat_auto_search_prompt">请帮我查询与「%1$s」相关的习惯或设置项</string>
     <string name="ai_chat_setting_change_format">%1$s → %2$s</string>
     <string name="ai_chat_on">开</string>
     <string name="ai_chat_off">关</string>

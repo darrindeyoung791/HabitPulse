@@ -903,12 +903,24 @@ fun HomeScreen(
 
     /**
      * 把 Omnibox 当前输入组装成固定模板的用户可见提示词并展开 AI 对话页。
-     * 模板区分创建/查询两种意图，无需 AI 预先判断。
+     * 目前仅「用 AI 创建」走模板（创建意图无需 AI 预先判断）。
      */
     fun sendOmniboxToAi(promptRes: Int, rawText: String) {
         val text = rawText.trim()
         if (text.isEmpty()) return
         pendingAiPrompt = context.getString(promptRes, text)
+        homeOmniboxText = ""
+        expandAiSheetAnimated()
+    }
+
+    /**
+     * 把 Omnibox 当前输入原样移交 AI 对话页（不套任何模板提示词）。
+     * 「发送给 AI」chip 用：用户输入什么，AI 就收到什么。
+     */
+    fun sendOmniboxRawToAi(rawText: String) {
+        val text = rawText.trim()
+        if (text.isEmpty()) return
+        pendingAiPrompt = text
         homeOmniboxText = ""
         expandAiSheetAnimated()
     }
@@ -1756,7 +1768,7 @@ fun HomeScreen(
                                 sendOmniboxToAi(R.string.ai_chat_auto_create_prompt, text)
                             },
                             onAiSearchHabits = { text ->
-                                sendOmniboxToAi(R.string.ai_chat_auto_search_prompt, text)
+                                sendOmniboxRawToAi(text)
                             },
                             showAddButton = currentSection == HomeSection.Habits,
                             onAddHabit = onCreateHabit
@@ -1896,7 +1908,7 @@ fun HomeScreen(
                                 sendOmniboxToAi(R.string.ai_chat_auto_create_prompt, text)
                             },
                             onAiSearchHabits = { text ->
-                                sendOmniboxToAi(R.string.ai_chat_auto_search_prompt, text)
+                                sendOmniboxRawToAi(text)
                             },
                             showAddButton = currentSection == HomeSection.Habits,
                             onAddHabit = onCreateHabit
@@ -2071,7 +2083,7 @@ fun HomeScreen(
                             sendOmniboxToAi(R.string.ai_chat_auto_create_prompt, text)
                         },
                         onAiSearchHabits = { text ->
-                            sendOmniboxToAi(R.string.ai_chat_auto_search_prompt, text)
+                            sendOmniboxRawToAi(text)
                         },
                         showAddButton = currentSection == HomeSection.Habits,
                         onAddHabit = onCreateHabit

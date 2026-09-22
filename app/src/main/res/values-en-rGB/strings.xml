@@ -611,9 +611,8 @@
     <string name="ai_chat_welcome_title">I\'m your AI habit assistant</string>
     <string name="ai_chat_welcome_subtitle">Ask me to create, find, edit or delete habits, or adjust app settings.</string>
     <string name="ai_omnibox_ai_create">Create with AI</string>
-    <string name="ai_omnibox_ai_search">Search with AI</string>
+    <string name="ai_omnibox_ai_search">Send to AI</string>
     <string name="ai_chat_auto_create_prompt">Please create a habit: \"%1$s\"</string>
-    <string name="ai_chat_auto_search_prompt">Please find habits or settings related to \"%1$s\"</string>
     <string name="ai_chat_setting_change_format">%1$s → %2$s</string>
     <string name="ai_chat_on">On</string>
     <string name="ai_chat_off">Off</string>
