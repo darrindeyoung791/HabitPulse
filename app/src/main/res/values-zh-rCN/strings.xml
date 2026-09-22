@@ -203,6 +203,9 @@
     <string name="search_contacts_hint">搜索联系人…</string>
     <string name="search_no_results">未找到匹配的习惯</string>
     <string name="search_no_results_description">请尝试其他关键词</string>
+    <!-- Omnibox 统一搜索（习惯/联系人/设置分组结果页） -->
+    <string name="search_type_all">全部</string>
+    <string name="search_unified_no_results">未找到结果</string>
     <string name="contacts_no_search_results">未找到匹配的联系人</string>
     <string name="contacts_no_search_results_description">请尝试其他关键词</string>
     <string name="search_results_count">找到 %d 个习惯</string>
@@ -749,7 +752,7 @@
     <string name="region_co">哥伦比亚</string>
     <string name="region_mx">墨西哥</string>
     <string name="region_nz">新西兰</string>
-    <string name="main_omnibox_hint">轻点搜索，上滑 AI</string>
+    <string name="main_omnibox_hint">搜索或提问</string>
     <string name="accessibility_omnibox_clear">清除搜索内容</string>
     <string name="accessibility_omnibox_add_habit">新建习惯</string>
     <string name="accessibility_omnibox_mic">语音搜索</string>

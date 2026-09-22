@@ -30,6 +30,8 @@ data/
 │   ├── AesGcmCipher.kt          # Pure JCA cipher (no Android deps, JVM-testable)
 │   ├── ApiKeyCrypto.kt          # Encrypt/decrypt/reveal API keys
 │   └── ApiKeyMigration.kt       # Plaintext detection + idempotent migration
+├── search/
+│   └── SettingsSearchIndex.kt   # Unified-search settings index (pure filterSettings + Context-bound buildEntries)
 └── preferences/
     └── UserPreferences.kt       # DataStore keys (extensive, scattered throughout)
 
@@ -43,8 +45,9 @@ ai/
 ui/
 ├── DeviceFormFactor.kt          # Unified device form factor: rememberDeviceFormInfo()
 ├── screens/
-│   ├── HomeScreen.kt            # Shell: 3 tabs + TopAppBar + reveal drawer + Omnibox
-│   ├── HabitScreen.kt           # Habit list, cards, search, reward sheet
+│   ├── HomeScreen.kt            # Shell: 3 tabs + TopAppBar + reveal drawer + Omnibox + unified search results + hoisted contact sheet/dialog
+│   ├── HabitScreen.kt           # Habit list, cards, search, reward sheet (highlightText is internal, shared with unified results)
+│   ├── search/UnifiedSearchResultsContent.kt # Omnibox grouped results page (habits/contacts/settings + type switcher)
 │   ├── ai/AIChatScreen.kt       # AI chat with tool-calling UI
 │   └── settings/                # Settings screens (segmented list UI)
 └── utils/
@@ -210,11 +213,14 @@ Breakpoints: `isTabletDevice` = min(w,h)≥600dp, `isWideLayout` = landscape w�
 
 ## Development Lessons
 
+### Unified Omnibox search (Habits/Contacts tabs)
+Query non-blank on Habits/Contacts → `UnifiedSearchResultsContent` replaces Section content (grouped habits + contacts + settings with a pinned type switcher); Records tab keeps local record-only search and must never leak records into unified results. Settings group uses `settingsSearchQuery` (200ms `LaunchedEffect` debounce) aligned with both VMs' 200ms debounce so all three groups settle together. LazyColumn keys need type prefixes (`habit_`/`contact_`/`settings_`). Search branch intentionally skips `PullToRefreshBox`.
+
 ### DatePicker: Use `key()` to prevent dual dialogs
 Orientation-dependent DatePicker in `if` conditions causes both to appear during recomposition. Fix: extract to separate composable + `key(isPhoneLandscape)` wrapper forces full recreation.
 
 ### Screen Architecture: Parent manages chrome, children manage content
-Child screens (RecordsScreen, ContactsScreen) must NOT manage TopAppBar or dialogs. Parent (HomeScreen) owns all chrome — prevents duplicate dialog triggers. Dialogs declared at END of parent composable.
+Child screens (RecordsScreen, ContactsScreen) must NOT manage TopAppBar or dialogs. Parent (HomeScreen) owns all chrome — prevents duplicate dialog triggers. Dialogs declared at END of parent composable. Contact detail `ModalBottomSheet` + delete-confirm dialog are hoisted to HomeScreen (state in app-scoped ContactsViewModel), so they also work when a contact is tapped from unified search results on the Habits tab.
 
 ### Theme Switch Black Screen (June 2026)
 Three-way deadlock: `configChanges` missing `uiMode` → Activity recreation → `installSplashScreen()` re-runs → `AnimatedVisibility(visible=false)` blocks content → `setKeepOnScreenCondition` stuck forever → black screen. Fix: add `uiMode` to `configChanges`, remove `AnimatedVisibility` gate, use `Surface` not `Box+.background()` for root.

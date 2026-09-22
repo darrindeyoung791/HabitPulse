@@ -1754,8 +1754,12 @@ private fun SearchEmptyState(
 
 // ============= Search Highlight Helpers =============
 
+/**
+ * 关键词高亮（搜索结果标题用）。internal：统一分组结果页
+ * （ui/screens/search）复用同一实现，避免重复代码。
+ */
 @Composable
-private fun highlightText(text: String, query: String): AnnotatedString {
+internal fun highlightText(text: String, query: String): AnnotatedString {
     if (query.isBlank()) {
         return AnnotatedString(text)
     }

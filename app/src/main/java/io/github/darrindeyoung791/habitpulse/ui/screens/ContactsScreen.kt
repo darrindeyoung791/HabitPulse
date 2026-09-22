@@ -138,7 +138,6 @@ fun ContactsScreenContent(
     val isLoading by viewModel.isLoading.collectAsStateWithLifecycle(initialValue = false)
     val hasLoadedDataOnce by viewModel.hasLoadedDataOnce.collectAsStateWithLifecycle(initialValue = false)
     val lastNonEmptyData by viewModel.lastNonEmptyData.collectAsStateWithLifecycle(initialValue = emptyList())
-    val selectedContact by viewModel.selectedContact.collectAsStateWithLifecycle()
 
     // Omnibox 查询词由 HomeScreen 同步到 ViewModel（debounce），此处只读取
     val searchQuery by viewModel.searchQuery.collectAsStateWithLifecycle(initialValue = "")
@@ -164,9 +163,6 @@ fun ContactsScreenContent(
     } else {
         displayContacts
     }
-    val showBottomSheet by viewModel.showBottomSheet.collectAsStateWithLifecycle()
-    val showDeleteConfirmDialog by viewModel.showDeleteConfirmDialog.collectAsStateWithLifecycle()
-    val deleteConfirmContext by viewModel.deleteConfirmContext.collectAsStateWithLifecycle()
 
     // Get habits for displaying in bottom sheet
     val habits = if (application != null) {
@@ -441,135 +437,6 @@ fun ContactsScreenContent(
             }
         }
     }
-    }
-
-    // Bottom Sheet - Show habits using this contact
-    if (showBottomSheet && selectedContact != null) {
-        val sheetState = rememberModalBottomSheetState(
-            skipPartiallyExpanded = true
-        )
-        val scope = rememberCoroutineScope()
-
-        ModalBottomSheet(
-            onDismissRequest = { viewModel.closeBottomSheet() },
-            sheetState = sheetState
-        ) {
-            ContactBottomSheetContent(
-                contact = selectedContact!!,
-                habits = habits.filter { it.id in selectedContact!!.habitIds },
-                onDeleteFromHabit = { habitId ->
-                    scope.launch {
-                        sheetState.hide()
-                        viewModel.showDeleteConfirmDialog(
-                            ContactsViewModel.DeleteConfirmType.FROM_HABIT,
-                            habitId = habitId,
-                            contact = selectedContact
-                        )
-                    }
-                },
-                onDeleteFromAll = {
-                    scope.launch {
-                        sheetState.hide()
-                        viewModel.showDeleteConfirmDialog(
-                            ContactsViewModel.DeleteConfirmType.FROM_ALL_HABITS,
-                            contact = selectedContact
-                        )
-                    }
-                },
-                onEditContact = { newValue ->
-                    scope.launch {
-                        sheetState.hide()
-                        viewModel.updateContactValue(
-                            oldValue = selectedContact!!.value,
-                            newValue = newValue,
-                            type = selectedContact!!.type
-                        )
-                    }
-                }
-            )
-        }
-    }
-
-    // Delete Confirmation Dialog
-    if (showDeleteConfirmDialog) {
-        val isFromAllHabits = deleteConfirmContext?.type == ContactsViewModel.DeleteConfirmType.FROM_ALL_HABITS
-        val habitId = deleteConfirmContext?.habitId
-        val contactForDeletion = deleteConfirmContext?.contact ?: selectedContact
-
-        AlertDialog(
-            onDismissRequest = { viewModel.closeDeleteConfirmDialog() },
-            title = {
-                Text(text = stringResource(id = R.string.contacts_delete_confirm_title))
-            },
-            text = {
-                Column(
-                    modifier = Modifier.fillMaxWidth()
-                ) {
-                    Text(
-                        text = if (isFromAllHabits) {
-                            stringResource(id = R.string.contacts_delete_from_all_habits_confirm)
-                        } else {
-                            stringResource(id = R.string.contacts_delete_from_habit_confirm)
-                        },
-                        modifier = Modifier.fillMaxWidth()
-                    )
-                    // Show warning if this is the last contact for a habit
-                    if (!isFromAllHabits && habitId != null && contactForDeletion != null) {
-                        val habit = habits.find { it.id == habitId }
-                        val isLastContact = habit?.let { h ->
-                            // 删除后，该类型只剩 0 个，且另一类型也为空
-                            val remainingOfType = when (contactForDeletion.type) {
-                                ContactsViewModel.ContactType.EMAIL ->
-                                    h.getSupervisorEmailsList().size - 1
-                                ContactsViewModel.ContactType.PHONE ->
-                                    h.getSupervisorPhonesList().size - 1
-                            }
-                            val otherTypeCount = when (contactForDeletion.type) {
-                                ContactsViewModel.ContactType.EMAIL ->
-                                    h.getSupervisorPhonesList().size
-                                ContactsViewModel.ContactType.PHONE ->
-                                    h.getSupervisorEmailsList().size
-                            }
-                            remainingOfType == 0 && otherTypeCount == 0
-                        } == true
-
-                        if (isLastContact) {
-                            Spacer(modifier = Modifier.height(12.dp))
-                            Text(
-                                text = stringResource(id = R.string.contacts_last_supervisor_warning),
-                                style = MaterialTheme.typography.bodySmall,
-                                color = MaterialTheme.colorScheme.error,
-                                modifier = Modifier.fillMaxWidth()
-                            )
-                        }
-                    }
-                }
-            },
-            confirmButton = {
-                TextButton(
-                    onClick = {
-                        if (isFromAllHabits) {
-                            viewModel.deleteContactFromAllHabits(contactForDeletion)
-                        } else if (habitId != null) {
-                            viewModel.deleteContactFromHabit(habitId, contactForDeletion)
-                        }
-                        viewModel.closeDeleteConfirmDialog()
-                    },
-                    colors = ButtonDefaults.textButtonColors(
-                        contentColor = MaterialTheme.colorScheme.error
-                    )
-                ) {
-                    Text(text = stringResource(id = R.string.contacts_delete_confirm))
-                }
-            },
-            dismissButton = {
-                TextButton(
-                    onClick = { viewModel.closeDeleteConfirmDialog() }
-                ) {
-                    Text(text = stringResource(id = R.string.contacts_delete_cancel))
-                }
-            }
-        )
     }
 }
 

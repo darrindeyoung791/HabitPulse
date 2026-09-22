@@ -204,6 +204,9 @@
     <string name="search_contacts_hint">搜尋聯絡人…</string>
     <string name="search_no_results">未找到符合的習慣</string>
     <string name="search_no_results_description">請嘗試其他關鍵詞</string>
+    <!-- Omnibox 統一搜尋（習慣/聯絡人/設定分組結果頁） -->
+    <string name="search_type_all">全部</string>
+    <string name="search_unified_no_results">未找到結果</string>
     <string name="contacts_no_search_results">未找到符合的聯絡人</string>
     <string name="contacts_no_search_results_description">請嘗試其他關鍵詞</string>
     <string name="search_results_count">找到 %d 個習慣</string>
@@ -759,7 +762,7 @@
     <string name="region_co">哥倫比亞</string>
     <string name="region_mx">墨西哥</string>
     <string name="region_nz">新西蘭</string>
-    <string name="main_omnibox_hint">輕按搜索，上滑 AI</string>
+    <string name="main_omnibox_hint">搜尋或提問</string>
     <string name="accessibility_omnibox_clear">清除搜尋內容</string>
     <string name="accessibility_omnibox_add_habit">新增習慣</string>
     <string name="accessibility_omnibox_mic">語音搜尋</string>

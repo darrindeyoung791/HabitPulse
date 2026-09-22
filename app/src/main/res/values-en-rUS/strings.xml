@@ -204,6 +204,9 @@
     <string name="search_contacts_hint">Search contacts…</string>
     <string name="search_no_results">No matching habits found</string>
     <string name="search_no_results_description">Try a different keyword</string>
+    <!-- Omnibox unified search (grouped habits/contacts/settings results) -->
+    <string name="search_type_all">All</string>
+    <string name="search_unified_no_results">No results found</string>
     <string name="contacts_no_search_results">No matching contacts found</string>
     <string name="contacts_no_search_results_description">Try a different keyword</string>
     <string name="search_results_count">%d habit(s) found</string>
@@ -761,7 +764,7 @@
     <string name="region_co">Colombia</string>
     <string name="region_mx">Mexico</string>
     <string name="region_nz">New Zealand</string>
-    <string name="main_omnibox_hint">Search</string>
+    <string name="main_omnibox_hint">AI Search</string>
     <string name="accessibility_omnibox_clear">Clear search</string>
     <string name="accessibility_omnibox_add_habit">Create new habit</string>
     <string name="accessibility_omnibox_mic">Voice search</string>

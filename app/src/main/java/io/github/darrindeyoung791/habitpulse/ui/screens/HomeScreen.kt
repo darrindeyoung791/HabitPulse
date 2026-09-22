@@ -18,6 +18,7 @@ import androidx.compose.animation.scaleIn
 import androidx.compose.animation.scaleOut
 import androidx.compose.animation.togetherWith
 import android.util.Log
+import android.content.Intent
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.background
 import androidx.compose.foundation.LocalIndication
@@ -44,6 +45,7 @@ import androidx.compose.runtime.saveable.Saver
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.rememberUpdatedState
+import androidx.compose.ui.platform.LocalConfiguration
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.platform.LocalLayoutDirection
@@ -87,10 +89,24 @@ import androidx.lifecycle.compose.collectAsStateWithLifecycle
 import androidx.compose.animation.AnimatedContentScope
 import androidx.compose.animation.SharedTransitionScope
 import io.github.darrindeyoung791.habitpulse.HabitPulseApplication
+import io.github.darrindeyoung791.habitpulse.OpenSourceLicensesActivity
 import io.github.darrindeyoung791.habitpulse.R
+import io.github.darrindeyoung791.habitpulse.SettingsAIActivity
+import io.github.darrindeyoung791.habitpulse.SettingsAboutActivity
+import io.github.darrindeyoung791.habitpulse.SettingsFontScaleActivity
+import io.github.darrindeyoung791.habitpulse.SettingsGeneralActivity
+import io.github.darrindeyoung791.habitpulse.SettingsLanguageActivity
+import io.github.darrindeyoung791.habitpulse.SettingsNotificationsActivity
+import io.github.darrindeyoung791.habitpulse.WebViewActivity
 import io.github.darrindeyoung791.habitpulse.data.model.Habit
+import io.github.darrindeyoung791.habitpulse.data.search.SettingsSearchEntry
+import io.github.darrindeyoung791.habitpulse.data.search.SettingsSearchIndex
+import io.github.darrindeyoung791.habitpulse.data.search.SettingsTarget
+import io.github.darrindeyoung791.habitpulse.navigation.RouteConfig
 import io.github.darrindeyoung791.habitpulse.navigation.getDeviceCornerRadius
 import io.github.darrindeyoung791.habitpulse.ui.rememberDeviceFormInfo
+import io.github.darrindeyoung791.habitpulse.ui.screens.search.SearchResultType
+import io.github.darrindeyoung791.habitpulse.ui.screens.search.UnifiedSearchResultsContent
 import io.github.darrindeyoung791.habitpulse.ui.theme.HabitPulseTheme
 import io.github.darrindeyoung791.habitpulse.ui.utils.PressVibrationFeedback
 import io.github.darrindeyoung791.habitpulse.ui.utils.rememberDebounceClickHandler
@@ -99,6 +115,7 @@ import io.github.darrindeyoung791.habitpulse.ui.utils.rememberPressVibrationPara
 import io.github.darrindeyoung791.habitpulse.ui.utils.vibrateShort
 import io.github.darrindeyoung791.habitpulse.ui.screens.DateFilterButton
 import io.github.darrindeyoung791.habitpulse.ui.screens.ai.AIChatScreen
+import io.github.darrindeyoung791.habitpulse.viewmodel.ContactsViewModel
 import io.github.darrindeyoung791.habitpulse.viewmodel.HabitViewModel
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.flow.map
@@ -149,6 +166,9 @@ private val OmniboxHandlePillSpacing = 6.dp
 
 /** Omnibox 胶囊输入框的最小高度。 */
 internal val OmniboxPillMinHeight = 64.dp
+
+/** Omnibox 内功能图标（搜索/麦克风/新建）统一尺寸：较默认 24dp 放大一档。 */
+private val OmniboxIconSize = 28.dp
 
 /**
  * 空状态占位在「AppBar ↔ Omnibox 上沿」之间整体垂直居中所需的额外底部净空：
@@ -365,7 +385,8 @@ private fun BoxScope.BottomOmniboxWithFade(
                             Icon(
                                 imageVector = Icons.Filled.Add,
                                 contentDescription = stringResource(id = R.string.accessibility_omnibox_add_habit),
-                                tint = MaterialTheme.colorScheme.onSurfaceVariant
+                                tint = MaterialTheme.colorScheme.onSurfaceVariant,
+                                modifier = Modifier.size(OmniboxIconSize)
                             )
                         }
                     }
@@ -634,6 +655,23 @@ fun HomeScreen(
         application?.contactsViewModel?.setSearchQuery(homeOmniboxText)
     }
 
+    // 统一搜索结果页（习惯/联系人/设置分组）状态：
+    // - 类型切换控件选中值，查询词清空时重置为「全部」
+    // - 统一结果列表的独立滚动状态（与各 Section 列表隔离；清空/切类型时回顶）
+    // - 设置索引查询词：与两个 ViewModel 的 200ms debounce 对齐，
+    //   避免设置组先于习惯/联系人组闪现
+    var searchResultType by rememberSaveable { mutableStateOf(SearchResultType.ALL) }
+    val unifiedSearchListState = remember { LazyListState() }
+    var settingsSearchQuery by remember { mutableStateOf("") }
+    LaunchedEffect(homeOmniboxText) {
+        if (homeOmniboxText.isBlank()) {
+            searchResultType = SearchResultType.ALL
+            unifiedSearchListState.requestScrollToItem(0)
+        }
+        delay(200)
+        settingsSearchQuery = homeOmniboxText
+    }
+
     // 当页面首次加载时，请求焦点到 title
     LaunchedEffect(Unit) {
         // 延迟一小段时间确保 UI 已经渲染完成
@@ -645,6 +683,19 @@ fun HomeScreen(
     val deviceForm = rememberDeviceFormInfo()
     val isLandscape = deviceForm.isLandscape
     val isTabletDevice = deviceForm.isTabletDevice
+
+    // 设置静态索引：按当前语言解析条目文案；「强制使用平板横屏模式」条目
+    // 的可见性与 SettingsGeneralScreen 保持一致（非平板横屏时才收录）。
+    val settingsLocale = LocalConfiguration.current.locales[0]
+    val settingsEntries = remember(settingsLocale, deviceForm.isTabletLandscape) {
+        SettingsSearchIndex.buildEntries(
+            context = context,
+            showForceTabletLandscapeSwitch = !deviceForm.isTabletLandscape
+        )
+    }
+    val filteredSettingsEntries = remember(settingsSearchQuery, settingsEntries) {
+        SettingsSearchIndex.filterSettings(settingsEntries, settingsSearchQuery)
+    }
 
     // 获取用户偏好设置
     val userPreferences = application?.let {
@@ -860,6 +911,34 @@ fun HomeScreen(
         pendingAiPrompt = context.getString(promptRes, text)
         homeOmniboxText = ""
         expandAiSheetAnimated()
+    }
+
+    /**
+     * 统一搜索结果里的设置条目：清空查询词并深链直达目标设置页。
+     * 页面级目标直接启动对应 Activity；[SettingsTarget.Help] 打开帮助 WebView；
+     * [SettingsTarget.LanSync] 复用主页局域网同步入口回调。
+     */
+    fun openSettingsTarget(target: SettingsTarget) {
+        homeOmniboxText = ""
+        scope.launch {
+            clickHandler.processClick {
+                when (target) {
+                    SettingsTarget.AI -> context.startActivity(Intent(context, SettingsAIActivity::class.java))
+                    SettingsTarget.Notifications -> context.startActivity(Intent(context, SettingsNotificationsActivity::class.java))
+                    SettingsTarget.General -> context.startActivity(Intent(context, SettingsGeneralActivity::class.java))
+                    SettingsTarget.About -> context.startActivity(Intent(context, SettingsAboutActivity::class.java))
+                    SettingsTarget.Language -> context.startActivity(Intent(context, SettingsLanguageActivity::class.java))
+                    SettingsTarget.FontScale -> context.startActivity(Intent(context, SettingsFontScaleActivity::class.java))
+                    SettingsTarget.OpenSourceLicenses -> context.startActivity(Intent(context, OpenSourceLicensesActivity::class.java))
+                    SettingsTarget.Help -> context.startActivity(
+                        Intent(context, WebViewActivity::class.java).apply {
+                            putExtra(WebViewActivity.EXTRA_INITIAL_URL, RouteConfig.HELP_URL)
+                        }
+                    )
+                    SettingsTarget.LanSync -> onViewLanSync()
+                }
+            }
+        }
     }
 
     // Shared horizontal drag gesture (custom axis-arbitrating detector).
@@ -1191,6 +1270,66 @@ fun HomeScreen(
         }
     }
 
+    // 统一搜索结果页：习惯/联系人 Section 输入查询词时替代 Section 内容，
+    // 同时返回两个 Section 的结果 + 系统设置条目（分组 + 顶部类型切换控件）。
+    // 记录 Section 不参与——保持本地记录过滤，记录不进入统一结果。
+    val unifiedSearchBody: @Composable (Modifier) -> Unit = { modifier ->
+        // 习惯：复用 HabitViewModel 的 200ms debounce 过滤管道（title/notes 匹配，含状态）
+        val habitResults by viewModel.filteredHabitsWithStatus.collectAsStateWithLifecycle()
+        // 联系人：复用 ContactsViewModel 的 200ms debounce 过滤管道（value 匹配）
+        val contactsVM = application?.contactsViewModel
+        val contactResults by (contactsVM?.filteredContactsFlow
+            ?: kotlinx.coroutines.flow.flowOf(emptyList<ContactsViewModel.ContactInfo>()))
+            .collectAsStateWithLifecycle(initialValue = emptyList())
+
+        // TopAppBar 折叠跟随当前 Section 的 scrollBehavior（与 topAppBarContent 一致）
+        val currentScrollBehavior = when (currentSection) {
+            HomeSection.Contacts -> contactsScrollBehavior
+            else -> habitsScrollBehavior
+        }
+
+        UnifiedSearchResultsContent(
+            query = homeOmniboxText,
+            selectedType = searchResultType,
+            onTypeChange = { type ->
+                searchResultType = type
+                unifiedSearchListState.requestScrollToItem(0)
+            },
+            habits = habitResults,
+            contacts = contactResults,
+            settingsEntries = filteredSettingsEntries,
+            allHabits = habits,
+            listState = unifiedSearchListState,
+            onHabitClick = { habit ->
+                // 离开结果页进编辑：清空查询词，返回后见完整列表
+                homeOmniboxText = ""
+                onEditHabit(habit)
+            },
+            onCheckIn = { habit -> viewModel.performSlotCheckIn(habit) },
+            onUndoCompletion = { habit -> viewModel.undoHabitCompletion(habit) },
+            onDeleteHabit = { habit ->
+                viewModel.deleteHabit(habit)
+                application?.recordsViewModel?.refreshRecords()
+            },
+            onNavigateToMultiSelect = { habitId ->
+                multiSelectTargetHabitId = habitId
+                onNavigateToMultiSelect(habitId)
+            },
+            onContactClick = { contact -> contactsVM?.selectContact(contact) },
+            onContactDeleteFromAll = { contact ->
+                contactsVM?.showDeleteConfirmDialog(
+                    ContactsViewModel.DeleteConfirmType.FROM_ALL_HABITS,
+                    contact = contact
+                )
+            },
+            onSettingsClick = { entry -> openSettingsTarget(entry.target) },
+            onClearSearch = { homeOmniboxText = "" },
+            modifier = modifier,
+            isWideLayout = deviceForm.isWideLayout,
+            nestedScrollConnection = currentScrollBehavior.nestedScrollConnection
+        )
+    }
+
     // 主页主体内容 - 不再接收 nestedScrollConn，由各组件自己处�?
     // 使用 AnimatedContent 实现 Section 切换时的淡入淡出动画
     // Z 轴切换（细微缩放 + 淡入淡出）
@@ -1212,6 +1351,10 @@ fun HomeScreen(
         ) { targetSection ->
             when (targetSection) {
                 HomeSection.Habits -> {
+                    // 查询词非空 → 统一分组结果页（习惯 + 联系人 + 设置）
+                    if (homeOmniboxText.isNotBlank()) {
+                        unifiedSearchBody(modifier)
+                    } else {
                     HabitScreenContent(
                         modifier = modifier,
                         application = application,
@@ -1239,14 +1382,20 @@ fun HomeScreen(
                         searchQuery = homeOmniboxText,
                         onClearSearch = { homeOmniboxText = "" }
                     )
+                    }
                 }
                 HomeSection.Contacts -> {
+                    // 查询词非空 → 统一分组结果页（与习惯 Tab 结果完全一致）
+                    if (homeOmniboxText.isNotBlank()) {
+                        unifiedSearchBody(modifier)
+                    } else {
                     ContactsScreenContent(
                         modifier = modifier,
                         application = application,
                         scrollBehavior = contactsScrollBehavior,
                         listState = contactsScrollState
                     )
+                    }
                 }
                 HomeSection.Records -> {
                     RecordsScreenContent(
@@ -2018,6 +2167,146 @@ fun HomeScreen(
         }
     }
 
+    // ------------------------------------------------------------------
+    // 联系人详情 Bottom Sheet + 删除确认对话框：chrome 级 UI 由 HomeScreen
+    // 统一持有（子 Section 不再管理，防止重复触发；见 AGENTS.md 屏幕架构约定）。
+    // 状态存于 application 级 ContactsViewModel——任意 tab（含统一搜索结果页）
+    // 触发 selectContact 后都会在此弹出。
+    // ------------------------------------------------------------------
+    val contactsChromeVM = application?.contactsViewModel
+    if (contactsChromeVM != null) {
+        val showContactSheet by contactsChromeVM.showBottomSheet.collectAsStateWithLifecycle()
+        val sheetContact by contactsChromeVM.selectedContact.collectAsStateWithLifecycle()
+        val showContactDeleteConfirm by contactsChromeVM.showDeleteConfirmDialog.collectAsStateWithLifecycle()
+        val contactDeleteContext by contactsChromeVM.deleteConfirmContext.collectAsStateWithLifecycle()
+
+        // Bottom Sheet - Show habits using this contact
+        if (showContactSheet && sheetContact != null) {
+            val sheetState = rememberModalBottomSheetState(skipPartiallyExpanded = true)
+
+            ModalBottomSheet(
+                onDismissRequest = { contactsChromeVM.closeBottomSheet() },
+                sheetState = sheetState
+            ) {
+                ContactBottomSheetContent(
+                    contact = sheetContact!!,
+                    habits = habits.filter { it.id in sheetContact!!.habitIds },
+                    onDeleteFromHabit = { habitId ->
+                        scope.launch {
+                            sheetState.hide()
+                            contactsChromeVM.showDeleteConfirmDialog(
+                                ContactsViewModel.DeleteConfirmType.FROM_HABIT,
+                                habitId = habitId,
+                                contact = sheetContact
+                            )
+                        }
+                    },
+                    onDeleteFromAll = {
+                        scope.launch {
+                            sheetState.hide()
+                            contactsChromeVM.showDeleteConfirmDialog(
+                                ContactsViewModel.DeleteConfirmType.FROM_ALL_HABITS,
+                                contact = sheetContact
+                            )
+                        }
+                    },
+                    onEditContact = { newValue ->
+                        scope.launch {
+                            sheetState.hide()
+                            contactsChromeVM.updateContactValue(
+                                oldValue = sheetContact!!.value,
+                                newValue = newValue,
+                                type = sheetContact!!.type
+                            )
+                        }
+                    }
+                )
+            }
+        }
+
+        // Delete Confirmation Dialog
+        if (showContactDeleteConfirm) {
+            val isFromAllHabits = contactDeleteContext?.type == ContactsViewModel.DeleteConfirmType.FROM_ALL_HABITS
+            val habitId = contactDeleteContext?.habitId
+            val contactForDeletion = contactDeleteContext?.contact ?: sheetContact
+
+            AlertDialog(
+                onDismissRequest = { contactsChromeVM.closeDeleteConfirmDialog() },
+                title = {
+                    Text(text = stringResource(id = R.string.contacts_delete_confirm_title))
+                },
+                text = {
+                    Column(
+                        modifier = Modifier.fillMaxWidth()
+                    ) {
+                        Text(
+                            text = if (isFromAllHabits) {
+                                stringResource(id = R.string.contacts_delete_from_all_habits_confirm)
+                            } else {
+                                stringResource(id = R.string.contacts_delete_from_habit_confirm)
+                            },
+                            modifier = Modifier.fillMaxWidth()
+                        )
+                        // Show warning if this is the last contact for a habit
+                        if (!isFromAllHabits && habitId != null && contactForDeletion != null) {
+                            val habit = habits.find { it.id == habitId }
+                            val isLastContact = habit?.let { h ->
+                                // 删除后，该类型只剩 0 个，且另一类型也为空
+                                val remainingOfType = when (contactForDeletion.type) {
+                                    ContactsViewModel.ContactType.EMAIL ->
+                                        h.getSupervisorEmailsList().size - 1
+                                    ContactsViewModel.ContactType.PHONE ->
+                                        h.getSupervisorPhonesList().size - 1
+                                }
+                                val otherTypeCount = when (contactForDeletion.type) {
+                                    ContactsViewModel.ContactType.EMAIL ->
+                                        h.getSupervisorPhonesList().size
+                                    ContactsViewModel.ContactType.PHONE ->
+                                        h.getSupervisorEmailsList().size
+                                }
+                                remainingOfType == 0 && otherTypeCount == 0
+                            } == true
+
+                            if (isLastContact) {
+                                Spacer(modifier = Modifier.height(12.dp))
+                                Text(
+                                    text = stringResource(id = R.string.contacts_last_supervisor_warning),
+                                    style = MaterialTheme.typography.bodySmall,
+                                    color = MaterialTheme.colorScheme.error,
+                                    modifier = Modifier.fillMaxWidth()
+                                )
+                            }
+                        }
+                    }
+                },
+                confirmButton = {
+                    TextButton(
+                        onClick = {
+                            if (isFromAllHabits) {
+                                contactsChromeVM.deleteContactFromAllHabits(contactForDeletion)
+                            } else if (habitId != null) {
+                                contactsChromeVM.deleteContactFromHabit(habitId, contactForDeletion)
+                            }
+                            contactsChromeVM.closeDeleteConfirmDialog()
+                        },
+                        colors = ButtonDefaults.textButtonColors(
+                            contentColor = MaterialTheme.colorScheme.error
+                        )
+                    ) {
+                        Text(text = stringResource(id = R.string.contacts_delete_confirm))
+                    }
+                },
+                dismissButton = {
+                    TextButton(
+                        onClick = { contactsChromeVM.closeDeleteConfirmDialog() }
+                    ) {
+                        Text(text = stringResource(id = R.string.contacts_delete_cancel))
+                    }
+                }
+            )
+        }
+    }
+
 }
 
 /**
@@ -2142,13 +2431,15 @@ private fun HomeOmnibox(
                 imageVector = Icons.Filled.Search,
                 contentDescription = null,
                 tint = MaterialTheme.colorScheme.onSurfaceVariant,
-                modifier = Modifier.padding(start = 16.dp)
+                modifier = Modifier
+                    .padding(start = 16.dp)
+                    .size(OmniboxIconSize)
             )
             BasicTextField(
                 value = query,
                 onValueChange = onQueryChange,
                 singleLine = true,
-                textStyle = MaterialTheme.typography.bodyMedium.copy(
+                textStyle = MaterialTheme.typography.bodyLarge.copy(
                     color = MaterialTheme.colorScheme.onSurface
                 ),
                 cursorBrush = SolidColor(MaterialTheme.colorScheme.primary),
@@ -2163,7 +2454,7 @@ private fun HomeOmnibox(
                         if (query.isEmpty()) {
                             Text(
                                 text = stringResource(id = R.string.main_omnibox_hint),
-                                style = MaterialTheme.typography.bodyMedium,
+                                style = MaterialTheme.typography.bodyLarge,
                                 color = MaterialTheme.colorScheme.onSurfaceVariant,
                                 maxLines = 1
                             )
@@ -2191,7 +2482,8 @@ private fun HomeOmnibox(
                     Icon(
                         imageVector = Icons.Filled.Mic,
                         contentDescription = stringResource(id = R.string.accessibility_omnibox_mic),
-                        tint = MaterialTheme.colorScheme.onSurfaceVariant
+                        tint = MaterialTheme.colorScheme.onSurfaceVariant,
+                        modifier = Modifier.size(OmniboxIconSize)
                     )
                 }
             }
